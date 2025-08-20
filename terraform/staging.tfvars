@@ -19,3 +19,7 @@ max_capacity  = 3
 # Admin access
 admin_ip_address = "86.162.34.238"
 key_pair_name = "fastapi-staging-bastion"
+
+# DMS access
+enable_dms_access = true
+# dms_replication_instance_sg_id = "sg-xxxxxxxxx"  # Set this if you have an existing DMS instance

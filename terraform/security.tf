@@ -71,8 +71,56 @@ resource "aws_security_group" "rds" {
   }
 
   # Note: Admin access via bastion host - see bastion.tf
+  # Note: DMS access via separate security group rules below
 
   tags = {
     Name = "${var.project_name}-${var.environment}-rds-sg"
   }
+}
+
+# Security group for DMS replication instances
+resource "aws_security_group" "dms" {
+  count = var.enable_dms_access ? 1 : 0
+
+  name        = "${var.project_name}-${var.environment}-dms-sg"
+  description = "Security group for DMS replication instances"
+  vpc_id      = aws_vpc.main.id
+
+  egress {
+    description = "All outbound traffic"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-dms-sg"
+  }
+}
+
+# Allow DMS replication instance to access RDS (when using our DMS security group)
+resource "aws_security_group_rule" "rds_from_dms_internal" {
+  count = var.enable_dms_access && var.dms_replication_instance_sg_id == null ? 1 : 0
+
+  type                     = "ingress"
+  from_port                = 3306
+  to_port                  = 3306
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.dms[0].id
+  security_group_id        = aws_security_group.rds.id
+  description              = "MySQL from DMS replication instance"
+}
+
+# Allow external DMS replication instance to access RDS (when SG ID is provided)
+resource "aws_security_group_rule" "rds_from_dms_external" {
+  count = var.enable_dms_access && var.dms_replication_instance_sg_id != null ? 1 : 0
+
+  type                     = "ingress"
+  from_port                = 3306
+  to_port                  = 3306
+  protocol                 = "tcp"
+  source_security_group_id = var.dms_replication_instance_sg_id
+  security_group_id        = aws_security_group.rds.id
+  description              = "MySQL from external DMS replication instance"
 }

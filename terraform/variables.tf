@@ -91,3 +91,15 @@ variable "key_pair_name" {
   type        = string
   default     = null
 }
+
+variable "enable_dms_access" {
+  description = "Enable DMS replication instance access to RDS"
+  type        = bool
+  default     = false
+}
+
+variable "dms_replication_instance_sg_id" {
+  description = "Security group ID of DMS replication instance (if known)"
+  type        = string
+  default     = null
+}

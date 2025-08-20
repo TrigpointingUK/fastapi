@@ -68,3 +68,8 @@ output "bastion_host_dns" {
   description = "Public DNS name of the bastion host"
   value       = var.environment == "staging" && var.admin_ip_address != null ? aws_instance.bastion[0].public_dns : null
 }
+
+output "dms_security_group_id" {
+  description = "Security group ID for DMS replication instances"
+  value       = var.enable_dms_access ? aws_security_group.dms[0].id : null
+}
