@@ -71,6 +71,5 @@ test.db
 htmlcov
 
 # Development
-requirements-dev.txt
 docker-compose.yml
 docker-compose.dev.yml
