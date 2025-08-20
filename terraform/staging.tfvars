@@ -22,4 +22,5 @@ key_pair_name = "fastapi-staging-bastion"
 
 # DMS access
 enable_dms_access = true
-# dms_replication_instance_sg_id = "sg-xxxxxxxxx"  # Set this if you have an existing DMS instance
+# dms_replication_instance_sg_id = "sg-a11585c5"  # For same VPC DMS instances
+dms_cidr_block = "172.31.0.0/16"  # CIDR block for cross-VPC DMS access

@@ -103,3 +103,9 @@ variable "dms_replication_instance_sg_id" {
   type        = string
   default     = null
 }
+
+variable "dms_cidr_block" {
+  description = "CIDR block for DMS replication instance (if in different VPC)"
+  type        = string
+  default     = null
+}
