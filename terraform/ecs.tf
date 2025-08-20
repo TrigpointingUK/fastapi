@@ -98,10 +98,7 @@ resource "aws_ecs_service" "app" {
     container_port   = 8000
   }
 
-  deployment_configuration {
-    maximum_percent         = 200
-    minimum_healthy_percent = 100
-  }
+
 
   depends_on = [
     aws_lb_listener.app,
