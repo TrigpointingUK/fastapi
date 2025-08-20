@@ -14,18 +14,27 @@ resource "aws_db_parameter_group" "main" {
   name   = "${var.project_name}-${var.environment}-db-params"
 
   parameter {
-    name  = "innodb_buffer_pool_size"
-    value = "{DBInstanceClassMemory*3/4}"
+    name         = "innodb_buffer_pool_size"
+    value        = "{DBInstanceClassMemory*3/4}"
+    apply_method = "pending-reboot"
   }
 
   parameter {
-    name  = "slow_query_log"
-    value = "1"
+    name         = "slow_query_log"
+    value        = "1"
+    apply_method = "immediate"
   }
 
   parameter {
-    name  = "log_queries_not_using_indexes"
-    value = "1"
+    name         = "log_queries_not_using_indexes"
+    value        = "1"
+    apply_method = "immediate"
+  }
+
+  lifecycle {
+    ignore_changes = [
+      parameter
+    ]
   }
 
   tags = {
