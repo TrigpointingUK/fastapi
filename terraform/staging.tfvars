@@ -18,3 +18,4 @@ max_capacity  = 3
 
 # Admin access
 admin_ip_address = "86.162.34.238"
+key_pair_name = "fastapi-staging-bastion"

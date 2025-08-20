@@ -85,3 +85,9 @@ variable "admin_ip_address" {
   type        = string
   default     = null
 }
+
+variable "key_pair_name" {
+  description = "AWS key pair name for bastion host access"
+  type        = string
+  default     = null
+}

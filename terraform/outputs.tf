@@ -58,3 +58,13 @@ output "sns_topic_arn" {
   description = "SNS topic ARN for alerts"
   value       = aws_sns_topic.alerts.arn
 }
+
+output "bastion_host_ip" {
+  description = "Public IP address of the bastion host"
+  value       = var.environment == "staging" && var.admin_ip_address != null ? aws_instance.bastion[0].public_ip : null
+}
+
+output "bastion_host_dns" {
+  description = "Public DNS name of the bastion host"
+  value       = var.environment == "staging" && var.admin_ip_address != null ? aws_instance.bastion[0].public_dns : null
+}

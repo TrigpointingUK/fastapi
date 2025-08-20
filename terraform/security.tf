@@ -70,17 +70,7 @@ resource "aws_security_group" "rds" {
     security_groups = [aws_security_group.ecs_tasks.id]
   }
 
-  # Conditional ingress rule for admin IP access
-  dynamic "ingress" {
-    for_each = var.admin_ip_address != null ? [1] : []
-    content {
-      description = "MySQL from admin IP"
-      from_port   = 3306
-      to_port     = 3306
-      protocol    = "tcp"
-      cidr_blocks = ["${var.admin_ip_address}/32"]
-    }
-  }
+  # Note: Admin access via bastion host - see bastion.tf
 
   tags = {
     Name = "${var.project_name}-${var.environment}-rds-sg"
