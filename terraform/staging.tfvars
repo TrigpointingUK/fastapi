@@ -15,3 +15,6 @@ jwt_secret_key = "staging-jwt-secret-key-change-this"
 desired_count = 1
 min_capacity  = 1
 max_capacity  = 3
+
+# Admin access
+admin_ip_address = "86.162.34.238"

@@ -56,7 +56,7 @@ resource "aws_db_instance" "main" {
   # Network
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [aws_security_group.rds.id]
-  publicly_accessible    = false
+  publicly_accessible    = var.environment == "staging" ? true : false
 
   # Maintenance
   parameter_group_name   = aws_db_parameter_group.main.name

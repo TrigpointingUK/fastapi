@@ -79,3 +79,9 @@ variable "memory_target_value" {
   type        = number
   default     = 80
 }
+
+variable "admin_ip_address" {
+  description = "IP address allowed to connect directly to RDS (for admin access)"
+  type        = string
+  default     = null
+}

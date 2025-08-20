@@ -7,12 +7,11 @@ terraform {
     }
   }
 
-  # backend "s3" {
-  #   # Configure this with your own S3 bucket for state storage
-  #   bucket = "your-terraform-state-bucket"
-  #   key    = "fastapi/terraform.tfstate"
-  #   region = "us-west-2"
-  # }
+  backend "s3" {
+    bucket = "tuk-terraform-state"
+    key    = "fastapi/terraform.tfstate"
+    region = "eu-west-1"
+  }
 }
 
 provider "aws" {
