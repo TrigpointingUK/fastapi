@@ -1,11 +1,16 @@
 #!/bin/bash
-yum update -y
+dnf update -y
 
-# Install MySQL client
-yum install -y mysql
+# Install MySQL client (available as mariadb-connector-c)
+dnf install -y mariadb105
 
 # Install useful tools
-yum install -y htop vim tmux
+dnf install -y htop vim tmux
+
+# Install and start SSM agent (should be pre-installed in AL2023)
+dnf install -y amazon-ssm-agent
+systemctl enable amazon-ssm-agent
+systemctl start amazon-ssm-agent
 
 # Create a script for easy database connection
 cat > /home/ec2-user/connect-db.sh << 'EOF'

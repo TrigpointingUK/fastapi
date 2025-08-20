@@ -9,6 +9,16 @@ resource "aws_instance" "bastion" {
   subnet_id                   = aws_subnet.public[0].id
   vpc_security_group_ids      = [aws_security_group.bastion[0].id]
   associate_public_ip_address = true
+  iam_instance_profile        = aws_iam_instance_profile.bastion[0].name
+
+  # Enable detailed monitoring and serial console access
+  monitoring                = true
+  
+  metadata_options {
+    http_endpoint = "enabled"
+    http_tokens   = "required"
+    http_put_response_hop_limit = 1
+  }
 
   user_data = base64encode(templatefile("${path.module}/bastion_user_data.sh", {
     db_endpoint = aws_db_instance.main.endpoint
@@ -21,14 +31,14 @@ resource "aws_instance" "bastion" {
   }
 }
 
-# Get the latest Amazon Linux 2 AMI
+# Get the latest Amazon Linux 2023 AMI
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
 
   filter {
     name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+    values = ["al2023-ami-*-x86_64"]
   }
 
   filter {
@@ -76,4 +86,44 @@ resource "aws_security_group_rule" "rds_from_bastion" {
   source_security_group_id = aws_security_group.bastion[0].id
   security_group_id        = aws_security_group.rds.id
   description              = "MySQL from bastion host"
+}
+
+# IAM Role for Bastion Host (SSM Access)
+resource "aws_iam_role" "bastion" {
+  count = var.environment == "staging" && var.admin_ip_address != null ? 1 : 0
+
+  name = "${var.project_name}-${var.environment}-bastion-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "ec2.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-bastion-role"
+  }
+}
+
+# Attach SSM policy to bastion role
+resource "aws_iam_role_policy_attachment" "bastion_ssm" {
+  count = var.environment == "staging" && var.admin_ip_address != null ? 1 : 0
+
+  role       = aws_iam_role.bastion[0].name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}
+
+# Instance profile for bastion host
+resource "aws_iam_instance_profile" "bastion" {
+  count = var.environment == "staging" && var.admin_ip_address != null ? 1 : 0
+
+  name = "${var.project_name}-${var.environment}-bastion-profile"
+  role = aws_iam_role.bastion[0].name
 }
