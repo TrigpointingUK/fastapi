@@ -1,8 +1,8 @@
 environment = "staging"
 aws_region  = "us-west-2"
 
-# Container image (update this with your actual image)
-container_image = "ghcr.io/your-username/fastapi:develop"
+# Container image (built by GitHub Actions CI/CD)
+container_image = "ghcr.io/TrigpointingUK/fastapi:develop"
 
 # Database credentials (use AWS Secrets Manager in production)
 db_username = "fastapi_user"
