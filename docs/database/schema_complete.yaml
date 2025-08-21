@@ -1,0 +1,6645 @@
+database_name: trigpoin_trigs
+export_timestamp: '2025-08-22 00:06:18.288963'
+tables:
+  OSGBIW:
+    row_count: 31518
+    sample_data:
+    - CLASS OF LEVELLING: 2
+      COMMENTS: N CEN ENGLAND ADJUSTMENT
+      Computing Date: 01/06/1987
+      DESTROYED MARK INDICATOR: 0
+      Date of Levelling: 01/06/1987
+      EASTING: !!python/object/apply:decimal.Decimal
+      - '463765.24'
+      HEIGHT: !!python/object/apply:decimal.Decimal
+      - '94.599'
+      LEVELLING DATUM: N
+      NORTHING: !!python/object/apply:decimal.Decimal
+      - '367685.93'
+      New Name: '0'
+      ORDER: 2
+      Original Name: /PP154
+      TYPE OF MARK: BOLT
+      Trig Name: Thoresby Wtr Twr
+      id: 1
+    - CLASS OF LEVELLING: 0
+      COMMENTS: ''
+      Computing Date: 01/06/1936
+      DESTROYED MARK INDICATOR: 0
+      Date of Levelling: ''
+      EASTING: !!python/object/apply:decimal.Decimal
+      - '392498.78'
+      HEIGHT: !!python/object/apply:decimal.Decimal
+      - '0.000'
+      LEVELLING DATUM: ''
+      NORTHING: !!python/object/apply:decimal.Decimal
+      - '120648.73'
+      New Name: PPP17
+      ORDER: 3
+      Original Name: /PP17
+      TYPE OF MARK: OLD TRIG
+      Trig Name: Wingreen (old)
+      id: 2
+    - CLASS OF LEVELLING: 0
+      COMMENTS: SE pinnacle
+      Computing Date: 01/06/1975
+      DESTROYED MARK INDICATOR: 0
+      Date of Levelling: ''
+      EASTING: !!python/object/apply:decimal.Decimal
+      - '539633.26'
+      HEIGHT: !!python/object/apply:decimal.Decimal
+      - '0.000'
+      LEVELLING DATUM: ''
+      NORTHING: !!python/object/apply:decimal.Decimal
+      - '137997.00'
+      New Name: '0'
+      ORDER: 3
+      Original Name: /PP170
+      TYPE OF MARK: PINNACLE
+      Trig Name: East Grinstead Ch Twr
+      id: 3
+    - CLASS OF LEVELLING: 0
+      COMMENTS: ''
+      Computing Date: 01/06/1952
+      DESTROYED MARK INDICATOR: 0
+      Date of Levelling: ''
+      EASTING: !!python/object/apply:decimal.Decimal
+      - '539629.37'
+      HEIGHT: !!python/object/apply:decimal.Decimal
+      - '0.000'
+      LEVELLING DATUM: ''
+      NORTHING: !!python/object/apply:decimal.Decimal
+      - '138000.44'
+      New Name: '0'
+      ORDER: 3
+      Original Name: /PP170
+      TYPE OF MARK: OLD TRIG
+      Trig Name: East Grinstead Ch Twr
+      id: 4
+    - CLASS OF LEVELLING: 0
+      COMMENTS: ''
+      Computing Date: 01/06/1950
+      DESTROYED MARK INDICATOR: 0
+      Date of Levelling: ''
+      EASTING: !!python/object/apply:decimal.Decimal
+      - '539629.81'
+      HEIGHT: !!python/object/apply:decimal.Decimal
+      - '0.000'
+      LEVELLING DATUM: ''
+      NORTHING: !!python/object/apply:decimal.Decimal
+      - '138000.66'
+      New Name: '0'
+      ORDER: 3
+      Original Name: /PP170
+      TYPE OF MARK: CENTRE
+      Trig Name: East Grinstead Ch Twr
+      id: 5
+    - CLASS OF LEVELLING: 0
+      COMMENTS: ''
+      Computing Date: 01/06/1938
+      DESTROYED MARK INDICATOR: 0
+      Date of Levelling: ''
+      EASTING: !!python/object/apply:decimal.Decimal
+      - '524537.16'
+      HEIGHT: !!python/object/apply:decimal.Decimal
+      - '0.000'
+      LEVELLING DATUM: ''
+      NORTHING: !!python/object/apply:decimal.Decimal
+      - '196463.42'
+      New Name: '0'
+      ORDER: 3
+      Original Name: /PP185
+      TYPE OF MARK: FLAGSTAFF
+      Trig Name: Chipping Barnet Ch Twr
+      id: 6
+    - CLASS OF LEVELLING: 0
+      COMMENTS: ''
+      Computing Date: 01/06/1938
+      DESTROYED MARK INDICATOR: 0
+      Date of Levelling: ''
+      EASTING: !!python/object/apply:decimal.Decimal
+      - '543189.79'
+      HEIGHT: !!python/object/apply:decimal.Decimal
+      - '0.000'
+      LEVELLING DATUM: ''
+      NORTHING: !!python/object/apply:decimal.Decimal
+      - '176192.54'
+      New Name: '0'
+      ORDER: 3
+      Original Name: /PP189
+      TYPE OF MARK: FLAGSTAFF
+      Trig Name: Severndroog Castle
+      id: 7
+    - CLASS OF LEVELLING: 0
+      COMMENTS: ''
+      Computing Date: 01/06/1949
+      DESTROYED MARK INDICATOR: 0
+      Date of Levelling: ''
+      EASTING: !!python/object/apply:decimal.Decimal
+      - '584338.17'
+      HEIGHT: !!python/object/apply:decimal.Decimal
+      - '0.000'
+      LEVELLING DATUM: ''
+      NORTHING: !!python/object/apply:decimal.Decimal
+      - '111921.99'
+      New Name: '0'
+      ORDER: 3
+      Original Name: /PP193
+      TYPE OF MARK: OLD TRIG
+      Trig Name: Fairlight Down (old)
+      id: 8
+    - CLASS OF LEVELLING: 0
+      COMMENTS: ''
+      Computing Date: 01/06/1949
+      DESTROYED MARK INDICATOR: 0
+      Date of Levelling: ''
+      EASTING: !!python/object/apply:decimal.Decimal
+      - '559047.46'
+      HEIGHT: !!python/object/apply:decimal.Decimal
+      - '0.000'
+      LEVELLING DATUM: ''
+      NORTHING: !!python/object/apply:decimal.Decimal
+      - '95798.56'
+      New Name: '0'
+      ORDER: 3
+      Original Name: /PP194
+      TYPE OF MARK: OLD TRIG
+      Trig Name: Beachy Head (old)
+      id: 9
+    - CLASS OF LEVELLING: 0
+      COMMENTS: ''
+      Computing Date: 01/06/1951
+      DESTROYED MARK INDICATOR: 0
+      Date of Levelling: ''
+      EASTING: !!python/object/apply:decimal.Decimal
+      - '313542.72'
+      HEIGHT: !!python/object/apply:decimal.Decimal
+      - '0.000'
+      LEVELLING DATUM: ''
+      NORTHING: !!python/object/apply:decimal.Decimal
+      - '485486.75'
+      New Name: PP0P2
+      ORDER: 3
+      Original Name: /PP2
+      TYPE OF MARK: OLD TRIG
+      Trig Name: Black Combe (old)
+      id: 10
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: Trig Name
+        nullable: true
+        primary_key: false
+        type: VARCHAR(255) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: Original Name
+        nullable: true
+        primary_key: false
+        type: VARCHAR(255) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: New Name
+        nullable: true
+        primary_key: false
+        type: VARCHAR(255) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: EASTING
+        nullable: true
+        primary_key: false
+        type: DECIMAL(10, 2)
+      - default: null
+        name: NORTHING
+        nullable: true
+        primary_key: false
+        type: DECIMAL(10, 2)
+      - default: null
+        name: HEIGHT
+        nullable: true
+        primary_key: false
+        type: DECIMAL(9, 3)
+      - default: null
+        name: ORDER
+        nullable: true
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: TYPE OF MARK
+        nullable: true
+        primary_key: false
+        type: VARCHAR(255) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: Computing Date
+        nullable: true
+        primary_key: false
+        type: VARCHAR(10) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: CLASS OF LEVELLING
+        nullable: true
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: Date of Levelling
+        nullable: true
+        primary_key: false
+        type: VARCHAR(255) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: LEVELLING DATUM
+        nullable: true
+        primary_key: false
+        type: VARCHAR(255) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: DESTROYED MARK INDICATOR
+        nullable: true
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: COMMENTS
+        nullable: true
+        primary_key: false
+        type: VARCHAR(255) COLLATE "utf8mb3_general_ci"
+      foreign_keys: []
+      indexes: []
+      name: OSGBIW
+      primary_keys:
+      - id
+  ad2user:
+    row_count: 0
+    sample_data: []
+    schema:
+      columns:
+      - default: null
+        name: ad_code
+        nullable: false
+        primary_key: true
+        type: CHAR(6) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: user_id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: eligible_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: ad2user
+      primary_keys:
+      - ad_code
+      - user_id
+  attr:
+    row_count: 14
+    sample_data:
+    - attrsource_id: 2
+      description: ''
+      grouped: 0
+      id: 1
+      mandatory: 1
+      multivalued: 0
+      name: Trig Name
+      sort_order: 1
+      style: null
+      type: null
+      upd_timestamp: 2014-05-21 21:24:03
+      url_javaclass: null
+    - attrsource_id: 2
+      description: ''
+      grouped: 0
+      id: 2
+      mandatory: 1
+      multivalued: 0
+      name: Original Name
+      sort_order: 2
+      style: null
+      type: null
+      upd_timestamp: 2014-05-21 21:24:03
+      url_javaclass: null
+    - attrsource_id: 2
+      description: ''
+      grouped: 0
+      id: 3
+      mandatory: 1
+      multivalued: 0
+      name: New Name
+      sort_order: 3
+      style: null
+      type: null
+      upd_timestamp: 2014-05-21 21:24:03
+      url_javaclass: null
+    - attrsource_id: 2
+      description: ''
+      grouped: 0
+      id: 4
+      mandatory: 1
+      multivalued: 0
+      name: EASTING
+      sort_order: 4
+      style: null
+      type: null
+      upd_timestamp: 2014-05-21 21:24:03
+      url_javaclass: null
+    - attrsource_id: 2
+      description: ''
+      grouped: 0
+      id: 5
+      mandatory: 1
+      multivalued: 0
+      name: NORTHING
+      sort_order: 5
+      style: null
+      type: null
+      upd_timestamp: 2014-05-21 21:24:03
+      url_javaclass: null
+    - attrsource_id: 2
+      description: ''
+      grouped: 0
+      id: 6
+      mandatory: 1
+      multivalued: 0
+      name: HEIGHT
+      sort_order: 6
+      style: null
+      type: null
+      upd_timestamp: 2014-05-21 21:24:03
+      url_javaclass: null
+    - attrsource_id: 2
+      description: ''
+      grouped: 1
+      id: 7
+      mandatory: 1
+      multivalued: 0
+      name: ORDER
+      sort_order: 7
+      style: null
+      type: null
+      upd_timestamp: 2014-05-21 21:24:03
+      url_javaclass: null
+    - attrsource_id: 2
+      description: ''
+      grouped: 1
+      id: 8
+      mandatory: 1
+      multivalued: 0
+      name: TYPE OF MARK
+      sort_order: 8
+      style: null
+      type: null
+      upd_timestamp: 2014-05-21 21:24:03
+      url_javaclass: null
+    - attrsource_id: 2
+      description: ''
+      grouped: 1
+      id: 9
+      mandatory: 1
+      multivalued: 0
+      name: Computing Date
+      sort_order: 9
+      style: null
+      type: null
+      upd_timestamp: 2014-05-21 21:24:03
+      url_javaclass: null
+    - attrsource_id: 2
+      description: ''
+      grouped: 1
+      id: 10
+      mandatory: 1
+      multivalued: 0
+      name: CLASS OF LEVELLING
+      sort_order: 10
+      style: null
+      type: null
+      upd_timestamp: 2014-05-21 21:24:03
+      url_javaclass: null
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: attrsource_id
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(45) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: description
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: mandatory
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: multivalued
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: grouped
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: sort_order
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: style
+        nullable: true
+        primary_key: false
+        type: VARCHAR(45) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: url_javaclass
+        nullable: true
+        primary_key: false
+        type: VARCHAR(45) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: type
+        nullable: true
+        primary_key: false
+        type: VARCHAR(45) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: attr
+      primary_keys:
+      - id
+  attrset:
+    row_count: 31518
+    sample_data:
+    - attrsource_id: 2
+      id: 1
+      sort_order: 1
+      trig_id: 7977
+      upd_timestamp: 2014-05-19 13:54:34
+    - attrsource_id: 2
+      id: 2
+      sort_order: 2
+      trig_id: 738
+      upd_timestamp: 2014-05-19 13:54:34
+    - attrsource_id: 2
+      id: 3
+      sort_order: 3
+      trig_id: 9062
+      upd_timestamp: 2014-05-19 13:54:34
+    - attrsource_id: 2
+      id: 4
+      sort_order: 4
+      trig_id: 7978
+      upd_timestamp: 2014-05-19 13:54:34
+    - attrsource_id: 2
+      id: 5
+      sort_order: 5
+      trig_id: 7978
+      upd_timestamp: 2014-05-19 13:54:34
+    - attrsource_id: 2
+      id: 6
+      sort_order: 6
+      trig_id: 7715
+      upd_timestamp: 2014-05-19 13:54:34
+    - attrsource_id: 2
+      id: 7
+      sort_order: 7
+      trig_id: 7980
+      upd_timestamp: 2014-05-19 13:54:34
+    - attrsource_id: 2
+      id: 8
+      sort_order: 8
+      trig_id: 442
+      upd_timestamp: 2014-05-19 13:54:34
+    - attrsource_id: 2
+      id: 9
+      sort_order: 9
+      trig_id: 453
+      upd_timestamp: 2014-05-19 13:54:34
+    - attrsource_id: 2
+      id: 10
+      sort_order: 10
+      trig_id: 698
+      upd_timestamp: 2014-05-19 13:54:34
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: trig_id
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: attrsource_id
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: sort_order
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: attrset
+      primary_keys:
+      - id
+  attrset_attrval:
+    row_count: 441252
+    sample_data:
+    - attrset_id: 1
+      attrval_id: 556716
+      upd_timestamp: 2014-05-19 13:54:44
+    - attrset_id: 1
+      attrval_id: 579956
+      upd_timestamp: 2014-05-19 13:54:47
+    - attrset_id: 1
+      attrval_id: 604341
+      upd_timestamp: 2014-05-19 13:54:51
+    - attrset_id: 1
+      attrval_id: 628605
+      upd_timestamp: 2014-05-19 13:54:55
+    - attrset_id: 1
+      attrval_id: 659080
+      upd_timestamp: 2014-05-19 13:54:57
+    - attrset_id: 1
+      attrval_id: 689582
+      upd_timestamp: 2014-05-19 13:54:59
+    - attrset_id: 1
+      attrval_id: 696519
+      upd_timestamp: 2014-05-19 13:55:02
+    - attrset_id: 1
+      attrval_id: 696528
+      upd_timestamp: 2014-05-19 13:55:03
+    - attrset_id: 1
+      attrval_id: 696576
+      upd_timestamp: 2014-05-19 13:55:07
+    - attrset_id: 1
+      attrval_id: 696699
+      upd_timestamp: 2014-05-19 13:55:11
+    schema:
+      columns:
+      - default: null
+        name: attrset_id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: attrval_id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: attrset_attrval
+      primary_keys:
+      - attrset_id
+      - attrval_id
+  attrsource:
+    row_count: 2
+    sample_data:
+    - crt_timestamp: 2014-05-12 21:17:52
+      descr: Data maintained by the TrigpointingUK admins
+      id: 1
+      name: TrigpointingUK
+      sort_order: 1
+      url: http://www.trigpointinguk.com
+    - crt_timestamp: 2014-05-21 21:21:49
+      descr: Every OS trig point known - IW 15-7-09
+      id: 2
+      name: OSGB36 trig archive spreadsheet - IW
+      sort_order: 2
+      url: https://groups.yahoo.com/neo/groups/trigonomy/files/OS%20data/
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(50) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: descr
+        nullable: true
+        primary_key: false
+        type: TEXT COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: url
+        nullable: true
+        primary_key: false
+        type: VARCHAR(255) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: sort_order
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: crt_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: attrsource
+      primary_keys:
+      - id
+  attrval:
+    row_count: 142930
+    sample_data:
+    - attr_id: 1
+      group_name: null
+      id: 556716
+      upd_timestamp: 2014-05-19 13:53:57
+      value_bool: null
+      value_double: null
+      value_point: null
+      value_string: Thoresby Wtr Twr
+    - attr_id: 1
+      group_name: null
+      id: 556717
+      upd_timestamp: 2014-05-19 13:53:57
+      value_bool: null
+      value_double: null
+      value_point: null
+      value_string: Wingreen (old)
+    - attr_id: 1
+      group_name: null
+      id: 556718
+      upd_timestamp: 2014-05-19 13:53:57
+      value_bool: null
+      value_double: null
+      value_point: null
+      value_string: East Grinstead Ch Twr
+    - attr_id: 1
+      group_name: null
+      id: 556719
+      upd_timestamp: 2014-05-19 13:53:57
+      value_bool: null
+      value_double: null
+      value_point: null
+      value_string: Chipping Barnet Ch Twr
+    - attr_id: 1
+      group_name: null
+      id: 556720
+      upd_timestamp: 2014-05-19 13:53:57
+      value_bool: null
+      value_double: null
+      value_point: null
+      value_string: Severndroog Castle
+    - attr_id: 1
+      group_name: null
+      id: 556721
+      upd_timestamp: 2014-05-19 13:53:57
+      value_bool: null
+      value_double: null
+      value_point: null
+      value_string: Fairlight Down (old)
+    - attr_id: 1
+      group_name: null
+      id: 556722
+      upd_timestamp: 2014-05-19 13:53:57
+      value_bool: null
+      value_double: null
+      value_point: null
+      value_string: Beachy Head (old)
+    - attr_id: 1
+      group_name: null
+      id: 556723
+      upd_timestamp: 2014-05-19 13:53:57
+      value_bool: null
+      value_double: null
+      value_point: null
+      value_string: Black Combe (old)
+    - attr_id: 1
+      group_name: null
+      id: 556724
+      upd_timestamp: 2014-05-19 13:53:57
+      value_bool: null
+      value_double: null
+      value_point: null
+      value_string: Rumfields Wtr Twr
+    - attr_id: 1
+      group_name: null
+      id: 556725
+      upd_timestamp: 2014-05-19 13:53:57
+      value_bool: null
+      value_double: null
+      value_point: null
+      value_string: Yes Tor New Fs
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: attr_id
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: value_string
+        nullable: true
+        primary_key: false
+        type: VARCHAR(255) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: value_double
+        nullable: true
+        primary_key: false
+        type: DOUBLE
+      - default: null
+        name: value_bool
+        nullable: true
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: value_point
+        nullable: true
+        primary_key: false
+        type: 'NULL'
+      - default: null
+        name: group_name
+        nullable: true
+        primary_key: false
+        type: VARCHAR(255) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: attrval
+      primary_keys:
+      - id
+  audit:
+    row_count: 1
+    sample_data:
+    - authcid: 43129
+      authid: 1
+      authname: Teasel
+      date_gmt: Sun, 23 Mar 2008 20:47:16 GMT
+      date_local: Sun, 23 Mar 2008 20:47:16 UTC
+      http_host: www.geocacheuk.com
+      http_user_agent: 'Mozilla/5.0 (X11; U; Linux i686; en-GB; rv:1.8.1.12) Gecko/20080207
+        Ubuntu/7.10 '
+      id: 1
+      query_string: ''
+      remote_addr: 87.127.168.137
+      remote_user: ''
+      request_method: GET
+      request_uri: /mystats/preferences.php
+      script_filename: /home/geocache/public_html/stats/mystats/preferences.php
+      script_name: /mystats/preferences.php
+      upd_timestamp: 2008-03-23 20:47:16
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: authid
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: authname
+        nullable: false
+        primary_key: false
+        type: VARCHAR(80) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: authcid
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: http_host
+        nullable: false
+        primary_key: false
+        type: VARCHAR(25) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: request_uri
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: script_name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(80) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: query_string
+        nullable: false
+        primary_key: false
+        type: VARCHAR(80) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: request_method
+        nullable: false
+        primary_key: false
+        type: VARCHAR(5) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: script_filename
+        nullable: false
+        primary_key: false
+        type: VARCHAR(80) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: http_user_agent
+        nullable: false
+        primary_key: false
+        type: VARCHAR(80) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: remote_user
+        nullable: false
+        primary_key: false
+        type: VARCHAR(80) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: remote_addr
+        nullable: false
+        primary_key: false
+        type: VARCHAR(15) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: date_local
+        nullable: false
+        primary_key: false
+        type: VARCHAR(80) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: date_gmt
+        nullable: false
+        primary_key: false
+        type: VARCHAR(80) COLLATE "latin1_swedish_ci"
+      foreign_keys: []
+      indexes: []
+      name: audit
+      primary_keys:
+      - id
+  audit_simple:
+    row_count: 0
+    sample_data: []
+    schema:
+      columns:
+      - default: null
+        name: authid
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: script_name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(80) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: remote_addr
+        nullable: false
+        primary_key: false
+        type: VARCHAR(15) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: audit_simple
+      primary_keys: []
+  barrytools:
+    row_count: 76
+    sample_data:
+    - crt_timestamp: 2005-06-10 00:26:47
+      description: Shows now many cachers have been logging cachers in the past
+      id: 1
+      linkable_ind: Y
+      name: active_cachers.php
+      p_by: N
+      p_county: N
+      p_date: N
+      p_others: ''
+      p_q: N
+      p_size: N
+      p_type: N
+      p_u: N
+      short_desc: ''
+      status: public
+      theme: cachers
+      theme_others: logs,cachers
+      title: Active Cachers in the last...
+      type: groupby
+      upd_timestamp: 2005-06-17 12:05:53
+      used_by: C
+    - crt_timestamp: '0000-00-00 00:00:00'
+      description: ''
+      id: 3
+      linkable_ind: Y
+      name: active_users.php
+      p_by: N
+      p_county: N
+      p_date: N
+      p_others: ''
+      p_q: N
+      p_size: N
+      p_type: N
+      p_u: N
+      short_desc: ''
+      status: public
+      theme: users
+      theme_others: logs
+      title: Active Users in the last...
+      type: groupby
+      upd_timestamp: 2005-06-17 12:13:29
+      used_by: T
+    - crt_timestamp: '0000-00-00 00:00:00'
+      description: ''
+      id: 4
+      linkable_ind: Y
+      name: album.php
+      p_by: N
+      p_county: O
+      p_date: N
+      p_others: "big - D\r\nalt - O\r\npage - D\r\nskipped - O\r\neach - O \r\nclass\
+        \ -O\r\nmean - O"
+      p_q: N
+      p_size: N
+      p_type: O
+      p_u: O
+      short_desc: ''
+      status: public
+      theme: photos
+      theme_others: trigs,logs,users
+      title: Highly Rated Photographs
+      type: album
+      upd_timestamp: 2005-06-17 12:23:01
+      used_by: T
+    - crt_timestamp: '0000-00-00 00:00:00'
+      description: ''
+      id: 5
+      linkable_ind: N
+      name: album2.php
+      p_by: N
+      p_county: N
+      p_date: N
+      p_others: ''
+      p_q: N
+      p_size: N
+      p_type: N
+      p_u: N
+      short_desc: ''
+      status: alpha
+      theme: trigs
+      theme_others: ''
+      title: Old Photo Album
+      type: album
+      upd_timestamp: 2005-06-17 12:16:47
+      used_by: T
+    - crt_timestamp: '0000-00-00 00:00:00'
+      description: ''
+      id: 6
+      linkable_ind: Y
+      name: bestandworst.php
+      p_by: O
+      p_county: O
+      p_date: N
+      p_others: ''
+      p_q: N
+      p_size: N
+      p_type: N
+      p_u: O
+      short_desc: by type of trigpoint
+      status: public
+      theme: trigs
+      theme_others: scores
+      title: Best and Worst
+      type: table
+      upd_timestamp: 2005-06-17 12:19:50
+      used_by: T
+    - crt_timestamp: '0000-00-00 00:00:00'
+      description: ''
+      id: 7
+      linkable_ind: Y
+      name: by.php
+      p_by: D
+      p_county: O
+      p_date: N
+      p_others: ''
+      p_q: N
+      p_size: N
+      p_type: N
+      p_u: O
+      short_desc: ''
+      status: public
+      theme: trigs
+      theme_others: ''
+      title: Breakdown
+      type: groupby
+      upd_timestamp: 2005-06-17 12:23:51
+      used_by: T
+    - crt_timestamp: '0000-00-00 00:00:00'
+      description: ''
+      id: 8
+      linkable_ind: Y
+      name: by_score.php
+      p_by: D
+      p_county: N
+      p_date: N
+      p_others: ''
+      p_q: N
+      p_size: N
+      p_type: N
+      p_u: N
+      short_desc: ''
+      status: public
+      theme: logs
+      theme_others: scores
+      title: Scoring Breakdown
+      type: groupby
+      upd_timestamp: 2005-06-17 12:24:04
+      used_by: T
+    - crt_timestamp: '0000-00-00 00:00:00'
+      description: Perform a standard Search for Trigs in County
+      id: 9
+      linkable_ind: Y
+      name: bycounty.php
+      p_by: N
+      p_county: N
+      p_date: N
+      p_others: ''
+      p_q: N
+      p_size: N
+      p_type: N
+      p_u: N
+      short_desc: ''
+      status: public
+      theme: trigs
+      theme_others: ''
+      title: Trigs in a County
+      type: search
+      upd_timestamp: 2005-06-17 12:09:00
+      used_by: T
+    - crt_timestamp: '0000-00-00 00:00:00'
+      description: Perform a standard Search for Trigs around a Town
+      id: 10
+      linkable_ind: Y
+      name: bytown.php
+      p_by: N
+      p_county: N
+      p_date: N
+      p_others: ''
+      p_q: N
+      p_size: N
+      p_type: N
+      p_u: N
+      short_desc: ''
+      status: public
+      theme: trigs
+      theme_others: ''
+      title: Trigs around a Town
+      type: search
+      upd_timestamp: 2005-06-17 12:09:00
+      used_by: T
+    - crt_timestamp: '0000-00-00 00:00:00'
+      description: Shows trigs that dissagree with the latest log
+      id: 11
+      linkable_ind: Y
+      name: check-logs-dis.php
+      p_by: N
+      p_county: N
+      p_date: N
+      p_others: ''
+      p_q: N
+      p_size: N
+      p_type: N
+      p_u: N
+      short_desc: ''
+      status: beta
+      theme: logs
+      theme_others: ''
+      title: Disaggreements
+      type: table
+      upd_timestamp: 2005-06-17 12:09:00
+      used_by: T
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(64) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: used_by
+        nullable: false
+        primary_key: false
+        type: SET
+      - default: null
+        name: theme
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: theme_others
+        nullable: false
+        primary_key: false
+        type: SET
+      - default: null
+        name: type
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: status
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: linkable_ind
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: title
+        nullable: false
+        primary_key: false
+        type: VARCHAR(64) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: short_desc
+        nullable: false
+        primary_key: false
+        type: VARCHAR(64) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: description
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: p_u
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: p_by
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: p_county
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: p_type
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: p_size
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: p_date
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: p_q
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: p_others
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: crt_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: barrytools
+      primary_keys:
+      - id
+  cache:
+    row_count: 0
+    sample_data: []
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: owner_id
+        nullable: true
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: name
+        nullable: false
+        primary_key: true
+        type: VARCHAR(80) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: placed_date
+        nullable: true
+        primary_key: false
+        type: DATE
+      - default: null
+        name: type
+        nullable: true
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: size
+        nullable: true
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: difficulty
+        nullable: true
+        primary_key: false
+        type: DECIMAL(2, 1)
+      - default: null
+        name: terrain
+        nullable: true
+        primary_key: false
+        type: DECIMAL(2, 1)
+      - default: null
+        name: waypoint
+        nullable: false
+        primary_key: true
+        type: VARCHAR(8) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: wgs_lat
+        nullable: true
+        primary_key: false
+        type: DECIMAL(9, 6)
+      - default: null
+        name: wgs_long
+        nullable: true
+        primary_key: false
+        type: DECIMAL(9, 6)
+      - default: null
+        name: osgb_eastings
+        nullable: true
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_northings
+        nullable: true
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_gridref
+        nullable: true
+        primary_key: false
+        type: VARCHAR(14) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: postcode6
+        nullable: true
+        primary_key: false
+        type: VARCHAR(6) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: county
+        nullable: false
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: town
+        nullable: false
+        primary_key: false
+        type: VARCHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: available_ind
+        nullable: true
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: archived_ind
+        nullable: true
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: archived_date
+        nullable: true
+        primary_key: false
+        type: DATE
+      - default: null
+        name: country_id
+        nullable: false
+        primary_key: false
+        type: SMALLINT
+      - default: null
+        name: uk_ind
+        nullable: false
+        primary_key: true
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: short_description
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: long_description
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: encoded_hints
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: guid
+        nullable: false
+        primary_key: false
+        type: VARCHAR(36) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: problem_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: process_xml_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: process_xml_warning
+        nullable: false
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: process_web_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: process_web_warning
+        nullable: false
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: update_xml_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: update_web_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: update_xml_auditid
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: changed_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: crt_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: cache
+      primary_keys:
+      - id
+      - uk_ind
+      - waypoint
+      - name
+  coord2county:
+    row_count: 35247
+    sample_data:
+    - county_id: 49
+      osgb_eastings: 54900
+      osgb_northings: 780256
+      upd_timestamp: 2012-07-28 16:04:51
+    - county_id: 49
+      osgb_eastings: 54903
+      osgb_northings: 780255
+      upd_timestamp: 2012-07-29 16:05:54
+    - county_id: 49
+      osgb_eastings: 57032
+      osgb_northings: 780143
+      upd_timestamp: 2012-07-28 15:51:03
+    - county_id: 49
+      osgb_eastings: 59282
+      osgb_northings: 862723
+      upd_timestamp: 2012-05-25 17:30:27
+    - county_id: 49
+      osgb_eastings: 61635
+      osgb_northings: 787163
+      upd_timestamp: 2012-02-13 12:42:40
+    - county_id: 49
+      osgb_eastings: 62713
+      osgb_northings: 799070
+      upd_timestamp: 2005-03-31 10:42:32
+    - county_id: 49
+      osgb_eastings: 64902
+      osgb_northings: 797156
+      upd_timestamp: 2012-04-09 20:25:00
+    - county_id: 49
+      osgb_eastings: 65357
+      osgb_northings: 797565
+      upd_timestamp: 2012-02-13 21:40:36
+    - county_id: 49
+      osgb_eastings: 65741
+      osgb_northings: 798268
+      upd_timestamp: 2014-06-23 14:48:21
+    - county_id: 49
+      osgb_eastings: 65745
+      osgb_northings: 798265
+      upd_timestamp: 2011-10-07 21:55:53
+    schema:
+      columns:
+      - default: null
+        name: osgb_eastings
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: osgb_northings
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: county_id
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: coord2county
+      primary_keys:
+      - osgb_eastings
+      - osgb_northings
+  county:
+    row_count: 72
+    sample_data:
+    - coast_ind: Y
+      country: E
+      grey: 2
+      hectares: 129307
+      id: 1
+      name: Avon
+      pop: 963000
+      type: C
+    - coast_ind: N
+      country: E
+      grey: 4
+      hectares: 123443
+      id: 2
+      name: Bedfordshire
+      pop: 535400
+      type: C
+    - coast_ind: N
+      country: E
+      grey: 6
+      hectares: 125888
+      id: 3
+      name: Berkshire
+      pop: 759500
+      type: C
+    - coast_ind: Y
+      country: S
+      grey: 8
+      hectares: 467151
+      id: 4
+      name: Borders Region
+      pop: 103500
+      type: R
+    - coast_ind: N
+      country: E
+      grey: 10
+      hectares: 188524
+      id: 5
+      name: Buckinghamshire
+      pop: 641400
+      type: C
+    - coast_ind: T
+      country: E
+      grey: 12
+      hectares: 340820
+      id: 6
+      name: Cambridgeshire
+      pop: 664400
+      type: C
+    - coast_ind: N
+      country: S
+      grey: 14
+      hectares: 263605
+      id: 7
+      name: Central Region
+      pop: 272100
+      type: R
+    - coast_ind: R
+      country: E
+      grey: 16
+      hectares: 232818
+      id: 8
+      name: Cheshire
+      pop: 958900
+      type: C
+    - coast_ind: Y
+      country: E
+      grey: 18
+      hectares: 58893
+      id: 9
+      name: Cleveland
+      pop: 552100
+      type: C
+    - coast_ind: Y
+      country: W
+      grey: 20
+      hectares: 242307
+      id: 10
+      name: Clwyd
+      pop: 411900
+      type: C
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: TINYINT
+      - default: null
+        name: name
+        nullable: false
+        primary_key: false
+        type: CHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: country
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: type
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: pop
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: hectares
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: coast_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: grey
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      foreign_keys: []
+      indexes: []
+      name: county
+      primary_keys:
+      - id
+  nearest:
+    row_count: 72
+    sample_data:
+    - comment: Buxton
+      id: 1
+      osgb_eastings: 405000
+      osgb_gridref: SK 05000 72998
+      osgb_northings: 372998
+      upd_timestamp: 2003-06-23 14:55:02
+      url: http://www.geocacheuk.com/
+      user_id: 1
+    - comment: St Albans
+      id: 2
+      osgb_eastings: 514999
+      osgb_gridref: TL 14999 06998
+      osgb_northings: 206998
+      upd_timestamp: 2003-06-23 14:56:06
+      url: http://www.trigpointinguk.com
+      user_id: 1
+    - comment: Somewhere new
+      id: 4
+      osgb_eastings: 412200
+      osgb_gridref: SE 12200 34500
+      osgb_northings: 434500
+      upd_timestamp: 2003-06-23 15:35:43
+      url: http://www.google.com
+      user_id: 1
+    - comment: St Albans
+      id: 5
+      osgb_eastings: 514998
+      osgb_gridref: TL 14998 06998
+      osgb_northings: 206998
+      upd_timestamp: 2003-06-23 15:40:13
+      url: http://www.trigpointinguk.com
+      user_id: 1
+    - comment: Test
+      id: 6
+      osgb_eastings: 513700
+      osgb_gridref: TL 13700 5500
+      osgb_northings: 205500
+      upd_timestamp: 2003-06-23 15:37:01
+      url: http://scouthut.org/spong/wibble.html?a=3&b=3
+      user_id: 1
+    - comment: test2
+      id: 9
+      osgb_eastings: 412300
+      osgb_gridref: SE 12300 12300
+      osgb_northings: 412300
+      upd_timestamp: 2003-06-23 16:02:35
+      url: http://www.lycoss.com
+      user_id: 1
+    - comment: ''
+      id: 10
+      osgb_eastings: 0
+      osgb_gridref: ''
+      osgb_northings: 0
+      upd_timestamp: 2003-06-23 16:27:27
+      url: http://yahoo.com
+      user_id: 1
+    - comment: Default
+      id: 11
+      osgb_eastings: 0
+      osgb_gridref: ''
+      osgb_northings: 0
+      upd_timestamp: 2003-06-24 15:49:46
+      url: http://www.buckscaching.co.uk/closer.html
+      user_id: 5
+    - comment: A Paddle at the Abbey by Dan & Anna
+      id: 12
+      osgb_eastings: 472065
+      osgb_gridref: SP 72065 10309
+      osgb_northings: 210309
+      upd_timestamp: 2003-06-23 16:34:20
+      url: http://www.buckscaching.co.uk/listings/notley.html
+      user_id: 5
+    - comment: Aesculus Hippocastanum by P.Howard
+      id: 13
+      osgb_eastings: 493593
+      osgb_gridref: SP 93593 10599
+      osgb_northings: 210599
+      upd_timestamp: 2003-06-23 16:35:11
+      url: http://www.buckscaching.co.uk/listings/hippo.html
+      user_id: 5
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: user_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_gridref
+        nullable: false
+        primary_key: false
+        type: VARCHAR(14) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: comment
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: url
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: nearest
+      primary_keys:
+      - id
+  os_net_web:
+    row_count: 844
+    sample_data:
+    - os_net_web_id: 609
+      stn_number: H2NJ9409
+    - os_net_web_id: 354
+      stn_number: H1NJ9605
+    - os_net_web_id: 620
+      stn_number: H2SO3214
+    - os_net_web_id: 363
+      stn_number: C1NN9815
+    - os_net_web_id: 1006
+      stn_number: H1SN6077
+    - os_net_web_id: 833
+      stn_number: H1NH1558
+    - os_net_web_id: 392
+      stn_number: C1SE7961
+    - os_net_web_id: 655
+      stn_number: T1TF1296
+    - os_net_web_id: 686
+      stn_number: T1NF7654
+    - os_net_web_id: 681
+      stn_number: T1ND3089
+    schema:
+      columns:
+      - default: null
+        name: stn_number
+        nullable: true
+        primary_key: false
+        type: VARCHAR(14) COLLATE "utf8mb3_general_ci"
+      - default: null
+        name: os_net_web_id
+        nullable: true
+        primary_key: false
+        type: INTEGER
+      foreign_keys: []
+      indexes: []
+      name: os_net_web
+      primary_keys: []
+  percentile:
+    row_count: 0
+    sample_data: []
+    schema:
+      columns:
+      - default: null
+        name: type
+        nullable: false
+        primary_key: true
+        type: CHAR(6) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: percent
+        nullable: false
+        primary_key: true
+        type: TINYINT
+      - default: null
+        name: value
+        nullable: false
+        primary_key: false
+        type: DECIMAL(6, 2)
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: percentile
+      primary_keys:
+      - type
+      - percent
+  place:
+    row_count: 39134
+    sample_data:
+    - addr1: ''
+      addr2: ''
+      addr3: ''
+      addr4: ''
+      addr5: ''
+      addr6: ''
+      name: M1 Junction 1
+      osgb_eastings: 522780
+      osgb_gridref: TQ 22780 87560
+      osgb_northings: 187560
+      phone: ''
+      postcode8: ''
+      type: MWAY
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+    - addr1: ''
+      addr2: ''
+      addr3: ''
+      addr4: ''
+      addr5: ''
+      addr6: ''
+      name: M1 Junction 10
+      osgb_eastings: 508668
+      osgb_gridref: TL 08668 18409
+      osgb_northings: 218409
+      phone: ''
+      postcode8: ''
+      type: MWAY
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+    - addr1: ''
+      addr2: ''
+      addr3: ''
+      addr4: ''
+      addr5: ''
+      addr6: ''
+      name: M1 Junction 11
+      osgb_eastings: 505393
+      osgb_gridref: TL 05393 22814
+      osgb_northings: 222814
+      phone: ''
+      postcode8: ''
+      type: MWAY
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+    - addr1: ''
+      addr2: ''
+      addr3: ''
+      addr4: ''
+      addr5: ''
+      addr6: ''
+      name: M1 Junction 12
+      osgb_eastings: 502073
+      osgb_gridref: TL 02073 29834
+      osgb_northings: 229834
+      phone: ''
+      postcode8: ''
+      type: MWAY
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+    - addr1: ''
+      addr2: ''
+      addr3: ''
+      addr4: ''
+      addr5: ''
+      addr6: ''
+      name: M1 Junction 13
+      osgb_eastings: 495894
+      osgb_gridref: SP 95894 37389
+      osgb_northings: 237389
+      phone: ''
+      postcode8: ''
+      type: MWAY
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+    - addr1: ''
+      addr2: ''
+      addr3: ''
+      addr4: ''
+      addr5: ''
+      addr6: ''
+      name: M1 Junction 14
+      osgb_eastings: 489204
+      osgb_gridref: SP 89204 40848
+      osgb_northings: 240848
+      phone: ''
+      postcode8: ''
+      type: MWAY
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+    - addr1: ''
+      addr2: ''
+      addr3: ''
+      addr4: ''
+      addr5: ''
+      addr6: ''
+      name: M1 Junction 15
+      osgb_eastings: 475619
+      osgb_gridref: SP 75619 54763
+      osgb_northings: 254763
+      phone: ''
+      postcode8: ''
+      type: MWAY
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+    - addr1: ''
+      addr2: ''
+      addr3: ''
+      addr4: ''
+      addr5: ''
+      addr6: ''
+      name: M1 Junction 15A
+      osgb_eastings: 472260
+      osgb_gridref: SP 72260 57333
+      osgb_northings: 257333
+      phone: ''
+      postcode8: ''
+      type: MWAY
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+    - addr1: ''
+      addr2: ''
+      addr3: ''
+      addr4: ''
+      addr5: ''
+      addr6: ''
+      name: M1 Junction 16
+      osgb_eastings: 467295
+      osgb_gridref: SP 67295 67295
+      osgb_northings: 259573
+      phone: ''
+      postcode8: ''
+      type: MWAY
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+    - addr1: ''
+      addr2: ''
+      addr3: ''
+      addr4: ''
+      addr5: ''
+      addr6: ''
+      name: M1 Junction 18
+      osgb_eastings: 457665
+      osgb_gridref: SP 57665 72858
+      osgb_northings: 272858
+      phone: ''
+      postcode8: ''
+      type: MWAY
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '0.00000'
+    schema:
+      columns:
+      - default: null
+        name: type
+        nullable: false
+        primary_key: true
+        type: CHAR(6) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: name
+        nullable: false
+        primary_key: true
+        type: CHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: addr1
+        nullable: false
+        primary_key: true
+        type: CHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: addr2
+        nullable: false
+        primary_key: true
+        type: CHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: addr3
+        nullable: false
+        primary_key: true
+        type: CHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: addr4
+        nullable: false
+        primary_key: true
+        type: CHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: addr5
+        nullable: false
+        primary_key: true
+        type: CHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: addr6
+        nullable: false
+        primary_key: true
+        type: CHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: postcode8
+        nullable: false
+        primary_key: true
+        type: CHAR(8) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: phone
+        nullable: false
+        primary_key: false
+        type: CHAR(15) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: wgs_lat
+        nullable: false
+        primary_key: false
+        type: DECIMAL(6, 5)
+      - default: null
+        name: wgs_long
+        nullable: false
+        primary_key: false
+        type: DECIMAL(6, 5)
+      - default: null
+        name: osgb_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_gridref
+        nullable: false
+        primary_key: false
+        type: CHAR(14) COLLATE "latin1_swedish_ci"
+      foreign_keys: []
+      indexes: []
+      name: place
+      primary_keys:
+      - type
+      - name
+      - addr1
+      - addr2
+      - addr3
+      - addr4
+      - addr5
+      - addr6
+      - postcode8
+  postcode6:
+    row_count: 8481
+    sample_data:
+    - code: AB1 0
+      code4: AB1
+      county: Grampian Region
+      osgb_eastings: 384240
+      osgb_gridref: NJ 84240 00680
+      osgb_northings: 800680
+      postal_town: ABERDEEN
+      town: ABERDEEN
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-2.26172'
+    - code: AB1 1
+      code4: AB1
+      county: Grampian Region
+      osgb_eastings: 393120
+      osgb_gridref: NJ 93120 05640
+      osgb_northings: 805640
+      postal_town: ABERDEEN
+      town: ABERDEEN
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-2.11531'
+    - code: AB1 2
+      code4: AB1
+      county: Grampian Region
+      osgb_eastings: 393840
+      osgb_gridref: NJ 93840 05640
+      osgb_northings: 805640
+      postal_town: ABERDEEN
+      town: ABERDEEN
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-2.10340'
+    - code: AB1 3
+      code4: AB1
+      county: Grampian Region
+      osgb_eastings: 394600
+      osgb_gridref: NJ 94600 04920
+      osgb_northings: 804920
+      postal_town: ABERDEEN
+      town: ABERDEEN
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-2.09083'
+    - code: AB1 4
+      code4: AB1
+      county: Grampian Region
+      osgb_eastings: 393840
+      osgb_gridref: NO 93840 99960
+      osgb_northings: 799960
+      postal_town: ABERDEEN
+      town: ABERDEEN
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-2.10327'
+    - code: AB1 5
+      code4: AB1
+      county: Grampian Region
+      osgb_eastings: 393120
+      osgb_gridref: NJ 93120 02800
+      osgb_northings: 802800
+      postal_town: ABERDEEN
+      town: ABERDEEN
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-2.11522'
+    - code: AB1 6
+      code4: AB1
+      county: Grampian Region
+      osgb_eastings: 392360
+      osgb_gridref: NJ 92360 04920
+      osgb_northings: 804920
+      postal_town: ABERDEEN
+      town: ABERDEEN
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-2.12784'
+    - code: AB1 7
+      code4: AB1
+      county: Grampian Region
+      osgb_eastings: 390880
+      osgb_gridref: NJ 90880 03520
+      osgb_northings: 803520
+      postal_town: ABERDEEN
+      town: ABERDEEN
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-2.15223'
+    - code: AB1 8
+      code4: AB1
+      county: Grampian Region
+      osgb_eastings: 387960
+      osgb_gridref: NJ 87960 05640
+      osgb_northings: 805640
+      postal_town: ABERDEEN
+      town: ABERDEEN
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-2.20056'
+    - code: AB1 9
+      code4: AB1
+      county: Grampian Region
+      osgb_eastings: 388680
+      osgb_gridref: NJ 88680 02800
+      osgb_northings: 802800
+      postal_town: ABERDEEN
+      town: ABERDEEN
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-2.18854'
+    schema:
+      columns:
+      - default: null
+        name: code
+        nullable: false
+        primary_key: true
+        type: CHAR(6) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: code4
+        nullable: false
+        primary_key: false
+        type: CHAR(4) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: wgs_lat
+        nullable: false
+        primary_key: false
+        type: DECIMAL(6, 5)
+      - default: null
+        name: wgs_long
+        nullable: false
+        primary_key: false
+        type: DECIMAL(6, 5)
+      - default: null
+        name: osgb_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_gridref
+        nullable: false
+        primary_key: false
+        type: CHAR(14) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: county
+        nullable: false
+        primary_key: false
+        type: CHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: town
+        nullable: false
+        primary_key: false
+        type: CHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: postal_town
+        nullable: false
+        primary_key: false
+        type: CHAR(50) COLLATE "latin1_swedish_ci"
+      foreign_keys: []
+      indexes: []
+      name: postcode6
+      primary_keys:
+      - code
+  postcode8:
+    row_count: 54552
+    sample_data:
+    - code: " \t NG884"
+      osgb_eastings: 280465
+      osgb_northings: 871775
+      source: Multimap
+      upd_timestamp: 2010-04-28 15:33:30
+    - code: ''
+      osgb_eastings: 530142
+      osgb_northings: 180561
+      source: Multimap
+      upd_timestamp: 2009-09-19 18:53:00
+    - code: '    SK13'
+      osgb_eastings: 402440
+      osgb_northings: 394654
+      source: Streetmap
+      upd_timestamp: 2006-07-24 11:36:28
+    - code: '   SK1 1'
+      osgb_eastings: 389630
+      osgb_northings: 390662
+      source: Streetmap
+      upd_timestamp: 2017-04-17 19:28:10
+    - code: '  S6 6LG'
+      osgb_eastings: 426857
+      osgb_northings: 392429
+      source: Streetmap
+      upd_timestamp: 2018-03-23 16:49:06
+    - code: '  SL5 0H'
+      osgb_eastings: 495162
+      osgb_northings: 166724
+      source: Streetmap
+      upd_timestamp: 2004-03-09 07:18:28
+    - code: '  YO18 7'
+      osgb_eastings: 486526
+      osgb_northings: 496770
+      source: Streetmap
+      upd_timestamp: 2017-11-22 15:03:40
+    - code: ' B14'
+      osgb_eastings: 407582
+      osgb_northings: 279947
+      source: Streetmap
+      upd_timestamp: 2011-10-19 12:44:59
+    - code: ' B23 7YT'
+      osgb_eastings: 409125
+      osgb_northings: 291147
+      source: Streetmap
+      upd_timestamp: 2006-02-02 07:34:34
+    - code: ' B93 9EN'
+      osgb_eastings: 416967
+      osgb_northings: 276459
+      source: Streetmap
+      upd_timestamp: 2016-05-17 13:42:06
+    schema:
+      columns:
+      - default: null
+        name: code
+        nullable: false
+        primary_key: true
+        type: CHAR(8) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: osgb_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: source
+        nullable: false
+        primary_key: false
+        type: CHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: postcode8
+      primary_keys:
+      - code
+  route_item:
+    row_count: 0
+    sample_data: []
+    schema:
+      columns:
+      - default: null
+        name: route_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: routeitem_id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: osgb_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      foreign_keys: []
+      indexes: []
+      name: route_item
+      primary_keys:
+      - routeitem_id
+  server:
+    row_count: 3
+    sample_data:
+    - id: 1
+      name: Amazon S3
+      path: trigpointinguk-photos
+      url: http://trigpointinguk-photos.s3.amazonaws.com/
+    - id: 2
+      name: EUK Server
+      path: /home/trigpoin/public_html/photos/
+      url: http://www.trigpointinguk.com/photos/
+    - id: 3
+      name: Amazon S3 Test
+      path: trigpointinguk-test
+      url: http://trigpointinguk-test.s3.amazonaws.com/
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: url
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: path
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      foreign_keys: []
+      indexes: []
+      name: server
+      primary_keys:
+      - id
+  sms:
+    row_count: 518
+    sample_data:
+    - id: 1
+      in_keyword: trig
+      in_message: ' tq1865173160 LT'
+      in_sender: '447932761671'
+      in_time: '2003-05-04 19:39:38'
+      out_error: "Test facility - no SMS sent.  Reply would have been:\n Trigs near\
+        \ TQ186731\nTQ18657316 P*\nTQ16967319 O*\nTQ18216332 P?\nTQ17808406 P?\nTQ16188438\
+        \ P*\nTQ30346881 P?\nTQ12108410 P?\nTQ16676036 P?\nTQ30627838 A\nTQ19308736\
+        \ P?\n"
+      out_ind: N
+      out_message: 'Trigs near TQ186731
+
+        TQ18657316 P*
+
+        TQ16967319 O*
+
+        TQ18216332 P?
+
+        TQ17808406 P?
+
+        TQ16188438 P*
+
+        TQ30346881 P?
+
+        TQ12108410 P?
+
+        TQ16676036 P?
+
+        TQ30627838 A
+
+        TQ19308736 P?
+
+        '
+      proc_debug1: ''
+      proc_debug2: ''
+      proc_sql: "\t\tSELECT DISTINCT\n\t\t\t   trig.osgb_gridref\n\t\t     , trig.physical_type\n\
+        \t\t\t , coalesce(logu.user_id = 18, 0) as log_user\n\t\t\t , count(distinct(logo.id))\
+        \ as log_count\n\t\tFROM trig\n\t\t\t left outer join log logu on trig.id\
+        \ = logu.trig_id and logu.user_id = 18\n\t\t\t left outer join log logo on\
+        \ trig.id = logo.trig_id\n\t\t \n\t\tGROUP BY trig.osgb_gridref\n\t\t    \
+        \   , trig.physical_type\n\t\t\t   , log_user\n\t\tORDER BY pow(trig.osgb_eastings\
+        \ - 518651,2) + pow(trig.osgb_northings - 173160,2)\n\t\tLIMIT 0,10\n"
+      upd_timestamp: 2003-05-04 11:52:25
+      user_id: 0
+    - id: 2
+      in_keyword: trig
+      in_message: ' su972774'
+      in_sender: '447876648764'
+      in_time: '2003-05-05 21:40:22'
+      out_error: ''
+      out_ind: Y
+      out_message: 'Trigs near SU972774
+
+        SU97377757 O?
+
+        SU97307697 F?
+
+        SU99417215 P?
+
+        SU87527656 P?
+
+        SU87108261 P?
+
+        SU86958444 P?
+
+        SU97266479 P?
+
+        SU97246478 O?
+
+        SU82408110 P?
+
+        TQ12108410 P?
+
+        '
+      proc_debug1: ''
+      proc_debug2: ''
+      proc_sql: "\t\tSELECT DISTINCT\n\t\t\t   trig.osgb_gridref\n\t\t     , trig.physical_type\n\
+        \t\t\t , coalesce(logu.user_id = 1, 0) as log_user\n\t\t\t , count(distinct(logo.id))\
+        \ as log_count\n\t\tFROM trig\n\t\t\t left outer join log logu on trig.id\
+        \ = logu.trig_id and logu.user_id = 1\n\t\t\t left outer join log logo on\
+        \ trig.id = logo.trig_id\n\t\tWHERE  logu.user_id is null  \n\t\tGROUP BY\
+        \ trig.osgb_gridref\n\t\t       , trig.physical_type\n\t\t\t   , log_user\n\
+        \t\tORDER BY pow(trig.osgb_eastings - 497200,2) + pow(trig.osgb_northings\
+        \ - 177400,2)\n\t\tLIMIT 0,10\n"
+      upd_timestamp: 2003-05-05 13:53:26
+      user_id: 0
+    - id: 3
+      in_keyword: trig
+      in_message: ' se246241'
+      in_sender: '447876648764'
+      in_time: '2003-05-07 18:31:13'
+      out_error: ''
+      out_ind: Y
+      out_message: 'Trigs near SE246241
+
+        SE25942435 P
+
+        SE22062469 P
+
+        SE21652164 P?
+
+        SE28092609 P
+
+        SE27142089 P
+
+        SE20582270 P
+
+        SE24841928 P
+
+        SE26171921 P
+
+        SE28222801 P?
+
+        SE24722944 P?
+
+        '
+      proc_debug1: ''
+      proc_debug2: ''
+      proc_sql: "\t\tSELECT DISTINCT\n\t\t\t   trig.osgb_gridref\n\t\t     , trig.physical_type\n\
+        \t\t\t , coalesce(logu.user_id = 1, 0) as log_user\n\t\t\t , count(distinct(logo.id))\
+        \ as log_count\n\t\tFROM trig\n\t\t\t left outer join log logu on trig.id\
+        \ = logu.trig_id and logu.user_id = 1\n\t\t\t left outer join log logo on\
+        \ trig.id = logo.trig_id\n\t\tWHERE  logu.user_id is null  \n\t\tGROUP BY\
+        \ trig.osgb_gridref\n\t\t       , trig.physical_type\n\t\t\t   , log_user\n\
+        \t\tORDER BY pow(trig.osgb_eastings - 424600,2) + pow(trig.osgb_northings\
+        \ - 424100,2)\n\t\tLIMIT 0,10\n"
+      upd_timestamp: 2003-05-07 10:44:30
+      user_id: 0
+    - id: 4
+      in_keyword: trig
+      in_message: ' tl137055'
+      in_sender: '447876648764'
+      in_time: '2003-05-20 23:04:26'
+      out_error: ''
+      out_ind: Y
+      out_message: 'Trigs near TL137055
+
+        TL11750505 P?
+
+        TL14950065 P?
+
+        TL09620232 P?
+
+        TL07230831 P?
+
+        TL06440346 P?
+
+        TL06600945 F?
+
+        TL06610948 O?
+
+        TL22420601 P
+
+        TL05351016 P?
+
+        TQ21349901 P?
+
+        '
+      proc_debug1: ''
+      proc_debug2: ''
+      proc_sql: "\t\tSELECT DISTINCT\n\t\t\t   trig.osgb_gridref\n\t\t     , trig.physical_type\n\
+        \t\t\t , coalesce(logu.user_id = 1, 0) as log_user\n\t\t\t , count(distinct(logo.id))\
+        \ as log_count\n\t\tFROM trig\n\t\t\t left outer join log logu on trig.id\
+        \ = logu.trig_id and logu.user_id = 1\n\t\t\t left outer join log logo on\
+        \ trig.id = logo.trig_id\n\t\tWHERE  logu.user_id is null  \n\t\tGROUP BY\
+        \ trig.osgb_gridref\n\t\t       , trig.physical_type\n\t\t\t   , log_user\n\
+        \t\tORDER BY pow(trig.osgb_eastings - 513700,2) + pow(trig.osgb_northings\
+        \ - 205500,2)\n\t\tLIMIT 0,10\n"
+      upd_timestamp: 2003-05-20 15:19:39
+      user_id: 0
+    - id: 5
+      in_keyword: trig
+      in_message: ' tl137055 f'
+      in_sender: '447876648764'
+      in_time: '2003-05-20 23:11:14'
+      out_error: ''
+      out_ind: Y
+      out_message: 'Trigs near TL137055
+
+        TL06600945 F?
+
+        TL37142774 F?
+
+        SU97307697 F?
+
+        SP85014234 F
+
+        TQ32396062 F?
+
+        SU62488818 F?
+
+        TL79061184 F?
+
+        TQ68526280 F?
+
+        TL74554461 F?
+
+        SU64385180 F?
+
+        '
+      proc_debug1: ''
+      proc_debug2: ''
+      proc_sql: "\t\tSELECT DISTINCT\n\t\t\t   trig.osgb_gridref\n\t\t     , trig.physical_type\n\
+        \t\t\t , coalesce(logu.user_id = 1, 0) as log_user\n\t\t\t , count(distinct(logo.id))\
+        \ as log_count\n\t\tFROM trig\n\t\t\t left outer join log logu on trig.id\
+        \ = logu.trig_id and logu.user_id = 1\n\t\t\t left outer join log logo on\
+        \ trig.id = logo.trig_id\n\t\tWHERE  ( trig.physical_type = 'FBM' ) AND  logu.user_id\
+        \ is null  \n\t\tGROUP BY trig.osgb_gridref\n\t\t       , trig.physical_type\n\
+        \t\t\t   , log_user\n\t\tORDER BY pow(trig.osgb_eastings - 513700,2) + pow(trig.osgb_northings\
+        \ - 205500,2)\n\t\tLIMIT 0,10\n"
+      upd_timestamp: 2003-05-20 15:26:10
+      user_id: 0
+    - id: 6
+      in_keyword: trig
+      in_message: ' TL495536'
+      in_sender: '447833305037'
+      in_time: '2003-06-04 16:13:05'
+      out_error: ''
+      out_ind: Y
+      out_message: 'Trigs near TL495536
+
+        TL55195116 P?
+
+        TL51944674 P?
+
+        TL42684971 P?
+
+        TL57315634 O?
+
+        TL57085878 P?
+
+        TL58665501 P?
+
+        TL40305145 P
+
+        TL54454468 P?
+
+        TL39385207 P
+
+        TL38805372 P?
+
+        '
+      proc_debug1: ''
+      proc_debug2: ''
+      proc_sql: "\t\tSELECT DISTINCT\n\t\t\t   trig.osgb_gridref\n\t\t     , trig.physical_type\n\
+        \t\t\t , coalesce(logu.user_id = 75, 0) as log_user\n\t\t\t , count(distinct(logo.id))\
+        \ as log_count\n\t\tFROM trig\n\t\t\t left outer join log logu on trig.id\
+        \ = logu.trig_id and logu.user_id = 75\n\t\t\t left outer join log logo on\
+        \ trig.id = logo.trig_id\n\t\tWHERE  logu.user_id is null  \n\t\tGROUP BY\
+        \ trig.osgb_gridref\n\t\t       , trig.physical_type\n\t\t\t   , log_user\n\
+        \t\tORDER BY pow(trig.osgb_eastings - 549500,2) + pow(trig.osgb_northings\
+        \ - 253600,2)\n\t\tLIMIT 0,10\n"
+      upd_timestamp: 2003-06-04 08:30:57
+      user_id: 0
+    - id: 7
+      in_keyword: ''
+      in_message: SK123123T
+      in_sender: '447876648764'
+      in_time: ''
+      out_error: "Test facility - no SMS sent.  Reply would have been:\n Trigs near\
+        \ SK123123\nSK08601428 P?\nSK09841864 P?\nSK04311288 P?\nSK20481132 P?\nSK03861523\
+        \ P?\nSK16350414 P?\nSK16210355 P?\nSK22081599 P?\nSK05582053 P?\nSK06100232\
+        \ P?\n"
+      out_ind: N
+      out_message: 'Trigs near SK123123
+
+        SK08601428 P?
+
+        SK09841864 P?
+
+        SK04311288 P?
+
+        SK20481132 P?
+
+        SK03861523 P?
+
+        SK16350414 P?
+
+        SK16210355 P?
+
+        SK22081599 P?
+
+        SK05582053 P?
+
+        SK06100232 P?
+
+        '
+      proc_debug1: ''
+      proc_debug2: ''
+      proc_sql: "\t\tSELECT DISTINCT\n\t\t\t   trig.osgb_gridref\n\t\t     , trig.physical_type\n\
+        \t\t\t , coalesce(logu.user_id = 1, 0) as log_user\n\t\t\t , count(distinct(logo.id))\
+        \ as log_count\n\t\tFROM trig\n\t\t\t left outer join tlog logu on trig.id\
+        \ = logu.trig_id and logu.user_id = 1\n\t\t\t left outer join tlog logo on\
+        \ trig.id = logo.trig_id\n\t\tWHERE  logu.user_id is null  \n\t\tGROUP BY\
+        \ trig.osgb_gridref\n\t\t       , trig.physical_type\n\t\t\t   , log_user\n\
+        \t\tORDER BY pow(trig.osgb_eastings - 412300,2) + pow(trig.osgb_northings\
+        \ - 312300,2)\n\t\tLIMIT 0,10\n"
+      upd_timestamp: 2003-06-13 13:53:27
+      user_id: 0
+    - id: 8
+      in_keyword: trig
+      in_message: ' sk123234'
+      in_sender: '447876648764'
+      in_time: '2003-06-13 21:59:12'
+      out_error: ''
+      out_ind: Y
+      out_message: 'Trigs near SK123234
+
+        SK10042566 P?
+
+        SK09841864 P?
+
+        SK09292808 P?
+
+        SK05692280 P?
+
+        SK13953032 P?
+
+        SK05582053 P?
+
+        SK20352404 P?
+
+        SK08363097 P?
+
+        SK08601428 P?
+
+        SK03432883 P?
+
+        '
+      proc_debug1: ''
+      proc_debug2: ''
+      proc_sql: "\t\tSELECT DISTINCT\n\t\t\t   trig.osgb_gridref\n\t\t     , trig.physical_type\n\
+        \t\t\t , coalesce(logu.user_id = 1, 0) as log_user\n\t\t\t , count(distinct(logo.id))\
+        \ as log_count\n\t\tFROM trig\n\t\t\t left outer join tlog logu on trig.id\
+        \ = logu.trig_id and logu.user_id = 1\n\t\t\t left outer join tlog logo on\
+        \ trig.id = logo.trig_id\n\t\tWHERE  logu.user_id is null  \n\t\tGROUP BY\
+        \ trig.osgb_gridref\n\t\t       , trig.physical_type\n\t\t\t   , log_user\n\
+        \t\tORDER BY pow(trig.osgb_eastings - 412300,2) + pow(trig.osgb_northings\
+        \ - 323400,2)\n\t\tLIMIT 0,10\n"
+      upd_timestamp: 2003-06-13 13:59:40
+      user_id: 0
+    - id: 9
+      in_keyword: trig
+      in_message: ' su433294'
+      in_sender: '447876648764'
+      in_time: '2003-07-20 10:10:45'
+      out_error: ''
+      out_ind: Y
+      out_message: 'Trigs near SU433294
+
+        SU44652766 O?
+
+        SU40332904 P
+
+        SU42822376 P?
+
+        SU48512705 P
+
+        SU49662942 O?
+
+        SU45823552 P
+
+        SU50412942 F?
+
+        SU50622754 P
+
+        SU36123180 P?
+
+        SU48572374 P?
+
+        '
+      proc_debug1: ''
+      proc_debug2: ''
+      proc_sql: "\t\tSELECT DISTINCT\n\t\t\t   trig.osgb_gridref\n\t\t     , trig.physical_type\n\
+        \t\t\t , coalesce(logu.user_id = 1, 0) as log_user\n\t\t\t , count(distinct(logo.id))\
+        \ as log_count\n\t\tFROM trig\n\t\t\t left outer join tlog logu on trig.id\
+        \ = logu.trig_id and logu.user_id = 1\n\t\t\t left outer join tlog logo on\
+        \ trig.id = logo.trig_id\n\t\tWHERE  logu.user_id is null  \n\t\tGROUP BY\
+        \ trig.osgb_gridref\n\t\t       , trig.physical_type\n\t\t\t   , log_user\n\
+        \t\tORDER BY pow(trig.osgb_eastings - 443300,2) + pow(trig.osgb_northings\
+        \ - 129400,2)\n\t\tLIMIT 0,10\n"
+      upd_timestamp: 2003-07-20 02:12:16
+      user_id: 0
+    - id: 10
+      in_keyword: trig
+      in_message: ' su895855'
+      in_sender: '447876648764'
+      in_time: '2003-08-04 19:59:54'
+      out_error: ''
+      out_ind: Y
+      out_message: 'Trigs near SU895855
+
+        SU97307697 F?
+
+        SP88050032 P?
+
+        TQ02739327 P?
+
+        SU81297184 P?
+
+        SU99417215 P?
+
+        SP82150143 P?
+
+        SU73287819 P
+
+        SP98340120 P?
+
+        SP80630189 O?
+
+        SP95580371 P?
+
+        '
+      proc_debug1: ''
+      proc_debug2: ''
+      proc_sql: "\t\tSELECT DISTINCT\n\t\t\t   trig.osgb_gridref\n\t\t     , trig.physical_type\n\
+        \t\t\t , coalesce(logu.user_id = 1, 0) as log_user\n\t\t\t , count(distinct(logo.id))\
+        \ as log_count\n\t\tFROM trig\n\t\t\t left outer join tlog logu on trig.id\
+        \ = logu.trig_id and logu.user_id = 1\n\t\t\t left outer join tlog logo on\
+        \ trig.id = logo.trig_id\n\t\tWHERE  logu.user_id is null  \n\t\tGROUP BY\
+        \ trig.osgb_gridref\n\t\t       , trig.physical_type\n\t\t\t   , log_user\n\
+        \t\tORDER BY pow(trig.osgb_eastings - 489500,2) + pow(trig.osgb_northings\
+        \ - 185500,2)\n\t\tLIMIT 0,10\n"
+      upd_timestamp: 2003-08-04 12:03:29
+      user_id: 0
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: in_keyword
+        nullable: false
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: in_message
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: in_sender
+        nullable: false
+        primary_key: false
+        type: VARCHAR(12) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: in_time
+        nullable: false
+        primary_key: false
+        type: VARCHAR(19) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: user_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: proc_sql
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: proc_debug1
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: proc_debug2
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: out_message
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: out_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: out_error
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: sms
+      primary_keys:
+      - id
+  status:
+    row_count: 7
+    sample_data:
+    - descr: Hotine, Vanessa or Stone Pillar
+      id: 10
+      limit_descr: Pillars only
+      name: Pillar
+    - descr: Substantial structures installed by the OS
+      id: 20
+      limit_descr: Pillars, FBMs, Curry Stools and similar
+      name: Major mark
+    - descr: Small marks installed by the OS
+      id: 30
+      limit_descr: Pillars, FBMs, Bolts, Blocks etc.  No Intersected.
+      name: Minor mark
+    - descr: Intersected stations
+      id: 40
+      limit_descr: All survey stations used by the OS.  Including Intersected.
+      name: Intersected
+    - descr: User added stations, awaiting approval
+      id: 50
+      limit_descr: Include unverified, user-added stations
+      name: User Added
+    - descr: Controversial entries
+      id: 60
+      limit_descr: Include Irish trigs, benchmarks, oddities etc
+      name: Controversial
+    - descr: Deleted entries
+      id: 99
+      limit_descr: Include deleted records
+      name: Deleted
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: name
+        nullable: false
+        primary_key: false
+        type: CHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: descr
+        nullable: false
+        primary_key: false
+        type: VARCHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: limit_descr
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      foreign_keys: []
+      indexes: []
+      name: status
+      primary_keys:
+      - id
+  tlog:
+    row_count: 468414
+    sample_data:
+    - comment: Near to cache GC598C.  The photo on the home page was taken here.
+      condition: G
+      date: 2002-09-08
+      fb_number: ''
+      id: 1
+      ip_addr: 62.49.6.31
+      osgb_eastings: 434443
+      osgb_gridref: SK 34443 55423
+      osgb_northings: 355423
+      score: 7
+      source: W
+      time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 73260
+      - 0
+      trig_id: 2588
+      upd_timestamp: 2003-04-18 12:23:17
+      user_id: 1
+    - comment: Shown on landranger maps, but not the more recent Outdoor Leisure series.  It's
+        still there, though!
+      condition: G
+      date: 2003-03-29
+      fb_number: S2775
+      id: 2
+      ip_addr: 62.49.6.31
+      osgb_eastings: 406260
+      osgb_gridref: SK 06260 77020
+      osgb_northings: 377020
+      score: 7
+      source: W
+      time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 50400
+      - 0
+      trig_id: 1406
+      upd_timestamp: 2003-04-18 12:36:45
+      user_id: 1
+    - comment: Delightful bit of bogtrotting!  Did it as geocache GC7D9F.
+      condition: G
+      date: 2003-02-07
+      fb_number: ''
+      id: 3
+      ip_addr: 62.49.6.31
+      osgb_eastings: 0
+      osgb_gridref: ''
+      osgb_northings: 0
+      score: 6
+      source: W
+      time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 57600
+      - 0
+      trig_id: 3980
+      upd_timestamp: 2003-04-26 11:55:02
+      user_id: 1
+    - comment: Did as part of the SP series of geocaches (GC373F).  OK if you like
+        pine forests!
+      condition: G
+      date: 2002-10-23
+      fb_number: ''
+      id: 4
+      ip_addr: 62.49.6.31
+      osgb_eastings: 0
+      osgb_gridref: ''
+      osgb_northings: 0
+      score: 3
+      source: W
+      time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 7200
+      - 0
+      trig_id: 5536
+      upd_timestamp: 2003-04-27 14:54:41
+      user_id: 1
+    - comment: Nice views!  Did as part of geocache GC9910.
+      condition: G
+      date: 2003-02-08
+      fb_number: S2757
+      id: 5
+      ip_addr: 62.49.6.31
+      osgb_eastings: 0
+      osgb_gridref: ''
+      osgb_northings: 0
+      score: 6
+      source: W
+      time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 54000
+      - 0
+      trig_id: 4172
+      upd_timestamp: 2003-04-28 08:33:34
+      user_id: 1
+    - comment: Good old Mam Tor!  Been here many a time.  The date on the log was
+        when I did GCA902.
+      condition: G
+      date: 2003-02-07
+      fb_number: ''
+      id: 6
+      ip_addr: 62.49.6.31
+      osgb_eastings: 0
+      osgb_gridref: ''
+      osgb_northings: 0
+      score: 7
+      source: W
+      time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 61200
+      - 0
+      trig_id: 4623
+      upd_timestamp: 2003-04-18 12:57:40
+      user_id: 1
+    - comment: Hidden in the undergrowth, on what is becoming a new housing estate.
+      condition: G
+      date: 2003-04-17
+      fb_number: S2491
+      id: 7
+      ip_addr: 194.164.14.60
+      osgb_eastings: 448866
+      osgb_gridref: SZ 48866 94921
+      osgb_northings: 94921
+      score: 5
+      source: W
+      time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 66600
+      - 0
+      trig_id: 1653
+      upd_timestamp: 2003-04-18 21:42:54
+      user_id: 8
+    - comment: Nice views of area from the 'Lump'
+      condition: G
+      date: 2002-11-28
+      fb_number: S3514
+      id: 9
+      ip_addr: 62.30.37.3
+      osgb_eastings: 0
+      osgb_gridref: ''
+      osgb_northings: 0
+      score: 7
+      source: W
+      time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 66600
+      - 0
+      trig_id: 1362
+      upd_timestamp: 2003-10-29 00:40:25
+      user_id: 10
+    - comment: Freely accessible on the edge of a car park
+      condition: G
+      date: 2002-11-21
+      fb_number: S3515
+      id: 10
+      ip_addr: 62.30.36.73
+      osgb_eastings: 0
+      osgb_gridref: ''
+      osgb_northings: 0
+      score: 5
+      source: W
+      time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 39600
+      - 0
+      trig_id: 825
+      upd_timestamp: 2003-04-18 23:42:42
+      user_id: 10
+    - comment: Just of the road on the edge of a farmers field. Have to go through
+        a bramble infested copse to access!
+      condition: G
+      date: 2003-02-20
+      fb_number: S4682
+      id: 11
+      ip_addr: 62.30.36.73
+      osgb_eastings: 0
+      osgb_gridref: ''
+      osgb_northings: 0
+      score: 5
+      source: W
+      time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 57600
+      - 0
+      trig_id: 1076
+      upd_timestamp: 2003-04-18 23:46:52
+      user_id: 10
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: trig_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: user_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: date
+        nullable: false
+        primary_key: false
+        type: DATE
+      - default: null
+        name: time
+        nullable: false
+        primary_key: false
+        type: TIME
+      - default: null
+        name: osgb_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_gridref
+        nullable: false
+        primary_key: false
+        type: VARCHAR(14) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: fb_number
+        nullable: false
+        primary_key: false
+        type: VARCHAR(10) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: condition
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: comment
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: score
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: ip_addr
+        nullable: false
+        primary_key: false
+        type: VARCHAR(15) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: source
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: tlog
+      primary_keys:
+      - id
+  town:
+    row_count: 1915
+    sample_data:
+    - name: ABBY WOOD
+      osgb_eastings: 546799
+      osgb_gridref: TQ 46799 78900
+      osgb_northings: 178900
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-0.11310'
+    - name: ABERAERON
+      osgb_eastings: 245000
+      osgb_gridref: SN 45000 61999
+      osgb_northings: 261999
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '4.27123'
+    - name: ABERCHIRDER
+      osgb_eastings: 361999
+      osgb_gridref: NJ 61999 51999
+      osgb_northings: 851999
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '2.63668'
+    - name: ABERDARE
+      osgb_eastings: 300000
+      osgb_gridref: SO 00000 02998
+      osgb_northings: 202998
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '3.44896'
+    - name: ABERDEEN
+      osgb_eastings: 394000
+      osgb_gridref: NJ 94000 05999
+      osgb_northings: 805999
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '2.10076'
+    - name: ABERFELDY
+      osgb_eastings: 284999
+      osgb_gridref: NN 84999 47998
+      osgb_northings: 747998
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '3.87521'
+    - name: ABERGAVENNY
+      osgb_eastings: 329999
+      osgb_gridref: SO 29999 13999
+      osgb_northings: 213999
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '3.01701'
+    - name: ABERGELE
+      osgb_eastings: 293999
+      osgb_gridref: SH 93999 76999
+      osgb_northings: 376999
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '3.59128'
+    - name: ABERLOUR
+      osgb_eastings: 325999
+      osgb_gridref: NJ 25999 41999
+      osgb_northings: 841999
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '3.23515'
+    - name: ABERSYCHAN
+      osgb_eastings: 326000
+      osgb_gridref: SO 26000 05000
+      osgb_northings: 205000
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '9.99999'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '3.07311'
+    schema:
+      columns:
+      - default: null
+        name: name
+        nullable: false
+        primary_key: true
+        type: CHAR(25) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: wgs_lat
+        nullable: false
+        primary_key: false
+        type: DECIMAL(6, 5)
+      - default: null
+        name: wgs_long
+        nullable: false
+        primary_key: false
+        type: DECIMAL(6, 5)
+      - default: null
+        name: osgb_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_gridref
+        nullable: false
+        primary_key: false
+        type: CHAR(14) COLLATE "latin1_swedish_ci"
+      foreign_keys: []
+      indexes: []
+      name: town
+      primary_keys:
+      - name
+  tphoto:
+    row_count: 402671
+    sample_data:
+    - crt_timestamp: 2009-12-24 10:55:55
+      deleted_ind: N
+      filename: 000/P00001.jpg
+      filesize: 63418
+      height: 480
+      icon_filename: 000/I00001.jpg
+      icon_filesize: 6058
+      icon_height: 90
+      icon_width: 120
+      id: 1
+      ip_addr: 62.49.6.31
+      name: GPSr on the trigpoint
+      public_ind: Y
+      server_id: 1
+      source: W
+      text_desc: ''
+      tlog_id: 1
+      type: T
+      width: 640
+    - crt_timestamp: 2009-12-24 10:55:55
+      deleted_ind: N
+      filename: 000/P00002.jpg
+      filesize: 96480
+      height: 480
+      icon_filename: 000/I00002.jpg
+      icon_filesize: 4538
+      icon_height: 90
+      icon_width: 120
+      id: 2
+      ip_addr: 62.49.6.31
+      name: Hang gliding at Mam Tor
+      public_ind: Y
+      server_id: 1
+      source: W
+      text_desc: ''
+      tlog_id: 6
+      type: O
+      width: 640
+    - crt_timestamp: 2009-12-24 10:55:55
+      deleted_ind: N
+      filename: 000/P00004.jpg
+      filesize: 77868
+      height: 636
+      icon_filename: 000/I00004.jpg
+      icon_filesize: 8049
+      icon_height: 120
+      icon_width: 91
+      id: 4
+      ip_addr: 81.86.215.227
+      name: The Pillar
+      public_ind: Y
+      server_id: 1
+      source: W
+      text_desc: Liverpool in the distance
+      tlog_id: 23
+      type: T
+      width: 482
+    - crt_timestamp: 2009-12-24 10:55:55
+      deleted_ind: N
+      filename: 000/P00005.jpg
+      filesize: 56530
+      height: 757
+      icon_filename: 000/I00005.jpg
+      icon_filesize: 5336
+      icon_height: 120
+      icon_width: 64
+      id: 5
+      ip_addr: 81.86.215.227
+      name: The plate
+      public_ind: Y
+      server_id: 1
+      source: W
+      text_desc: ''
+      tlog_id: 23
+      type: F
+      width: 405
+    - crt_timestamp: 2009-12-24 10:55:55
+      deleted_ind: N
+      filename: 000/P00006.jpg
+      filesize: 95149
+      height: 400
+      icon_filename: 000/I00006.jpg
+      icon_filesize: 4400
+      icon_height: 120
+      icon_width: 90
+      id: 6
+      ip_addr: 81.86.215.227
+      name: High on the hill
+      public_ind: Y
+      server_id: 1
+      source: W
+      text_desc: ''
+      tlog_id: 16
+      type: T
+      width: 300
+    - crt_timestamp: 2009-12-24 10:55:55
+      deleted_ind: N
+      filename: 000/P00007.jpg
+      filesize: 81763
+      height: 377
+      icon_filename: 000/I00007.jpg
+      icon_filesize: 5817
+      icon_height: 120
+      icon_width: 66
+      id: 7
+      ip_addr: 81.86.215.227
+      name: The plate
+      public_ind: Y
+      server_id: 1
+      source: W
+      text_desc: ''
+      tlog_id: 16
+      type: F
+      width: 209
+    - crt_timestamp: 2009-12-24 10:55:55
+      deleted_ind: N
+      filename: 000/P00009.jpg
+      filesize: 48413
+      height: 480
+      icon_filename: 000/I00009.jpg
+      icon_filesize: 3989
+      icon_height: 90
+      icon_width: 120
+      id: 9
+      ip_addr: 213.253.39.99
+      name: The view from the trigpoint
+      public_ind: Y
+      server_id: 1
+      source: W
+      text_desc: Looking away from Luton
+      tlog_id: 55
+      type: L
+      width: 640
+    - crt_timestamp: 2009-12-24 10:55:55
+      deleted_ind: N
+      filename: 000/P00010.jpg
+      filesize: 32518
+      height: 288
+      icon_filename: 000/I00010.jpg
+      icon_filesize: 3132
+      icon_height: 97
+      icon_width: 120
+      id: 10
+      ip_addr: 80.1.0.211
+      name: S1793
+      public_ind: N
+      server_id: 1
+      source: W
+      text_desc: ''
+      tlog_id: 28
+      type: T
+      width: 352
+    - crt_timestamp: 2009-12-24 10:55:55
+      deleted_ind: N
+      filename: 000/P00011.jpg
+      filesize: 30645
+      height: 288
+      icon_filename: 000/I00011.jpg
+      icon_filesize: 2610
+      icon_height: 97
+      icon_width: 120
+      id: 11
+      ip_addr: 80.1.0.211
+      name: S1792
+      public_ind: N
+      server_id: 1
+      source: W
+      text_desc: ''
+      tlog_id: 29
+      type: T
+      width: 352
+    - crt_timestamp: 2009-12-24 10:55:55
+      deleted_ind: N
+      filename: 000/P00012.jpg
+      filesize: 27589
+      height: 288
+      icon_filename: 000/I00012.jpg
+      icon_filesize: 2677
+      icon_height: 97
+      icon_width: 120
+      id: 12
+      ip_addr: 80.1.0.211
+      name: S1845
+      public_ind: N
+      server_id: 1
+      source: W
+      text_desc: ''
+      tlog_id: 30
+      type: T
+      width: 352
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: tlog_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: server_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: type
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: filename
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: filesize
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: height
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: width
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: icon_filename
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: icon_filesize
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: icon_height
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: icon_width
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(80) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: text_desc
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: ip_addr
+        nullable: false
+        primary_key: false
+        type: VARCHAR(15) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: public_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: deleted_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: source
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: crt_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: tphoto
+      primary_keys:
+      - id
+  tphotoclass:
+    row_count: 5292
+    sample_data:
+    - id: 1
+      photo_class: 10
+    - id: 2
+      photo_class: 4
+    - id: 4
+      photo_class: 3
+    - id: 5
+      photo_class: 6
+    - id: 6
+      photo_class: 3
+    - id: 7
+      photo_class: 1
+    - id: 9
+      photo_class: 3
+    - id: 10
+      photo_class: 1
+    - id: 11
+      photo_class: 3
+    - id: 12
+      photo_class: 6
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: photo_class
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      foreign_keys: []
+      indexes: []
+      name: tphotoclass
+      primary_keys:
+      - id
+  tphotostats:
+    row_count: 0
+    sample_data: []
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: score_mean
+        nullable: false
+        primary_key: false
+        type: DECIMAL(5, 2)
+      - default: null
+        name: score_baysian
+        nullable: false
+        primary_key: false
+        type: DECIMAL(5, 2)
+      - default: null
+        name: logged_count
+        nullable: false
+        primary_key: false
+        type: SMALLINT
+      foreign_keys: []
+      indexes: []
+      name: tphotostats
+      primary_keys:
+      - id
+  tphotovote:
+    row_count: 94832
+    sample_data:
+    - id: 1
+      score: 2
+      tphoto_id: 3279
+      upd_timestamp: 2004-09-25 04:51:27
+      user_id: 844
+    - id: 2
+      score: 4
+      tphoto_id: 7784
+      upd_timestamp: 2004-09-25 04:51:27
+      user_id: 844
+    - id: 3
+      score: -2
+      tphoto_id: 4328
+      upd_timestamp: 2004-09-25 04:51:27
+      user_id: 844
+    - id: 4
+      score: -2
+      tphoto_id: 3611
+      upd_timestamp: 2004-09-25 04:51:27
+      user_id: 844
+    - id: 5
+      score: 3
+      tphoto_id: 4440
+      upd_timestamp: 2004-09-25 04:51:27
+      user_id: 844
+    - id: 6
+      score: 1
+      tphoto_id: 7333
+      upd_timestamp: 2004-09-25 04:51:27
+      user_id: 844
+    - id: 7
+      score: -2
+      tphoto_id: 10333
+      upd_timestamp: 2004-09-25 04:51:27
+      user_id: 844
+    - id: 8
+      score: 8
+      tphoto_id: 4272
+      upd_timestamp: 2004-09-25 04:51:27
+      user_id: 844
+    - id: 9
+      score: 7
+      tphoto_id: 9469
+      upd_timestamp: 2004-09-25 04:51:27
+      user_id: 844
+    - id: 10
+      score: -2
+      tphoto_id: 8581
+      upd_timestamp: 2004-09-25 05:53:00
+      user_id: -1
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: tphoto_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: user_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: score
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: tphotovote
+      primary_keys:
+      - id
+  tquery:
+    row_count: 2456719
+    sample_data:
+    - crt_timestamp: '0000-00-00 00:00:00'
+      id: 1
+      osgb_eastings: 405000
+      osgb_northings: 372998
+      sql_from: ''
+      sql_having: ''
+      sql_order: ' pow(trig.osgb_eastings - 405000,2) + pow(trig.osgb_northings -
+        372998,2) '
+      sql_where: ''
+      system_ind: N
+      text: trigpoints, near to BUXTON
+      type: T
+      upd_timestamp: 2025-03-10 13:30:58
+      user_id: 1
+    - crt_timestamp: '0000-00-00 00:00:00'
+      id: 2
+      osgb_eastings: 0
+      osgb_northings: 0
+      sql_from: ' inner join trigstats on trig.id = trigstats.id '
+      sql_having: ''
+      sql_order: ' trigstats.score_baysian desc'
+      sql_where: ''
+      system_ind: Y
+      text: highest scored trigpoints
+      type: T
+      upd_timestamp: 2025-08-20 02:46:56
+      user_id: 1
+    - crt_timestamp: 2011-10-10 12:11:54
+      id: 3
+      osgb_eastings: 0
+      osgb_northings: 0
+      sql_from: ''
+      sql_having: ''
+      sql_order: trig.needs_attention desc, trig.id desc
+      sql_where: trig.needs_attention <> 0
+      system_ind: Y
+      text: trigpoint records needing attention from an admin
+      type: T
+      upd_timestamp: 2025-08-19 21:36:01
+      user_id: 1
+    - crt_timestamp: 2011-10-10 12:30:36
+      id: 4
+      osgb_eastings: 0
+      osgb_northings: 0
+      sql_from: ''
+      sql_having: ''
+      sql_order: trig.id desc
+      sql_where: trig.needs_attention & 8 > 0
+      system_ind: Y
+      text: new trigpoints, needing attention from an admin
+      type: T
+      upd_timestamp: 2025-06-16 08:52:06
+      user_id: null
+    - crt_timestamp: 2011-10-10 12:30:36
+      id: 5
+      osgb_eastings: 0
+      osgb_northings: 0
+      sql_from: ''
+      sql_having: ''
+      sql_order: trig.id desc
+      sql_where: trig.needs_attention & 2 > 0
+      system_ind: Y
+      text: trigpoints needing attention from a SysAdmin
+      type: T
+      upd_timestamp: 2025-04-16 20:16:13
+      user_id: null
+    - crt_timestamp: 2011-10-10 12:36:03
+      id: 6
+      osgb_eastings: 0
+      osgb_northings: 0
+      sql_from: ''
+      sql_having: ''
+      sql_order: trig.id desc
+      sql_where: trig.needs_attention & 4 > 0
+      system_ind: Y
+      text: trigpoint records flagged by users as needing attention
+      type: T
+      upd_timestamp: 2025-04-16 20:16:22
+      user_id: null
+    - crt_timestamp: 2011-10-10 12:36:03
+      id: 7
+      osgb_eastings: 0
+      osgb_northings: 0
+      sql_from: ''
+      sql_having: ''
+      sql_order: trig.id desc
+      sql_where: trig.needs_attention & 1 > 0
+      system_ind: Y
+      text: trigpoint records flagged by admins as needing attention
+      type: T
+      upd_timestamp: 2025-03-10 13:30:58
+      user_id: null
+    - crt_timestamp: '0000-00-00 00:00:00'
+      id: 8
+      osgb_eastings: 489000
+      osgb_northings: 181998
+      sql_from: ''
+      sql_having: ''
+      sql_order: ' pow(trig.osgb_eastings - 489000,2) + pow(trig.osgb_northings -
+        181998,2) '
+      sql_where: ''
+      system_ind: N
+      text: trigpoints, near to MAIDENHEAD
+      type: T
+      upd_timestamp: 2025-03-10 13:30:58
+      user_id: 1
+    - crt_timestamp: '0000-00-00 00:00:00'
+      id: 14
+      osgb_eastings: 448951
+      osgb_northings: 92470
+      sql_from: ''
+      sql_having: ''
+      sql_order: ' pow(trig.osgb_eastings - 448951,2) + pow(trig.osgb_northings -
+        92470,2) '
+      sql_where: ''
+      system_ind: N
+      text: trigpoints, near to waypoint TP2594 ( Crockers Pit)
+      type: T
+      upd_timestamp: 2025-03-10 13:30:58
+      user_id: 8
+    - crt_timestamp: '0000-00-00 00:00:00'
+      id: 15
+      osgb_eastings: 576960
+      osgb_northings: 167720
+      sql_from: ''
+      sql_having: ''
+      sql_order: ' pow(trig.osgb_eastings - 576960,2) + pow(trig.osgb_northings -
+        167720,2) '
+      sql_where: '   trig.physical_type = ''Pillar''  '
+      system_ind: N
+      text: trigpoints, near to postcode ME7 4EH, which are pillars
+      type: T
+      upd_timestamp: 2025-03-10 13:30:58
+      user_id: 9
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: type
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: text
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: sql_from
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: sql_where
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: sql_having
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: sql_order
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: osgb_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: user_id
+        nullable: true
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: system_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: crt_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: tquery
+      primary_keys:
+      - id
+  tquizscores:
+    row_count: 3277
+    sample_data:
+    - Game: A3
+      correct: '-'
+      crt_timestamp: 2005-03-03 16:20:47
+      id: 1
+      photo_id: 11627
+      result: ''
+      trig_id: 3428
+      user_id: 844
+    - Game: A3
+      correct: Y
+      crt_timestamp: 2005-03-03 16:20:47
+      id: 2
+      photo_id: 13413
+      result: '4216'
+      trig_id: 4216
+      user_id: 844
+    - Game: A3
+      correct: Y
+      crt_timestamp: 2005-03-03 16:20:47
+      id: 3
+      photo_id: 9609
+      result: '2492'
+      trig_id: 2492
+      user_id: 844
+    - Game: A3
+      correct: '-'
+      crt_timestamp: 2005-03-03 16:20:47
+      id: 4
+      photo_id: 1122
+      result: Pass
+      trig_id: 6422
+      user_id: 844
+    - Game: A3
+      correct: '-'
+      crt_timestamp: 2005-03-03 16:48:48
+      id: 5
+      photo_id: 3712
+      result: Pass
+      trig_id: 1839
+      user_id: 844
+    - Game: A3
+      correct: Y
+      crt_timestamp: 2005-03-03 16:48:48
+      id: 6
+      photo_id: 4739
+      result: '6324'
+      trig_id: 6324
+      user_id: 844
+    - Game: A3
+      correct: Y
+      crt_timestamp: 2005-03-03 16:48:48
+      id: 7
+      photo_id: 1611
+      result: '5447'
+      trig_id: 5447
+      user_id: 844
+    - Game: A3
+      correct: '='
+      crt_timestamp: 2005-03-03 21:34:40
+      id: 8
+      photo_id: 996
+      result: Easy
+      trig_id: 3724
+      user_id: 844
+    - Game: A3
+      correct: N
+      crt_timestamp: 2005-03-03 16:50:40
+      id: 9
+      photo_id: 6712
+      result: '2815'
+      trig_id: 5405
+      user_id: 844
+    - Game: A3
+      correct: Y
+      crt_timestamp: 2005-03-03 16:50:40
+      id: 10
+      photo_id: 4961
+      result: '5368'
+      trig_id: 5368
+      user_id: 844
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: trig_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: photo_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: result
+        nullable: false
+        primary_key: false
+        type: VARCHAR(5) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: correct
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: user_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: Game
+        nullable: false
+        primary_key: false
+        type: CHAR(2) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: crt_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: tquizscores
+      primary_keys:
+      - id
+  trig:
+    row_count: 25810
+    sample_data:
+    - admin_ip_addr: null
+      admin_timestamp: null
+      admin_user_id: null
+      attention_comment: ''
+      condition: G
+      county: Shetland
+      crt_date: 2003-04-02
+      crt_ip_addr: ''
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 53788
+      - 0
+      crt_user_id: 0
+      current_use: Passive station
+      fb_number: S4928
+      historic_use: Primary
+      id: 1
+      name: Fetlar
+      needs_attention: 0
+      os_net_web_id: 836
+      osgb_eastings: 462229
+      osgb_gridref: HU 62229 93521
+      osgb_height: 159
+      osgb_northings: 1193521
+      permission_ind: Y
+      physical_type: Pillar
+      postcode6: ZE2 9
+      status_id: 10
+      stn_number: B1HU6293
+      stn_number_active: null
+      stn_number_osgb36: null
+      stn_number_passive: B1HU6293
+      town: ''
+      upd_timestamp: 2014-07-10 11:37:14
+      user_added: 0
+      waypoint: TP0001
+      wgs_height: 208
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '60.62023'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-0.86480'
+    - admin_ip_addr: 87.127.168.137
+      admin_timestamp: 2014-05-15 21:06:57
+      admin_user_id: 1
+      attention_comment: 15 May 2014 21:06:57 - Teasel - trigpointing@teasel.org -
+        15 May 2014 20:57:03 - Teasel - trigpointing@teasel.org - fsdafdsfsdfa
+      condition: G
+      county: Highland Region
+      crt_date: 2003-04-02
+      crt_ip_addr: ''
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 53790
+      - 0
+      crt_user_id: 0
+      current_use: Passive station
+      fb_number: S6119
+      historic_use: Primary
+      id: 2
+      name: An Cuaidh
+      needs_attention: 0
+      os_net_web_id: 339
+      osgb_eastings: 176500
+      osgb_gridref: NG 76500 89127
+      osgb_height: 297
+      osgb_northings: 889127
+      permission_ind: Y
+      physical_type: Pillar
+      postcode6: IV21 2
+      status_id: 10
+      stn_number: B1NG7689
+      stn_number_active: null
+      stn_number_osgb36: PP373
+      stn_number_passive: B1NG7689
+      town: ''
+      upd_timestamp: 2014-06-05 19:12:03
+      user_added: 0
+      waypoint: TP0002
+      wgs_height: 352
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '57.83566'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-5.76663'
+    - admin_ip_addr: 86.2.13.81
+      admin_timestamp: 2017-08-20 22:43:24
+      admin_user_id: 11551
+      attention_comment: ''
+      condition: Q
+      county: Western Isles
+      crt_date: 2003-04-02
+      crt_ip_addr: ''
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 53792
+      - 0
+      crt_user_id: 0
+      current_use: Passive station
+      fb_number: ''
+      historic_use: Other
+      id: 3
+      name: Barra Differential
+      needs_attention: 0
+      os_net_web_id: 342
+      osgb_eastings: 70095
+      osgb_gridref: NL 70095 98813
+      osgb_height: 26
+      osgb_northings: 798813
+      permission_ind: Y
+      physical_type: Bolt
+      postcode6: PA80 5
+      status_id: 30
+      stn_number: B1NL7098
+      stn_number_active: null
+      stn_number_osgb36: null
+      stn_number_passive: B1NL7098
+      town: ''
+      upd_timestamp: 2017-08-20 22:43:24
+      user_added: 0
+      waypoint: TP0003
+      wgs_height: 83
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '56.96243'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-7.43001'
+    - admin_ip_addr: null
+      admin_timestamp: null
+      admin_user_id: null
+      attention_comment: ''
+      condition: G
+      county: North Yorkshire
+      crt_date: 2003-04-02
+      crt_ip_addr: ''
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 53795
+      - 0
+      crt_user_id: 0
+      current_use: Passive station
+      fb_number: S4255
+      historic_use: Secondary
+      id: 4
+      name: Danby Beacon
+      needs_attention: 0
+      os_net_web_id: 347
+      osgb_eastings: 473626
+      osgb_gridref: NZ 73626 09255
+      osgb_height: 299
+      osgb_northings: 509255
+      permission_ind: Y
+      physical_type: Pillar
+      postcode6: YO21 2
+      status_id: 10
+      stn_number: B1NZ7309
+      stn_number_active: null
+      stn_number_osgb36: NZ42/41
+      stn_number_passive: B1NZ7309
+      town: LOFTUS
+      upd_timestamp: 2014-07-10 11:37:14
+      user_added: 0
+      waypoint: TP0004
+      wgs_height: 347
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '54.47333'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-0.86537'
+    - admin_ip_addr: 172.70.58.154
+      admin_timestamp: 2025-04-17 13:36:51
+      admin_user_id: 1477
+      attention_comment: "17 Apr 2025 13:36:51 - agentmancuso - berniehughes73@gmail.com\
+        \ - Emailed 05 Apr 2025 18:37:49- icecreamsmiles - annemarieablett@hotmail.co.uk\
+        \ - Trig point spelling is incorrect. Should be Moel Famau (ONE M, not two).\
+        \ I would also expect far, far more logs than there are, as this is a very\
+        \ popular spot, but it\u2019s hard to find the trig point on the database\
+        \ because of the incorrect spelling.\r\n\r\n08 Feb 2019 09:33:56 - agentmancuso\
+        \ - berniehughes73@gmail.com - PM sent\r\n\r\n04 Feb 2019 15:58:30- Jeff Trig\
+        \ Point -  - Pillar condition is shown as good, there are signs of cracking\
+        \ on the pillar, just after some clarification about your thoughts of when\
+        \ slightly damaged is appropriate? thanks jeff\r\n\r\n06 Jan 2019 13:55:46\
+        \ - agentmancuso - berniehughes73@gmail.com - PM re OS placenames.\r\n04 Jan\
+        \ 2019 13:46:28 - Jeff Trig Point - there is only 1 M in Famau\r\n\r\n02 Nov\
+        \ 2018 12:09:49 - agentmancuso - berniehughes73@gmail.com - 05 Oct 2018 13:22:12\
+        \ - chevyfire - stunning views over Mersey estaury and Welsh border hills\r\
+        \n\r\n24 Aug 2014 12:50:45 - agentmancuso - berniehughes73@gmail.com - 23\
+        \ Aug 2014 22:07:11 - Chris920 - Fantastic walk up with brilliant views over\
+        \ the Welsh countryside. Great chance for bagging a few carins.\r\n\r\n"
+      condition: S
+      county: Clwyd
+      crt_date: 2003-04-02
+      crt_ip_addr: ''
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 53797
+      - 0
+      crt_user_id: 0
+      current_use: Passive station
+      fb_number: '2961'
+      historic_use: Primary
+      id: 5
+      name: Moel Fammau
+      needs_attention: 0
+      os_net_web_id: 348
+      osgb_eastings: 316164
+      osgb_gridref: SJ 16164 62653
+      osgb_height: 554
+      osgb_northings: 362653
+      permission_ind: Y
+      physical_type: Pillar
+      postcode6: CH7 5
+      status_id: 10
+      stn_number: B1SJ1662
+      stn_number_active: null
+      stn_number_osgb36: PP86
+      stn_number_passive: B1SJ1662
+      town: MOLD
+      upd_timestamp: 2025-04-17 13:36:51
+      user_added: 0
+      waypoint: TP0005
+      wgs_height: 608
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '53.15439'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-3.25513'
+    - admin_ip_addr: null
+      admin_timestamp: null
+      admin_user_id: null
+      attention_comment: ''
+      condition: G
+      county: Nottinghamshire
+      crt_date: 2003-04-02
+      crt_ip_addr: ''
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 53799
+      - 0
+      crt_user_id: 0
+      current_use: Passive station
+      fb_number: S4631
+      historic_use: 3rd order
+      id: 6
+      name: Darlton
+      needs_attention: 0
+      os_net_web_id: 349
+      osgb_eastings: 475832
+      osgb_gridref: SK 75832 72215
+      osgb_height: 48
+      osgb_northings: 372215
+      permission_ind: N
+      physical_type: Pillar
+      postcode6: NG22 0
+      status_id: 10
+      stn_number: B1SK7572
+      stn_number_active: null
+      stn_number_osgb36: TF05/T16
+      stn_number_passive: B1SK7572
+      town: RETFORD
+      upd_timestamp: 2014-07-10 11:37:14
+      user_added: 0
+      waypoint: TP0006
+      wgs_height: 95
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '53.24156'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-0.86514'
+    - admin_ip_addr: 172.69.79.171
+      admin_timestamp: 2022-08-16 09:48:01
+      admin_user_id: 1477
+      attention_comment: "16 Aug 2022 09:48:01 - agentmancuso - berniehughes73@gmail.com\
+        \ - 08 Aug 2022 15:32:40 - Wheresthatpenguin - Parked on the road to the south\
+        \ west of the pillar. Entered the trig field via the public right of way,\
+        \ and then walked the fence line up to the pillar. There is some slight damage\
+        \ to the top of the pillar. The cap was missing, so I replaced it. Situated\
+        \ at the highest point in the  Cotswolds, and is the Gloucestershire county\
+        \ top -  330 metres (1 of 7 today in and around Cheltenham)\r\n\r\n08 Aug\
+        \ 2022 10:15:28 - Wheresthatpenguin - Parked on the road to the south west\
+        \ of the pillar. Entered the trig field via the public right of way, and then\
+        \ walked the fence line up to the pillar. There is some slight damage to the\
+        \ top of the pillar. The cap was missing, so I replaced it. Situated at the\
+        \ highest point in the  Cotswolds, and is the Gloucestershire county top -\
+        \  330 metres (1 of 7 today in and around Cheltenham\r\n\r\n"
+      condition: S
+      county: Gloucestershire
+      crt_date: 2003-04-02
+      crt_ip_addr: ''
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 53803
+      - 0
+      crt_user_id: 0
+      current_use: Passive station
+      fb_number: S1529
+      historic_use: Primary
+      id: 7
+      name: Cleeve Hill
+      needs_attention: 0
+      os_net_web_id: 350
+      osgb_eastings: 399694
+      osgb_gridref: SO 99694 24593
+      osgb_height: 330
+      osgb_northings: 224593
+      permission_ind: Y
+      physical_type: Pillar
+      postcode6: GL52 3
+      status_id: 10
+      stn_number: B1SO9924
+      stn_number_active: null
+      stn_number_osgb36: PP69
+      stn_number_passive: B1SO9924
+      town: CHELTENHAM
+      upd_timestamp: 2022-08-16 09:48:01
+      user_added: 0
+      waypoint: TP0007
+      wgs_height: 379
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '51.91987'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-2.00585'
+    - admin_ip_addr: null
+      admin_timestamp: null
+      admin_user_id: null
+      attention_comment: ''
+      condition: X
+      county: Dyfed
+      crt_date: 2003-04-02
+      crt_ip_addr: ''
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 53805
+      - 0
+      crt_user_id: 0
+      current_use: Passive station
+      fb_number: S6381
+      historic_use: 3rd order
+      id: 8
+      name: Warren Farm
+      needs_attention: 0
+      os_net_web_id: null
+      osgb_eastings: 193196
+      osgb_gridref: SR 93196 97645
+      osgb_height: 72
+      osgb_northings: 197645
+      permission_ind: Y
+      physical_type: Pillar
+      postcode6: SA34 0
+      status_id: 10
+      stn_number: B1SR9397
+      stn_number_active: null
+      stn_number_osgb36: SN02/T47
+      stn_number_passive: B1SR9397
+      town: NARBERTH
+      upd_timestamp: 2014-07-10 11:36:34
+      user_added: 0
+      waypoint: TP0008
+      wgs_height: 126
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '51.63950'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-4.99008'
+    - admin_ip_addr: null
+      admin_timestamp: null
+      admin_user_id: null
+      attention_comment: ''
+      condition: G
+      county: Cornwall
+      crt_date: 2003-04-02
+      crt_ip_addr: ''
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 53808
+      - 0
+      crt_user_id: 0
+      current_use: Passive station
+      fb_number: S1706
+      historic_use: Primary
+      id: 9
+      name: Bartinney
+      needs_attention: 0
+      os_net_web_id: 323
+      osgb_eastings: 139448
+      osgb_gridref: SW 39448 29328
+      osgb_height: 225
+      osgb_northings: 29328
+      permission_ind: Y
+      physical_type: Pillar
+      postcode6: TR19 7
+      status_id: 10
+      stn_number: B1SW3929
+      stn_number_active: null
+      stn_number_osgb36: PP180
+      stn_number_passive: B1SW3929
+      town: ST JUST
+      upd_timestamp: 2014-07-10 11:36:34
+      user_added: 0
+      waypoint: TP0009
+      wgs_height: 278
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '50.10676'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '-5.64532'
+    - admin_ip_addr: null
+      admin_timestamp: null
+      admin_user_id: null
+      attention_comment: ''
+      condition: G
+      county: Kent
+      crt_date: 2003-04-02
+      crt_ip_addr: ''
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 53810
+      - 0
+      crt_user_id: 0
+      current_use: Passive station
+      fb_number: S2034
+      historic_use: 3rd order
+      id: 10
+      name: Rowdow Hill
+      needs_attention: 0
+      os_net_web_id: 336
+      osgb_eastings: 554228
+      osgb_gridref: TQ 54228 59952
+      osgb_height: 204
+      osgb_northings: 159952
+      permission_ind: N
+      physical_type: Pillar
+      postcode6: TN15 6
+      status_id: 10
+      stn_number: B1TQ5459
+      stn_number_active: null
+      stn_number_osgb36: TQ47/T238
+      stn_number_passive: B1TQ5459
+      town: OTFORD
+      upd_timestamp: 2014-07-10 11:37:14
+      user_added: 0
+      waypoint: TP0010
+      wgs_height: 249
+      wgs_lat: !!python/object/apply:decimal.Decimal
+      - '51.31778'
+      wgs_long: !!python/object/apply:decimal.Decimal
+      - '0.21177'
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: waypoint
+        nullable: false
+        primary_key: false
+        type: VARCHAR(8) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: status_id
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: user_added
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: current_use
+        nullable: false
+        primary_key: false
+        type: VARCHAR(25) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: historic_use
+        nullable: false
+        primary_key: false
+        type: VARCHAR(30) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: physical_type
+        nullable: false
+        primary_key: false
+        type: VARCHAR(25) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: wgs_lat
+        nullable: false
+        primary_key: false
+        type: DECIMAL(7, 5)
+      - default: null
+        name: wgs_long
+        nullable: false
+        primary_key: false
+        type: DECIMAL(7, 5)
+      - default: null
+        name: wgs_height
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: osgb_gridref
+        nullable: false
+        primary_key: false
+        type: VARCHAR(14) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: osgb_height
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: fb_number
+        nullable: false
+        primary_key: false
+        type: VARCHAR(10) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: stn_number
+        nullable: false
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: stn_number_active
+        nullable: true
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: stn_number_passive
+        nullable: true
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: stn_number_osgb36
+        nullable: true
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: os_net_web_id
+        nullable: true
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: permission_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: condition
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: postcode6
+        nullable: false
+        primary_key: false
+        type: VARCHAR(6) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: county
+        nullable: false
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: town
+        nullable: false
+        primary_key: false
+        type: VARCHAR(50) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: needs_attention
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: attention_comment
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: crt_date
+        nullable: false
+        primary_key: false
+        type: DATE
+      - default: null
+        name: crt_time
+        nullable: false
+        primary_key: false
+        type: TIME
+      - default: null
+        name: crt_user_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: crt_ip_addr
+        nullable: false
+        primary_key: false
+        type: VARCHAR(15) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: admin_user_id
+        nullable: true
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: admin_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: admin_ip_addr
+        nullable: true
+        primary_key: false
+        type: VARCHAR(15) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: trig
+      primary_keys:
+      - id
+  trigdata:
+    row_count: 7314
+    sample_data:
+    - area_osgb_height: 131
+      aroaddist: 2100
+      aroade: 461102
+      aroadn: 1191749
+      broaddist: 2148
+      broade: 461500
+      broadn: 1191500
+      countryside: 99.68
+      croaddist: 2659
+      croade: 460500
+      croadn: 1191500
+      id: 1
+      mwaydist: 495249
+      mwayjtn: M90-11
+      near1: 3592
+      near10: 84598
+      near100: 7457147
+      near1000: 356866295
+      near15: 160551
+      near2: 8553
+      near20: 256716
+      near3: 14112
+      near4: 20958
+      near5: 27839
+      osgb_height_dif: 28
+      stndist: 272557
+      stne: 329156
+      stnn: 955657
+      trackdist: 271901
+      tracke: 311279
+      trackn: 967370
+      urban: 0.0
+      woodland: 0.0
+    - area_osgb_height: 267
+      aroaddist: 3873
+      aroade: 173991
+      aroadn: 886176
+      broaddist: 3301
+      broade: 174500
+      broadn: 886500
+      countryside: 95.27
+      croaddist: 1067
+      croade: 175500
+      croadn: 889500
+      id: 2
+      mwaydist: 212216
+      mwayjtn: M90-11
+      near1: 5081
+      near10: 93405
+      near100: 3761914
+      near1000: 126580739
+      near15: 169717
+      near2: 10281
+      near20: 276746
+      near3: 16477
+      near4: 24044
+      near5: 34781
+      osgb_height_dif: 30
+      stndist: 47003
+      stne: 200280
+      stnn: 848583
+      trackdist: 46914
+      tracke: 199605
+      trackn: 848296
+      urban: 0.0
+      woodland: 4.73
+    - area_osgb_height: 1
+      aroaddist: 840
+      aroade: 69947
+      aroadn: 799640
+      broaddist: 16293
+      broade: 74500
+      broadn: 814500
+      countryside: 7.85
+      croaddist: 672
+      croade: 69500
+      croadn: 798500
+      id: 3
+      mwaydist: 211656
+      mwayjtn: M8-31
+      near1: 2363
+      near10: 80629
+      near100: 6019782
+      near1000: 160914688
+      near15: 176161
+      near2: 7305
+      near20: 321119
+      near3: 12560
+      near4: 18777
+      near5: 26602
+      osgb_height_dif: 25
+      stndist: 98197
+      stne: 168099
+      stnn: 792645
+      trackdist: 96546
+      tracke: 166014
+      trackn: 787823
+      urban: 0.0
+      woodland: 0.0
+    - area_osgb_height: 278
+      aroaddist: 3211
+      aroade: 470727
+      aroadn: 510636
+      broaddist: 3434
+      broade: 472500
+      broadn: 512500
+      countryside: 98.48
+      croaddist: 275
+      croade: 473500
+      croadn: 509500
+      id: 4
+      mwaydist: 79145
+      mwayjtn: M62-38
+      near1: 4096
+      near10: 64418
+      near100: 2551299
+      near1000: 90394954
+      near15: 114044
+      near2: 8514
+      near20: 174297
+      near3: 13606
+      near4: 18732
+      near5: 25126
+      osgb_height_dif: 21
+      stndist: 14644
+      stne: 460495
+      stnn: 515739
+      trackdist: 1939
+      tracke: 474402
+      trackn: 507477
+      urban: 0.0
+      woodland: 0.0
+    - area_osgb_height: 440
+      aroaddist: 2577
+      aroade: 318608
+      aroadn: 361833
+      broaddist: 2721
+      broade: 314500
+      broadn: 360500
+      countryside: 1.31
+      croaddist: 1200
+      croade: 316500
+      croadn: 361500
+      id: 5
+      mwaydist: 23544
+      mwayjtn: M56-16
+      near1: 4568
+      near10: 75653
+      near100: 2559282
+      near1000: 83735267
+      near15: 135231
+      near2: 9788
+      near20: 203227
+      near3: 15114
+      near4: 21546
+      near5: 28336
+      osgb_height_dif: 114
+      stndist: 8457
+      stne: 313021
+      stnn: 354801
+      trackdist: 5831
+      tracke: 321161
+      trackn: 365660
+      urban: 0.0
+      woodland: 98.69
+    - area_osgb_height: 34
+      aroaddist: 1743
+      aroade: 475482
+      aroadn: 373923
+      broaddist: 2171
+      broade: 474500
+      broadn: 370500
+      countryside: 98.72
+      croaddist: 1327
+      croade: 475500
+      croadn: 373500
+      id: 6
+      mwaydist: 29202
+      mwayjtn: M1-30
+      near1: 3881
+      near10: 70607
+      near100: 2102519
+      near1000: 68202170
+      near15: 122324
+      near2: 8313
+      near20: 184298
+      near3: 14792
+      near4: 21700
+      near5: 29181
+      osgb_height_dif: 14
+      stndist: 7244
+      stne: 479175
+      stnn: 365788
+      trackdist: 1837
+      tracke: 474088
+      trackn: 371635
+      urban: 0.0
+      woodland: 0.0
+    - area_osgb_height: 305
+      aroaddist: 2850
+      aroade: 396848
+      aroadn: 224434
+      broaddist: 2195
+      broade: 397500
+      broadn: 224500
+      countryside: 99.21
+      croaddist: 215
+      croade: 399500
+      croadn: 224500
+      id: 7
+      mwaydist: 9248
+      mwayjtn: M5-10
+      near1: 2102
+      near10: 80327
+      near100: 2305760
+      near1000: 67704287
+      near15: 145804
+      near2: 6714
+      near20: 222520
+      near3: 12450
+      near4: 19698
+      near5: 27551
+      osgb_height_dif: 25
+      stndist: 7289
+      stne: 393223
+      stnn: 227949
+      trackdist: 6055
+      tracke: 393674
+      trackn: 225249
+      urban: 0.0
+      woodland: 0.0
+    - area_osgb_height: 53
+      aroaddist: 6688
+      aroade: 198152
+      aroadn: 202136
+      broaddist: 336
+      broade: 193500
+      broadn: 197500
+      countryside: 83.92
+      croaddist: 336
+      croade: 193500
+      croadn: 197500
+      id: 8
+      mwaydist: 64842
+      mwayjtn: M4-48
+      near1: 3879
+      near10: 92748
+      near100: 3205523
+      near1000: 109649790
+      near15: 167192
+      near2: 8099
+      near20: 255635
+      near3: 14829
+      near4: 23462
+      near5: 32524
+      osgb_height_dif: 19
+      stndist: 24557
+      stne: 201509
+      stnn: 220753
+      trackdist: 6876
+      tracke: 198622
+      trackn: 201869
+      urban: 0.0
+      woodland: 0.0
+    - area_osgb_height: 189
+      aroaddist: 1430
+      aroade: 138876
+      aroadn: 28017
+      broaddist: 1258
+      broade: 138500
+      broadn: 28500
+      countryside: 100.0
+      croaddist: 829
+      croade: 139500
+      croadn: 28500
+      id: 9
+      mwaydist: 164214
+      mwayjtn: M5-31
+      near1: 2402
+      near10: 50341
+      near100: 4662993
+      near1000: 184450830
+      near15: 84963
+      near2: 4908
+      near20: 140856
+      near3: 8949
+      near4: 13419
+      near5: 18810
+      osgb_height_dif: 36
+      stndist: 23530
+      stne: 161030
+      stnn: 38704
+      trackdist: 8088
+      tracke: 147278
+      trackn: 31357
+      urban: 0.0
+      woodland: 0.0
+    - area_osgb_height: 153
+      aroaddist: 1944
+      aroade: 555510
+      aroadn: 158490
+      broaddist: 3527
+      broade: 553500
+      broadn: 156500
+      countryside: 36.81
+      croaddist: 527
+      croade: 554500
+      croadn: 159500
+      id: 10
+      mwaydist: 5033
+      mwayjtn: M25-4
+      near1: 5095
+      near10: 74260
+      near100: 2411772
+      near1000: 84306976
+      near15: 132570
+      near2: 10320
+      near20: 203530
+      near3: 15829
+      near4: 21587
+      near5: 28595
+      osgb_height_dif: 51
+      stndist: 17482
+      stne: 540330
+      stnn: 170557
+      trackdist: 1701
+      tracke: 552527
+      trackn: 159913
+      urban: 0.0
+      woodland: 52.91
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: near1
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: near2
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: near3
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: near4
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: near5
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: near10
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: near15
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: near20
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: near100
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: near1000
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: mwayjtn
+        nullable: false
+        primary_key: false
+        type: VARCHAR(10) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: mwaydist
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: aroaddist
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: aroade
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: aroadn
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: area_osgb_height
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: osgb_height_dif
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: trackdist
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: tracke
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: trackn
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: broaddist
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: broade
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: broadn
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: croaddist
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: croadn
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: croade
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: countryside
+        nullable: false
+        primary_key: false
+        type: DOUBLE
+      - default: null
+        name: woodland
+        nullable: false
+        primary_key: false
+        type: DOUBLE
+      - default: null
+        name: urban
+        nullable: false
+        primary_key: false
+        type: DOUBLE
+      - default: null
+        name: stndist
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: stne
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: stnn
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      foreign_keys: []
+      indexes: []
+      name: trigdata
+      primary_keys:
+      - id
+  trigdatafields:
+    row_count: 32
+    sample_data:
+    - data_source: os
+      description: Height
+      description_high: Areas of High Altitude
+      description_low: Areas of Low Altitude
+      explanation: Average Area Height
+      field: area_osgb_height
+      field_enabled: y
+      field_group: height
+      includes_position: ''
+      multipler: 0.089605735
+    - data_source: dcw
+      description: to A Roads
+      description_high: Far
+      description_low: Near
+      explanation: Distance to Nearest A Road
+      field: aroaddist
+      field_enabled: y
+      field_group: aroad
+      includes_position: en
+      multipler: 0.001388833
+    - data_source: ''
+      description: ''
+      description_high: ''
+      description_low: ''
+      explanation: ''
+      field: aroade
+      field_enabled: ''
+      field_group: ''
+      includes_position: ''
+      multipler: 0.0
+    - data_source: ''
+      description: ''
+      description_high: ''
+      description_low: ''
+      explanation: ''
+      field: aroadn
+      field_enabled: ''
+      field_group: ''
+      includes_position: ''
+      multipler: 0.0
+    - data_source: os
+      description: to B Road
+      description_high: Far
+      description_low: Near
+      explanation: Distance to Nearest B Road
+      field: broaddist
+      field_enabled: y
+      field_group: broad
+      includes_position: en
+      multipler: 0.001252036
+    - data_source: ''
+      description: ''
+      description_high: ''
+      description_low: ''
+      explanation: ''
+      field: broade
+      field_enabled: ''
+      field_group: ''
+      includes_position: ''
+      multipler: 0.0
+    - data_source: ''
+      description: ''
+      description_high: ''
+      description_low: ''
+      explanation: ''
+      field: broadn
+      field_enabled: ''
+      field_group: ''
+      includes_position: ''
+      multipler: 0.0
+    - data_source: os
+      description: in Open Countryside
+      description_high: Countryside
+      description_low: Urban
+      explanation: Countryside %
+      field: countryside
+      field_enabled: y
+      field_group: countryside
+      includes_position: ''
+      multipler: 1.0
+    - data_source: os
+      description: to Unclassifed Road
+      description_high: Far
+      description_low: Near
+      explanation: Distance to Nearest C Road
+      field: croaddist
+      field_enabled: y
+      field_group: croad
+      includes_position: ''
+      multipler: 0.006805562
+    - data_source: ''
+      description: ''
+      description_high: ''
+      description_low: ''
+      explanation: ''
+      field: croade
+      field_enabled: ''
+      field_group: ''
+      includes_position: ''
+      multipler: 0.0
+    schema:
+      columns:
+      - default: null
+        name: field
+        nullable: false
+        primary_key: true
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: field_group
+        nullable: false
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: field_enabled
+        nullable: false
+        primary_key: false
+        type: ENUM
+      - default: null
+        name: multipler
+        nullable: false
+        primary_key: false
+        type: DOUBLE
+      - default: null
+        name: description
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: description_low
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: description_high
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: includes_position
+        nullable: false
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: data_source
+        nullable: false
+        primary_key: false
+        type: VARCHAR(10) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: explanation
+        nullable: false
+        primary_key: false
+        type: VARCHAR(64) COLLATE "latin1_swedish_ci"
+      foreign_keys: []
+      indexes: []
+      name: trigdatafields
+      primary_keys:
+      - field
+  trigstats:
+    row_count: 25066
+    sample_data:
+    - area_osgb_height: 0
+      found_count: 0
+      found_last: '0000-00-00'
+      id: 0
+      logged_count: 0
+      logged_first: '0000-00-00'
+      logged_last: '0000-00-00'
+      photo_count: 0
+      score_baysian: !!python/object/apply:decimal.Decimal
+      - '0.00'
+      score_mean: !!python/object/apply:decimal.Decimal
+      - '5.57'
+      upd_timestamp: 2025-03-18 10:31:33
+    - area_osgb_height: 0
+      found_count: 19
+      found_last: 2024-06-07
+      id: 1
+      logged_count: 22
+      logged_first: 2001-08-20
+      logged_last: 2024-06-07
+      photo_count: 23
+      score_baysian: !!python/object/apply:decimal.Decimal
+      - '6.46'
+      score_mean: !!python/object/apply:decimal.Decimal
+      - '6.50'
+      upd_timestamp: 2025-03-08 17:01:41
+    - area_osgb_height: 0
+      found_count: 23
+      found_last: 2025-08-12
+      id: 2
+      logged_count: 31
+      logged_first: 2000-07-04
+      logged_last: 2025-08-12
+      photo_count: 16
+      score_baysian: !!python/object/apply:decimal.Decimal
+      - '6.46'
+      score_mean: !!python/object/apply:decimal.Decimal
+      - '6.48'
+      upd_timestamp: 2025-08-16 10:23:39
+    - area_osgb_height: 0
+      found_count: 0
+      found_last: '0000-00-00'
+      id: 3
+      logged_count: 5
+      logged_first: 2017-05-02
+      logged_last: 2024-09-25
+      photo_count: 15
+      score_baysian: !!python/object/apply:decimal.Decimal
+      - '5.09'
+      score_mean: !!python/object/apply:decimal.Decimal
+      - '5.00'
+      upd_timestamp: 2024-10-16 19:13:07
+    - area_osgb_height: 0
+      found_count: 155
+      found_last: 2024-12-26
+      id: 4
+      logged_count: 166
+      logged_first: 1985-03-31
+      logged_last: 2025-06-18
+      photo_count: 146
+      score_baysian: !!python/object/apply:decimal.Decimal
+      - '6.98'
+      score_mean: !!python/object/apply:decimal.Decimal
+      - '6.99'
+      upd_timestamp: 2025-06-19 17:56:31
+    - area_osgb_height: 0
+      found_count: 224
+      found_last: 2025-07-05
+      id: 5
+      logged_count: 275
+      logged_first: 1970-01-01
+      logged_last: 2025-07-12
+      photo_count: 189
+      score_baysian: !!python/object/apply:decimal.Decimal
+      - '7.00'
+      score_mean: !!python/object/apply:decimal.Decimal
+      - '7.01'
+      upd_timestamp: 2025-08-13 12:13:28
+    - area_osgb_height: 0
+      found_count: 56
+      found_last: 2024-12-27
+      id: 6
+      logged_count: 59
+      logged_first: 1996-03-30
+      logged_last: 2024-12-27
+      photo_count: 53
+      score_baysian: !!python/object/apply:decimal.Decimal
+      - '5.43'
+      score_mean: !!python/object/apply:decimal.Decimal
+      - '5.42'
+      upd_timestamp: 2025-01-03 19:53:08
+    - area_osgb_height: 0
+      found_count: 228
+      found_last: 2025-07-18
+      id: 7
+      logged_count: 264
+      logged_first: 1975-08-28
+      logged_last: 2025-08-13
+      photo_count: 161
+      score_baysian: !!python/object/apply:decimal.Decimal
+      - '5.98'
+      score_mean: !!python/object/apply:decimal.Decimal
+      - '5.98'
+      upd_timestamp: 2025-08-13 11:36:21
+    - area_osgb_height: 0
+      found_count: 6
+      found_last: 2005-08-27
+      id: 8
+      logged_count: 30
+      logged_first: 1984-06-27
+      logged_last: 2024-02-26
+      photo_count: 12
+      score_baysian: !!python/object/apply:decimal.Decimal
+      - '3.76'
+      score_mean: !!python/object/apply:decimal.Decimal
+      - '3.70'
+      upd_timestamp: 2024-03-04 09:41:41
+    - area_osgb_height: 0
+      found_count: 59
+      found_last: 2025-03-27
+      id: 9
+      logged_count: 70
+      logged_first: 2002-08-25
+      logged_last: 2025-03-27
+      photo_count: 124
+      score_baysian: !!python/object/apply:decimal.Decimal
+      - '6.81'
+      score_mean: !!python/object/apply:decimal.Decimal
+      - '6.83'
+      upd_timestamp: 2025-08-13 21:23:42
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: logged_first
+        nullable: false
+        primary_key: false
+        type: DATE
+      - default: null
+        name: logged_last
+        nullable: false
+        primary_key: false
+        type: DATE
+      - default: null
+        name: logged_count
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: found_last
+        nullable: false
+        primary_key: false
+        type: DATE
+      - default: null
+        name: found_count
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: photo_count
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: score_mean
+        nullable: false
+        primary_key: false
+        type: DECIMAL(5, 2)
+      - default: null
+        name: score_baysian
+        nullable: false
+        primary_key: false
+        type: DECIMAL(5, 2)
+      - default: null
+        name: area_osgb_height
+        nullable: false
+        primary_key: false
+        type: SMALLINT
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: trigstats
+      primary_keys:
+      - id
+  tuserstats:
+    row_count: 0
+    sample_data: []
+    schema:
+      columns:
+      - default: null
+        name: user_id
+        nullable: false
+        primary_key: true
+        type: INTEGER
+      - default: null
+        name: avg_visits
+        nullable: false
+        primary_key: false
+        type: FLOAT
+      foreign_keys: []
+      indexes: []
+      name: tuserstats
+      primary_keys:
+      - user_id
+  twatch:
+    row_count: 5
+    sample_data:
+    - crt_timestamp: 2004-06-25 21:41:42
+      email_ind: ''
+      trig_id: 2448
+      upd_timestamp: 2004-06-25 21:58:54
+      user_id: 1
+    - crt_timestamp: 2004-06-25 21:39:57
+      email_ind: ''
+      trig_id: 3229
+      upd_timestamp: 2004-06-25 21:39:57
+      user_id: 1
+    - crt_timestamp: 2004-08-05 21:23:05
+      email_ind: ''
+      trig_id: 577
+      upd_timestamp: 2004-08-05 21:23:05
+      user_id: 844
+    - crt_timestamp: 2004-08-05 22:14:10
+      email_ind: ''
+      trig_id: 2783
+      upd_timestamp: 2004-08-05 22:14:10
+      user_id: 844
+    - crt_timestamp: 2004-08-05 21:24:41
+      email_ind: Y
+      trig_id: 4870
+      upd_timestamp: 2004-08-05 21:25:43
+      user_id: 844
+    schema:
+      columns:
+      - default: null
+        name: user_id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: trig_id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: email_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: crt_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      foreign_keys: []
+      indexes: []
+      name: twatch
+      primary_keys:
+      - user_id
+      - trig_id
+  user:
+    row_count: 14682
+    sample_data:
+    - about: Coder for TrigpointingUK's website
+      admin_ind: Y
+      album_cols: 4
+      album_rows: 2
+      cacher_id: 43129
+      cacher_ind: Y
+      crt_date: 2003-04-18
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 47269
+      - 0
+      cryptpw: $1$mVjX7zy0$kIoKygviJYxgT49FPnuqY.
+      disclaimer_ind: Y
+      disclaimer_timestamp: 2003-04-18 13:07:49
+      distance_ind: K
+      email: trigpointinguk@teasel.org
+      email_challenge: ''
+      email_ind: O
+      email_valid: Y
+      firstname: Ian
+      gc_auth_challenge: ''
+      gc_auth_ind: Y
+      gc_auth_timestamp: '0000-00-00 00:00:00'
+      gc_licence_ind: Y
+      gc_licence_timestamp: 2003-06-22 03:19:43
+      gc_premium_ind: Y
+      gc_premium_timestamp: 2005-05-09 11:24:32
+      home1_eastings: 534403
+      home1_gridref: TL 34403 72179
+      home1_name: home
+      home1_northings: 272179
+      home2_eastings: 289934
+      home2_gridref: NH 89934 10748
+      home2_name: Speyside
+      home2_northings: 810748
+      home3_eastings: 477984
+      home3_gridref: SZ 77984 98498
+      home3_name: Wittering
+      home3_northings: 98498
+      homepage: http://https://trigpointing.uk
+      id: 1
+      name: Teasel
+      nearest_max_m: 10
+      online_map_type: mm25kl
+      online_map_type2: ge
+      public_ind: N
+      showhandi: Y
+      showscores: Y
+      sms_credit: 9
+      sms_grace: 5
+      sms_number: '447876648764'
+      status_max: 20
+      surname: Harris
+      trigger_ind: Y
+      trigmap_b: 0
+      trigmap_c: 1
+      trigmap_l: 0
+      upd_timestamp: 2022-08-15 21:57:52
+    - about: ''
+      admin_ind: N
+      album_cols: 4
+      album_rows: 2
+      cacher_id: 2918
+      cacher_ind: Y
+      crt_date: 2003-04-18
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 56870
+      - 0
+      cryptpw: $1$4X7BYm.S$18p8tgau4qDbofjrl89fC1
+      disclaimer_ind: Y
+      disclaimer_timestamp: 2003-04-18 15:47:50
+      distance_ind: M
+      email: jstead@bigfoot.com
+      email_challenge: ''
+      email_ind: O
+      email_valid: Y
+      firstname: John
+      gc_auth_challenge: ''
+      gc_auth_ind: Y
+      gc_auth_timestamp: '0000-00-00 00:00:00'
+      gc_licence_ind: Y
+      gc_licence_timestamp: 2003-06-25 03:10:08
+      gc_premium_ind: N
+      gc_premium_timestamp: 2005-05-09 11:11:12
+      home1_eastings: 348600
+      home1_gridref: SJ 48600 96000
+      home1_name: Home
+      home1_northings: 396000
+      home2_eastings: 0
+      home2_gridref: ''
+      home2_name: work
+      home2_northings: 0
+      home3_eastings: 0
+      home3_gridref: ''
+      home3_name: ''
+      home3_northings: 0
+      homepage: ''
+      id: 2
+      name: John Stead
+      nearest_max_m: 50000
+      online_map_type: ''
+      online_map_type2: lla
+      public_ind: Y
+      showhandi: Y
+      showscores: Y
+      sms_credit: 0
+      sms_grace: 5
+      sms_number: ''
+      status_max: 0
+      surname: Stead
+      trigger_ind: Y
+      trigmap_b: 3
+      trigmap_c: 0
+      trigmap_l: 0
+      upd_timestamp: 2008-12-26 22:27:01
+    - about: ''
+      admin_ind: N
+      album_cols: 4
+      album_rows: 2
+      cacher_id: 53091
+      cacher_ind: Y
+      crt_date: 2003-04-18
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 59711
+      - 0
+      cryptpw: $1$H5qbI8/H$cZOhfq5nIbqF1YpDkM8KM0
+      disclaimer_ind: Y
+      disclaimer_timestamp: 2003-04-18 16:35:11
+      distance_ind: M
+      email: amalbon@enterprise.net
+      email_challenge: ''
+      email_ind: N
+      email_valid: Y
+      firstname: Andy
+      gc_auth_challenge: ''
+      gc_auth_ind: Y
+      gc_auth_timestamp: '0000-00-00 00:00:00'
+      gc_licence_ind: Y
+      gc_licence_timestamp: 2003-07-12 02:34:33
+      gc_premium_ind: N
+      gc_premium_timestamp: 2005-05-09 11:11:12
+      home1_eastings: 452100
+      home1_gridref: SU 52100 67972
+      home1_name: subarite
+      home1_northings: 167972
+      home2_eastings: 0
+      home2_gridref: ''
+      home2_name: ''
+      home2_northings: 0
+      home3_eastings: 0
+      home3_gridref: ''
+      home3_name: ''
+      home3_northings: 0
+      homepage: ''
+      id: 3
+      name: subarite
+      nearest_max_m: 50000
+      online_map_type: sm25k
+      online_map_type2: lla
+      public_ind: ''
+      showhandi: Y
+      showscores: Y
+      sms_credit: 0
+      sms_grace: 5
+      sms_number: null
+      status_max: 0
+      surname: ''
+      trigger_ind: Y
+      trigmap_b: 1
+      trigmap_c: 0
+      trigmap_l: 0
+      upd_timestamp: 2005-10-04 04:04:26
+    - about: ''
+      admin_ind: Y
+      album_cols: 4
+      album_rows: 2
+      cacher_id: 61390
+      cacher_ind: Y
+      crt_date: 2003-04-18
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 61433
+      - 0
+      cryptpw: $1$x5oO8nnS$twYb1t7KFX18nDjbdBHvR/
+      disclaimer_ind: Y
+      disclaimer_timestamp: 2003-04-18 17:03:53
+      distance_ind: K
+      email: mark@geocacheuk.com
+      email_challenge: ''
+      email_ind: Y
+      email_valid: Y
+      firstname: Mark
+      gc_auth_challenge: ''
+      gc_auth_ind: Y
+      gc_auth_timestamp: 2003-07-13 14:19:55
+      gc_licence_ind: Y
+      gc_licence_timestamp: 2003-07-13 14:18:10
+      gc_premium_ind: N
+      gc_premium_timestamp: 2005-05-09 11:11:12
+      home1_eastings: 0
+      home1_gridref: ''
+      home1_name: home
+      home1_northings: 0
+      home2_eastings: 0
+      home2_gridref: ''
+      home2_name: work
+      home2_northings: 0
+      home3_eastings: 0
+      home3_gridref: ''
+      home3_name: ''
+      home3_northings: 0
+      homepage: http://www.geocacheuk.com
+      id: 4
+      name: TheCat
+      nearest_max_m: 50000
+      online_map_type: ''
+      online_map_type2: lla
+      public_ind: N
+      showhandi: Y
+      showscores: Y
+      sms_credit: 0
+      sms_grace: 5
+      sms_number: null
+      status_max: 0
+      surname: Thompson
+      trigger_ind: Y
+      trigmap_b: 2
+      trigmap_c: 0
+      trigmap_l: 0
+      upd_timestamp: 2005-05-09 11:11:12
+    - about: 21yr old from Aylesbury, Bucks.
+      admin_ind: N
+      album_cols: 4
+      album_rows: 2
+      cacher_id: 41508
+      cacher_ind: Y
+      crt_date: 2003-04-18
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 62652
+      - 0
+      cryptpw: $1$3hOatMEX$hIX5rv9IfpaQXfsNheOOH/
+      disclaimer_ind: Y
+      disclaimer_timestamp: 2003-04-18 17:24:12
+      distance_ind: M
+      email: Danadamsa1@hotmail.com
+      email_challenge: ''
+      email_ind: O
+      email_valid: Y
+      firstname: Dan
+      gc_auth_challenge: ''
+      gc_auth_ind: Y
+      gc_auth_timestamp: '0000-00-00 00:00:00'
+      gc_licence_ind: N
+      gc_licence_timestamp: '0000-00-00 00:00:00'
+      gc_premium_ind: N
+      gc_premium_timestamp: 2005-05-09 11:11:12
+      home1_eastings: 0
+      home1_gridref: ''
+      home1_name: Home
+      home1_northings: 0
+      home2_eastings: 0
+      home2_gridref: ''
+      home2_name: work
+      home2_northings: 0
+      home3_eastings: 0
+      home3_gridref: ''
+      home3_name: ''
+      home3_northings: 0
+      homepage: http://www.buckscaching.co.uk
+      id: 5
+      name: Dan Wilson
+      nearest_max_m: 50000
+      online_map_type: ''
+      online_map_type2: lla
+      public_ind: N
+      showhandi: Y
+      showscores: Y
+      sms_credit: 0
+      sms_grace: 5
+      sms_number: null
+      status_max: 0
+      surname: Wilson
+      trigger_ind: Y
+      trigmap_b: 2
+      trigmap_c: 0
+      trigmap_l: 0
+      upd_timestamp: 2005-05-09 11:11:12
+    - about: Trig-bashers
+      admin_ind: N
+      album_cols: 4
+      album_rows: 2
+      cacher_id: 0
+      cacher_ind: N
+      crt_date: 2003-04-18
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 62963
+      - 0
+      cryptpw: $1$zeM2rzJI$4TFxWAYnSkvtEg9eOUARx0
+      disclaimer_ind: Y
+      disclaimer_timestamp: 2003-04-18 17:29:23
+      distance_ind: K
+      email: ''
+      email_challenge: ''
+      email_ind: N
+      email_valid: N
+      firstname: Harold, Albert & Hercules
+      gc_auth_challenge: ''
+      gc_auth_ind: Y
+      gc_auth_timestamp: '0000-00-00 00:00:00'
+      gc_licence_ind: N
+      gc_licence_timestamp: '0000-00-00 00:00:00'
+      gc_premium_ind: N
+      gc_premium_timestamp: 2005-05-09 11:11:12
+      home1_eastings: 0
+      home1_gridref: ''
+      home1_name: home
+      home1_northings: 0
+      home2_eastings: 0
+      home2_gridref: ''
+      home2_name: work
+      home2_northings: 0
+      home3_eastings: 0
+      home3_gridref: ''
+      home3_name: ''
+      home3_northings: 0
+      homepage: ''
+      id: 6
+      name: The Steptoes
+      nearest_max_m: 50000
+      online_map_type: ''
+      online_map_type2: lla
+      public_ind: N
+      showhandi: Y
+      showscores: Y
+      sms_credit: 0
+      sms_grace: 5
+      sms_number: null
+      status_max: 0
+      surname: ''
+      trigger_ind: Y
+      trigmap_b: 2
+      trigmap_c: 0
+      trigmap_l: 0
+      upd_timestamp: 2005-05-09 11:11:12
+    - about: ''
+      admin_ind: N
+      album_cols: 4
+      album_rows: 2
+      cacher_id: 34689
+      cacher_ind: Y
+      crt_date: 2003-04-18
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 79962
+      - 0
+      cryptpw: $1$J52GNx7e$uXXf0LISQXXb9ItBePd7q0
+      disclaimer_ind: Y
+      disclaimer_timestamp: 2003-04-18 22:12:42
+      distance_ind: K
+      email: chris@fabalou.com
+      email_challenge: ''
+      email_ind: N
+      email_valid: Y
+      firstname: Chris
+      gc_auth_challenge: ''
+      gc_auth_ind: Y
+      gc_auth_timestamp: '0000-00-00 00:00:00'
+      gc_licence_ind: Y
+      gc_licence_timestamp: 2003-07-13 14:31:53
+      gc_premium_ind: N
+      gc_premium_timestamp: 2005-05-09 11:11:12
+      home1_eastings: 0
+      home1_gridref: ''
+      home1_name: home
+      home1_northings: 0
+      home2_eastings: 0
+      home2_gridref: ''
+      home2_name: work
+      home2_northings: 0
+      home3_eastings: 0
+      home3_gridref: ''
+      home3_name: ''
+      home3_northings: 0
+      homepage: http://www.sheps.clara.net
+      id: 7
+      name: Chris n Maria
+      nearest_max_m: 50000
+      online_map_type: ''
+      online_map_type2: lla
+      public_ind: Y
+      showhandi: Y
+      showscores: Y
+      sms_credit: 0
+      sms_grace: 5
+      sms_number: null
+      status_max: 0
+      surname: Shepherd
+      trigger_ind: Y
+      trigmap_b: 2
+      trigmap_c: 0
+      trigmap_l: 0
+      upd_timestamp: 2005-05-09 11:11:12
+    - about: ''
+      admin_ind: N
+      album_cols: 4
+      album_rows: 2
+      cacher_id: 0
+      cacher_ind: N
+      crt_date: 2003-04-18
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 81519
+      - 0
+      cryptpw: $1$PO4UcF.K$Q2lXuAvSSJ7c2MWkE2hPv.
+      disclaimer_ind: Y
+      disclaimer_timestamp: 2003-04-18 22:38:39
+      distance_ind: K
+      email: ciemon@gmail.com
+      email_challenge: ''
+      email_ind: N
+      email_valid: Y
+      firstname: Ciemon
+      gc_auth_challenge: ''
+      gc_auth_ind: Y
+      gc_auth_timestamp: '0000-00-00 00:00:00'
+      gc_licence_ind: N
+      gc_licence_timestamp: '0000-00-00 00:00:00'
+      gc_premium_ind: N
+      gc_premium_timestamp: 2005-05-09 11:11:12
+      home1_eastings: 0
+      home1_gridref: ''
+      home1_name: home
+      home1_northings: 0
+      home2_eastings: 0
+      home2_gridref: ''
+      home2_name: work
+      home2_northings: 0
+      home3_eastings: 0
+      home3_gridref: ''
+      home3_name: ''
+      home3_northings: 0
+      homepage: ''
+      id: 8
+      name: Cie
+      nearest_max_m: 50000
+      online_map_type: sm25k
+      online_map_type2: lla
+      public_ind: Y
+      showhandi: Y
+      showscores: Y
+      sms_credit: 0
+      sms_grace: 5
+      sms_number: ''
+      status_max: 0
+      surname: Dunville
+      trigger_ind: Y
+      trigmap_b: 2
+      trigmap_c: 0
+      trigmap_l: 0
+      upd_timestamp: 2007-07-15 19:14:22
+    - about: ''
+      admin_ind: N
+      album_cols: 4
+      album_rows: 2
+      cacher_id: 67369
+      cacher_ind: Y
+      crt_date: 2003-04-18
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 84710
+      - 0
+      cryptpw: $1$SmCb5smd$Yghr2DxflrIfd2Gcmxky90
+      disclaimer_ind: Y
+      disclaimer_timestamp: 2003-04-18 23:31:50
+      distance_ind: M
+      email: mcl@talk21.com
+      email_challenge: ''
+      email_ind: O
+      email_valid: Y
+      firstname: Martyn
+      gc_auth_challenge: ''
+      gc_auth_ind: Y
+      gc_auth_timestamp: '0000-00-00 00:00:00'
+      gc_licence_ind: Y
+      gc_licence_timestamp: 2003-08-31 06:42:50
+      gc_premium_ind: N
+      gc_premium_timestamp: 2005-05-09 11:11:12
+      home1_eastings: 0
+      home1_gridref: ''
+      home1_name: home
+      home1_northings: 0
+      home2_eastings: 0
+      home2_gridref: ''
+      home2_name: work
+      home2_northings: 0
+      home3_eastings: 0
+      home3_gridref: ''
+      home3_name: ''
+      home3_northings: 0
+      homepage: ''
+      id: 9
+      name: MCL
+      nearest_max_m: 50000
+      online_map_type: llr
+      online_map_type2: ge
+      public_ind: N
+      showhandi: Y
+      showscores: Y
+      sms_credit: 0
+      sms_grace: 5
+      sms_number: ''
+      status_max: 0
+      surname: Lycett
+      trigger_ind: Y
+      trigmap_b: 1
+      trigmap_c: 1
+      trigmap_l: 0
+      upd_timestamp: 2021-07-22 06:11:29
+    - about: ''
+      admin_ind: N
+      album_cols: 4
+      album_rows: 2
+      cacher_id: 75327
+      cacher_ind: Y
+      crt_date: 2003-04-19
+      crt_time: !!python/object/apply:datetime.timedelta
+      - 0
+      - 1144
+      - 0
+      cryptpw: $1$.4.03RXi$xDewYRRsKaj5tWDp7q4SV.
+      disclaimer_ind: Y
+      disclaimer_timestamp: 2003-04-19 00:19:04
+      distance_ind: M
+      email: iaegmooh@gmail.com
+      email_challenge: ''
+      email_ind: N
+      email_valid: Y
+      firstname: ''
+      gc_auth_challenge: ''
+      gc_auth_ind: Y
+      gc_auth_timestamp: '0000-00-00 00:00:00'
+      gc_licence_ind: Y
+      gc_licence_timestamp: 2004-01-18 07:20:12
+      gc_premium_ind: N
+      gc_premium_timestamp: 2005-05-09 11:11:12
+      home1_eastings: 318165
+      home1_gridref: SJ 18165 73869
+      home1_name: home
+      home1_northings: 373869
+      home2_eastings: 0
+      home2_gridref: ''
+      home2_name: work
+      home2_northings: 0
+      home3_eastings: 0
+      home3_gridref: ''
+      home3_name: ''
+      home3_northings: 0
+      homepage: ''
+      id: 10
+      name: poshandbecks
+      nearest_max_m: 50000
+      online_map_type: sm25k
+      online_map_type2: lla
+      public_ind: N
+      showhandi: Y
+      showscores: Y
+      sms_credit: 0
+      sms_grace: 5
+      sms_number: ''
+      status_max: 40
+      surname: ''
+      trigger_ind: Y
+      trigmap_b: 0
+      trigmap_c: 0
+      trigmap_l: 0
+      upd_timestamp: 2021-05-04 14:56:54
+    schema:
+      columns:
+      - default: null
+        name: id
+        nullable: false
+        primary_key: true
+        type: MEDIUMINT
+      - default: null
+        name: cacher_id
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(30) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: firstname
+        nullable: false
+        primary_key: false
+        type: VARCHAR(30) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: surname
+        nullable: false
+        primary_key: false
+        type: VARCHAR(30) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: email
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: email_challenge
+        nullable: false
+        primary_key: false
+        type: VARCHAR(34) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: email_valid
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: email_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: homepage
+        nullable: false
+        primary_key: false
+        type: VARCHAR(255) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: distance_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: about
+        nullable: false
+        primary_key: false
+        type: TEXT COLLATE "latin1_swedish_ci"
+      - default: null
+        name: status_max
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: home1_name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: home1_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: home1_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: home1_gridref
+        nullable: false
+        primary_key: false
+        type: VARCHAR(14) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: home2_name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: home2_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: home2_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: home2_gridref
+        nullable: false
+        primary_key: false
+        type: VARCHAR(14) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: home3_name
+        nullable: false
+        primary_key: false
+        type: VARCHAR(20) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: home3_eastings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: home3_northings
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: home3_gridref
+        nullable: false
+        primary_key: false
+        type: VARCHAR(14) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: album_rows
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: album_cols
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: public_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: sms_number
+        nullable: true
+        primary_key: false
+        type: VARCHAR(12) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: sms_credit
+        nullable: false
+        primary_key: false
+        type: MEDIUMINT
+      - default: null
+        name: sms_grace
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: cryptpw
+        nullable: false
+        primary_key: false
+        type: VARCHAR(34) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: cacher_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: trigger_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: admin_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: crt_date
+        nullable: false
+        primary_key: false
+        type: DATE
+      - default: null
+        name: crt_time
+        nullable: false
+        primary_key: false
+        type: TIME
+      - default: null
+        name: upd_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: disclaimer_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: disclaimer_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: gc_licence_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: gc_licence_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: gc_auth_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: gc_auth_challenge
+        nullable: false
+        primary_key: false
+        type: VARCHAR(34) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: gc_auth_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: gc_premium_ind
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: gc_premium_timestamp
+        nullable: true
+        primary_key: false
+        type: TIMESTAMP
+      - default: null
+        name: nearest_max_m
+        nullable: false
+        primary_key: false
+        type: INTEGER
+      - default: null
+        name: online_map_type
+        nullable: false
+        primary_key: false
+        type: VARCHAR(10) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: online_map_type2
+        nullable: false
+        primary_key: false
+        type: VARCHAR(10) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: trigmap_b
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: trigmap_l
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: trigmap_c
+        nullable: false
+        primary_key: false
+        type: TINYINT
+      - default: null
+        name: showscores
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      - default: null
+        name: showhandi
+        nullable: false
+        primary_key: false
+        type: CHAR(1) COLLATE "latin1_swedish_ci"
+      foreign_keys: []
+      indexes: []
+      name: user
+      primary_keys:
+      - id
+total_tables: 38
