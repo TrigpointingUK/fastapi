@@ -115,3 +115,30 @@ variable "dms_instance_ip" {
   type        = string
   default     = null
 }
+
+# CloudFlare SSL Configuration
+variable "cloudflare_origin_cert" {
+  description = "CloudFlare origin certificate (PEM format)"
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "cloudflare_origin_key" {
+  description = "CloudFlare origin certificate private key"
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "enable_cloudflare_ssl" {
+  description = "Enable HTTPS with CloudFlare origin certificate"
+  type        = bool
+  default     = false
+}
+
+variable "domain_name" {
+  description = "Domain name for the API (e.g., fastapi.trigpointing.me)"
+  type        = string
+  default     = null
+}
