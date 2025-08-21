@@ -60,13 +60,13 @@ output "sns_topic_arn" {
 }
 
 output "bastion_host_ip" {
-  description = "Public IP address of the bastion host"
-  value       = var.environment == "staging" && var.admin_ip_address != null ? aws_instance.bastion[0].public_ip : null
+  description = "Elastic IP address of the bastion host"
+  value       = var.environment == "staging" && var.admin_ip_address != null ? aws_eip.bastion[0].public_ip : null
 }
 
 output "bastion_host_dns" {
-  description = "Public DNS name of the bastion host"
-  value       = var.environment == "staging" && var.admin_ip_address != null ? aws_instance.bastion[0].public_dns : null
+  description = "Public DNS name of the bastion host (via Elastic IP)"
+  value       = var.environment == "staging" && var.admin_ip_address != null ? aws_eip.bastion[0].public_dns : null
 }
 
 output "dms_security_group_id" {

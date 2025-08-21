@@ -1,3 +1,14 @@
+# Elastic IP for Bastion Host
+resource "aws_eip" "bastion" {
+  count = var.environment == "staging" && var.admin_ip_address != null ? 1 : 0
+
+  domain = "vpc"
+  
+  tags = {
+    Name = "${var.project_name}-${var.environment}-bastion-eip"
+  }
+}
+
 # Bastion Host for secure database access
 resource "aws_instance" "bastion" {
   count = var.environment == "staging" && var.admin_ip_address != null ? 1 : 0
@@ -8,7 +19,7 @@ resource "aws_instance" "bastion" {
 
   subnet_id                   = aws_subnet.public[0].id
   vpc_security_group_ids      = [aws_security_group.bastion[0].id]
-  associate_public_ip_address = true
+  associate_public_ip_address = false  # We'll use the EIP instead
   iam_instance_profile        = aws_iam_instance_profile.bastion[0].name
 
   # Enable detailed monitoring and serial console access
@@ -29,6 +40,14 @@ resource "aws_instance" "bastion" {
   tags = {
     Name = "${var.project_name}-${var.environment}-bastion"
   }
+}
+
+# Associate Elastic IP with Bastion Host
+resource "aws_eip_association" "bastion" {
+  count = var.environment == "staging" && var.admin_ip_address != null ? 1 : 0
+
+  instance_id   = aws_instance.bastion[0].id
+  allocation_id = aws_eip.bastion[0].id
 }
 
 # Get the latest Amazon Linux 2023 AMI
