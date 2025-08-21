@@ -1,7 +1,7 @@
 """
 API dependencies for authentication and database access.
 """
-from typing import Generator
+# from typing import Generator  # Currently unused
 
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt

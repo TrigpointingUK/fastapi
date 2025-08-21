@@ -1,7 +1,7 @@
 """
 Tests for main application endpoints.
 """
-import pytest
+# import pytest  # Currently unused
 from fastapi.testclient import TestClient
 
 

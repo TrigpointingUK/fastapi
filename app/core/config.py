@@ -1,7 +1,7 @@
 """
 Core configuration settings for the FastAPI application.
 """
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Union
 
 from pydantic import AnyHttpUrl, validator
 from pydantic_settings import BaseSettings

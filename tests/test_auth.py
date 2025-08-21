@@ -1,7 +1,7 @@
 """
 Tests for authentication endpoints.
 """
-import pytest
+# import pytest  # Currently unused
 from fastapi.testclient import TestClient
 
 from app.core.config import settings
