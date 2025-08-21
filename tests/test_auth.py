@@ -11,7 +11,7 @@ def test_login_success(client: TestClient, test_user):
     """Test successful login."""
     response = client.post(
         f"{settings.API_V1_STR}/auth/login",
-        data={"username": test_user.email, "password": "testpassword123"}
+        data={"username": test_user.email, "password": "testpassword123"},
     )
     assert response.status_code == 200
     data = response.json()
@@ -23,7 +23,7 @@ def test_login_invalid_email(client: TestClient, test_user):
     """Test login with invalid email."""
     response = client.post(
         f"{settings.API_V1_STR}/auth/login",
-        data={"username": "nonexistent@example.com", "password": "testpassword123"}
+        data={"username": "nonexistent@example.com", "password": "testpassword123"},
     )
     assert response.status_code == 401
     assert "Incorrect email or password" in response.json()["detail"]
@@ -33,7 +33,7 @@ def test_login_invalid_password(client: TestClient, test_user):
     """Test login with invalid password."""
     response = client.post(
         f"{settings.API_V1_STR}/auth/login",
-        data={"username": test_user.email, "password": "wrongpassword"}
+        data={"username": test_user.email, "password": "wrongpassword"},
     )
     assert response.status_code == 401
     assert "Incorrect email or password" in response.json()["detail"]

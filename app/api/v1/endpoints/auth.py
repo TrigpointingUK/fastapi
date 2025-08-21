@@ -3,7 +3,6 @@ Authentication endpoints.
 """
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
@@ -12,14 +11,14 @@ from app.core.security import create_access_token
 from app.crud.user import authenticate_user
 from app.db.database import get_db
 from app.schemas.user import Token
+from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
 
 
 @router.post("/login", response_model=Token)
 def login_for_access_token(
-    db: Session = Depends(get_db),
-    form_data: OAuth2PasswordRequestForm = Depends()
+    db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ):
     """Login endpoint to get JWT access token."""
     user = authenticate_user(db, email=form_data.username, password=form_data.password)

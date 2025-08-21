@@ -2,7 +2,7 @@
 Security utilities for JWT authentication and password hashing.
 """
 from datetime import datetime, timedelta
-from typing import Any, Union, Optional
+from typing import Any, Optional, Union
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -23,7 +23,9 @@ def create_access_token(
             minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
         )
     to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM)
+    encoded_jwt = jwt.encode(
+        to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
+    )
     return encoded_jwt
 
 

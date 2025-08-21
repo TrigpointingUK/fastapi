@@ -45,4 +45,4 @@ def create_user(db: Session, user: UserCreate) -> User:
 
 def is_admin(user: User) -> bool:
     """Check if user is an admin."""
-    return str(user.admin_ind) == 'Y'
+    return str(user.admin_ind) == "Y"

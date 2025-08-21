@@ -4,10 +4,11 @@ Tests for CRUD operations.
 import pytest
 from sqlalchemy.orm import Session
 
-from app.crud.user import get_user_by_id, get_user_by_email, authenticate_user, create_user, is_admin
 from app.crud.tlog import get_trig_count
-from app.schemas.user import UserCreate
+from app.crud.user import (authenticate_user, create_user, get_user_by_email,
+                           get_user_by_id, is_admin)
 from app.models.user import TLog
+from app.schemas.user import UserCreate
 
 
 def test_get_user_by_id(db: Session, test_user):
@@ -63,7 +64,7 @@ def test_create_user(db: Session):
     user = create_user(db, user_data)
     assert user.email == "new@example.com"
     assert user.password_hash != "newpassword123"  # Should be hashed
-    assert user.admin_ind == 'N'  # Default value
+    assert user.admin_ind == "N"  # Default value
 
 
 def test_is_admin_true(db: Session, test_admin_user):
@@ -80,7 +81,7 @@ def test_get_trig_count_with_data(db: Session, test_tlog_entries):
     """Test getting trig count with existing data."""
     count = get_trig_count(db, 1)
     assert count == 3
-    
+
     count = get_trig_count(db, 2)
     assert count == 2
 

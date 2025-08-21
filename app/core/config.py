@@ -9,19 +9,19 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
-    
+
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Legacy API Migration"
     DEBUG: bool = False
-    
+
     # Database
     DATABASE_URL: str = "mysql+pymysql://user:pass@localhost/db"
-    
+
     # JWT
     JWT_SECRET_KEY: str = "default-secret-change-in-production"
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-    
+
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 

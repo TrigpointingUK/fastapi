@@ -1,8 +1,8 @@
 """
 CRUD operations for tlog table.
 """
-from sqlalchemy.orm import Session
 from sqlalchemy import func
+from sqlalchemy.orm import Session
 
 from app.models.user import TLog
 

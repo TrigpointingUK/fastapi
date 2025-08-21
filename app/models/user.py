@@ -9,12 +9,13 @@ from app.db.database import Base
 
 class User(Base):
     """User model matching the existing legacy database schema."""
+
     __tablename__ = "user"
 
     user_id = Column(Integer, primary_key=True, index=True)
     email = Column(String(255), unique=True, index=True, nullable=False)
     password_hash = Column(String(255), nullable=False)
-    admin_ind = Column(CHAR(1), default='N', nullable=False)
+    admin_ind = Column(CHAR(1), default="N", nullable=False)
     # Add other fields as they exist in your legacy schema
     # first_name = Column(String(100))
     # last_name = Column(String(100))
@@ -24,6 +25,7 @@ class User(Base):
 
 class TLog(Base):
     """TLog model for the tlog table."""
+
     __tablename__ = "tlog"
 
     id = Column(Integer, primary_key=True, index=True)
