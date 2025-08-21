@@ -5,8 +5,14 @@ Tests for CRUD operations.
 from sqlalchemy.orm import Session
 
 from app.crud.tlog import get_trig_count
-from app.crud.user import (authenticate_user, create_user, get_user_by_email,
-                           get_user_by_id, is_admin)
+from app.crud.user import (
+    authenticate_user,
+    create_user,
+    get_user_by_email,
+    get_user_by_id,
+    is_admin,
+)
+
 # from app.models.user import TLog  # Currently unused
 from app.schemas.user import UserCreate
 
