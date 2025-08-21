@@ -101,7 +101,7 @@ resource "aws_ecs_service" "app" {
 
 
   depends_on = [
-    aws_lb_listener.app,
+    aws_lb_listener.app_https,
     aws_iam_role_policy_attachment.ecs_task_execution_role,
   ]
 
