@@ -4,6 +4,7 @@ API dependencies for authentication and database access.
 # from typing import Generator  # Currently unused
 
 from typing import Optional
+
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
