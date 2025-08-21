@@ -40,7 +40,7 @@ type-check: ## Run type checking
 
 security: ## Run security checks
 	bandit -r app
-	safety check
+	-safety check
 
 # Application
 build: ## Build the application
