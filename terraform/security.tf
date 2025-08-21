@@ -101,7 +101,7 @@ resource "aws_security_group" "dms" {
 
 # Allow DMS replication instance to access RDS (when using our DMS security group)
 resource "aws_security_group_rule" "rds_from_dms_internal" {
-  count = var.enable_dms_access && var.dms_replication_instance_sg_id == null ? 1 : 0
+  count = var.enable_dms_access && var.dms_replication_instance_sg_id == null && var.dms_instance_ip == null ? 1 : 0
 
   type                     = "ingress"
   from_port                = 3306
@@ -112,9 +112,9 @@ resource "aws_security_group_rule" "rds_from_dms_internal" {
   description              = "MySQL from DMS replication instance"
 }
 
-# Allow external DMS replication instance to access RDS (when SG ID is provided, same VPC)
+# Allow external DMS replication instance to access RDS (when SG ID is provided)
 resource "aws_security_group_rule" "rds_from_dms_external" {
-  count = var.enable_dms_access && var.dms_replication_instance_sg_id != null && var.dms_cidr_block == null ? 1 : 0
+  count = var.enable_dms_access && var.dms_replication_instance_sg_id != null && var.dms_cidr_block == null && var.dms_instance_ip == null ? 1 : 0
 
   type                     = "ingress"
   from_port                = 3306
@@ -122,7 +122,7 @@ resource "aws_security_group_rule" "rds_from_dms_external" {
   protocol                 = "tcp"
   source_security_group_id = var.dms_replication_instance_sg_id
   security_group_id        = aws_security_group.rds.id
-  description              = "MySQL from external DMS replication instance"
+  description              = "MySQL from DMS replication instance (serverless)"
 }
 
 # Allow external DMS replication instance to access RDS (when CIDR block is provided, different VPC)
