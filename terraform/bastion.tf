@@ -19,7 +19,7 @@ resource "aws_instance" "bastion" {
 
   subnet_id                   = aws_subnet.public[0].id
   vpc_security_group_ids      = [aws_security_group.bastion[0].id]
-  associate_public_ip_address = false  # We'll use the EIP instead
+  associate_public_ip_address = true
   iam_instance_profile        = aws_iam_instance_profile.bastion[0].name
 
   # Enable detailed monitoring and serial console access

@@ -41,6 +41,8 @@ def get_current_user(
     except (JWTError, ValueError):
         raise credentials_exception
     
+    if token_data.user_id is None:
+        raise credentials_exception
     user = get_user_by_id(db, user_id=token_data.user_id)
     if user is None:
         raise credentials_exception

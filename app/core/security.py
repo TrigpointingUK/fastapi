@@ -2,7 +2,7 @@
 Security utilities for JWT authentication and password hashing.
 """
 from datetime import datetime, timedelta
-from typing import Any, Union
+from typing import Any, Union, Optional
 
 from jose import jwt
 from passlib.context import CryptContext
@@ -13,7 +13,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def create_access_token(
-    subject: Union[str, Any], expires_delta: timedelta = None
+    subject: Union[str, Any], expires_delta: Optional[timedelta] = None
 ) -> str:
     """Create a JWT access token."""
     if expires_delta:

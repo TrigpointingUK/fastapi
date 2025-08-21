@@ -51,4 +51,4 @@ def get_user_email(
             detail="User not found"
         )
     
-    return UserEmail(user_id=target_user.user_id, email=target_user.email)
+    return UserEmail(user_id=int(target_user.user_id), email=str(target_user.email))

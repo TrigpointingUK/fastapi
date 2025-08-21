@@ -25,7 +25,7 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     user = get_user_by_email(db, email=email)
     if not user:
         return None
-    if not verify_password(password, user.password_hash):
+    if not verify_password(password, str(user.password_hash)):
         return None
     return user
 
@@ -45,4 +45,4 @@ def create_user(db: Session, user: UserCreate) -> User:
 
 def is_admin(user: User) -> bool:
     """Check if user is an admin."""
-    return user.admin_ind == 'Y'
+    return str(user.admin_ind) == 'Y'

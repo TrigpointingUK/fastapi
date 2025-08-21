@@ -15,10 +15,10 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     
     # Database
-    DATABASE_URL: str
+    DATABASE_URL: str = "mysql+pymysql://user:pass@localhost/db"
     
     # JWT
-    JWT_SECRET_KEY: str
+    JWT_SECRET_KEY: str = "default-secret-change-in-production"
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
