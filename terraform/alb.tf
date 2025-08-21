@@ -38,8 +38,9 @@ resource "aws_lb_target_group" "app" {
   }
 }
 
-# ALB Listener
+# ALB HTTP Listener (only when CloudFlare SSL is disabled)
 resource "aws_lb_listener" "app" {
+  count             = var.enable_cloudflare_ssl ? 0 : 1
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
   protocol          = "HTTP"
@@ -50,7 +51,7 @@ resource "aws_lb_listener" "app" {
   }
 
   tags = {
-    Name = "${var.project_name}-${var.environment}-listener"
+    Name = "${var.project_name}-${var.environment}-http-listener"
   }
 }
 
