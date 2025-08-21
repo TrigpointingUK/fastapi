@@ -16,6 +16,7 @@ class Settings(BaseSettings):
 
     # Database
     DATABASE_URL: str = "mysql+pymysql://user:pass@localhost/db"
+    DATABASE_SCHEMA: str = "trigpoin_trigs"  # Legacy schema name for migration compatibility
 
     # JWT
     JWT_SECRET_KEY: str = "default-secret-change-in-production"

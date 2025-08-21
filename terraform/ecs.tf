@@ -52,6 +52,10 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "DEBUG"
           value = var.environment == "production" ? "false" : "true"
+        },
+        {
+          name  = "DATABASE_SCHEMA"
+          value = var.db_schema
         }
       ]
       logConfiguration = {

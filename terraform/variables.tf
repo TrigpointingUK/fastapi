@@ -32,6 +32,12 @@ variable "db_password" {
   sensitive   = true
 }
 
+variable "db_schema" {
+  description = "Database schema name (legacy: trigpoin_trigs)"
+  type        = string
+  default     = "trigpoin_trigs"
+}
+
 variable "jwt_secret_key" {
   description = "JWT secret key"
   type        = string

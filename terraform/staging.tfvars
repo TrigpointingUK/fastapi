@@ -7,6 +7,7 @@ container_image = "ghcr.io/trigpointinguk/fastapi:develop"
 # Database credentials (use AWS Secrets Manager in production)
 db_username = "fastapi_user"
 db_password = "change-this-password-in-production"
+db_schema = "trigpoin_trigs"  # Legacy schema name for migration compatibility
 
 # JWT secret (use AWS Secrets Manager in production)
 jwt_secret_key = "staging-jwt-secret-key-change-this"

@@ -56,3 +56,24 @@ terraform apply -var-file="staging.tfvars" -var-file="cloudflare-cert.tfvars"
 - **Minimum TLS**: 1.2+
 
 This setup provides enterprise-grade security with zero-trust networking principles.
+
+## 🗄️ Database Schema Configuration
+
+The database schema is configurable to support migration from legacy systems:
+
+- **Current**: `trigpoin_trigs` (legacy ISP naming convention)
+- **Future**: Can be changed to `fastapi` or any preferred name
+- **Configuration**: Set via `db_schema` variable in tfvars files
+
+### Changing Schema (Future)
+
+```bash
+# Update terraform/staging.tfvars
+db_schema = "fastapi"  # New clean schema name
+
+# Update terraform/production.tfvars  
+db_schema = "fastapi"  # New clean schema name
+
+# Apply changes
+terraform apply -var-file="staging.tfvars"
+```
