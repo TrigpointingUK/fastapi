@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov lint format type-check security build run clean docker-build docker-run docker-down
+.PHONY: help install install-dev test test-cov lint format type-check security build run clean docker-build docker-run docker-down mysql-client
 
 # Default target
 help: ## Show this help message
@@ -72,6 +72,30 @@ db-migrate: ## Run database migrations
 
 db-migration: ## Create new database migration
 	alembic revision --autogenerate -m "$(msg)"
+
+mysql-client: ## Connect to development MySQL database
+	@echo "Connecting to development MySQL database..."
+	@if docker-compose ps db 2>/dev/null | grep -q "Up"; then \
+		echo "Using Docker Compose MySQL instance..."; \
+		docker-compose exec db mysql -u fastapi_user -pfastapi_pass fastapi_db; \
+	elif docker-compose -f docker-compose.dev.yml ps db 2>/dev/null | grep -q "Up"; then \
+		echo "Using Docker Compose dev MySQL instance..."; \
+		docker-compose -f docker-compose.dev.yml exec db mysql -u fastapi_user -pfastapi_pass fastapi_db; \
+	elif command -v mysql >/dev/null 2>&1; then \
+		echo "Using local MySQL client with connection details from environment..."; \
+		if [ -f .env ]; then \
+			export $$(grep -v '^#' .env | xargs); \
+			mysql -h localhost -P 3306 -u fastapi_user -pfastapi_pass fastapi_db; \
+		else \
+			mysql -h localhost -P 3306 -u fastapi_user -pfastapi_pass fastapi_db; \
+		fi; \
+	else \
+		echo "❌ Error: No MySQL connection available."; \
+		echo "Please ensure either:"; \
+		echo "  1. Docker Compose is running: make docker-dev"; \
+		echo "  2. MySQL client is installed: apt install mysql-client"; \
+		exit 1; \
+	fi
 
 # Cleanup
 clean: ## Clean up temporary files

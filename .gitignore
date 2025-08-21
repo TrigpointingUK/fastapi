@@ -144,6 +144,9 @@ test.db
 .terraform/
 .terraform.lock.hcl
 
+# CloudFlare certificates (keep private)
+terraform/cloudflare-cert.tfvars
+
 # Secrets
 *.pem
 *.key
