@@ -40,7 +40,7 @@ def test_get_trig_count_invalid_id(client: TestClient):
     assert response.status_code == 422  # Validation error
 
 
-def test_get_trig_count_negative_id(client: TestClient):
+def test_get_trig_count_negative_id(client: TestClient, db):
     """Test trig count with negative ID."""
     response = client.get(f"{settings.API_V1_STR}/tlog/trig-count/-1")
     assert response.status_code == 200

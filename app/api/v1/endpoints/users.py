@@ -36,18 +36,18 @@ def get_user_email(
         HTTPException: 403 if user doesn't have permission
         HTTPException: 404 if requested user doesn't exist
     """
+    # Get the requested user first
+    target_user = get_user_by_id(db, user_id=user_id)
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+
     # Check if user is requesting their own email or is an admin
     if current_user.user_id != user_id and not is_admin(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to access this user's email",
-        )
-
-    # Get the requested user
-    target_user = get_user_by_id(db, user_id=user_id)
-    if not target_user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
         )
 
     return UserEmail(user_id=int(target_user.user_id), email=str(target_user.email))
