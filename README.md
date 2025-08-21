@@ -93,6 +93,39 @@ The Docker Compose setup includes a MySQL container with sample data. For connec
    - `user` table with columns: `user_id`, `email`, `password_hash`, `admin_ind`
    - `tlog` table with columns: `id`, `trig_id`, and other legacy columns
 
+## 🔍 Code Quality Requirements (CRITICAL)
+
+**MANDATORY:** Always run CI checks before committing code changes.
+
+### Quick Setup with Automation
+```bash
+# One-time setup: environment, dependencies, and automated git hooks
+chmod +x setup-dev.sh && ./setup-dev.sh
+```
+
+### Manual Process (if not using setup script)
+```bash
+# 1. Activate virtual environment (required)
+source venv/bin/activate
+
+# 2. Run complete CI suite before every commit
+make ci
+
+# 3. Only commit if all checks pass ✅
+git add . && git commit -m "your message"
+```
+
+### What `make ci` checks:
+- ✅ **black** - Code formatting
+- ✅ **isort** - Import sorting  
+- ✅ **flake8** - Code linting
+- ✅ **mypy** - Type checking
+- ✅ **bandit** - Security scanning
+- ⚠️ **safety** - Dependency vulnerabilities (warnings allowed)
+- ✅ **pytest** - Full test suite
+
+**Automated enforcement:** The pre-commit hook automatically runs these checks on every commit.
+
 ## 🧪 Testing
 
 ```bash
