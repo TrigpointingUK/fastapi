@@ -1,6 +1,8 @@
 """
 SQLAlchemy model for the trig table - UK trigonometric stations.
 """
+from typing import Any
+
 from sqlalchemy import (
     CHAR,
     DECIMAL,
@@ -46,8 +48,8 @@ class Trig(Base):
     condition = Column(CHAR(1), nullable=False)  # G=Good, etc.
 
     # WGS84 coordinates
-    wgs_lat = Column(DECIMAL(7, 5), nullable=False)  # Latitude
-    wgs_long = Column(DECIMAL(7, 5), nullable=False)  # Longitude
+    wgs_lat: Any = Column(DECIMAL(7, 5), nullable=False)  # Latitude
+    wgs_long: Any = Column(DECIMAL(7, 5), nullable=False)  # Longitude
     wgs_height = Column(Integer, nullable=False)  # Height in meters
 
     # OSGB coordinates
