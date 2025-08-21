@@ -35,7 +35,7 @@ resource "aws_ecs_task_definition" "app" {
       environment = [
         {
           name  = "DATABASE_URL"
-          value = "mysql+pymysql://${var.db_username}:${var.db_password}@${aws_db_instance.main.endpoint}/${aws_db_instance.main.db_name}"
+          value = "mysql+pymysql://${var.db_username}:${var.db_password}@${aws_db_instance.main.endpoint}/${var.db_schema}"
         },
         {
           name  = "JWT_SECRET_KEY"
@@ -52,10 +52,6 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "DEBUG"
           value = var.environment == "production" ? "false" : "true"
-        },
-        {
-          name  = "DATABASE_SCHEMA"
-          value = var.db_schema
         }
       ]
       logConfiguration = {
