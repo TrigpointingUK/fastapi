@@ -26,8 +26,8 @@ dms_replication_instance_sg_id = "sg-0439b939713d7c283"  # fastapi-staging-dms-s
 # dms_cidr_block = "172.31.0.0/16"  # CIDR block for cross-VPC DMS access  
 # dms_instance_ip = "10.0.11.50"  # Specific IP of fastapi-2 DMS instance (legacy)
 
-# CloudFlare SSL Configuration
+# CloudFlare SSL Configuration (REQUIRED - no HTTP access)
 domain_name = "fastapi.trigpointing.me"
-enable_cloudflare_ssl = false  # Set to true after adding certificates
+enable_cloudflare_ssl = true  # REQUIRED for security - origin only accepts HTTPS
 # cloudflare_origin_cert = "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
 # cloudflare_origin_key = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"

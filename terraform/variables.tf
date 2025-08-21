@@ -132,9 +132,9 @@ variable "cloudflare_origin_key" {
 }
 
 variable "enable_cloudflare_ssl" {
-  description = "Enable HTTPS with CloudFlare origin certificate"
+  description = "Enable HTTPS with CloudFlare origin certificate (REQUIRED for security - no HTTP listener)"
   type        = bool
-  default     = false
+  default     = true  # Required for production security
 }
 
 variable "domain_name" {

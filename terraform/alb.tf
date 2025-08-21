@@ -38,22 +38,8 @@ resource "aws_lb_target_group" "app" {
   }
 }
 
-# ALB HTTP Listener (only when CloudFlare SSL is disabled)
-resource "aws_lb_listener" "app" {
-  count             = var.enable_cloudflare_ssl ? 0 : 1
-  load_balancer_arn = aws_lb.main.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.app.arn
-  }
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-http-listener"
-  }
-}
+# No HTTP listener - CloudFlare handles HTTP->HTTPS redirects at edge
+# Origin server only accepts HTTPS traffic from CloudFlare
 
 # CloudFlare Origin Certificate
 resource "aws_acm_certificate" "cloudflare_origin" {
@@ -90,24 +76,5 @@ resource "aws_lb_listener" "app_https" {
   }
 }
 
-# HTTP to HTTPS Redirect (when HTTPS is enabled)
-resource "aws_lb_listener" "app_http_redirect" {
-  count             = var.enable_cloudflare_ssl ? 1 : 0
-  load_balancer_arn = aws_lb.main.arn
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    type = "redirect"
-
-    redirect {
-      port        = "443"
-      protocol    = "HTTPS"
-      status_code = "HTTP_301"
-    }
-  }
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-http-redirect"
-  }
-}
+# No HTTP redirect needed - CloudFlare handles this at the edge
+# This keeps the origin server secure with HTTPS-only
