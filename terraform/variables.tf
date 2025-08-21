@@ -109,3 +109,9 @@ variable "dms_cidr_block" {
   type        = string
   default     = null
 }
+
+variable "dms_instance_ip" {
+  description = "Specific IP address of DMS replication instance"
+  type        = string
+  default     = null
+}

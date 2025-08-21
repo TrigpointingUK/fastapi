@@ -137,3 +137,16 @@ resource "aws_security_group_rule" "rds_from_dms_cidr" {
   security_group_id = aws_security_group.rds.id
   description       = "MySQL from DMS replication instance (cross-VPC)"
 }
+
+# Allow specific DMS instance IP to access RDS (when DMS instance IP is provided)
+resource "aws_security_group_rule" "rds_from_dms_specific_ip" {
+  count = var.enable_dms_access && var.dms_instance_ip != null ? 1 : 0
+
+  type              = "ingress"
+  from_port         = 3306
+  to_port           = 3306
+  protocol          = "tcp"
+  cidr_blocks       = ["${var.dms_instance_ip}/32"]
+  security_group_id = aws_security_group.rds.id
+  description       = "MySQL from specific DMS instance IP"
+}
