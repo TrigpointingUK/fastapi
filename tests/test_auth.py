@@ -26,7 +26,7 @@ def test_login_invalid_email(client: TestClient, test_user):
         data={"username": "nonexistent@example.com", "password": "testpassword123"},
     )
     assert response.status_code == 401
-    assert "Incorrect email or password" in response.json()["detail"]
+    assert "Incorrect username/email or password" in response.json()["detail"]
 
 
 def test_login_invalid_password(client: TestClient, test_user):
@@ -36,7 +36,7 @@ def test_login_invalid_password(client: TestClient, test_user):
         data={"username": test_user.email, "password": "wrongpassword"},
     )
     assert response.status_code == 401
-    assert "Incorrect email or password" in response.json()["detail"]
+    assert "Incorrect username/email or password" in response.json()["detail"]
 
 
 def test_login_missing_credentials(client: TestClient):

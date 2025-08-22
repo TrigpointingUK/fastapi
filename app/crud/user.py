@@ -73,7 +73,7 @@ def verify_password(plain_password: str, cryptpw: str) -> bool:
 
 def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     """
-    Authenticate a user with email and password.
+    Authenticate a user with email and password (legacy function for compatibility).
 
     Args:
         db: Database session
@@ -84,6 +84,49 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
         User object if authentication successful, None otherwise
     """
     user = get_user_by_email(db, email)
+    if not user:
+        return None
+    if not verify_password(password, str(user.cryptpw)):
+        return None
+    return user
+
+
+def authenticate_user_flexible(
+    db: Session, identifier: str, password: str
+) -> Optional[User]:
+    """
+    Authenticate a user with either email or username.
+
+    Auto-detects the identifier type:
+    - Contains '@' -> treated as email
+    - No '@' -> treated as username
+    - Falls back to alternate method if first fails
+
+    Args:
+        db: Database session
+        identifier: Email address or username
+        password: Plain text password
+
+    Returns:
+        User object if authentication successful, None otherwise
+    """
+    user = None
+
+    # Primary detection: email vs username
+    if "@" in identifier:
+        # Looks like email - try email first, then username fallback
+        user = get_user_by_email(db, identifier)
+        if not user:
+            # Fallback: maybe it's a username that contains @
+            user = get_user_by_name(db, identifier)
+    else:
+        # Looks like username - try username first, then email fallback
+        user = get_user_by_name(db, identifier)
+        if not user:
+            # Fallback: maybe it's an email without obvious @ structure
+            user = get_user_by_email(db, identifier)
+
+    # Verify password if user found
     if not user:
         return None
     if not verify_password(password, str(user.cryptpw)):
