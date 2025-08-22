@@ -8,9 +8,8 @@ terraform {
   }
 
   backend "s3" {
-    bucket = "tuk-terraform-state"
-    key    = "fastapi/terraform.tfstate"
-    region = "eu-west-1"
+    # Backend configuration moved to backend.conf files
+    # Use: terraform init -backend-config=backend-staging.conf
   }
 }
 

@@ -109,17 +109,41 @@ clean: ## Clean up temporary files
 	rm -rf *.egg-info
 
 # Terraform commands
-tf-init: ## Initialize Terraform
-	cd terraform && terraform init
+tf-init: ## Initialize Terraform with environment-specific backend (usage: make tf-init env=staging)
+	cd terraform && terraform init -backend-config="backend-$(env).conf"
 
-tf-plan: ## Plan Terraform changes
-	cd terraform && terraform plan -var-file="$(env).tfvars"
+tf-plan: ## Plan Terraform changes (usage: make tf-plan env=staging)
+	@if [ ! -f "terraform/cloudflare-cert-trigpointing-$(shell echo $(env) | sed 's/staging/me/;s/production/uk/').tfvars" ]; then \
+		echo "🔑 CloudFlare certificate file not found. Using base configuration only..."; \
+		cd terraform && terraform plan -var-file="$(env).tfvars"; \
+	else \
+		echo "🔑 Using CloudFlare certificates for $(env)..."; \
+		cd terraform && terraform plan -var-file="$(env).tfvars" -var-file="cloudflare-cert-trigpointing-$(shell echo $(env) | sed 's/staging/me/;s/production/uk/').tfvars"; \
+	fi
 
-tf-apply: ## Apply Terraform changes
-	cd terraform && terraform apply -var-file="$(env).tfvars"
+tf-apply: ## Apply Terraform changes (usage: make tf-apply env=staging)
+	@if [ ! -f "terraform/cloudflare-cert-trigpointing-$(shell echo $(env) | sed 's/staging/me/;s/production/uk/').tfvars" ]; then \
+		echo "🔑 CloudFlare certificate file not found. Using base configuration only..."; \
+		cd terraform && terraform apply -var-file="$(env).tfvars"; \
+	else \
+		echo "🔑 Using CloudFlare certificates for $(env)..."; \
+		cd terraform && terraform apply -var-file="$(env).tfvars" -var-file="cloudflare-cert-trigpointing-$(shell echo $(env) | sed 's/staging/me/;s/production/uk/').tfvars"; \
+	fi
 
-tf-destroy: ## Destroy Terraform infrastructure
-	cd terraform && terraform destroy -var-file="$(env).tfvars"
+tf-destroy: ## Destroy Terraform infrastructure (usage: make tf-destroy env=staging)
+	@if [ ! -f "terraform/cloudflare-cert-trigpointing-$(shell echo $(env) | sed 's/staging/me/;s/production/uk/').tfvars" ]; then \
+		echo "🔑 CloudFlare certificate file not found. Using base configuration only..."; \
+		cd terraform && terraform destroy -var-file="$(env).tfvars"; \
+	else \
+		echo "🔑 Using CloudFlare certificates for $(env)..."; \
+		cd terraform && terraform destroy -var-file="$(env).tfvars" -var-file="cloudflare-cert-trigpointing-$(shell echo $(env) | sed 's/staging/me/;s/production/uk/').tfvars"; \
+	fi
+
+tf-validate: ## Validate Terraform configuration
+	cd terraform && terraform validate
+
+tf-fmt: ## Format Terraform files
+	cd terraform && terraform fmt -recursive
 
 # CI/CD
 pre-commit: ## Run pre-commit hooks
