@@ -22,9 +22,11 @@ pip install -r requirements.txt
 pip install -r requirements-dev.txt
 
 # Install pre-commit hook
-echo "🪝 Installing pre-commit hook..."
+echo "🪝 Installing git hooks..."
 cp .githooks/pre-commit .git/hooks/pre-commit
+cp .githooks/pre-push .git/hooks/pre-push
 chmod +x .git/hooks/pre-commit
+chmod +x .git/hooks/pre-push
 
 # Run initial CI check
 echo "🧪 Running initial CI check..."

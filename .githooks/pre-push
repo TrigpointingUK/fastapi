@@ -1,0 +1,66 @@
+#!/bin/bash
+# Pre-push hook to enforce strict validation for main/develop branches
+# To install: cp .githooks/pre-push .git/hooks/pre-push && chmod +x .git/hooks/pre-push
+
+set -e
+
+# Get the current branch
+current_branch=$(git rev-parse --abbrev-ref HEAD)
+remote_name="$1"
+remote_url="$2"
+
+echo "🔍 Pre-push validation for branch: $current_branch"
+
+# Check if pushing to protected branches
+if [[ "$current_branch" == "main" || "$current_branch" == "develop" ]]; then
+    echo "🚨 CRITICAL: Pushing to protected branch '$current_branch'"
+    echo "📋 Running mandatory CI validation..."
+    
+    # Check if virtual environment is activated
+    if [[ "$VIRTUAL_ENV" == "" ]]; then
+        echo "⚠️  Virtual environment not activated. Activating..."
+        if [[ -f "venv/bin/activate" ]]; then
+            source venv/bin/activate
+        else
+            echo "❌ Virtual environment not found. Please run: python3 -m venv venv && source venv/bin/activate && make install-dev"
+            exit 1
+        fi
+    fi
+    
+    # Enforce strict CI validation
+    echo "🧪 Running complete CI suite (required for $current_branch)..."
+    if make ci; then
+        echo "✅ All CI checks passed! Push approved for $current_branch"
+        
+        # Additional check for main branch
+        if [[ "$current_branch" == "main" ]]; then
+            echo "⚠️  WARNING: Direct push to main branch detected!"
+            echo "📋 Best practice: Use develop → main via pull request"
+            echo "⏸️  Continue anyway? (y/N): "
+            read -r response
+            if [[ ! "$response" =~ ^[Yy]$ ]]; then
+                echo "🛑 Push cancelled. Consider using: git checkout develop && git push"
+                exit 1
+            fi
+        fi
+        
+    else
+        echo "❌ CI validation FAILED for protected branch '$current_branch'"
+        echo ""
+        echo "🔧 Required fixes before push:"
+        echo "  1. Run: make ci"
+        echo "  2. Fix all reported issues" 
+        echo "  3. Auto-fix formatting: black app tests && isort app tests"
+        echo "  4. Manual fix: flake8, mypy, test failures"
+        echo "  5. Re-run: make ci (must pass completely)"
+        echo ""
+        echo "🚫 PUSH BLOCKED until all CI checks pass"
+        exit 1
+    fi
+    
+else
+    echo "ℹ️  Feature branch push detected. Skipping strict validation."
+    echo "💡 Reminder: Run 'make ci' before merging to develop/main"
+fi
+
+echo "🚀 Pre-push validation complete"

@@ -95,7 +95,25 @@ The Docker Compose setup includes a MySQL container with sample data. For connec
 
 ## 🔍 Code Quality Requirements (CRITICAL)
 
-**MANDATORY:** Always run CI checks before committing code changes.
+**🚨 MANDATORY: Strict CI validation enforced on main/develop branches!**
+
+### Branch Protection Rules
+
+#### For `main` and `develop` branches:
+- **Pre-push validation** automatically enforced via git hooks
+- **ALL CI checks** must pass before any push is allowed
+- **NO EXCEPTIONS** - push will be blocked if CI fails
+
+```bash
+# REQUIRED before every push to main/develop
+make ci
+```
+
+#### Quick validation check:
+```bash
+# Verify everything passes before pushing
+source venv/bin/activate && make ci
+```
 
 ### Quick Setup with Automation
 ```bash
@@ -116,13 +134,32 @@ git add . && git commit -m "your message"
 ```
 
 ### What `make ci` checks:
-- ✅ **black** - Code formatting
-- ✅ **isort** - Import sorting  
-- ✅ **flake8** - Code linting
-- ✅ **mypy** - Type checking
-- ✅ **bandit** - Security scanning
-- ⚠️ **safety** - Dependency vulnerabilities (warnings allowed)
-- ✅ **pytest** - Full test suite
+- ✅ **black** - Code formatting (`black --check app tests`)
+- ✅ **isort** - Import sorting (`isort --check-only app tests`)
+- ✅ **flake8** - Code linting (`flake8 app tests`)
+- ✅ **mypy** - Type checking (`mypy app --ignore-missing-imports`)
+- ✅ **bandit** - Security scanning (`bandit -r app`)
+- ⚠️ **safety** - Dependency vulnerabilities (`safety check` - warnings allowed)
+- ✅ **pytest** - Full test suite (all tests must pass)
+
+### Git Hooks Enforcement:
+- **Pre-commit hook**: Runs `make ci` on every commit
+- **Pre-push hook**: Blocks pushes to main/develop if CI fails
+- **Automatic installation**: Hooks installed via `./setup-dev.sh`
+
+### Manual CI fix workflow (if CI fails):
+```bash
+# Auto-fix formatting and imports
+black app tests && isort app tests
+
+# Check remaining issues
+flake8 app tests                    # Fix linting errors
+mypy app --ignore-missing-imports   # Fix type errors  
+pytest                             # Fix failing tests
+
+# Final validation (must pass)
+make ci
+```
 
 **Automated enforcement:** The pre-commit hook automatically runs these checks on every commit.
 
