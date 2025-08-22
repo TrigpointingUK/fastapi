@@ -174,7 +174,7 @@ def test_search_users_by_name(client: TestClient, db: Session):
     response = client.get("/api/v1/user/search/name?q=li")
     assert response.status_code == 200
     data = response.json()
-    
+
     # Should find alice (contains "li") and charlie (contains "li")
     assert len(data) == 2
     names = [user["name"] for user in data]

@@ -79,5 +79,5 @@ class Token(BaseModel):
 class UserEmail(BaseModel):
     """User email response for JWT-protected endpoints."""
 
-    user_id: int
+    user_id: int  # Keep as user_id for API compatibility
     email: str

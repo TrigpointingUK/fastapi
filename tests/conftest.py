@@ -8,7 +8,8 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core.config import settings
-from app.core.security import get_password_hash
+
+# from app.core.security import get_password_hash  # No longer needed - using Unix crypt
 from app.db.database import Base, get_db
 from app.main import app
 from app.models.user import TLog, User
@@ -58,10 +59,23 @@ def client():
 @pytest.fixture
 def test_user(db):
     """Create a test user."""
+    import crypt
+
+    # Create Unix crypt hash for testing
+    test_password = "testpassword123"
+    cryptpw = crypt.crypt(test_password, "$1$testsalt$")
+
     user = User(
+        id=1000,  # Avoid conflicts with real data
+        name="testuser",
+        firstname="Test",
+        surname="User",
         email="test@example.com",
-        password_hash=get_password_hash("testpassword123"),
+        cryptpw=cryptpw,
+        about="Test user for unit tests",
         admin_ind="N",
+        email_valid="Y",
+        public_ind="Y",
     )
     db.add(user)
     db.commit()
@@ -72,10 +86,23 @@ def test_user(db):
 @pytest.fixture
 def test_admin_user(db):
     """Create a test admin user."""
+    import crypt
+
+    # Create Unix crypt hash for testing
+    admin_password = "adminpassword123"
+    cryptpw = crypt.crypt(admin_password, "$1$testsalt$")
+
     admin = User(
+        id=1001,  # Avoid conflicts with real data
+        name="testadmin",
+        firstname="Test",
+        surname="Admin",
         email="admin@example.com",
-        password_hash=get_password_hash("adminpassword123"),
+        cryptpw=cryptpw,
+        about="Test admin user for unit tests",
         admin_ind="Y",
+        email_valid="Y",
+        public_ind="Y",
     )
     db.add(admin)
     db.commit()
