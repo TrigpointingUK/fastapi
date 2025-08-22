@@ -1,6 +1,7 @@
 """
 API v1 router that includes all endpoint routers.
 """
+
 from app.api.v1.endpoints import auth, tlog, trig, user, users
 from fastapi import APIRouter
 

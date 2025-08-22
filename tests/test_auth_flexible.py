@@ -1,6 +1,7 @@
 """
 Tests for flexible authentication (email or username).
 """
+
 import crypt
 
 from fastapi.testclient import TestClient

@@ -1,6 +1,7 @@
 """
 Database models for the existing legacy database schema.
 """
+
 from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.types import CHAR
 

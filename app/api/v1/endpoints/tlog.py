@@ -1,6 +1,7 @@
 """
 TLog endpoints for public access.
 """
+
 from sqlalchemy.orm import Session
 
 from app.crud.tlog import get_trig_count

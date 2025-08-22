@@ -1,6 +1,7 @@
 """
 Trig endpoints for trigpoint data.
 """
+
 from typing import List
 
 from sqlalchemy.orm import Session

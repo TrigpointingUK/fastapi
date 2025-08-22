@@ -1,6 +1,7 @@
 """
 Tests for CRUD operations.
 """
+
 # import pytest  # Currently unused
 from sqlalchemy.orm import Session
 

@@ -1,6 +1,7 @@
 """
 CRUD operations for users with Unix crypt authentication.
 """
+
 import crypt
 from typing import Optional
 

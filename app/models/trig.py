@@ -1,6 +1,7 @@
 """
 SQLAlchemy model for the trig table - UK trigonometric stations.
 """
+
 from typing import Any
 
 from sqlalchemy import (

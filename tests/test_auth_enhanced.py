@@ -1,6 +1,7 @@
 """
 Tests for enhanced authentication with user data in login response.
 """
+
 import crypt
 
 from fastapi.testclient import TestClient

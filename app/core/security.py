@@ -1,6 +1,7 @@
 """
 Security utilities for JWT authentication and password hashing.
 """
+
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional, Union
 
