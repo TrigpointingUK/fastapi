@@ -1,66 +1,83 @@
 """
-Pydantic schemas for request/response models.
+Pydantic schemas for user endpoints with permission-based field filtering.
 """
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, Field
 
 
 class UserBase(BaseModel):
-    """Base user schema."""
+    """Base user schema with always-public fields."""
 
-    email: EmailStr
-
-
-class UserCreate(UserBase):
-    """Schema for creating a user."""
-
-    password: str
+    id: int = Field(..., description="User ID")
+    name: str = Field(..., description="Username")
+    firstname: str = Field(..., description="First name")
+    surname: str = Field(..., description="Surname")
+    about: str = Field(..., description="User bio/description")
 
 
-class UserInDB(UserBase):
-    """Schema for user as stored in database."""
+class UserPublic(UserBase):
+    """Public user schema - includes email only if user has public profile."""
 
-    user_id: int
-    admin_ind: str
-    password_hash: str
+    email: Optional[str] = Field(None, description="Email address (only if public)")
 
-    model_config = ConfigDict(from_attributes=True)
-
-
-class User(UserBase):
-    """Schema for user in responses."""
-
-    user_id: int
-    admin_ind: str
-
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
 
 
-class UserEmail(BaseModel):
-    """Schema for user email response."""
+class UserPrivate(UserBase):
+    """Private user schema - includes all fields for authenticated users."""
 
-    user_id: int
-    email: EmailStr
+    email: str = Field(..., description="Email address")
+    email_valid: str = Field(..., description="Email validation status (Y/N)")
+    admin_ind: str = Field(..., description="Admin status (Y/N)")
+    public_ind: str = Field(..., description="Public profile status (Y/N)")
 
-    model_config = ConfigDict(from_attributes=True)
+    class Config:
+        from_attributes = True
 
 
-class TrigCountResponse(BaseModel):
-    """Schema for trig count response."""
+class UserResponse(BaseModel):
+    """Dynamic user response that adapts fields based on permissions."""
 
-    trig_id: int
-    count: int
+    # Always included
+    id: int
+    name: str
+    firstname: str
+    surname: str
+    about: str
+
+    # Conditionally included based on permissions
+    email: Optional[str] = None
+    email_valid: Optional[str] = None
+    admin_ind: Optional[str] = None
+    public_ind: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class UserSummary(BaseModel):
+    """Simplified user summary for list endpoints."""
+
+    id: int
+    name: str
+    firstname: str
+    surname: str
+
+    class Config:
+        from_attributes = True
 
 
 class Token(BaseModel):
-    """Schema for JWT token response."""
+    """JWT Token response."""
 
     access_token: str
     token_type: str
 
 
-class TokenData(BaseModel):
-    """Schema for token data."""
+class UserEmail(BaseModel):
+    """User email response for JWT-protected endpoints."""
 
-    user_id: Optional[int] = None
+    user_id: int
+    email: str

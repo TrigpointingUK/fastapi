@@ -7,21 +7,20 @@ from sqlalchemy.orm import Session
 from app.crud.tlog import get_trig_count
 from app.crud.user import (
     authenticate_user,
-    create_user,
     get_user_by_email,
     get_user_by_id,
     is_admin,
 )
 
 # from app.models.user import TLog  # Currently unused
-from app.schemas.user import UserCreate
+# from app.schemas.user import UserCreate  # Removed - read-only endpoints only
 
 
 def test_get_user_by_id(db: Session, test_user):
     """Test getting user by ID."""
-    user = get_user_by_id(db, test_user.user_id)
+    user = get_user_by_id(db, test_user.id)
     assert user is not None
-    assert user.user_id == test_user.user_id
+    assert user.id == test_user.id
     assert user.email == test_user.email
 
 
@@ -35,7 +34,7 @@ def test_get_user_by_email(db: Session, test_user):
     """Test getting user by email."""
     user = get_user_by_email(db, test_user.email)
     assert user is not None
-    assert user.user_id == test_user.user_id
+    assert user.id == test_user.id
     assert user.email == test_user.email
 
 
@@ -49,7 +48,7 @@ def test_authenticate_user_success(db: Session, test_user):
     """Test successful user authentication."""
     user = authenticate_user(db, test_user.email, "testpassword123")
     assert user is not None
-    assert user.user_id == test_user.user_id
+    assert user.id == test_user.id
 
 
 def test_authenticate_user_wrong_password(db: Session, test_user):
@@ -64,13 +63,7 @@ def test_authenticate_user_wrong_email(db: Session):
     assert user is None
 
 
-def test_create_user(db: Session):
-    """Test creating a new user."""
-    user_data = UserCreate(email="new@example.com", password="newpassword123")
-    user = create_user(db, user_data)
-    assert user.email == "new@example.com"
-    assert user.password_hash != "newpassword123"  # Should be hashed
-    assert user.admin_ind == "N"  # Default value
+# Removed test_create_user - focusing on read-only endpoints for now
 
 
 def test_is_admin_true(db: Session, test_admin_user):

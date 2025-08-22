@@ -13,7 +13,8 @@ from app.core.config import settings
 from app.crud.user import get_user_by_id
 from app.db.database import get_db
 from app.models.user import User
-from app.schemas.user import TokenData
+
+# from app.schemas.user import TokenData
 from fastapi import Depends, HTTPException, status
 
 security = HTTPBearer(auto_error=False)
@@ -43,16 +44,43 @@ def get_current_user(
             settings.JWT_SECRET_KEY,
             algorithms=[settings.JWT_ALGORITHM],
         )
-        user_id: str = payload.get("sub")
-        if user_id is None:
+        user_id_str: str = payload.get("sub")
+        if user_id_str is None:
             raise credentials_exception
-        token_data = TokenData(user_id=int(user_id))
+        user_id = int(user_id_str)
     except (JWTError, ValueError):
         raise credentials_exception
 
-    if token_data.user_id is None:
+    if user_id is None:
         raise credentials_exception
-    user = get_user_by_id(db, user_id=token_data.user_id)
+    user = get_user_by_id(db, user_id=user_id)
     if user is None:
         raise credentials_exception
+    return user
+
+
+def get_current_user_optional(
+    db: Session = Depends(get_db),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> Optional[User]:
+    """Get current user from JWT token, returning None if not authenticated."""
+    if credentials is None:
+        return None
+
+    try:
+        payload = jwt.decode(
+            credentials.credentials,
+            settings.JWT_SECRET_KEY,
+            algorithms=[settings.JWT_ALGORITHM],
+        )
+        user_id_str: str = payload.get("sub")
+        if user_id_str is None:
+            return None
+        user_id = int(user_id_str)
+    except (JWTError, ValueError):
+        return None
+
+    if user_id is None:
+        return None
+    user = get_user_by_id(db, user_id=user_id)
     return user

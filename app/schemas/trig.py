@@ -94,3 +94,10 @@ class TrigSummary(BaseModel):
         json_encoders = {
             Decimal: str,
         }
+
+
+class TrigCountResponse(BaseModel):
+    """Response model for trigpoint count queries."""
+
+    trig_id: int
+    count: int

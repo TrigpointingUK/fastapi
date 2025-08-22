@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.crud.tlog import get_trig_count
 from app.db.database import get_db
-from app.schemas.user import TrigCountResponse
+from app.schemas.trig import TrigCountResponse
 from fastapi import APIRouter, Depends
 
 router = APIRouter()

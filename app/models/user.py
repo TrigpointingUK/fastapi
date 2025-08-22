@@ -1,7 +1,7 @@
 """
 Database models for the existing legacy database schema.
 """
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Text
 from sqlalchemy.types import CHAR
 
 from app.db.database import Base
@@ -12,15 +12,25 @@ class User(Base):
 
     __tablename__ = "user"
 
-    user_id = Column(Integer, primary_key=True, index=True)
-    email = Column(String(255), unique=True, index=True, nullable=False)
-    password_hash = Column(String(255), nullable=False)
-    admin_ind = Column(CHAR(1), default="N", nullable=False)
-    # Add other fields as they exist in your legacy schema
-    # first_name = Column(String(100))
-    # last_name = Column(String(100))
-    # created_at = Column(DateTime)
-    # etc.
+    # Primary identifier
+    id = Column(Integer, primary_key=True, index=True)  # MEDIUMINT in MySQL
+
+    # Core identity fields
+    name = Column(String(30), nullable=False, index=True)  # Username
+    firstname = Column(String(30), nullable=False)
+    surname = Column(String(30), nullable=False)
+    email = Column(String(255), nullable=False, index=True)
+
+    # Authentication - Unix crypt format password
+    cryptpw = Column(String(34), nullable=False)  # Never expose in API
+
+    # Profile information
+    about = Column(Text, nullable=False)  # User bio/description
+
+    # Permissions and visibility flags
+    admin_ind = Column(CHAR(1), nullable=False, default="N")  # Y/N admin flag
+    email_valid = Column(CHAR(1), nullable=False, default="N")  # Y/N email verified
+    public_ind = Column(CHAR(1), nullable=False, default="Y")  # Y/N public profile
 
 
 class TLog(Base):

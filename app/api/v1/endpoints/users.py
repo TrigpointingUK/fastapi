@@ -44,10 +44,10 @@ def get_user_email(
         )
 
     # Check if user is requesting their own email or is an admin
-    if current_user.user_id != user_id and not is_admin(current_user):
+    if current_user.id != user_id and not is_admin(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions to access this user's email",
         )
 
-    return UserEmail(user_id=int(target_user.user_id), email=str(target_user.email))
+    return UserEmail(user_id=int(target_user.id), email=str(target_user.email))
