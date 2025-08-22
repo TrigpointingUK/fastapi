@@ -10,21 +10,28 @@ from app.core.config import settings
 from app.core.security import create_access_token
 from app.crud.user import authenticate_user_flexible
 from app.db.database import get_db
-from app.schemas.user import Token
+from app.schemas.user import LoginResponse
 from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
 
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=LoginResponse)
 def login_for_access_token(
     db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ):
     """
-    Login endpoint to get JWT access token.
+    Enhanced login endpoint returning JWT token + essential user data.
 
     Accepts either email address or username in the 'username' field.
     Auto-detects the type and authenticates accordingly.
+
+    Returns:
+    - JWT access token for API authentication
+    - Essential user data (name, email if public, etc.)
+    - Token expiration time
+
+    This reduces the need for an immediate /user/me API call after login.
 
     Examples:
     - username: "john@example.com" (email)
@@ -39,8 +46,23 @@ def login_for_access_token(
             detail="Incorrect username/email or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
+
+    # Create JWT token
     access_token_expires = timedelta(minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         subject=user.id, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+
+    # Import here to avoid circular imports
+    from app.api.v1.endpoints.user import filter_user_fields
+
+    # Build user response with appropriate field filtering
+    # For login response, user sees their own data (full access)
+    user_data = filter_user_fields(user, current_user=user)
+
+    return LoginResponse(
+        access_token=access_token,
+        token_type="bearer",  # nosec B106 - OAuth2 standard token type, not a password
+        user=user_data,
+        expires_in=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,  # Convert to seconds
+    )

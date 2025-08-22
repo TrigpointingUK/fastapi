@@ -76,6 +76,20 @@ class Token(BaseModel):
     token_type: str
 
 
+class LoginResponse(BaseModel):
+    """Enhanced login response with token and essential user data."""
+
+    # JWT token for API authentication
+    access_token: str
+    token_type: str
+
+    # Essential user data (reduces need for immediate /user/me call)
+    user: UserResponse
+
+    # Optional: token metadata
+    expires_in: int  # seconds until token expires
+
+
 class UserEmail(BaseModel):
     """User email response for JWT-protected endpoints."""
 

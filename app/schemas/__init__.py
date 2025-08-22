@@ -1,7 +1,8 @@
 from .trig import TrigCountResponse, TrigResponse, TrigSummary
-from .user import Token, UserEmail, UserResponse, UserSummary
+from .user import LoginResponse, Token, UserEmail, UserResponse, UserSummary
 
 __all__ = [
+    "LoginResponse",
     "Token",
     "UserEmail",
     "UserResponse",
