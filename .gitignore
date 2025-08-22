@@ -146,6 +146,8 @@ test.db
 
 # CloudFlare certificates (keep private)
 terraform/cloudflare-cert.tfvars
+terraform/cloudflare-cert-trigpointing-uk.tfvars
+terraform/cloudflare-cert-trigpointing-me.tfvars
 
 # Secrets
 *.pem
