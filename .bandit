@@ -1,0 +1,18 @@
+[bandit]
+# Bandit configuration for FastAPI project
+
+# Skip specific tests that are acceptable for our use case
+# B104: hardcoded_bind_all_interfaces - We handle this with environment variables
+# B101: assert_used - Asserts are fine in tests
+skips = B104,B101
+
+# Exclude test files from some checks
+exclude_dirs = tests
+
+# Set confidence level (LOW, MEDIUM, HIGH)
+# Only report MEDIUM and HIGH confidence issues
+confidence = MEDIUM
+
+# Set severity level (LOW, MEDIUM, HIGH) 
+# Only report MEDIUM and HIGH severity issues
+level = MEDIUM

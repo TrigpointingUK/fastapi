@@ -1,0 +1,28 @@
+#!/bin/bash
+# Pre-commit hook to run CI checks
+# To install: cp .githooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+set -e
+
+echo "🔍 Running pre-commit CI checks..."
+
+# Check if virtual environment is activated
+if [[ "$VIRTUAL_ENV" == "" ]]; then
+    echo "⚠️  Virtual environment not activated. Activating..."
+    if [[ -f "venv/bin/activate" ]]; then
+        source venv/bin/activate
+    else
+        echo "❌ Virtual environment not found. Please run: python3 -m venv venv && source venv/bin/activate && make install-dev"
+        exit 1
+    fi
+fi
+
+# Run the full CI suite
+echo "🧪 Running CI checks (this may take a moment)..."
+if make ci; then
+    echo "✅ All CI checks passed! Proceeding with commit..."
+else
+    echo "❌ CI checks failed! Please fix the issues before committing."
+    echo "💡 Run 'make ci' to see detailed error messages."
+    exit 1
+fi
