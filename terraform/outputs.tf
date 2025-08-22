@@ -39,14 +39,20 @@ output "ecs_service_name" {
 }
 
 output "rds_endpoint" {
-  description = "RDS instance endpoint"
-  value       = aws_db_instance.main.endpoint
+  description = "RDS instance endpoint (only for managed RDS)"
+  value       = var.use_external_database ? null : aws_db_instance.main[0].endpoint
   sensitive   = true
 }
 
 output "rds_port" {
-  description = "RDS instance port"
-  value       = aws_db_instance.main.port
+  description = "RDS instance port (only for managed RDS)"
+  value       = var.use_external_database ? null : aws_db_instance.main[0].port
+}
+
+output "external_database_secret_arn" {
+  description = "ARN of the external database secret"
+  value       = var.use_external_database ? aws_secretsmanager_secret.external_database[0].arn : null
+  sensitive   = true
 }
 
 output "cloudwatch_log_group_name" {

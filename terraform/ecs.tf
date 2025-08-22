@@ -32,11 +32,7 @@ resource "aws_ecs_task_definition" "app" {
           protocol      = "tcp"
         }
       ]
-      environment = [
-        {
-          name  = "DATABASE_URL"
-          value = "mysql+pymysql://${var.db_username}:${var.db_password}@${aws_db_instance.main.endpoint}/${var.db_schema}"
-        },
+      environment = concat([
         {
           name  = "JWT_SECRET_KEY"
           value = var.jwt_secret_key
@@ -53,7 +49,23 @@ resource "aws_ecs_task_definition" "app" {
           name  = "DEBUG"
           value = var.environment == "production" ? "false" : "true"
         }
+      ], 
+      # Add DATABASE_URL for managed RDS (when not using external database)
+      var.use_external_database ? [] : [
+        {
+          name  = "DATABASE_URL"
+          value = "mysql+pymysql://${var.db_username}:${var.db_password}@${aws_db_instance.main[0].endpoint}/${var.db_schema}"
+        }
       ]
+      )
+      
+      # Secrets from AWS Secrets Manager (for external database)
+      secrets = var.use_external_database ? [
+        {
+          name      = "DATABASE_URL"
+          valueFrom = "${aws_secretsmanager_secret.external_database[0].arn}:database_url::"
+        }
+      ] : []
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -101,8 +113,11 @@ resource "aws_ecs_service" "app" {
 
 
   depends_on = [
-    aws_lb_listener.app_https,
     aws_iam_role_policy_attachment.ecs_task_execution_role,
+    # Note: Terraform requires static depends_on - both listeners are declared
+    # but only one will be created based on enable_cloudflare_ssl
+    aws_lb_listener.app_https,
+    aws_lb_listener.app_http,
   ]
 
   tags = {

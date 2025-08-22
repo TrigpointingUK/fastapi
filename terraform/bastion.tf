@@ -32,7 +32,7 @@ resource "aws_instance" "bastion" {
   }
 
   user_data = base64encode(templatefile("${path.module}/bastion_user_data.sh", {
-    db_endpoint = aws_db_instance.main.endpoint
+    db_endpoint = var.use_external_database ? "external-mysql-host" : aws_db_instance.main[0].endpoint
     db_username = var.db_username
     db_password = var.db_password
   }))
@@ -96,14 +96,14 @@ resource "aws_security_group" "bastion" {
 
 # Update RDS security group to allow bastion access
 resource "aws_security_group_rule" "rds_from_bastion" {
-  count = var.environment == "staging" && var.admin_ip_address != null ? 1 : 0
+  count = !var.use_external_database && var.environment == "staging" && var.admin_ip_address != null ? 1 : 0
 
   type                     = "ingress"
   from_port                = 3306
   to_port                  = 3306
   protocol                 = "tcp"
   source_security_group_id = aws_security_group.bastion[0].id
-  security_group_id        = aws_security_group.rds.id
+  security_group_id        = aws_security_group.rds[0].id
   description              = "MySQL from bastion host"
 }
 

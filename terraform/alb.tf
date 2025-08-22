@@ -76,5 +76,22 @@ resource "aws_lb_listener" "app_https" {
   }
 }
 
-# No HTTP redirect needed - CloudFlare handles this at the edge
-# This keeps the origin server secure with HTTPS-only
+# HTTP Listener (only when CloudFlare SSL is disabled - for staging/testing)
+resource "aws_lb_listener" "app_http" {
+  count             = var.enable_cloudflare_ssl ? 0 : 1
+  load_balancer_arn = aws_lb.main.arn
+  port              = "80"
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.app.arn
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-http-listener"
+  }
+}
+
+# Note: When CloudFlare SSL is enabled, HTTP listener is not created
+# CloudFlare handles HTTP->HTTPS redirects at the edge for security

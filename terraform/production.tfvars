@@ -2,12 +2,17 @@ environment = "production"
 aws_region  = "us-west-2"
 
 # Container image (update this with your actual image)
-container_image = "ghcr.io/your-username/fastapi:main"
+container_image = "ghcr.io/trigpointinguk/fastapi:main"
 
-# Database credentials (use AWS Secrets Manager in production)
+# External database configuration (MySQL 5.5 on EC2)
+use_external_database        = true
+external_database_secret_name = "fastapi-production-external-db"
+db_schema = "trigpoin_trigs"  # Legacy schema name for migration compatibility
+
+# Database credentials (not used when use_external_database = true)
+# These are kept for staging/development environments
 db_username = "fastapi_user"
 db_password = "secure-production-password-change-this"
-db_schema = "trigpoin_trigs"  # Legacy schema name for migration compatibility
 
 # JWT secret (use AWS Secrets Manager in production)
 jwt_secret_key = "super-secure-production-jwt-secret-key"
@@ -16,3 +21,11 @@ jwt_secret_key = "super-secure-production-jwt-secret-key"
 desired_count = 2
 min_capacity  = 2
 max_capacity  = 10
+
+# CloudFlare SSL Configuration (REQUIRED for production)
+domain_name = "api.trigpointing.me"  # Replace with your actual production domain
+enable_cloudflare_ssl = true  # REQUIRED for production security
+
+# CloudFlare Origin Certificate (create these with: terraform apply -var-file=cloudflare-cert.tfvars)
+# cloudflare_origin_cert = "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
+# cloudflare_origin_key = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"

@@ -13,7 +13,7 @@ resource "aws_cloudwatch_dashboard" "main" {
   dashboard_name = "${var.project_name}-${var.environment}-dashboard"
 
   dashboard_body = jsonencode({
-    widgets = [
+    widgets = concat([
       {
         type   = "metric"
         x      = 0
@@ -54,7 +54,10 @@ resource "aws_cloudwatch_dashboard" "main" {
           title   = "ALB Metrics"
           period  = 300
         }
-      },
+      }
+    ],
+    # Add RDS widget only when using managed RDS
+    var.use_external_database ? [] : [
       {
         type   = "metric"
         x      = 0
@@ -64,7 +67,7 @@ resource "aws_cloudwatch_dashboard" "main" {
 
         properties = {
           metrics = [
-            ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", aws_db_instance.main.id],
+            ["AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", aws_db_instance.main[0].id],
             [".", "DatabaseConnections", ".", "."],
             [".", "FreeableMemory", ".", "."],
             [".", "ReadLatency", ".", "."],
@@ -77,7 +80,7 @@ resource "aws_cloudwatch_dashboard" "main" {
           period  = 300
         }
       }
-    ]
+    ])
   })
 }
 

@@ -1,5 +1,7 @@
-# RDS Subnet Group
+# RDS Subnet Group (only when using managed RDS)
 resource "aws_db_subnet_group" "main" {
+  count = var.use_external_database ? 0 : 1
+
   name       = "${var.project_name}-${var.environment}-db-subnet-group"
   subnet_ids = aws_subnet.private[*].id
 
@@ -8,8 +10,10 @@ resource "aws_db_subnet_group" "main" {
   }
 }
 
-# RDS Parameter Group
+# RDS Parameter Group (only when using managed RDS)
 resource "aws_db_parameter_group" "main" {
+  count = var.use_external_database ? 0 : 1
+
   family = "mysql8.0"
   name   = "${var.project_name}-${var.environment}-db-params"
 
@@ -42,8 +46,10 @@ resource "aws_db_parameter_group" "main" {
   }
 }
 
-# RDS Instance
+# RDS Instance (only when using managed RDS)
 resource "aws_db_instance" "main" {
+  count = var.use_external_database ? 0 : 1
+
   identifier = "${var.project_name}-${var.environment}-db"
 
   # Engine
@@ -63,12 +69,12 @@ resource "aws_db_instance" "main" {
   storage_encrypted     = true
 
   # Network
-  db_subnet_group_name   = aws_db_subnet_group.main.name
-  vpc_security_group_ids = [aws_security_group.rds.id]
+  db_subnet_group_name   = aws_db_subnet_group.main[0].name
+  vpc_security_group_ids = [aws_security_group.rds[0].id]
   publicly_accessible    = var.environment == "staging" ? true : false
 
   # Maintenance
-  parameter_group_name   = aws_db_parameter_group.main.name
+  parameter_group_name   = aws_db_parameter_group.main[0].name
   backup_retention_period = var.environment == "production" ? 7 : 1
   backup_window          = "03:00-04:00"
   maintenance_window     = "Sun:04:00-Sun:05:00"

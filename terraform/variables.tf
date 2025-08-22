@@ -148,3 +148,15 @@ variable "domain_name" {
   type        = string
   default     = null
 }
+
+variable "use_external_database" {
+  description = "Use external database instead of provisioning RDS (for production with existing MySQL 5.5)"
+  type        = bool
+  default     = false
+}
+
+variable "external_database_secret_name" {
+  description = "Name of the AWS Secrets Manager secret containing external database URL"
+  type        = string
+  default     = null
+}
