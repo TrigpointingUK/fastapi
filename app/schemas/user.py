@@ -1,6 +1,7 @@
 """
 Pydantic schemas for user endpoints with permission-based field filtering.
 """
+
 from typing import Optional
 
 from pydantic import BaseModel, Field

@@ -1,6 +1,7 @@
 """
 Main FastAPI application entry point.
 """
+
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.api import api_router

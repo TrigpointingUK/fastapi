@@ -1,6 +1,7 @@
 """
 Core configuration settings for the FastAPI application.
 """
+
 from typing import List, Union
 
 from pydantic import AnyHttpUrl, field_validator

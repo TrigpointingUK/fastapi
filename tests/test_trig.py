@@ -1,6 +1,7 @@
 """
 Tests for trig endpoints.
 """
+
 from datetime import date, time
 from decimal import Decimal
 

@@ -1,6 +1,7 @@
 """
 Pydantic schemas for trig endpoints.
 """
+
 from datetime import date, datetime, time
 from decimal import Decimal
 from typing import Optional

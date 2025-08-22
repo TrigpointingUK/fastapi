@@ -1,6 +1,7 @@
 """
 CRUD operations for trig table.
 """
+
 from typing import Optional
 
 from sqlalchemy.orm import Session

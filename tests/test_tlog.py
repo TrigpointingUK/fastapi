@@ -1,6 +1,7 @@
 """
 Tests for tlog endpoints.
 """
+
 # import pytest  # Currently unused
 from fastapi.testclient import TestClient
 
