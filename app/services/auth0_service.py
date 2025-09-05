@@ -441,7 +441,7 @@ class Auth0Service:
         log_data = {
             "event": "auth0_comprehensive_search_username_attempt",
             "username": username,
-            "connection": self.connection,
+            "connection": str(self.connection),  # Convert to string to handle MagicMock in tests
             "timestamp": datetime.utcnow().isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
@@ -463,7 +463,7 @@ class Auth0Service:
                 "event": "auth0_comprehensive_search_email_attempt",
                 "username": username,
                 "email": email,
-                "connection": self.connection,
+                "connection": str(self.connection),  # Convert to string to handle MagicMock in tests
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
@@ -551,7 +551,7 @@ class Auth0Service:
         log_data = {
             "event": "auth0_users_debug_before_filtering",
             "total_users": len(users),
-            "connection": connection,
+            "connection": str(connection),  # Convert to string to handle MagicMock in tests
             "users_sample": [
                 {
                     "user_id": user.get("user_id", ""),
@@ -575,7 +575,7 @@ class Auth0Service:
             "event": "auth0_users_filtered_by_connection",
             "total_users": len(users),
             "filtered_users": len(filtered_users),
-            "connection": connection,
+            "connection": str(connection),  # Convert to string to handle MagicMock in tests
             "timestamp": datetime.utcnow().isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
