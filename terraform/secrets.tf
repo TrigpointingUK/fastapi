@@ -120,3 +120,11 @@ resource "aws_iam_role_policy_attachment" "ecs_task_auth0_secrets" {
   role       = aws_iam_role.ecs_task_role.name
   policy_arn = aws_iam_policy.ecs_auth0_secrets_access[0].arn
 }
+
+# Attach the Auth0 secrets policy to the ECS task execution role (for ECS to retrieve secrets at startup)
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_auth0_secrets" {
+  count = var.auth0_domain != null ? 1 : 0
+
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = aws_iam_policy.ecs_auth0_secrets_access[0].arn
+}
