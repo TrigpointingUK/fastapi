@@ -418,7 +418,7 @@ class Auth0Service:
             "timestamp": datetime.utcnow().isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
-        
+
         user = self.find_user_by_username(username)
         if user:
             log_data = {
@@ -439,7 +439,7 @@ class Auth0Service:
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
-            
+
             user = self.find_user_by_email(email)
             if user:
                 log_data = {
@@ -745,7 +745,7 @@ class Auth0Service:
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
-            
+
             auth0_user = self.find_user_comprehensive(username, email)
 
             if auth0_user:
@@ -820,7 +820,7 @@ class Auth0Service:
                     "timestamp": datetime.utcnow().isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
-                
+
                 log_data = {
                     "event": "auth0_user_creation_started",
                     "username": username,
