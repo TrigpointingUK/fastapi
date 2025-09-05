@@ -342,8 +342,10 @@ class Auth0Service:
 
         if response and "users" in response and len(response["users"]) > 0:
             # Filter users by connection since Auth0 API doesn't support connection filtering in search
-            filtered_users = self._filter_users_by_connection(response["users"], self.connection)
-            
+            filtered_users = self._filter_users_by_connection(
+                response["users"], self.connection
+            )
+
             if filtered_users:
                 log_data = {
                     "event": "auth0_user_found_by_username",
@@ -381,8 +383,10 @@ class Auth0Service:
 
         if response and "users" in response and len(response["users"]) > 0:
             # Filter users by connection since Auth0 API doesn't support connection filtering in search
-            filtered_users = self._filter_users_by_connection(response["users"], self.connection)
-            
+            filtered_users = self._filter_users_by_connection(
+                response["users"], self.connection
+            )
+
             if filtered_users:
                 log_data = {
                     "event": "auth0_user_found_by_email",
@@ -471,8 +475,10 @@ class Auth0Service:
                 response = self._make_auth0_request("GET", endpoint)
                 if response and "users" in response and len(response["users"]) > 0:
                     # Filter users by connection since Auth0 API doesn't support connection filtering in search
-                    filtered_users = self._filter_users_by_connection(response["users"], self.connection)
-                    
+                    filtered_users = self._filter_users_by_connection(
+                        response["users"], self.connection
+                    )
+
                     if filtered_users:
                         log_data = {
                             "event": "auth0_user_found_by_username_fallback",
@@ -500,22 +506,28 @@ class Auth0Service:
         logger.info(json.dumps(log_data))
         return None
 
-    def _filter_users_by_connection(self, users: List[Dict], connection: str) -> List[Dict]:
+    def _filter_users_by_connection(
+        self, users: List[Dict], connection: str
+    ) -> List[Dict]:
         """
         Filter users by connection since Auth0 API doesn't support connection filtering in search.
-        
+
         Args:
             users: List of user dictionaries from Auth0
             connection: Connection name to filter by
-            
+
         Returns:
             Filtered list of users matching the connection
         """
         if not users:
             return []
-            
-        filtered_users = [user for user in users if user.get("identities", [{}])[0].get("connection") == connection]
-        
+
+        filtered_users = [
+            user
+            for user in users
+            if user.get("identities", [{}])[0].get("connection") == connection
+        ]
+
         log_data = {
             "event": "auth0_users_filtered_by_connection",
             "total_users": len(users),
@@ -524,7 +536,7 @@ class Auth0Service:
             "timestamp": datetime.utcnow().isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
-        
+
         return filtered_users
 
     def create_user(
