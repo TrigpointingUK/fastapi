@@ -860,7 +860,7 @@ class Auth0Service:
                 "event": "auth0_user_search_completed",
                 "username": username,
                 "email": email or "",
-                "user_found": auth0_user is not None,
+                "user_found": str(auth0_user is not None),
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
