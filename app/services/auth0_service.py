@@ -65,54 +65,62 @@ class Auth0Service:
             response = client.get_secret_value(SecretId=self.secret_name)
             secret_data = json.loads(response["SecretString"])
 
-            logger.info(
-                "Successfully retrieved Auth0 credentials from AWS Secrets Manager"
-            )
+            log_data = {
+                "event": "auth0_credentials_retrieved",
+                "secret_name": self.secret_name,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
             return secret_data
 
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
+            error_message = e.response["Error"]["Message"]
+
+            log_data = {
+                "event": "auth0_credentials_retrieval_failed",
+                "error_type": "ClientError",
+                "error_code": error_code,
+                "error_message": error_message,
+                "secret_name": self.secret_name,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+
             if error_code == "DecryptionFailureException":
-                logger.error(
-                    "Auth0 credentials could not be decrypted",
-                    extra={"error": str(e), "secret_name": self.secret_name},
+                log_data["error_description"] = (
+                    "Auth0 credentials could not be decrypted"
                 )
             elif error_code == "InternalServiceErrorException":
-                logger.error(
-                    "AWS internal service error retrieving Auth0 credentials",
-                    extra={"error": str(e), "secret_name": self.secret_name},
+                log_data["error_description"] = (
+                    "AWS internal service error retrieving Auth0 credentials"
                 )
             elif error_code == "InvalidParameterException":
-                logger.error(
-                    "Invalid parameter retrieving Auth0 credentials",
-                    extra={"error": str(e), "secret_name": self.secret_name},
+                log_data["error_description"] = (
+                    "Invalid parameter retrieving Auth0 credentials"
                 )
             elif error_code == "InvalidRequestException":
-                logger.error(
-                    "Invalid request retrieving Auth0 credentials",
-                    extra={"error": str(e), "secret_name": self.secret_name},
+                log_data["error_description"] = (
+                    "Invalid request retrieving Auth0 credentials"
                 )
             elif error_code == "ResourceNotFoundException":
-                logger.error(
-                    "Auth0 secret not found",
-                    extra={"error": str(e), "secret_name": self.secret_name},
-                )
+                log_data["error_description"] = "Auth0 secret not found"
             else:
-                logger.error(
-                    "Unexpected error retrieving Auth0 credentials",
-                    extra={
-                        "error": str(e),
-                        "secret_name": self.secret_name,
-                        "error_code": error_code,
-                    },
+                log_data["error_description"] = (
+                    "Unexpected error retrieving Auth0 credentials"
                 )
+
+            logger.error(json.dumps(log_data))
             return None
 
         except Exception as e:
-            logger.error(
-                "Unexpected error retrieving Auth0 credentials",
-                extra={"error": str(e), "secret_name": self.secret_name},
-            )
+            log_data = {
+                "event": "auth0_credentials_retrieval_failed",
+                "error_type": "UnexpectedError",
+                "error_message": str(e),
+                "secret_name": self.secret_name,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
             return None
 
     def _get_access_token(self) -> Optional[str]:
@@ -160,24 +168,34 @@ class Auth0Service:
                 seconds=expires_in - 300
             )
 
-            logger.info("Successfully obtained Auth0 Management API access token")
+            log_data = {
+                "event": "auth0_access_token_obtained",
+                "domain": self.domain,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
             return self._access_token
 
         except requests.exceptions.RequestException as e:
-            logger.error(
-                "Failed to obtain Auth0 access token",
-                extra={
-                    "error": str(e),
-                    "domain": self.domain,
-                    "status_code": getattr(e.response, "status_code", None),
-                },
-            )
+            log_data = {
+                "event": "auth0_access_token_failed",
+                "error_type": "RequestException",
+                "error_message": str(e),
+                "domain": self.domain,
+                "status_code": getattr(e.response, "status_code", None),
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
             return None
         except Exception as e:
-            logger.error(
-                "Unexpected error obtaining Auth0 access token",
-                extra={"error": str(e), "domain": self.domain},
-            )
+            log_data = {
+                "event": "auth0_access_token_failed",
+                "error_type": "UnexpectedError",
+                "error_message": str(e),
+                "domain": self.domain,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
             return None
 
     def _make_auth0_request(
@@ -239,26 +257,28 @@ class Auth0Service:
                 return None
 
         except requests.exceptions.RequestException as e:
-            logger.error(
-                "Auth0 API request failed",
-                extra={
-                    "method": method,
-                    "endpoint": endpoint,
-                    "error": str(e),
-                    "url": url,
-                },
-            )
+            log_data = {
+                "event": "auth0_api_request_failed",
+                "error_type": "RequestException",
+                "error_message": str(e),
+                "method": method,
+                "endpoint": endpoint,
+                "url": url,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
             return None
         except Exception as e:
-            logger.error(
-                "Unexpected error in Auth0 API request",
-                extra={
-                    "method": method,
-                    "endpoint": endpoint,
-                    "error": str(e),
-                    "url": url,
-                },
-            )
+            log_data = {
+                "event": "auth0_api_request_failed",
+                "error_type": "UnexpectedError",
+                "error_message": str(e),
+                "method": method,
+                "endpoint": endpoint,
+                "url": url,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
             return None
 
     def find_user_by_username(self, username: str) -> Optional[Dict]:
@@ -335,19 +355,22 @@ class Auth0Service:
         response = self._make_auth0_request("POST", "users", user_data)
 
         if response:
-            logger.info(
-                "Successfully created Auth0 user",
-                extra={
-                    "username": username,
-                    "email": email,
-                    "auth0_user_id": response.get("user_id"),
-                },
-            )
+            log_data = {
+                "event": "auth0_user_created",
+                "username": username,
+                "email": email or "",
+                "auth0_user_id": response.get("user_id") or "",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
         else:
-            logger.error(
-                "Failed to create Auth0 user",
-                extra={"username": username, "email": email},
-            )
+            log_data = {
+                "event": "auth0_user_creation_failed",
+                "username": username,
+                "email": email or "",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
 
         return response
 
@@ -370,16 +393,22 @@ class Auth0Service:
         response = self._make_auth0_request("PATCH", f"users/{user_id}", user_data)
 
         if response:
-            logger.info(
-                "Successfully updated Auth0 user email",
-                extra={"user_id": user_id, "email": email},
-            )
+            log_data = {
+                "event": "auth0_user_email_updated",
+                "user_id": user_id,
+                "email": email,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
             return True
         else:
-            logger.error(
-                "Failed to update Auth0 user email",
-                extra={"user_id": user_id, "email": email},
-            )
+            log_data = {
+                "event": "auth0_user_email_update_failed",
+                "user_id": user_id,
+                "email": email,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
             return False
 
     def sync_user_to_auth0(
@@ -399,13 +428,22 @@ class Auth0Service:
             Auth0 user data dictionary or None if sync failed
         """
         if not self.enabled:
-            logger.info("Auth0 sync skipped - service disabled")
+            log_data = {
+                "event": "auth0_sync_skipped",
+                "reason": "service_disabled",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
             return None
 
-        logger.info(
-            "Starting Auth0 user sync",
-            extra={"username": username, "email": email, "name": name},
-        )
+        log_data = {
+            "event": "auth0_user_sync_started",
+            "username": username,
+            "email": email or "",
+            "name": name,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+        logger.info(json.dumps(log_data))
 
         try:
             # First, try to find user by username
@@ -415,38 +453,46 @@ class Auth0Service:
                 # User exists, check if email needs updating
                 current_email = auth0_user.get("email")
                 if email and current_email != email:
-                    logger.info(
-                        "Updating Auth0 user email",
-                        extra={
-                            "username": username,
-                            "old_email": current_email,
-                            "new_email": email,
-                        },
-                    )
+                    log_data = {
+                        "event": "auth0_user_email_update_started",
+                        "username": username,
+                        "old_email": current_email or "",
+                        "new_email": email or "",
+                        "timestamp": datetime.utcnow().isoformat() + "Z",
+                    }
+                    logger.info(json.dumps(log_data))
                     self.update_user_email(auth0_user["user_id"], email)
                     auth0_user["email"] = email
 
-                logger.info(
-                    "Auth0 user sync completed - user updated",
-                    extra={
-                        "username": username,
-                        "auth0_user_id": auth0_user["user_id"],
-                    },
-                )
+                log_data = {
+                    "event": "auth0_user_sync_completed_updated",
+                    "username": username,
+                    "auth0_user_id": auth0_user["user_id"],
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                logger.info(json.dumps(log_data))
                 return auth0_user
             else:
                 # User doesn't exist, create new one
-                logger.info(
-                    "Creating new Auth0 user",
-                    extra={"username": username, "email": email},
-                )
+                log_data = {
+                    "event": "auth0_user_creation_started",
+                    "username": username,
+                    "email": email or "",
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                logger.info(json.dumps(log_data))
                 return self.create_user(username, email, name)
 
         except Exception as e:
-            logger.error(
-                "Unexpected error during Auth0 user sync",
-                extra={"username": username, "email": email, "error": str(e)},
-            )
+            log_data = {
+                "event": "auth0_user_sync_failed",
+                "error_type": "UnexpectedError",
+                "error_message": str(e),
+                "username": username,
+                "email": email or "",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
             return None
 
 
