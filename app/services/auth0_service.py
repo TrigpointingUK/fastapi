@@ -441,6 +441,7 @@ class Auth0Service:
         log_data = {
             "event": "auth0_comprehensive_search_username_attempt",
             "username": username,
+            "connection": self.connection,
             "timestamp": datetime.utcnow().isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
@@ -462,6 +463,7 @@ class Auth0Service:
                 "event": "auth0_comprehensive_search_email_attempt",
                 "username": username,
                 "email": email,
+                "connection": self.connection,
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
@@ -544,6 +546,24 @@ class Auth0Service:
         """
         if not users:
             return []
+
+        # Debug: Log the actual user data structure
+        log_data = {
+            "event": "auth0_users_debug_before_filtering",
+            "total_users": len(users),
+            "connection": connection,
+            "users_sample": [
+                {
+                    "user_id": user.get("user_id", ""),
+                    "username": user.get("username", ""),
+                    "email": user.get("email", ""),
+                    "identities": user.get("identities", []),
+                }
+                for user in users[:3]  # Log first 3 users for debugging
+            ],
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+        logger.info(json.dumps(log_data))
 
         filtered_users = [
             user
