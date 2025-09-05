@@ -855,7 +855,7 @@ class Auth0Service:
             logger.info(json.dumps(log_data))
 
             auth0_user = self.find_user_comprehensive(username, email)
-            
+
             log_data = {
                 "event": "auth0_user_search_completed",
                 "username": username,
