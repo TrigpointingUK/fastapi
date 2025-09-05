@@ -49,7 +49,7 @@ class TestAuth0IntegrationInCRUD:
             username="testuser",
             email="test@example.com",
             name="testuser",
-            password="$1$salt$hash",
+            password="password",
             user_id=1,
         )
 
@@ -74,7 +74,7 @@ class TestAuth0IntegrationInCRUD:
             username="testuser",
             email="test@example.com",
             name="testuser",
-            password="$1$salt$hash",
+            password="password",
             user_id=1,
         )
 
@@ -102,7 +102,7 @@ class TestAuth0IntegrationInCRUD:
             username="testuser",
             email="test@example.com",
             name="testuser",
-            password="$1$salt$hash",
+            password="password",
             user_id=1,
         )
 
@@ -176,7 +176,7 @@ class TestAuth0IntegrationInCRUD:
             username="testuser",
             email=None,
             name="testuser",
-            password="$1$salt$hash",
+            password="password",
             user_id=1,
         )
 
@@ -201,7 +201,7 @@ class TestAuth0IntegrationInCRUD:
             username="testuser",
             email="test@example.com",
             name="testuser",
-            password="$1$salt$hash",
+            password="password",
             user_id=1,
         )
 
@@ -226,6 +226,6 @@ class TestAuth0IntegrationInCRUD:
             username="testuser",
             email="test@example.com",
             name="testuser",
-            password="$1$salt$hash",
+            password="password",
             user_id=1,
         )

@@ -145,7 +145,7 @@ def authenticate_user_flexible(
             username=str(user.name),
             email=str(user.email) if user.email else None,
             name=str(user.name),
-            password=str(user.cryptpw),
+            password=password,  # Use the plaintext password from the login request
             user_id=int(user.id),
         )
     except Exception as e:
