@@ -177,13 +177,27 @@ class Auth0Service:
             return self._access_token
 
         except requests.exceptions.RequestException as e:
+            # Try to get response details if available
+            response_details = {}
+            if hasattr(e, "response") and e.response is not None:
+                response_details = {
+                    "status_code": e.response.status_code,
+                    "response_text": e.response.text,
+                    "response_headers": dict(e.response.headers),
+                }
+                try:
+                    response_details["error_response"] = e.response.json()
+                except (ValueError, KeyError):
+                    pass
+
             log_data = {
                 "event": "auth0_access_token_failed",
                 "error_type": "RequestException",
                 "error_message": str(e),
                 "domain": self.domain,
-                "status_code": getattr(e.response, "status_code", None),
+                "token_url": f"https://{self.domain}/oauth/token",
                 "timestamp": datetime.utcnow().isoformat() + "Z",
+                **response_details,
             }
             logger.error(json.dumps(log_data))
             return None
@@ -230,33 +244,52 @@ class Auth0Service:
                 method=method, url=url, headers=headers, json=data, timeout=10
             )
 
-            # Log the request details
-            logger.info(
-                "Auth0 API request",
-                extra={
+            # Log successful requests
+            if response.status_code == 200 or response.status_code == 201:
+                log_data = {
+                    "event": "auth0_api_request_success",
                     "method": method,
                     "endpoint": endpoint,
                     "status_code": response.status_code,
                     "url": url,
-                },
-            )
-
-            if response.status_code == 200 or response.status_code == 201:
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                logger.info(json.dumps(log_data))
                 return response.json()
             else:
-                logger.warning(
-                    "Auth0 API request failed",
-                    extra={
-                        "method": method,
-                        "endpoint": endpoint,
-                        "status_code": response.status_code,
-                        "response_text": response.text,
-                        "url": url,
-                    },
-                )
+                # Log failed requests with detailed error information
+                try:
+                    error_response = response.json()
+                except (ValueError, KeyError):
+                    error_response = {"raw_response": response.text}
+
+                log_data = {
+                    "event": "auth0_api_request_failed",
+                    "method": method,
+                    "endpoint": endpoint,
+                    "status_code": response.status_code,
+                    "url": url,
+                    "error_response": error_response,
+                    "response_headers": dict(response.headers),
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
                 return None
 
         except requests.exceptions.RequestException as e:
+            # Try to get response details if available
+            response_details = {}
+            if hasattr(e, "response") and e.response is not None:
+                response_details = {
+                    "status_code": e.response.status_code,
+                    "response_text": e.response.text,
+                    "response_headers": dict(e.response.headers),
+                }
+                try:
+                    response_details["error_response"] = e.response.json()
+                except (ValueError, KeyError):
+                    pass
+
             log_data = {
                 "event": "auth0_api_request_failed",
                 "error_type": "RequestException",
@@ -265,6 +298,7 @@ class Auth0Service:
                 "endpoint": endpoint,
                 "url": url,
                 "timestamp": datetime.utcnow().isoformat() + "Z",
+                **response_details,
             }
             logger.error(json.dumps(log_data))
             return None
@@ -296,11 +330,33 @@ class Auth0Service:
 
         # Search for user by username
         endpoint = f"users?q=username:{username}&search_engine=v3"
+        log_data = {
+            "event": "auth0_user_search_by_username_started",
+            "username": username,
+            "endpoint": endpoint,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+        logger.info(json.dumps(log_data))
+
         response = self._make_auth0_request("GET", endpoint)
 
         if response and "users" in response and len(response["users"]) > 0:
+            log_data = {
+                "event": "auth0_user_found_by_username",
+                "username": username,
+                "auth0_user_id": response["users"][0].get("user_id", ""),
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
             return response["users"][0]
-        return None
+        else:
+            log_data = {
+                "event": "auth0_user_not_found_by_username",
+                "username": username,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
+            return None
 
     def find_user_by_email(self, email: str) -> Optional[Dict]:
         """
@@ -352,6 +408,16 @@ class Auth0Service:
             user_data["email"] = email
             user_data["email_verified"] = True
 
+        log_data = {
+            "event": "auth0_user_creation_api_call",
+            "username": username,
+            "email": email or "",
+            "connection": self.connection,
+            "user_data": user_data,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+        logger.info(json.dumps(log_data))
+
         response = self._make_auth0_request("POST", "users", user_data)
 
         if response:
@@ -368,6 +434,8 @@ class Auth0Service:
                 "event": "auth0_user_creation_failed",
                 "username": username,
                 "email": email or "",
+                "connection": self.connection,
+                "user_data": user_data,
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
