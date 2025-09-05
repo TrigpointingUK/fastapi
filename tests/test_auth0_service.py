@@ -222,7 +222,7 @@ class TestAuth0Service:
 
         assert result == self.mock_user_data
         mock_request.assert_called_once_with(
-            "GET", "users?q=username:testuser&search_engine=v3"
+            "GET", "users?q=username:\"testuser\"&search_engine=v3"
         )
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
@@ -255,7 +255,7 @@ class TestAuth0Service:
 
         assert result == self.mock_user_data
         mock_request.assert_called_once_with(
-            "GET", "users?q=email:test@example.com&search_engine=v3"
+            "GET", "users?q=email:\"test@example.com\"&search_engine=v3"
         )
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")

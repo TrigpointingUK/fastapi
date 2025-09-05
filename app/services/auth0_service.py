@@ -328,8 +328,8 @@ class Auth0Service:
         if not self.enabled:
             return None
 
-        # Search for user by username
-        endpoint = f"users?q=username:{username}&search_engine=v3"
+        # Search for user by username - try multiple search formats
+        endpoint = f"users?q=username:\"{username}\"&search_engine=v3"
         log_data = {
             "event": "auth0_user_search_by_username_started",
             "username": username,
@@ -372,11 +372,75 @@ class Auth0Service:
             return None
 
         # Search for user by email
-        endpoint = f"users?q=email:{email}&search_engine=v3"
+        endpoint = f"users?q=email:\"{email}\"&search_engine=v3"
         response = self._make_auth0_request("GET", endpoint)
 
         if response and "users" in response and len(response["users"]) > 0:
+            log_data = {
+                "event": "auth0_user_found_by_email",
+                "email": email,
+                "auth0_user_id": response["users"][0].get("user_id", ""),
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
             return response["users"][0]
+        else:
+            log_data = {
+                "event": "auth0_user_not_found_by_email",
+                "email": email,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
+        return None
+
+    def find_user_comprehensive(self, username: str, email: Optional[str] = None) -> Optional[Dict]:
+        """
+        Find a user using multiple search strategies.
+        
+        Args:
+            username: Username to search for
+            email: Email address to search for (optional)
+            
+        Returns:
+            User data dictionary or None if not found
+        """
+        if not self.enabled:
+            return None
+            
+        # Try username search first
+        user = self.find_user_by_username(username)
+        if user:
+            return user
+            
+        # If email provided, try email search
+        if email:
+            user = self.find_user_by_email(email)
+            if user:
+                return user
+                
+        # Try searching by username without quotes (fallback)
+        if not user:
+            try:
+                endpoint = f"users?q=username:{username}&search_engine=v3"
+                response = self._make_auth0_request("GET", endpoint)
+                if response and "users" in response and len(response["users"]) > 0:
+                    log_data = {
+                        "event": "auth0_user_found_by_username_fallback",
+                        "username": username,
+                        "auth0_user_id": response["users"][0].get("user_id", ""),
+                        "timestamp": datetime.utcnow().isoformat() + "Z",
+                    }
+                    logger.info(json.dumps(log_data))
+                    return response["users"][0]
+            except Exception as e:
+                log_data = {
+                    "event": "auth0_user_search_fallback_failed",
+                    "username": username,
+                    "error": str(e),
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                logger.warning(json.dumps(log_data))
+                
         return None
 
     def create_user(
@@ -453,6 +517,7 @@ class Auth0Service:
             }
             logger.info(json.dumps(log_data))
         else:
+            # Check if this is a user already exists error
             log_data = {
                 "event": "auth0_user_creation_failed",
                 "username": username,
@@ -462,6 +527,28 @@ class Auth0Service:
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
+            
+            # Try to find the existing user and return it instead of failing
+            log_data = {
+                "event": "auth0_user_creation_conflict_attempting_fallback",
+                "username": username,
+                "email": email or "",
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.warning(json.dumps(log_data))
+            
+            # Try to find the existing user
+            existing_user = self.find_user_comprehensive(username, email)
+            if existing_user:
+                log_data = {
+                    "event": "auth0_user_creation_conflict_resolved",
+                    "username": username,
+                    "email": email or "",
+                    "auth0_user_id": existing_user.get("user_id", ""),
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                logger.info(json.dumps(log_data))
+                return existing_user
 
         return response
 
@@ -603,8 +690,8 @@ class Auth0Service:
         logger.info(json.dumps(log_data))
 
         try:
-            # First, try to find user by username
-            auth0_user = self.find_user_by_username(username)
+            # Use comprehensive search to find user
+            auth0_user = self.find_user_comprehensive(username, email)
 
             if auth0_user:
                 # User exists, check if email or profile needs updating
