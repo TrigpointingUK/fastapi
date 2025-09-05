@@ -46,7 +46,11 @@ class TestAuth0IntegrationInCRUD:
         mock_get_user.assert_called_once_with(self.mock_db, "testuser")
         mock_verify_password.assert_called_once_with("password", "$1$salt$hash")
         mock_auth0_service.sync_user_to_auth0.assert_called_once_with(
-            username="testuser", email="test@example.com", name="testuser"
+            username="testuser",
+            email="test@example.com",
+            name="testuser",
+            password="$1$salt$hash",
+            user_id=1,
         )
 
     @patch("app.crud.user.auth0_service")
@@ -67,7 +71,11 @@ class TestAuth0IntegrationInCRUD:
         # Assertions
         assert result == self.mock_user  # Authentication should still succeed
         mock_auth0_service.sync_user_to_auth0.assert_called_once_with(
-            username="testuser", email="test@example.com", name="testuser"
+            username="testuser",
+            email="test@example.com",
+            name="testuser",
+            password="$1$salt$hash",
+            user_id=1,
         )
 
     @patch("app.crud.user.auth0_service")
@@ -91,7 +99,11 @@ class TestAuth0IntegrationInCRUD:
         assert result == self.mock_user
         mock_get_user.assert_called_once_with(self.mock_db, "test@example.com")
         mock_auth0_service.sync_user_to_auth0.assert_called_once_with(
-            username="testuser", email="test@example.com", name="testuser"
+            username="testuser",
+            email="test@example.com",
+            name="testuser",
+            password="$1$salt$hash",
+            user_id=1,
         )
 
     @patch("app.crud.user.auth0_service")
@@ -161,7 +173,11 @@ class TestAuth0IntegrationInCRUD:
         # Assertions
         assert result == user_no_email
         mock_auth0_service.sync_user_to_auth0.assert_called_once_with(
-            username="testuser", email=None, name="testuser"
+            username="testuser",
+            email=None,
+            name="testuser",
+            password="$1$salt$hash",
+            user_id=1,
         )
 
     @patch("app.crud.user.auth0_service")
@@ -182,7 +198,11 @@ class TestAuth0IntegrationInCRUD:
         # Assertions
         assert result == self.mock_user
         mock_auth0_service.sync_user_to_auth0.assert_called_once_with(
-            username="testuser", email="test@example.com", name="testuser"
+            username="testuser",
+            email="test@example.com",
+            name="testuser",
+            password="$1$salt$hash",
+            user_id=1,
         )
 
     @patch("app.crud.user.auth0_service")
@@ -203,5 +223,9 @@ class TestAuth0IntegrationInCRUD:
         # Assertions
         assert result == self.mock_user  # Authentication should still succeed
         mock_auth0_service.sync_user_to_auth0.assert_called_once_with(
-            username="testuser", email="test@example.com", name="testuser"
+            username="testuser",
+            email="test@example.com",
+            name="testuser",
+            password="$1$salt$hash",
+            user_id=1,
         )

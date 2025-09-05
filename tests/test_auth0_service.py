@@ -270,7 +270,9 @@ class TestAuth0Service:
         mock_request.return_value = self.mock_user_data
 
         service = Auth0Service()
-        result = service.create_user("testuser", "test@example.com", "Test User")
+        result = service.create_user(
+            "testuser", "test@example.com", "Test User", "password123", 123
+        )
 
         assert result == self.mock_user_data
         mock_request.assert_called_once()
@@ -282,9 +284,13 @@ class TestAuth0Service:
                 "connection": "Username-Password-Authentication",
                 "username": "testuser",
                 "name": "Test User",
+                "password": "password123",
                 "email": "test@example.com",
                 "email_verified": True,
                 "verify_email": False,
+                "app_metadata": {
+                    "legacy_user_id": 123,
+                },
             },
         )
 
@@ -300,11 +306,15 @@ class TestAuth0Service:
         mock_request.return_value = self.mock_user_data
 
         service = Auth0Service()
-        result = service.create_user("testuser", None, "Test User")
+        result = service.create_user("testuser", None, "Test User", "password123", 123)
 
         assert result == self.mock_user_data
         call_args = mock_request.call_args
         assert "email" not in call_args[0][2]
+        # Check that password and app_metadata are included
+        user_data = call_args[0][2]
+        assert user_data["password"] == "password123"
+        assert user_data["app_metadata"]["legacy_user_id"] == 123
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
     @patch("app.services.auth0_service.settings")
@@ -318,7 +328,9 @@ class TestAuth0Service:
         mock_request.return_value = self.mock_user_data
 
         service = Auth0Service()
-        result = service.create_user("testuser", "test@example.com", "Test User")
+        result = service.create_user(
+            "testuser", "test@example.com", "Test User", "password123", 123
+        )
 
         assert result == self.mock_user_data
         call_args = mock_request.call_args
@@ -329,9 +341,13 @@ class TestAuth0Service:
                 "connection": "tme-users",
                 "username": "testuser",
                 "name": "Test User",
+                "password": "password123",
                 "email": "test@example.com",
                 "email_verified": True,
                 "verify_email": False,
+                "app_metadata": {
+                    "legacy_user_id": 123,
+                },
             },
         )
 
@@ -391,7 +407,9 @@ class TestAuth0Service:
         mock_update_email.return_value = True
 
         service = Auth0Service()
-        result = service.sync_user_to_auth0("testuser", "new@example.com", "Test User")
+        result = service.sync_user_to_auth0(
+            "testuser", "new@example.com", "Test User", "password123", 123
+        )
 
         assert result["email"] == "new@example.com"
         mock_find_user.assert_called_once_with("testuser")
@@ -412,12 +430,14 @@ class TestAuth0Service:
         mock_create_user.return_value = self.mock_user_data
 
         service = Auth0Service()
-        result = service.sync_user_to_auth0("testuser", "test@example.com", "Test User")
+        result = service.sync_user_to_auth0(
+            "testuser", "test@example.com", "Test User", "password123", 123
+        )
 
         assert result == self.mock_user_data
         mock_find_user.assert_called_once_with("testuser")
         mock_create_user.assert_called_once_with(
-            "testuser", "test@example.com", "Test User"
+            "testuser", "test@example.com", "Test User", "password123", 123
         )
 
     @patch("app.services.auth0_service.Auth0Service.find_user_by_username")
@@ -439,7 +459,9 @@ class TestAuth0Service:
         mock_find_user.return_value = existing_user
 
         service = Auth0Service()
-        result = service.sync_user_to_auth0("testuser", "test@example.com", "Test User")
+        result = service.sync_user_to_auth0(
+            "testuser", "test@example.com", "Test User", "password123", 123
+        )
 
         assert result == existing_user
         mock_find_user.assert_called_once_with("testuser")
@@ -450,7 +472,9 @@ class TestAuth0Service:
         mock_settings.AUTH0_ENABLED = False
 
         service = Auth0Service()
-        result = service.sync_user_to_auth0("testuser", "test@example.com", "Test User")
+        result = service.sync_user_to_auth0(
+            "testuser", "test@example.com", "Test User", "password123", 123
+        )
 
         assert result is None
 
@@ -465,6 +489,8 @@ class TestAuth0Service:
         mock_find_user.side_effect = Exception("Auth0 API Error")
 
         service = Auth0Service()
-        result = service.sync_user_to_auth0("testuser", "test@example.com", "Test User")
+        result = service.sync_user_to_auth0(
+            "testuser", "test@example.com", "Test User", "password123", 123
+        )
 
         assert result is None

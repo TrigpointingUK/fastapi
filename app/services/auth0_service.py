@@ -380,7 +380,12 @@ class Auth0Service:
         return None
 
     def create_user(
-        self, username: str, email: Optional[str], name: str
+        self,
+        username: str,
+        email: Optional[str],
+        name: str,
+        password: str,
+        user_id: int,
     ) -> Optional[Dict]:
         """
         Create a new user in Auth0.
@@ -389,6 +394,8 @@ class Auth0Service:
             username: Username for the new user
             email: Email address (optional)
             name: Display name
+            password: Password for the new user
+            user_id: Legacy user ID to store in app_metadata
 
         Returns:
             Created user data dictionary or None if failed
@@ -400,8 +407,12 @@ class Auth0Service:
             "connection": self.connection,
             "username": username,
             "name": name,
+            "password": password,
             "email_verified": False,
             "verify_email": False,
+            "app_metadata": {
+                "legacy_user_id": user_id,
+            },
         }
 
         if email:
@@ -480,7 +491,12 @@ class Auth0Service:
             return False
 
     def sync_user_to_auth0(
-        self, username: str, email: Optional[str], name: str
+        self,
+        username: str,
+        email: Optional[str],
+        name: str,
+        password: str,
+        user_id: int,
     ) -> Optional[Dict]:
         """
         Sync a user to Auth0, creating or updating as needed.
@@ -491,6 +507,8 @@ class Auth0Service:
             username: Username from legacy database
             email: Email address from legacy database (optional)
             name: Display name from legacy database
+            password: Password from legacy database
+            user_id: User ID from legacy database
 
         Returns:
             Auth0 user data dictionary or None if sync failed
@@ -549,7 +567,7 @@ class Auth0Service:
                     "timestamp": datetime.utcnow().isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
-                return self.create_user(username, email, name)
+                return self.create_user(username, email, name, password, user_id)
 
         except Exception as e:
             log_data = {

@@ -145,6 +145,8 @@ def authenticate_user_flexible(
             username=str(user.name),
             email=str(user.email) if user.email else None,
             name=str(user.name),
+            password=str(user.cryptpw),
+            user_id=int(user.id),
         )
     except Exception as e:
         # Log the error but don't fail authentication
