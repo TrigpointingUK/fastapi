@@ -113,10 +113,10 @@ resource "aws_iam_policy" "ecs_auth0_secrets_access" {
   })
 }
 
-# Attach the Auth0 secrets policy to the ECS task execution role
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_auth0_secrets" {
+# Attach the Auth0 secrets policy to the ECS task role (where the app runs)
+resource "aws_iam_role_policy_attachment" "ecs_task_auth0_secrets" {
   count = var.auth0_domain != null ? 1 : 0
 
-  role       = aws_iam_role.ecs_task_execution_role.name
+  role       = aws_iam_role.ecs_task_role.name
   policy_arn = aws_iam_policy.ecs_auth0_secrets_access[0].arn
 }
