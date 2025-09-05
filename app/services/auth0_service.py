@@ -355,6 +355,14 @@ class Auth0Service:
                 }
                 logger.info(json.dumps(log_data))
                 return filtered_users[0]
+            else:
+                log_data = {
+                    "event": "auth0_user_not_found_by_username_connection_filtered",
+                    "username": username,
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                logger.info(json.dumps(log_data))
+                return None
         else:
             log_data = {
                 "event": "auth0_user_not_found_by_username",
@@ -396,6 +404,14 @@ class Auth0Service:
                 }
                 logger.info(json.dumps(log_data))
                 return filtered_users[0]
+            else:
+                log_data = {
+                    "event": "auth0_user_not_found_by_email_connection_filtered",
+                    "email": email,
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                logger.info(json.dumps(log_data))
+                return None
         else:
             log_data = {
                 "event": "auth0_user_not_found_by_email",
@@ -403,7 +419,7 @@ class Auth0Service:
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
-        return None
+            return None
 
     def find_user_comprehensive(
         self, username: str, email: Optional[str] = None
@@ -488,6 +504,13 @@ class Auth0Service:
                         }
                         logger.info(json.dumps(log_data))
                         return filtered_users[0]
+                    else:
+                        log_data = {
+                            "event": "auth0_user_not_found_by_username_fallback_connection_filtered",
+                            "username": username,
+                            "timestamp": datetime.utcnow().isoformat() + "Z",
+                        }
+                        logger.info(json.dumps(log_data))
             except Exception as e:
                 log_data = {
                     "event": "auth0_user_search_fallback_failed",
