@@ -50,6 +50,30 @@ resource "aws_ecs_task_definition" "app" {
           value = var.environment == "production" ? "false" : "true"
         }
       ], 
+      # Add Auth0 configuration if enabled
+      var.auth0_domain != null ? [
+        {
+          name  = "AUTH0_DOMAIN"
+          value = var.auth0_domain
+        },
+        {
+          name  = "AUTH0_SECRET_NAME"
+          value = var.auth0_secret_name
+        },
+        {
+          name  = "AUTH0_CONNECTION"
+          value = var.auth0_connection
+        },
+        {
+          name  = "AUTH0_ENABLED"
+          value = "true"
+        }
+      ] : [
+        {
+          name  = "AUTH0_ENABLED"
+          value = "false"
+        }
+      ],
       # Add DATABASE_URL for managed RDS (when not using external database)
       var.use_external_database ? [] : [
         {
@@ -59,13 +83,31 @@ resource "aws_ecs_task_definition" "app" {
       ]
       )
       
-      # Secrets from AWS Secrets Manager (for external database)
-      secrets = var.use_external_database ? [
-        {
-          name      = "DATABASE_URL"
-          valueFrom = "${aws_secretsmanager_secret.external_database[0].arn}:database_url::"
-        }
-      ] : []
+      # Secrets from AWS Secrets Manager
+      secrets = concat(
+        # External database secret (if using external database)
+        var.use_external_database ? [
+          {
+            name      = "DATABASE_URL"
+            valueFrom = "${aws_secretsmanager_secret.external_database[0].arn}:database_url::"
+          }
+        ] : [],
+        # Auth0 secrets (if Auth0 is enabled)
+        var.auth0_domain != null ? [
+          {
+            name      = "AUTH0_CLIENT_ID"
+            valueFrom = "${aws_secretsmanager_secret.auth0_credentials[0].arn}:client_id::"
+          },
+          {
+            name      = "AUTH0_CLIENT_SECRET"
+            valueFrom = "${aws_secretsmanager_secret.auth0_credentials[0].arn}:client_secret::"
+          },
+          {
+            name      = "AUTH0_AUDIENCE"
+            valueFrom = "${aws_secretsmanager_secret.auth0_credentials[0].arn}:audience::"
+          }
+        ] : []
+      )
       logConfiguration = {
         logDriver = "awslogs"
         options = {

@@ -3,11 +3,15 @@ CRUD operations for users with Unix crypt authentication.
 """
 
 import crypt
+import logging
 from typing import Optional
 
 from sqlalchemy.orm import Session
 
 from app.models.user import User
+from app.services.auth0_service import auth0_service
+
+logger = logging.getLogger(__name__)
 
 
 def get_user_by_id(db: Session, user_id: int) -> Optional[User]:
@@ -103,6 +107,8 @@ def authenticate_user_flexible(
     - No '@' -> treated as username
     - Falls back to alternate method if first fails
 
+    After successful authentication, syncs the user to Auth0 if enabled.
+
     Args:
         db: Database session
         identifier: Email address or username
@@ -132,6 +138,26 @@ def authenticate_user_flexible(
         return None
     if not verify_password(password, str(user.cryptpw)):
         return None
+
+    # Sync user to Auth0 after successful authentication
+    try:
+        auth0_service.sync_user_to_auth0(
+            username=str(user.name),
+            email=str(user.email) if user.email else None,
+            name=str(user.name),
+        )
+    except Exception as e:
+        # Log the error but don't fail authentication
+        logger.error(
+            "Auth0 sync failed during authentication",
+            extra={
+                "user_id": user.id,
+                "username": user.name,
+                "email": user.email,
+                "error": str(e),
+            },
+        )
+
     return user
 
 
