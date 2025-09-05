@@ -11,7 +11,7 @@ This service handles:
 import json
 import logging
 from datetime import datetime, timedelta
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import boto3
 import requests
@@ -329,8 +329,7 @@ class Auth0Service:
             return None
 
         # Search for user by username - try multiple search formats
-        # Include connection filter to search only in the correct connection
-        endpoint = f'users?q=username:"{username}" AND connection:"{self.connection}"&search_engine=v3'
+        endpoint = f'users?q=username:"{username}"&search_engine=v3'
         log_data = {
             "event": "auth0_user_search_by_username_started",
             "username": username,
@@ -342,14 +341,18 @@ class Auth0Service:
         response = self._make_auth0_request("GET", endpoint)
 
         if response and "users" in response and len(response["users"]) > 0:
-            log_data = {
-                "event": "auth0_user_found_by_username",
-                "username": username,
-                "auth0_user_id": response["users"][0].get("user_id", ""),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-            }
-            logger.info(json.dumps(log_data))
-            return response["users"][0]
+            # Filter users by connection since Auth0 API doesn't support connection filtering in search
+            filtered_users = self._filter_users_by_connection(response["users"], self.connection)
+            
+            if filtered_users:
+                log_data = {
+                    "event": "auth0_user_found_by_username",
+                    "username": username,
+                    "auth0_user_id": filtered_users[0].get("user_id", ""),
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                logger.info(json.dumps(log_data))
+                return filtered_users[0]
         else:
             log_data = {
                 "event": "auth0_user_not_found_by_username",
@@ -373,19 +376,22 @@ class Auth0Service:
             return None
 
         # Search for user by email
-        # Include connection filter to search only in the correct connection
-        endpoint = f'users?q=email:"{email}" AND connection:"{self.connection}"&search_engine=v3'
+        endpoint = f'users?q=email:"{email}"&search_engine=v3'
         response = self._make_auth0_request("GET", endpoint)
 
         if response and "users" in response and len(response["users"]) > 0:
-            log_data = {
-                "event": "auth0_user_found_by_email",
-                "email": email,
-                "auth0_user_id": response["users"][0].get("user_id", ""),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
-            }
-            logger.info(json.dumps(log_data))
-            return response["users"][0]
+            # Filter users by connection since Auth0 API doesn't support connection filtering in search
+            filtered_users = self._filter_users_by_connection(response["users"], self.connection)
+            
+            if filtered_users:
+                log_data = {
+                    "event": "auth0_user_found_by_email",
+                    "email": email,
+                    "auth0_user_id": filtered_users[0].get("user_id", ""),
+                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                }
+                logger.info(json.dumps(log_data))
+                return filtered_users[0]
         else:
             log_data = {
                 "event": "auth0_user_not_found_by_email",
@@ -461,17 +467,21 @@ class Auth0Service:
             }
             logger.info(json.dumps(log_data))
             try:
-                endpoint = f'users?q=username:{username} AND connection:"{self.connection}"&search_engine=v3'
+                endpoint = f"users?q=username:{username}&search_engine=v3"
                 response = self._make_auth0_request("GET", endpoint)
                 if response and "users" in response and len(response["users"]) > 0:
-                    log_data = {
-                        "event": "auth0_user_found_by_username_fallback",
-                        "username": username,
-                        "auth0_user_id": response["users"][0].get("user_id", ""),
-                        "timestamp": datetime.utcnow().isoformat() + "Z",
-                    }
-                    logger.info(json.dumps(log_data))
-                    return response["users"][0]
+                    # Filter users by connection since Auth0 API doesn't support connection filtering in search
+                    filtered_users = self._filter_users_by_connection(response["users"], self.connection)
+                    
+                    if filtered_users:
+                        log_data = {
+                            "event": "auth0_user_found_by_username_fallback",
+                            "username": username,
+                            "auth0_user_id": filtered_users[0].get("user_id", ""),
+                            "timestamp": datetime.utcnow().isoformat() + "Z",
+                        }
+                        logger.info(json.dumps(log_data))
+                        return filtered_users[0]
             except Exception as e:
                 log_data = {
                     "event": "auth0_user_search_fallback_failed",
@@ -489,6 +499,33 @@ class Auth0Service:
         }
         logger.info(json.dumps(log_data))
         return None
+
+    def _filter_users_by_connection(self, users: List[Dict], connection: str) -> List[Dict]:
+        """
+        Filter users by connection since Auth0 API doesn't support connection filtering in search.
+        
+        Args:
+            users: List of user dictionaries from Auth0
+            connection: Connection name to filter by
+            
+        Returns:
+            Filtered list of users matching the connection
+        """
+        if not users:
+            return []
+            
+        filtered_users = [user for user in users if user.get("identities", [{}])[0].get("connection") == connection]
+        
+        log_data = {
+            "event": "auth0_users_filtered_by_connection",
+            "total_users": len(users),
+            "filtered_users": len(filtered_users),
+            "connection": connection,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+        logger.info(json.dumps(log_data))
+        
+        return filtered_users
 
     def create_user(
         self,
