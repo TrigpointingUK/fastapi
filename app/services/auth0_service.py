@@ -385,6 +385,13 @@ class Auth0Service:
         if not self.enabled:
             return None
 
+        log_data = {
+            "event": "auth0_find_user_by_email_called",
+            "email": email,
+            "timestamp": datetime.utcnow().isoformat() + "Z",
+        }
+        logger.info(json.dumps(log_data))
+
         # Search for user by email
         endpoint = f'users?q=email:"{email}"&search_engine=v3'
         response = self._make_auth0_request("GET", endpoint)
@@ -842,11 +849,21 @@ class Auth0Service:
                 "event": "auth0_user_search_started",
                 "username": username,
                 "email": email or "",
+                "connection": str(self.connection),
                 "timestamp": datetime.utcnow().isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
 
             auth0_user = self.find_user_comprehensive(username, email)
+            
+            log_data = {
+                "event": "auth0_user_search_completed",
+                "username": username,
+                "email": email or "",
+                "user_found": auth0_user is not None,
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
 
             if auth0_user:
                 log_data = {
