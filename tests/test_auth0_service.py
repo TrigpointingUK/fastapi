@@ -291,6 +291,7 @@ class TestAuth0Service:
                 "app_metadata": {
                     "legacy_user_id": 123,
                 },
+                "nickname": "testuser",
             },
         )
 
@@ -348,6 +349,7 @@ class TestAuth0Service:
                 "app_metadata": {
                     "legacy_user_id": 123,
                 },
+                "nickname": "testuser",
             },
         )
 
@@ -437,7 +439,7 @@ class TestAuth0Service:
         assert result == self.mock_user_data
         mock_find_user.assert_called_once_with("testuser")
         mock_create_user.assert_called_once_with(
-            "testuser", "test@example.com", "Test User", "password123", 123
+            "testuser", "test@example.com", "Test User", "password123", 123, None, None
         )
 
     @patch("app.services.auth0_service.Auth0Service.find_user_by_username")

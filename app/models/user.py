@@ -2,7 +2,9 @@
 Database models for the existing legacy database schema.
 """
 
-from sqlalchemy import Column, Integer, String, Text
+from datetime import date, datetime, time
+
+from sqlalchemy import Column, Date, DateTime, Integer, SmallInteger, String, Text, Time
 from sqlalchemy.types import CHAR
 
 from app.db.database import Base
@@ -14,24 +16,91 @@ class User(Base):
     __tablename__ = "user"
 
     # Primary identifier
-    id = Column(Integer, primary_key=True, index=True)  # MEDIUMINT in MySQL
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    cacher_id = Column(Integer, nullable=False, default=0)
 
     # Core identity fields
-    name = Column(String(30), nullable=False, index=True)  # Username
-    firstname = Column(String(30), nullable=False)
-    surname = Column(String(30), nullable=False)
-    email = Column(String(255), nullable=False, index=True)
+    name = Column(String(30), nullable=False, index=True, unique=True)  # Username
+    firstname = Column(String(30), nullable=False, default="")
+    surname = Column(String(30), nullable=False, default="")
+    email = Column(String(255), nullable=False, default="", index=True)
+    email_challenge = Column(String(34), nullable=False, default="")
+    email_valid = Column(CHAR(1), nullable=False, default="N")
+    email_ind = Column(CHAR(1), nullable=False, default="N")
+    homepage = Column(String(255), nullable=False, default="")
+    distance_ind = Column(CHAR(1), nullable=False, default="K")
+    about = Column(Text, nullable=False, default="")
+
+    # Status and limits
+    status_max = Column(Integer, nullable=False, default=0)
+
+    # Home locations (3 different home/work locations)
+    home1_name = Column(String(20), nullable=False, default="home")
+    home1_eastings = Column(Integer, nullable=False, default=0)
+    home1_northings = Column(Integer, nullable=False, default=0)
+    home1_gridref = Column(String(14), nullable=False, default="")
+    home2_name = Column(String(20), nullable=False, default="work")
+    home2_eastings = Column(Integer, nullable=False, default=0)
+    home2_northings = Column(Integer, nullable=False, default=0)
+    home2_gridref = Column(String(14), nullable=False, default="")
+    home3_name = Column(String(20), nullable=False, default="")
+    home3_eastings = Column(Integer, nullable=False, default=0)
+    home3_northings = Column(Integer, nullable=False, default=0)
+    home3_gridref = Column(String(14), nullable=False, default="")
+
+    # Display preferences
+    album_rows = Column(SmallInteger, nullable=False, default=2)
+    album_cols = Column(SmallInteger, nullable=False, default=4)
+    public_ind = Column(CHAR(1), nullable=False, default="N")
+
+    # SMS functionality
+    sms_number = Column(String(12), nullable=True)
+    sms_credit = Column(Integer, nullable=False, default=0)
+    sms_grace = Column(SmallInteger, nullable=False, default=5)
 
     # Authentication - Unix crypt format password
-    cryptpw = Column(String(34), nullable=False)  # Never expose in API
+    cryptpw = Column(String(34), nullable=False, default="")
 
-    # Profile information
-    about = Column(Text, nullable=False)  # User bio/description
+    # User type indicators
+    cacher_ind = Column(CHAR(1), nullable=False, default="N")
+    trigger_ind = Column(CHAR(1), nullable=False, default="N")
+    admin_ind = Column(CHAR(1), nullable=False, default="N")
 
-    # Permissions and visibility flags
-    admin_ind = Column(CHAR(1), nullable=False, default="N")  # Y/N admin flag
-    email_valid = Column(CHAR(1), nullable=False, default="N")  # Y/N email verified
-    public_ind = Column(CHAR(1), nullable=False, default="Y")  # Y/N public profile
+    # Timestamps
+    crt_date = Column(Date, nullable=False, default=date(1900, 1, 1))
+    crt_time = Column(Time, nullable=False, default=time(0, 0, 0))
+    upd_timestamp = Column(DateTime, nullable=False, default=datetime.now)
+
+    # Legal agreements
+    disclaimer_ind = Column(CHAR(1), nullable=False, default="N")
+    disclaimer_timestamp = Column(
+        DateTime, nullable=False, default=datetime(1900, 1, 1, 0, 0, 0)
+    )
+    gc_licence_ind = Column(CHAR(1), nullable=False, default="N")
+    gc_licence_timestamp = Column(
+        DateTime, nullable=False, default=datetime(1900, 1, 1, 0, 0, 0)
+    )
+
+    # Geocaching.com integration
+    gc_auth_ind = Column(CHAR(1), nullable=False, default="Y")
+    gc_auth_challenge = Column(String(34), nullable=False, default="")
+    gc_auth_timestamp = Column(
+        DateTime, nullable=False, default=datetime(1900, 1, 1, 0, 0, 0)
+    )
+    gc_premium_ind = Column(CHAR(1), nullable=False, default="N")
+    gc_premium_timestamp = Column(
+        DateTime, nullable=False, default=datetime(1900, 1, 1, 0, 0, 0)
+    )
+
+    # Display and search preferences
+    nearest_max_m = Column(Integer, nullable=False, default=50000)
+    online_map_type = Column(String(10), nullable=False, default="")
+    online_map_type2 = Column(String(10), nullable=False, default="lla")
+    trigmap_b = Column(SmallInteger, nullable=False, default=2)
+    trigmap_l = Column(SmallInteger, nullable=False, default=0)
+    trigmap_c = Column(SmallInteger, nullable=False, default=0)
+    showscores = Column(CHAR(1), nullable=False, default="Y")
+    showhandi = Column(CHAR(1), nullable=False, default="Y")
 
 
 class TLog(Base):

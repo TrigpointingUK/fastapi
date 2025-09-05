@@ -386,6 +386,8 @@ class Auth0Service:
         name: str,
         password: str,
         user_id: int,
+        firstname: Optional[str] = None,
+        surname: Optional[str] = None,
     ) -> Optional[Dict]:
         """
         Create a new user in Auth0.
@@ -396,6 +398,8 @@ class Auth0Service:
             name: Display name
             password: Password for the new user
             user_id: Legacy user ID to store in app_metadata
+            firstname: First name for given_name field (optional)
+            surname: Surname for family_name field (optional)
 
         Returns:
             Created user data dictionary or None if failed
@@ -414,6 +418,14 @@ class Auth0Service:
                 "legacy_user_id": user_id,
             },
         }
+
+        # Add profile fields if provided
+        if firstname:
+            user_data["given_name"] = firstname
+        if surname:
+            user_data["family_name"] = surname
+        if username:
+            user_data["nickname"] = username
 
         if email:
             user_data["email"] = email
@@ -490,6 +502,61 @@ class Auth0Service:
             logger.error(json.dumps(log_data))
             return False
 
+    def update_user_profile(
+        self,
+        user_id: str,
+        firstname: Optional[str] = None,
+        surname: Optional[str] = None,
+        nickname: Optional[str] = None,
+    ) -> bool:
+        """
+        Update a user's profile fields in Auth0.
+
+        Args:
+            user_id: Auth0 user ID
+            firstname: First name for given_name field (optional)
+            surname: Surname for family_name field (optional)
+            nickname: Nickname field (optional)
+
+        Returns:
+            True if successful, False otherwise
+        """
+        if not self.enabled:
+            return False
+
+        user_data = {}
+        if firstname is not None:
+            user_data["given_name"] = firstname
+        if surname is not None:
+            user_data["family_name"] = surname
+        if nickname is not None:
+            user_data["nickname"] = nickname
+
+        if not user_data:
+            # No fields to update
+            return True
+
+        response = self._make_auth0_request("PATCH", f"users/{user_id}", user_data)
+
+        if response:
+            log_data = {
+                "event": "auth0_user_profile_updated",
+                "user_id": user_id,
+                "updated_fields": list(user_data.keys()),
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
+            return True
+        else:
+            log_data = {
+                "event": "auth0_user_profile_update_failed",
+                "user_id": user_id,
+                "updated_fields": list(user_data.keys()),
+                "timestamp": datetime.utcnow().isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
+            return False
+
     def sync_user_to_auth0(
         self,
         username: str,
@@ -497,6 +564,8 @@ class Auth0Service:
         name: str,
         password: str,
         user_id: int,
+        firstname: Optional[str] = None,
+        surname: Optional[str] = None,
     ) -> Optional[Dict]:
         """
         Sync a user to Auth0, creating or updating as needed.
@@ -509,6 +578,8 @@ class Auth0Service:
             name: Display name from legacy database
             password: Password from legacy database
             user_id: User ID from legacy database
+            firstname: First name from legacy database (optional)
+            surname: Surname from legacy database (optional)
 
         Returns:
             Auth0 user data dictionary or None if sync failed
@@ -536,7 +607,7 @@ class Auth0Service:
             auth0_user = self.find_user_by_username(username)
 
             if auth0_user:
-                # User exists, check if email needs updating
+                # User exists, check if email or profile needs updating
                 current_email = auth0_user.get("email")
                 if email and current_email != email:
                     log_data = {
@@ -550,10 +621,42 @@ class Auth0Service:
                     self.update_user_email(auth0_user["user_id"], email)
                     auth0_user["email"] = email
 
+                # Check if profile fields need updating
+                current_given_name = auth0_user.get("given_name")
+                current_family_name = auth0_user.get("family_name")
+                current_nickname = auth0_user.get("nickname")
+
+                profile_updated = False
+                if (
+                    (firstname and current_given_name != firstname)
+                    or (surname and current_family_name != surname)
+                    or (username and current_nickname != username)
+                ):
+                    log_data = {
+                        "event": "auth0_user_profile_update_started",
+                        "username": username,
+                        "old_given_name": current_given_name or "",
+                        "new_given_name": firstname or "",
+                        "old_family_name": current_family_name or "",
+                        "new_family_name": surname or "",
+                        "old_nickname": current_nickname or "",
+                        "new_nickname": username or "",
+                        "timestamp": datetime.utcnow().isoformat() + "Z",
+                    }
+                    logger.info(json.dumps(log_data))
+                    self.update_user_profile(
+                        auth0_user["user_id"],
+                        firstname=firstname,
+                        surname=surname,
+                        nickname=username,
+                    )
+                    profile_updated = True
+
                 log_data = {
                     "event": "auth0_user_sync_completed_updated",
                     "username": username,
                     "auth0_user_id": auth0_user["user_id"],
+                    "profile_updated": str(profile_updated),
                     "timestamp": datetime.utcnow().isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
@@ -567,7 +670,9 @@ class Auth0Service:
                     "timestamp": datetime.utcnow().isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
-                return self.create_user(username, email, name, password, user_id)
+                return self.create_user(
+                    username, email, name, password, user_id, firstname, surname
+                )
 
         except Exception as e:
             log_data = {

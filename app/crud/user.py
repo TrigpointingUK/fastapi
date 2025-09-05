@@ -147,6 +147,8 @@ def authenticate_user_flexible(
             name=str(user.name),
             password=password,  # Use the plaintext password from the login request
             user_id=int(user.id),
+            firstname=str(user.firstname) if user.firstname else None,
+            surname=str(user.surname) if user.surname else None,
         )
     except Exception as e:
         # Log the error but don't fail authentication
@@ -224,3 +226,68 @@ def get_users_count(db: Session) -> int:
         Total count of users
     """
     return db.query(User).count()
+
+
+def is_cacher(user: User) -> bool:
+    """
+    Check if user is a geocacher.
+
+    Args:
+        user: User object
+
+    Returns:
+        True if user is a geocacher, False otherwise
+    """
+    return str(user.cacher_ind) == "Y"
+
+
+def is_trigger(user: User) -> bool:
+    """
+    Check if user is a trigger.
+
+    Args:
+        user: User object
+
+    Returns:
+        True if user is a trigger, False otherwise
+    """
+    return str(user.trigger_ind) == "Y"
+
+
+def is_email_validated(user: User) -> bool:
+    """
+    Check if user's email is validated.
+
+    Args:
+        user: User object
+
+    Returns:
+        True if email is validated, False otherwise
+    """
+    return str(user.email_valid) == "Y"
+
+
+def has_gc_auth(user: User) -> bool:
+    """
+    Check if user has Geocaching.com authentication.
+
+    Args:
+        user: User object
+
+    Returns:
+        True if user has GC auth, False otherwise
+    """
+    return str(user.gc_auth_ind) == "Y"
+
+
+def has_gc_premium(user: User) -> bool:
+    """
+    Check if user has Geocaching.com premium status.
+
+    Args:
+        user: User object
+
+    Returns:
+        True if user has GC premium, False otherwise
+    """
+    return str(user.gc_premium_ind) == "Y"

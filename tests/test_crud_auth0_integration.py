@@ -51,6 +51,8 @@ class TestAuth0IntegrationInCRUD:
             name="testuser",
             password="password",
             user_id=1,
+            firstname=None,
+            surname=None,
         )
 
     @patch("app.crud.user.auth0_service")
@@ -76,6 +78,8 @@ class TestAuth0IntegrationInCRUD:
             name="testuser",
             password="password",
             user_id=1,
+            firstname=None,
+            surname=None,
         )
 
     @patch("app.crud.user.auth0_service")
@@ -104,6 +108,8 @@ class TestAuth0IntegrationInCRUD:
             name="testuser",
             password="password",
             user_id=1,
+            firstname=None,
+            surname=None,
         )
 
     @patch("app.crud.user.auth0_service")
@@ -178,6 +184,8 @@ class TestAuth0IntegrationInCRUD:
             name="testuser",
             password="password",
             user_id=1,
+            firstname=None,
+            surname=None,
         )
 
     @patch("app.crud.user.auth0_service")
@@ -203,6 +211,8 @@ class TestAuth0IntegrationInCRUD:
             name="testuser",
             password="password",
             user_id=1,
+            firstname=None,
+            surname=None,
         )
 
     @patch("app.crud.user.auth0_service")
@@ -228,4 +238,6 @@ class TestAuth0IntegrationInCRUD:
             name="testuser",
             password="password",
             user_id=1,
+            firstname=None,
+            surname=None,
         )
