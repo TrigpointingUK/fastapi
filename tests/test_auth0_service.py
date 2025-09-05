@@ -214,6 +214,7 @@ class TestAuth0Service:
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
+        mock_settings.AUTH0_CONNECTION = "Username-Password-Authentication"
 
         mock_request.return_value = {"users": [self.mock_user_data]}
 
@@ -222,7 +223,7 @@ class TestAuth0Service:
 
         assert result == self.mock_user_data
         mock_request.assert_called_once_with(
-            "GET", 'users?q=username:"testuser"&search_engine=v3'
+            "GET", 'users?q=username:"testuser" AND connection:"Username-Password-Authentication"&search_engine=v3'
         )
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
@@ -247,6 +248,7 @@ class TestAuth0Service:
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
+        mock_settings.AUTH0_CONNECTION = "Username-Password-Authentication"
 
         mock_request.return_value = {"users": [self.mock_user_data]}
 
@@ -255,7 +257,7 @@ class TestAuth0Service:
 
         assert result == self.mock_user_data
         mock_request.assert_called_once_with(
-            "GET", 'users?q=email:"test@example.com"&search_engine=v3'
+            "GET", 'users?q=email:"test@example.com" AND connection:"Username-Password-Authentication"&search_engine=v3'
         )
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
