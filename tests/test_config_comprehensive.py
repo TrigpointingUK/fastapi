@@ -13,21 +13,31 @@ class TestConfigComprehensive:
 
     def test_default_values(self):
         """Test that default values are set correctly."""
-        settings = Settings()
+        # Clear any environment variables that might affect the test
+        import os
 
-        assert settings.API_V1_STR == "/api/v1"
-        assert settings.PROJECT_NAME == "Legacy API Migration"
-        assert settings.DEBUG is False
-        assert settings.DATABASE_URL == "mysql+pymysql://user:pass@localhost/db"
-        assert settings.JWT_SECRET_KEY == "default-secret-change-in-production"
-        assert settings.JWT_ALGORITHM == "HS256"
-        assert settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES == 30
-        assert settings.BACKEND_CORS_ORIGINS == []
-        assert settings.AUTH0_DOMAIN is None
-        assert settings.AUTH0_SECRET_NAME is None
-        assert settings.AUTH0_CONNECTION == "Username-Password-Authentication"
-        assert settings.AUTH0_ENABLED is False
-        assert settings.LOG_LEVEL == "INFO"
+        original_database_url = os.environ.pop("DATABASE_URL", None)
+
+        try:
+            settings = Settings()
+
+            assert settings.API_V1_STR == "/api/v1"
+            assert settings.PROJECT_NAME == "Legacy API Migration"
+            assert settings.DEBUG is False
+            assert settings.DATABASE_URL == "mysql+pymysql://user:pass@localhost/db"
+            assert settings.JWT_SECRET_KEY == "default-secret-change-in-production"
+            assert settings.JWT_ALGORITHM == "HS256"
+            assert settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES == 30
+            assert settings.BACKEND_CORS_ORIGINS == []
+            assert settings.AUTH0_DOMAIN is None
+            assert settings.AUTH0_SECRET_NAME is None
+            assert settings.AUTH0_CONNECTION == "Username-Password-Authentication"
+            assert settings.AUTH0_ENABLED is False
+            assert settings.LOG_LEVEL == "INFO"
+        finally:
+            # Restore the original environment variable
+            if original_database_url is not None:
+                os.environ["DATABASE_URL"] = original_database_url
 
     def test_cors_origins_string_parsing(self):
         """Test CORS origins parsing from string."""

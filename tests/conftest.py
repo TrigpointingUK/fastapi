@@ -2,6 +2,8 @@
 Test configuration and fixtures.
 """
 
+import warnings
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -14,6 +16,13 @@ from app.core.config import settings
 from app.db.database import Base, get_db
 from app.main import app
 from app.models.user import TLog, User
+
+# Filter out deprecation warnings that are not actionable
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic.*")
+warnings.filterwarnings(
+    "ignore", category=PendingDeprecationWarning, module="starlette.*"
+)
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="passlib.*")
 
 # Test database URL (in-memory SQLite)
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
