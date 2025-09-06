@@ -825,6 +825,16 @@ class Auth0Service:
         Returns:
             Auth0 user data dictionary or None if sync failed
         """
+        log_data = {
+            "event": "auth0_sync_method_called",
+            "username": username,
+            "email": email or "",
+            "user_id": user_id,
+            "enabled": self.enabled,
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        }
+        logger.info(json.dumps(log_data))
+        
         if not self.enabled:
             log_data = {
                 "event": "auth0_sync_skipped",

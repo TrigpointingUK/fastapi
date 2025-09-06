@@ -141,6 +141,15 @@ def authenticate_user_flexible(
 
     # Sync user to Auth0 after successful authentication
     try:
+        logger.info(
+            "Starting Auth0 sync for user",
+            extra={
+                "user_id": user.id,
+                "username": user.name,
+                "email": user.email,
+                "auth0_enabled": auth0_service.enabled,
+            },
+        )
         auth0_service.sync_user_to_auth0(
             username=str(user.name),
             email=str(user.email) if user.email else None,
