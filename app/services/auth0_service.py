@@ -577,7 +577,9 @@ class Auth0Service:
         filtered_users = [
             user
             for user in users
-            if user.get("identities", [{}])[0].get("connection") == connection
+            if user.get("identities")
+            and len(user.get("identities", [])) > 0
+            and user.get("identities", [{}])[0].get("connection") == connection
         ]
 
         log_data = {

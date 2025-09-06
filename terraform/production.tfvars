@@ -29,3 +29,8 @@ enable_cloudflare_ssl = true  # REQUIRED for production security
 # CloudFlare Origin Certificate (create these with: terraform apply -var-file=cloudflare-cert.tfvars)
 # cloudflare_origin_cert = "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
 # cloudflare_origin_key = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+
+# Auth0 Configuration
+auth0_domain = "trigpointing.eu.auth0.com"
+auth0_secret_name = "auth0-fastapi-tuk"
+auth0_connection = "tuk-users"
