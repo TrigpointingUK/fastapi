@@ -222,7 +222,7 @@ class TestAuth0Service:
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "Username-Password-Authentication"
 
-        mock_request.return_value = {"users": [self.mock_user_data]}
+        mock_request.return_value = [self.mock_user_data]
 
         service = Auth0Service()
         result = service.find_user_by_username("testuser")
@@ -256,7 +256,7 @@ class TestAuth0Service:
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "Username-Password-Authentication"
 
-        mock_request.return_value = {"users": [self.mock_user_data]}
+        mock_request.return_value = [self.mock_user_data]
 
         service = Auth0Service()
         result = service.find_user_by_email("test@example.com")
