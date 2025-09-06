@@ -6,7 +6,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.v1.api import api_router
 from app.core.config import settings
+from app.core.logging import setup_logging
 from fastapi import FastAPI
+
+# Configure logging first
+setup_logging()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,

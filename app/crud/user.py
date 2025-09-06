@@ -3,15 +3,15 @@ CRUD operations for users with Unix crypt authentication.
 """
 
 import crypt
-import logging
 from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.core.logging import get_logger
 from app.models.user import User
 from app.services.auth0_service import auth0_service
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def get_user_by_id(db: Session, user_id: int) -> Optional[User]:

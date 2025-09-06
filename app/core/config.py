@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     AUTH0_CONNECTION: str = "Username-Password-Authentication"
     AUTH0_ENABLED: bool = False
 
+    # Logging Configuration
+    LOG_LEVEL: str = "INFO"
+
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:

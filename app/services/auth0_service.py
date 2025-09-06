@@ -9,7 +9,6 @@ This service handles:
 """
 
 import json
-import logging
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
@@ -18,8 +17,9 @@ import requests
 from botocore.exceptions import ClientError
 
 from app.core.config import settings
+from app.core.logging import get_logger
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 class Auth0Service:
