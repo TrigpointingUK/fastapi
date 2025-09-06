@@ -16,7 +16,26 @@ class TestConfigComprehensive:
         # Clear any environment variables that might affect the test
         import os
 
-        original_database_url = os.environ.pop("DATABASE_URL", None)
+        # Store original values
+        original_env_vars = {}
+        env_vars_to_clear = [
+            "DATABASE_URL",
+            "JWT_SECRET_KEY",
+            "JWT_ALGORITHM",
+            "JWT_ACCESS_TOKEN_EXPIRE_MINUTES",
+            "AUTH0_DOMAIN",
+            "AUTH0_SECRET_NAME",
+            "AUTH0_CONNECTION",
+            "AUTH0_ENABLED",
+            "LOG_LEVEL",
+            "DEBUG",
+            "PROJECT_NAME",
+            "API_V1_STR",
+            "BACKEND_CORS_ORIGINS",
+        ]
+
+        for var in env_vars_to_clear:
+            original_env_vars[var] = os.environ.pop(var, None)
 
         try:
             settings = Settings()
@@ -35,9 +54,10 @@ class TestConfigComprehensive:
             assert settings.AUTH0_ENABLED is False
             assert settings.LOG_LEVEL == "INFO"
         finally:
-            # Restore the original environment variable
-            if original_database_url is not None:
-                os.environ["DATABASE_URL"] = original_database_url
+            # Restore the original environment variables
+            for var, value in original_env_vars.items():
+                if value is not None:
+                    os.environ[var] = value
 
     def test_cors_origins_string_parsing(self):
         """Test CORS origins parsing from string."""
@@ -125,6 +145,32 @@ class TestConfigComprehensive:
         """Test database configuration."""
         settings = Settings(DATABASE_URL="postgresql://user:pass@localhost/db")
         assert settings.DATABASE_URL == "postgresql://user:pass@localhost/db"
+
+    def test_environment_variable_override(self):
+        """Test that environment variables override default values."""
+        import os
+
+        # Set environment variables
+        os.environ["JWT_SECRET_KEY"] = "env-secret-key"
+        os.environ["DATABASE_URL"] = "env-database-url"
+        os.environ["AUTH0_DOMAIN"] = "env.auth0.com"
+
+        try:
+            settings = Settings()
+
+            # These should be overridden by environment variables
+            assert settings.JWT_SECRET_KEY == "env-secret-key"
+            assert settings.DATABASE_URL == "env-database-url"
+            assert settings.AUTH0_DOMAIN == "env.auth0.com"
+
+            # These should still be defaults
+            assert settings.API_V1_STR == "/api/v1"
+            assert settings.PROJECT_NAME == "Legacy API Migration"
+            assert settings.DEBUG is False
+        finally:
+            # Clean up environment variables
+            for var in ["JWT_SECRET_KEY", "DATABASE_URL", "AUTH0_DOMAIN"]:
+                os.environ.pop(var, None)
 
     def test_debug_configuration(self):
         """Test debug configuration."""
