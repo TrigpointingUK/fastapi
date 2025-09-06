@@ -10,7 +10,7 @@ This service handles:
 
 import json
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
 import boto3
@@ -68,7 +68,7 @@ class Auth0Service:
             log_data = {
                 "event": "auth0_credentials_retrieved",
                 "secret_name": self.secret_name,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
             return secret_data
@@ -83,7 +83,7 @@ class Auth0Service:
                 "error_code": error_code,
                 "error_message": error_message,
                 "secret_name": self.secret_name,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
 
             if error_code == "DecryptionFailureException":
@@ -118,7 +118,7 @@ class Auth0Service:
                 "error_type": "UnexpectedError",
                 "error_message": str(e),
                 "secret_name": self.secret_name,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
             return None
@@ -137,7 +137,7 @@ class Auth0Service:
         if (
             self._access_token
             and self._token_expires_at
-            and datetime.utcnow() < self._token_expires_at
+            and datetime.now(timezone.utc) < self._token_expires_at
         ):
             return self._access_token
 
@@ -164,14 +164,14 @@ class Auth0Service:
 
             # Set expiration time (with 5 minute buffer)
             expires_in = token_data.get("expires_in", 3600)
-            self._token_expires_at = datetime.utcnow() + timedelta(
+            self._token_expires_at = datetime.now(timezone.utc) + timedelta(
                 seconds=expires_in - 300
             )
 
             log_data = {
                 "event": "auth0_access_token_obtained",
                 "domain": self.domain,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
             return self._access_token
@@ -196,7 +196,7 @@ class Auth0Service:
                 "error_message": str(e),
                 "domain": self.domain,
                 "token_url": f"https://{self.domain}/oauth/token",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 **response_details,
             }
             logger.error(json.dumps(log_data))
@@ -207,7 +207,7 @@ class Auth0Service:
                 "error_type": "UnexpectedError",
                 "error_message": str(e),
                 "domain": self.domain,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
             return None
@@ -252,7 +252,7 @@ class Auth0Service:
                     "endpoint": endpoint,
                     "status_code": response.status_code,
                     "url": url,
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
                 return response.json()
@@ -271,7 +271,7 @@ class Auth0Service:
                     "url": url,
                     "error_response": error_response,
                     "response_headers": dict(response.headers),
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.error(json.dumps(log_data))
                 return None
@@ -297,7 +297,7 @@ class Auth0Service:
                 "method": method,
                 "endpoint": endpoint,
                 "url": url,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 **response_details,
             }
             logger.error(json.dumps(log_data))
@@ -310,7 +310,7 @@ class Auth0Service:
                 "method": method,
                 "endpoint": endpoint,
                 "url": url,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
             return None
@@ -334,7 +334,7 @@ class Auth0Service:
             "event": "auth0_user_search_by_username_started",
             "username": username,
             "endpoint": endpoint,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
 
@@ -351,7 +351,7 @@ class Auth0Service:
                     "event": "auth0_user_found_by_username",
                     "username": username,
                     "auth0_user_id": filtered_users[0].get("user_id", ""),
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
                 return filtered_users[0]
@@ -359,7 +359,7 @@ class Auth0Service:
                 log_data = {
                     "event": "auth0_user_not_found_by_username_connection_filtered",
                     "username": username,
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
                 return None
@@ -367,7 +367,7 @@ class Auth0Service:
             log_data = {
                 "event": "auth0_user_not_found_by_username",
                 "username": username,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
             return None
@@ -388,7 +388,7 @@ class Auth0Service:
         log_data = {
             "event": "auth0_find_user_by_email_called",
             "email": email,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
 
@@ -407,7 +407,7 @@ class Auth0Service:
                     "event": "auth0_user_found_by_email",
                     "email": email,
                     "auth0_user_id": filtered_users[0].get("user_id", ""),
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
                 return filtered_users[0]
@@ -415,7 +415,7 @@ class Auth0Service:
                 log_data = {
                     "event": "auth0_user_not_found_by_email_connection_filtered",
                     "email": email,
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
                 return None
@@ -423,7 +423,7 @@ class Auth0Service:
             log_data = {
                 "event": "auth0_user_not_found_by_email",
                 "email": email,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
             return None
@@ -451,7 +451,7 @@ class Auth0Service:
             "connection": str(
                 self.connection
             ),  # Convert to string to handle MagicMock in tests
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
 
@@ -461,7 +461,7 @@ class Auth0Service:
                 "event": "auth0_comprehensive_search_username_success",
                 "username": username,
                 "auth0_user_id": user.get("user_id", ""),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
             return user
@@ -475,7 +475,7 @@ class Auth0Service:
                 "connection": str(
                     self.connection
                 ),  # Convert to string to handle MagicMock in tests
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
 
@@ -486,7 +486,7 @@ class Auth0Service:
                     "username": username,
                     "email": email,
                     "auth0_user_id": user.get("user_id", ""),
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
                 return user
@@ -496,7 +496,7 @@ class Auth0Service:
             log_data = {
                 "event": "auth0_comprehensive_search_fallback_attempt",
                 "username": username,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
             try:
@@ -513,7 +513,7 @@ class Auth0Service:
                             "event": "auth0_user_found_by_username_fallback",
                             "username": username,
                             "auth0_user_id": filtered_users[0].get("user_id", ""),
-                            "timestamp": datetime.utcnow().isoformat() + "Z",
+                            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                         }
                         logger.info(json.dumps(log_data))
                         return filtered_users[0]
@@ -521,7 +521,7 @@ class Auth0Service:
                         log_data = {
                             "event": "auth0_user_not_found_by_username_fallback_connection_filtered",
                             "username": username,
-                            "timestamp": datetime.utcnow().isoformat() + "Z",
+                            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                         }
                         logger.info(json.dumps(log_data))
             except Exception as e:
@@ -529,7 +529,7 @@ class Auth0Service:
                     "event": "auth0_user_search_fallback_failed",
                     "username": username,
                     "error": str(e),
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.warning(json.dumps(log_data))
 
@@ -537,7 +537,7 @@ class Auth0Service:
             "event": "auth0_comprehensive_search_no_user_found",
             "username": username,
             "email": email or "",
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
         return None
@@ -574,7 +574,7 @@ class Auth0Service:
                 }
                 for user in users[:3]  # Log first 3 users for debugging
             ],
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
 
@@ -591,7 +591,7 @@ class Auth0Service:
             "connection": str(
                 connection
             ),  # Convert to string to handle MagicMock in tests
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
 
@@ -655,7 +655,7 @@ class Auth0Service:
             "email": email or "",
             "connection": self.connection,
             "user_data": user_data,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
 
@@ -667,7 +667,7 @@ class Auth0Service:
                 "username": username,
                 "email": email or "",
                 "auth0_user_id": response.get("user_id") or "",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
         else:
@@ -678,7 +678,7 @@ class Auth0Service:
                 "email": email or "",
                 "connection": self.connection,
                 "user_data": user_data,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
 
@@ -687,7 +687,7 @@ class Auth0Service:
                 "event": "auth0_user_creation_conflict_attempting_fallback",
                 "username": username,
                 "email": email or "",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.warning(json.dumps(log_data))
 
@@ -699,7 +699,7 @@ class Auth0Service:
                     "username": username,
                     "email": email or "",
                     "auth0_user_id": existing_user.get("user_id", ""),
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
                 return existing_user
@@ -729,7 +729,7 @@ class Auth0Service:
                 "event": "auth0_user_email_updated",
                 "user_id": user_id,
                 "email": email,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
             return True
@@ -738,7 +738,7 @@ class Auth0Service:
                 "event": "auth0_user_email_update_failed",
                 "user_id": user_id,
                 "email": email,
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
             return False
@@ -784,7 +784,7 @@ class Auth0Service:
                 "event": "auth0_user_profile_updated",
                 "user_id": user_id,
                 "updated_fields": list(user_data.keys()),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
             return True
@@ -793,7 +793,7 @@ class Auth0Service:
                 "event": "auth0_user_profile_update_failed",
                 "user_id": user_id,
                 "updated_fields": list(user_data.keys()),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
             return False
@@ -829,7 +829,7 @@ class Auth0Service:
             log_data = {
                 "event": "auth0_sync_skipped",
                 "reason": "service_disabled",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
             return None
@@ -839,7 +839,7 @@ class Auth0Service:
             "username": username,
             "email": email or "",
             "name": name,
-            "timestamp": datetime.utcnow().isoformat() + "Z",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
 
@@ -850,7 +850,7 @@ class Auth0Service:
                 "username": username,
                 "email": email or "",
                 "connection": str(self.connection),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
 
@@ -861,7 +861,7 @@ class Auth0Service:
                 "username": username,
                 "email": email or "",
                 "user_found": str(auth0_user is not None),
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
 
@@ -871,7 +871,7 @@ class Auth0Service:
                     "username": username,
                     "email": email or "",
                     "auth0_user_id": auth0_user.get("user_id", ""),
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
                 # User exists, check if email or profile needs updating
@@ -882,7 +882,7 @@ class Auth0Service:
                         "username": username,
                         "old_email": current_email or "",
                         "new_email": email or "",
-                        "timestamp": datetime.utcnow().isoformat() + "Z",
+                        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                     }
                     logger.info(json.dumps(log_data))
                     self.update_user_email(auth0_user["user_id"], email)
@@ -908,7 +908,7 @@ class Auth0Service:
                         "new_family_name": surname or "",
                         "old_nickname": current_nickname or "",
                         "new_nickname": username or "",
-                        "timestamp": datetime.utcnow().isoformat() + "Z",
+                        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                     }
                     logger.info(json.dumps(log_data))
                     self.update_user_profile(
@@ -924,7 +924,7 @@ class Auth0Service:
                     "username": username,
                     "auth0_user_id": auth0_user["user_id"],
                     "profile_updated": str(profile_updated),
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
                 return auth0_user
@@ -934,7 +934,7 @@ class Auth0Service:
                     "event": "auth0_user_not_found_during_sync",
                     "username": username,
                     "email": email or "",
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
 
@@ -942,7 +942,7 @@ class Auth0Service:
                     "event": "auth0_user_creation_started",
                     "username": username,
                     "email": email or "",
-                    "timestamp": datetime.utcnow().isoformat() + "Z",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
                 return self.create_user(
@@ -956,7 +956,7 @@ class Auth0Service:
                 "error_message": str(e),
                 "username": username,
                 "email": email or "",
-                "timestamp": datetime.utcnow().isoformat() + "Z",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
             return None
