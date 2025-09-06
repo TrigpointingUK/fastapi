@@ -834,7 +834,7 @@ class Auth0Service:
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
-        
+
         if not self.enabled:
             log_data = {
                 "event": "auth0_sync_skipped",
