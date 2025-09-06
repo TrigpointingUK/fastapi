@@ -673,7 +673,7 @@ class Auth0Service:
         else:
             # Check if this is a user already exists error
             log_data = {
-                "event": "auth0_user_creation_failed",
+                "event": "auth0_user_creation_failedxxxxx",
                 "username": username,
                 "email": email or "",
                 "connection": self.connection,
