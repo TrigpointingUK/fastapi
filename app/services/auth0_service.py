@@ -340,11 +340,9 @@ class Auth0Service:
 
         response = self._make_auth0_request("GET", endpoint)
 
-        if response and "users" in response and len(response["users"]) > 0:
+        if response and isinstance(response, list) and len(response) > 0:
             # Filter users by connection since Auth0 API doesn't support connection filtering in search
-            filtered_users = self._filter_users_by_connection(
-                response["users"], self.connection
-            )
+            filtered_users = self._filter_users_by_connection(response, self.connection)
 
             if filtered_users:
                 log_data = {
@@ -396,11 +394,9 @@ class Auth0Service:
         endpoint = f'users?q=email:"{email}"&search_engine=v3'
         response = self._make_auth0_request("GET", endpoint)
 
-        if response and "users" in response and len(response["users"]) > 0:
+        if response and isinstance(response, list) and len(response) > 0:
             # Filter users by connection since Auth0 API doesn't support connection filtering in search
-            filtered_users = self._filter_users_by_connection(
-                response["users"], self.connection
-            )
+            filtered_users = self._filter_users_by_connection(response, self.connection)
 
             if filtered_users:
                 log_data = {
@@ -502,10 +498,10 @@ class Auth0Service:
             try:
                 endpoint = f"users?q=username:{username}&search_engine=v3"
                 response = self._make_auth0_request("GET", endpoint)
-                if response and "users" in response and len(response["users"]) > 0:
+                if response and isinstance(response, list) and len(response) > 0:
                     # Filter users by connection since Auth0 API doesn't support connection filtering in search
                     filtered_users = self._filter_users_by_connection(
-                        response["users"], self.connection
+                        response, self.connection
                     )
 
                     if filtered_users:
