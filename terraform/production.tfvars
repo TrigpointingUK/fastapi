@@ -23,7 +23,7 @@ min_capacity  = 2
 max_capacity  = 10
 
 # CloudFlare SSL Configuration (REQUIRED for production)
-domain_name = "api.trigpointing.me"  # Replace with your actual production domain
+domain_name = "fastapi.trigpointing.uk"  # Replace with your actual production domain
 enable_cloudflare_ssl = true  # REQUIRED for production security
 
 # CloudFlare Origin Certificate (create these with: terraform apply -var-file=cloudflare-cert.tfvars)

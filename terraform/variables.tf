@@ -160,3 +160,22 @@ variable "external_database_secret_name" {
   type        = string
   default     = null
 }
+
+# Auth0 Configuration
+variable "auth0_domain" {
+  description = "Auth0 domain (e.g., your-tenant.auth0.com)"
+  type        = string
+  default     = null
+}
+
+variable "auth0_secret_name" {
+  description = "Name of the AWS Secrets Manager secret containing Auth0 credentials"
+  type        = string
+  default     = null
+}
+
+variable "auth0_connection" {
+  description = "Auth0 connection name for user database (e.g., tme-users, Username-Password-Authentication)"
+  type        = string
+  default     = "Username-Password-Authentication"
+}

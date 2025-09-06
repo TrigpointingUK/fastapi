@@ -33,3 +33,8 @@ enable_cloudflare_ssl = false  # Disabled for staging - will use HTTP for testin
 # For production, enable CloudFlare SSL and set:
 # cloudflare_origin_cert = "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"
 # cloudflare_origin_key = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
+
+# Auth0 Configuration
+auth0_domain = "trigpointing.eu.auth0.com"
+auth0_secret_name = "auth0-fastapi-tme"
+auth0_connection = "tme-users"

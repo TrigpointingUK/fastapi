@@ -7,7 +7,11 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.core.logging import get_logger
 from app.models.user import User
+from app.services.auth0_service import auth0_service
+
+logger = get_logger(__name__)
 
 
 def get_user_by_id(db: Session, user_id: int) -> Optional[User]:
@@ -103,6 +107,8 @@ def authenticate_user_flexible(
     - No '@' -> treated as username
     - Falls back to alternate method if first fails
 
+    After successful authentication, syncs the user to Auth0 if enabled.
+
     Args:
         db: Database session
         identifier: Email address or username
@@ -111,6 +117,13 @@ def authenticate_user_flexible(
     Returns:
         User object if authentication successful, None otherwise
     """
+    logger.info(
+        "authenticate_user_flexible called",
+        extra={
+            "identifier": identifier,
+            "password_length": len(password) if password else 0,
+        },
+    )
     user = None
 
     # Primary detection: email vs username
@@ -129,9 +142,60 @@ def authenticate_user_flexible(
 
     # Verify password if user found
     if not user:
+        logger.info(
+            "User not found in database",
+            extra={"identifier": identifier},
+        )
         return None
     if not verify_password(password, str(user.cryptpw)):
+        logger.info(
+            "Password verification failed",
+            extra={"identifier": identifier, "user_id": user.id},
+        )
         return None
+
+    logger.info(
+        "User authentication successful",
+        extra={
+            "identifier": identifier,
+            "user_id": user.id,
+            "username": user.name,
+            "email": user.email,
+        },
+    )
+
+    # Sync user to Auth0 after successful authentication
+    try:
+        logger.info(
+            "Starting Auth0 sync for user",
+            extra={
+                "user_id": user.id,
+                "username": user.name,
+                "email": user.email,
+                "auth0_enabled": auth0_service.enabled,
+            },
+        )
+        auth0_service.sync_user_to_auth0(
+            username=str(user.name),
+            email=str(user.email) if user.email else None,
+            name=str(user.name),
+            password=password,  # Use the plaintext password from the login request
+            user_id=int(user.id),
+            firstname=str(user.firstname) if user.firstname else None,
+            surname=str(user.surname) if user.surname else None,
+        )
+    except Exception as e:
+        # Log the error but don't fail authentication
+        logger.error(
+            "Auth0 sync failed during authentication",
+            extra={
+                "user_id": user.id,
+                "username": user.name,
+                "email": user.email,
+                "error": str(e),
+            },
+        )
+
     return user
 
 
@@ -196,3 +260,68 @@ def get_users_count(db: Session) -> int:
         Total count of users
     """
     return db.query(User).count()
+
+
+def is_cacher(user: User) -> bool:
+    """
+    Check if user is a geocacher.
+
+    Args:
+        user: User object
+
+    Returns:
+        True if user is a geocacher, False otherwise
+    """
+    return str(user.cacher_ind) == "Y"
+
+
+def is_trigger(user: User) -> bool:
+    """
+    Check if user is a trigger.
+
+    Args:
+        user: User object
+
+    Returns:
+        True if user is a trigger, False otherwise
+    """
+    return str(user.trigger_ind) == "Y"
+
+
+def is_email_validated(user: User) -> bool:
+    """
+    Check if user's email is validated.
+
+    Args:
+        user: User object
+
+    Returns:
+        True if email is validated, False otherwise
+    """
+    return str(user.email_valid) == "Y"
+
+
+def has_gc_auth(user: User) -> bool:
+    """
+    Check if user has Geocaching.com authentication.
+
+    Args:
+        user: User object
+
+    Returns:
+        True if user has GC auth, False otherwise
+    """
+    return str(user.gc_auth_ind) == "Y"
+
+
+def has_gc_premium(user: User) -> bool:
+    """
+    Check if user has Geocaching.com premium status.
+
+    Args:
+        user: User object
+
+    Returns:
+        True if user has GC premium, False otherwise
+    """
+    return str(user.gc_premium_ind) == "Y"

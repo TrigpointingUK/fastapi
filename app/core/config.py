@@ -2,7 +2,7 @@
 Core configuration settings for the FastAPI application.
 """
 
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,6 +25,15 @@ class Settings(BaseSettings):
 
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
+
+    # Auth0 Configuration
+    AUTH0_DOMAIN: Optional[str] = None
+    AUTH0_SECRET_NAME: Optional[str] = None
+    AUTH0_CONNECTION: str = "Username-Password-Authentication"
+    AUTH0_ENABLED: bool = False
+
+    # Logging Configuration
+    LOG_LEVEL: str = "INFO"
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
