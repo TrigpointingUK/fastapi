@@ -117,6 +117,13 @@ def authenticate_user_flexible(
     Returns:
         User object if authentication successful, None otherwise
     """
+    logger.info(
+        "authenticate_user_flexible called",
+        extra={
+            "identifier": identifier,
+            "password_length": len(password) if password else 0,
+        },
+    )
     user = None
 
     # Primary detection: email vs username
@@ -135,9 +142,27 @@ def authenticate_user_flexible(
 
     # Verify password if user found
     if not user:
+        logger.info(
+            "User not found in database",
+            extra={"identifier": identifier},
+        )
         return None
     if not verify_password(password, str(user.cryptpw)):
+        logger.info(
+            "Password verification failed",
+            extra={"identifier": identifier, "user_id": user.id},
+        )
         return None
+
+    logger.info(
+        "User authentication successful",
+        extra={
+            "identifier": identifier,
+            "user_id": user.id,
+            "username": user.name,
+            "email": user.email,
+        },
+    )
 
     # Sync user to Auth0 after successful authentication
     try:
