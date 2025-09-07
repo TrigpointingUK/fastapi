@@ -72,9 +72,10 @@ def get_username_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
 
             for username in original_usernames:
                 user = get_user_by_name(db, username)
-                if user:
-                    user_ids.append(user.id)
-                    username_to_user_id[username] = user.id
+                if user and user.id is not None:
+                    user_id = int(user.id)
+                    user_ids.append(user_id)
+                    username_to_user_id[username] = user_id
 
             # Get log statistics for all users
             log_stats = get_user_log_stats(db, user_ids)
@@ -82,15 +83,15 @@ def get_username_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
             # Build user information with log stats
             users_with_logs = []
             for username in original_usernames:
-                user_id = username_to_user_id.get(username)
-                if user_id:
+                current_user_id: int | None = username_to_user_id.get(username)
+                if current_user_id is not None:
                     user_log_info = log_stats.get(
-                        user_id, {"log_count": 0, "latest_log_timestamp": None}
+                        current_user_id, {"log_count": 0, "latest_log_timestamp": None}
                     )
                     users_with_logs.append(
                         {
                             "username": username,
-                            "user_id": user_id,
+                            "user_id": current_user_id,
                             "log_count": user_log_info["log_count"],
                             "latest_log_timestamp": user_log_info[
                                 "latest_log_timestamp"
