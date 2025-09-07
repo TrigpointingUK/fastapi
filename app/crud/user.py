@@ -3,12 +3,13 @@ CRUD operations for users with Unix crypt authentication.
 """
 
 import crypt
-from typing import Optional
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
-from app.models.user import User
+from app.models.user import TLog, User
 from app.services.auth0_service import auth0_service
 
 logger = get_logger(__name__)
@@ -121,6 +122,7 @@ def authenticate_user_flexible(
         "authenticate_user_flexible called",
         extra={
             "identifier": identifier,
+            "password_provided": bool(password),
             "password_length": len(password) if password else 0,
         },
     )
@@ -325,3 +327,117 @@ def has_gc_premium(user: User) -> bool:
         True if user has GC premium, False otherwise
     """
     return str(user.gc_premium_ind) == "Y"
+
+
+def get_all_usernames(db: Session) -> List[str]:
+    """
+    Get all usernames from the legacy database.
+
+    Args:
+        db: Database session
+
+    Returns:
+        List of all usernames in the database
+    """
+    users = db.query(User).all()
+    return [str(user.name) for user in users if user.name]
+
+
+def get_user_log_stats(db: Session, user_ids: List[int]) -> Dict[int, Dict[str, Any]]:
+    """
+    Get log statistics for a list of user IDs.
+    Returns a dictionary mapping user_id to log count and latest log timestamp.
+
+    Args:
+        db: Database session
+        user_ids: List of user IDs to get log stats for
+
+    Returns:
+        Dictionary mapping user_id to log statistics
+    """
+    if not user_ids:
+        return {}
+
+    # Get log count and latest log timestamp for each user
+    log_stats = (
+        db.query(
+            TLog.user_id,
+            func.count(TLog.id).label("log_count"),
+            func.max(func.concat(TLog.date, " ", TLog.time)).label(
+                "latest_log_timestamp"
+            ),
+        )
+        .filter(TLog.user_id.in_(user_ids))
+        .group_by(TLog.user_id)
+        .all()
+    )
+
+    # Convert to dictionary
+    result = {}
+    for user_id, log_count, latest_log_timestamp in log_stats:
+        result[user_id] = {
+            "log_count": log_count,
+            "latest_log_timestamp": latest_log_timestamp,
+        }
+
+    return result
+
+
+def get_all_emails(db: Session) -> List[str]:
+    """
+    Get all email addresses from the legacy database.
+
+    Args:
+        db: Database session
+
+    Returns:
+        List of all email addresses in the database
+    """
+    users = db.query(User).all()
+    return [str(user.email) for user in users if user.email]
+
+
+def find_duplicate_emails(emails: List[str]) -> Dict[str, List[str]]:
+    """
+    Find duplicate email addresses (case-insensitive).
+
+    Args:
+        emails: List of email addresses
+
+    Returns:
+        Dictionary mapping email addresses to lists of original email addresses
+        that are duplicates (case-insensitive). Only includes entries where
+        multiple email addresses map to the same normalized email.
+    """
+    email_to_originals: Dict[str, List[str]] = {}
+
+    for email in emails:
+        if not email:
+            continue
+        # Normalize email to lowercase for comparison
+        normalized = email.lower().strip()
+        if normalized not in email_to_originals:
+            email_to_originals[normalized] = []
+        email_to_originals[normalized].append(email)
+
+    # Return only duplicates
+    duplicates = {
+        normalized: originals
+        for normalized, originals in email_to_originals.items()
+        if len(originals) > 1
+    }
+    return duplicates
+
+
+def get_users_by_email(db: Session, email: str) -> List[User]:
+    """
+    Get all users with a specific email address (case-insensitive).
+
+    Args:
+        db: Database session
+        email: Email address to search for
+
+    Returns:
+        List of User objects with the specified email address
+    """
+    return db.query(User).filter(func.lower(User.email) == email.lower()).all()

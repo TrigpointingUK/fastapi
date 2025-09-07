@@ -2,6 +2,8 @@
 Test configuration and fixtures.
 """
 
+import warnings
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -14,6 +16,13 @@ from app.core.config import settings
 from app.db.database import Base, get_db
 from app.main import app
 from app.models.user import TLog, User
+
+# Filter out deprecation warnings that are not actionable
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic.*")
+warnings.filterwarnings(
+    "ignore", category=PendingDeprecationWarning, module="starlette.*"
+)
+warnings.filterwarnings("ignore", category=DeprecationWarning, module="passlib.*")
 
 # Test database URL (in-memory SQLite)
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
@@ -114,12 +123,89 @@ def test_admin_user(db):
 @pytest.fixture
 def test_tlog_entries(db):
     """Create test tlog entries."""
+    from datetime import date, datetime, time
+
     entries = [
-        TLog(trig_id=1),
-        TLog(trig_id=1),
-        TLog(trig_id=1),
-        TLog(trig_id=2),
-        TLog(trig_id=2),
+        TLog(
+            trig_id=1,
+            user_id=1000,
+            date=date(2023, 12, 15),
+            time=time(14, 30, 0),
+            osgb_eastings=100000,
+            osgb_northings=200000,
+            osgb_gridref="TQ 00000 00000",
+            fb_number="",
+            condition="G",
+            comment="Test log entry 1",
+            score=7,
+            ip_addr="127.0.0.1",
+            source="W",
+            upd_timestamp=datetime(2023, 12, 15, 14, 30, 0),
+        ),
+        TLog(
+            trig_id=1,
+            user_id=1000,
+            date=date(2023, 12, 10),
+            time=time(10, 15, 0),
+            osgb_eastings=100000,
+            osgb_northings=200000,
+            osgb_gridref="TQ 00000 00000",
+            fb_number="",
+            condition="G",
+            comment="Test log entry 2",
+            score=8,
+            ip_addr="127.0.0.1",
+            source="W",
+            upd_timestamp=datetime(2023, 12, 10, 10, 15, 0),
+        ),
+        TLog(
+            trig_id=1,
+            user_id=1000,
+            date=date(2023, 12, 5),
+            time=time(16, 45, 0),
+            osgb_eastings=100000,
+            osgb_northings=200000,
+            osgb_gridref="TQ 00000 00000",
+            fb_number="",
+            condition="G",
+            comment="Test log entry 3",
+            score=9,
+            ip_addr="127.0.0.1",
+            source="W",
+            upd_timestamp=datetime(2023, 12, 5, 16, 45, 0),
+        ),
+        TLog(
+            trig_id=2,
+            user_id=1001,
+            date=date(2023, 11, 20),
+            time=time(9, 15, 0),
+            osgb_eastings=150000,
+            osgb_northings=250000,
+            osgb_gridref="TQ 50000 50000",
+            fb_number="",
+            condition="G",
+            comment="Test log entry 4",
+            score=6,
+            ip_addr="127.0.0.1",
+            source="W",
+            upd_timestamp=datetime(2023, 11, 20, 9, 15, 0),
+        ),
+        TLog(
+            trig_id=2,
+            user_id=1001,
+            date=date(2023, 11, 15),
+            time=time(11, 30, 0),
+            osgb_eastings=150000,
+            osgb_northings=250000,
+            osgb_gridref="TQ 50000 50000",
+            fb_number="",
+            condition="G",
+            comment="Test log entry 5",
+            score=7,
+            ip_addr="127.0.0.1",
+            source="W",
+            upd_timestamp=datetime(2023, 11, 15, 11, 30, 0),
+        ),
     ]
     for entry in entries:
         db.add(entry)

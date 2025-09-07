@@ -18,6 +18,7 @@ from botocore.exceptions import ClientError
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.utils.username_sanitizer import sanitize_username_for_auth0
 
 logger = get_logger(__name__)
 
@@ -328,11 +329,15 @@ class Auth0Service:
         if not self.enabled:
             return None
 
-        # Search for user by username - try multiple search formats
-        endpoint = f'users?q=username:"{username}"&search_engine=v3'
+        # Sanitize username for Auth0 search
+        sanitized_username = sanitize_username_for_auth0(username)
+
+        # Search for user by sanitized username - try multiple search formats
+        endpoint = f'users?q=username:"{sanitized_username}"&search_engine=v3'
         log_data = {
             "event": "auth0_user_search_by_username_started",
-            "username": username,
+            "original_username": username,
+            "sanitized_username": sanitized_username,
             "endpoint": endpoint,
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
@@ -347,7 +352,8 @@ class Auth0Service:
             if filtered_users:
                 log_data = {
                     "event": "auth0_user_found_by_username",
-                    "username": username,
+                    "original_username": username,
+                    "sanitized_username": sanitized_username,
                     "auth0_user_id": filtered_users[0].get("user_id", ""),
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
@@ -356,7 +362,8 @@ class Auth0Service:
             else:
                 log_data = {
                     "event": "auth0_user_not_found_by_username_connection_filtered",
-                    "username": username,
+                    "original_username": username,
+                    "sanitized_username": sanitized_username,
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
@@ -364,7 +371,8 @@ class Auth0Service:
         else:
             log_data = {
                 "event": "auth0_user_not_found_by_username",
-                "username": username,
+                "original_username": username,
+                "sanitized_username": sanitized_username,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
@@ -577,7 +585,9 @@ class Auth0Service:
         filtered_users = [
             user
             for user in users
-            if user.get("identities", [{}])[0].get("connection") == connection
+            if user.get("identities")
+            and len(user.get("identities", [])) > 0
+            and user.get("identities", [{}])[0].get("connection") == connection
         ]
 
         log_data = {
@@ -621,15 +631,19 @@ class Auth0Service:
         if not self.enabled:
             return None
 
+        # Sanitize username for Auth0 compatibility while preserving original as nickname
+        sanitized_username = sanitize_username_for_auth0(username)
+
         user_data = {
             "connection": self.connection,
-            "username": username,
+            "username": sanitized_username,  # Use sanitized username for Auth0
             "name": name,
             "password": password,
             "email_verified": False,
             "verify_email": False,
             "app_metadata": {
                 "legacy_user_id": user_id,
+                "original_username": username,  # Store original username in metadata
             },
         }
 
@@ -639,18 +653,24 @@ class Auth0Service:
         if surname:
             user_data["family_name"] = surname
         if username:
-            user_data["nickname"] = username
+            user_data["nickname"] = username  # Keep original username as nickname
 
         if email:
             user_data["email"] = email
             user_data["email_verified"] = True
 
+        # Create safe user_data for logging (redact password)
+        safe_user_data = user_data.copy()
+        redacted_text = "***REDACTED***"
+        safe_user_data["password"] = redacted_text
+
         log_data = {
             "event": "auth0_user_creation_api_call",
-            "username": username,
+            "original_username": username,
+            "sanitized_username": sanitized_username,
             "email": email or "",
             "connection": self.connection,
-            "user_data": user_data,
+            "user_data": safe_user_data,
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
@@ -660,7 +680,8 @@ class Auth0Service:
         if response:
             log_data = {
                 "event": "auth0_user_created",
-                "username": username,
+                "original_username": username,
+                "sanitized_username": sanitized_username,
                 "email": email or "",
                 "auth0_user_id": response.get("user_id") or "",
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
@@ -669,11 +690,12 @@ class Auth0Service:
         else:
             # Check if this is a user already exists error
             log_data = {
-                "event": "auth0_user_creation_failedxxxxx",
-                "username": username,
+                "event": "auth0_user_creation_failed",
+                "original_username": username,
+                "sanitized_username": sanitized_username,
                 "email": email or "",
                 "connection": self.connection,
-                "user_data": user_data,
+                "user_data": safe_user_data,  # Use the redacted version
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))

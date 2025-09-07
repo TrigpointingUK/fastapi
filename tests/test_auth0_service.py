@@ -298,6 +298,7 @@ class TestAuth0Service:
                 "verify_email": False,
                 "app_metadata": {
                     "legacy_user_id": 123,
+                    "original_username": "testuser",
                 },
                 "nickname": "testuser",
             },
@@ -356,6 +357,7 @@ class TestAuth0Service:
                 "verify_email": False,
                 "app_metadata": {
                     "legacy_user_id": 123,
+                    "original_username": "testuser",
                 },
                 "nickname": "testuser",
             },

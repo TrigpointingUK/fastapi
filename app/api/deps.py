@@ -11,7 +11,7 @@ from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.crud.user import get_user_by_id
+from app.crud.user import get_user_by_id, is_admin
 from app.db.database import get_db
 from app.models.user import User
 
@@ -85,3 +85,15 @@ def get_current_user_optional(
         return None
     user = get_user_by_id(db, user_id=user_id)
     return user
+
+
+def get_current_admin_user(
+    current_user: User = Depends(get_current_user),
+) -> User:
+    """Get current authenticated user and verify they have admin privileges."""
+    if not is_admin(current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin privileges required",
+        )
+    return current_user

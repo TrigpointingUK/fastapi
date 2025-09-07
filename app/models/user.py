@@ -110,7 +110,16 @@ class TLog(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     trig_id = Column(Integer, index=True, nullable=False)
-    # Add other fields as they exist in your legacy schema
-    # log_data = Column(Text)
-    # timestamp = Column(DateTime)
-    # etc.
+    user_id = Column(Integer, index=True, nullable=False)
+    date = Column(Date, nullable=False)
+    time = Column(Time, nullable=False)
+    osgb_eastings = Column(Integer, nullable=False)
+    osgb_northings = Column(Integer, nullable=False)
+    osgb_gridref = Column(String(14), nullable=False)
+    fb_number = Column(String(10), nullable=False)
+    condition = Column(CHAR(1), nullable=False)
+    comment = Column(Text, nullable=False)
+    score = Column(SmallInteger, nullable=False)
+    ip_addr = Column(String(15), nullable=False)
+    source = Column(CHAR(1), nullable=False)
+    upd_timestamp = Column(DateTime, nullable=True)
