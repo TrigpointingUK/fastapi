@@ -77,6 +77,7 @@ class TestUsernameDuplicatesAPI:
         for user_info in result["user_name"]["users"]:
             assert "username" in user_info
             assert "user_id" in user_info
+            assert "email" in user_info
             assert "log_count" in user_info
             assert "latest_log_timestamp" in user_info
 
@@ -208,6 +209,7 @@ class TestUsernameDuplicatesAPI:
                 for user_info in duplicate_info["users"]:
                     assert "username" in user_info
                     assert "user_id" in user_info
+                    assert "email" in user_info
                     assert "log_count" in user_info
                     assert "latest_log_timestamp" in user_info
 

@@ -46,12 +46,14 @@ def get_username_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
                     {
                         "username": "user name",
                         "user_id": 123,
+                        "email": "user1@example.com",
                         "log_count": 45,
                         "latest_log_timestamp": "2023-12-15 14:30:00"
                     },
                     {
                         "username": "user-name",
                         "user_id": 456,
+                        "email": "user2@example.com",
                         "log_count": 23,
                         "latest_log_timestamp": "2023-11-20 09:15:00"
                     }
@@ -76,6 +78,7 @@ def get_username_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
             # Get user IDs for all original usernames
             user_ids = []
             username_to_user_id = {}
+            username_to_user = {}
 
             for username in original_usernames:
                 user = get_user_by_name(db, username)
@@ -83,6 +86,8 @@ def get_username_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
                     user_id = int(user.id)
                     user_ids.append(user_id)
                     username_to_user_id[username] = user_id
+                    # Store user object for later use
+                    username_to_user[username] = user
 
             # Get log statistics for all users
             log_stats = get_user_log_stats(db, user_ids)
@@ -92,6 +97,7 @@ def get_username_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
             for username in original_usernames:
                 current_user_id: int | None = username_to_user_id.get(username)
                 if current_user_id is not None:
+                    user = username_to_user.get(username)
                     user_log_info = log_stats.get(
                         current_user_id, {"log_count": 0, "latest_log_timestamp": None}
                     )
@@ -99,6 +105,7 @@ def get_username_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
                         {
                             "username": username,
                             "user_id": current_user_id,
+                            "email": str(user.email) if user and user.email else "",
                             "log_count": user_log_info["log_count"],
                             "latest_log_timestamp": user_log_info[
                                 "latest_log_timestamp"
