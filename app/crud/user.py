@@ -121,6 +121,7 @@ def authenticate_user_flexible(
         "authenticate_user_flexible called",
         extra={
             "identifier": identifier,
+            "password_provided": bool(password),
             "password_length": len(password) if password else 0,
         },
     )

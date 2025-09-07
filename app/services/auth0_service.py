@@ -647,12 +647,17 @@ class Auth0Service:
             user_data["email"] = email
             user_data["email_verified"] = True
 
+        # Create safe user_data for logging (redact password)
+        safe_user_data = user_data.copy()
+        redacted_text = "***REDACTED***"
+        safe_user_data["password"] = redacted_text
+
         log_data = {
             "event": "auth0_user_creation_api_call",
             "username": username,
             "email": email or "",
             "connection": self.connection,
-            "user_data": user_data,
+            "user_data": safe_user_data,
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
@@ -671,11 +676,11 @@ class Auth0Service:
         else:
             # Check if this is a user already exists error
             log_data = {
-                "event": "auth0_user_creation_failedxxxxx",
+                "event": "auth0_user_creation_failed",
                 "username": username,
                 "email": email or "",
                 "connection": self.connection,
-                "user_data": user_data,
+                "user_data": safe_user_data,  # Use the redacted version
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
