@@ -104,9 +104,11 @@ def debug_auth(credentials: HTTPBearer = Depends(HTTPBearer(auto_error=False))):
         return {
             "authenticated": False,
             "error": str(e),
-            "token": credentials.credentials[:50] + "..."
-            if len(credentials.credentials) > 50
-            else credentials.credentials,
+            "token": (
+                credentials.credentials[:50] + "..."
+                if len(credentials.credentials) > 50
+                else credentials.credentials
+            ),
         }
 
 
