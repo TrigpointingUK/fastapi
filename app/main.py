@@ -3,7 +3,7 @@ Main FastAPI application entry point.
 """
 
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.api.v1.api import api_router
 from app.core.config import settings
@@ -57,7 +57,7 @@ def custom_openapi():
     return app.openapi_schema
 
 
-app.openapi = custom_openapi
+app.openapi = custom_openapi  # type: ignore
 
 # Set up CORS
 if settings.BACKEND_CORS_ORIGINS:
@@ -80,7 +80,9 @@ def health_check():
 
 
 @app.get("/debug/auth")
-def debug_auth(credentials: HTTPBearer = Depends(HTTPBearer(auto_error=False))):
+def debug_auth(
+    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
+):
     """Debug endpoint to test authentication."""
     if credentials is None:
         return {"authenticated": False, "error": "No credentials provided"}
