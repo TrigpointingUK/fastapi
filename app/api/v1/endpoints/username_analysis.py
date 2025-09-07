@@ -128,7 +128,11 @@ def get_username_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
 
 
 @router.get("/email-duplicates")
-def get_email_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
+def get_email_duplicates(
+    db: Session = Depends(get_db),
+    limit: int = 50,
+    offset: int = 0,
+) -> Dict[str, Any]:
     """
     Get all email addresses from the legacy database and identify duplicates.
 
@@ -137,11 +141,17 @@ def get_email_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
     2. Identifies which email addresses are used by multiple users (case-insensitive)
     3. For each duplicate email, includes log count and latest log timestamp for each user
     4. Returns a JSON object showing all duplicate emails with log information
+    5. Supports pagination to prevent timeouts with large datasets
+
+    Args:
+        limit: Maximum number of duplicate email addresses to process (default: 50)
+        offset: Number of duplicate email addresses to skip (default: 0)
 
     Returns:
         Dictionary mapping normalized email addresses to user information including:
         - original_emails: List of original email addresses that are duplicates
         - users: List of user objects with log statistics for each user with this email
+        - pagination: Information about current page and total counts
 
     Example response:
         {
@@ -163,23 +173,58 @@ def get_email_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
                         "latest_log_timestamp": "2023-11-20 09:15:00"
                     }
                 ]
+            },
+            "pagination": {
+                "limit": 50,
+                "offset": 0,
+                "total_duplicates": 150,
+                "has_more": true
             }
         }
     """
+    # Validate pagination parameters
+    if limit <= 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Limit must be greater than 0",
+        )
+    if offset < 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Offset must be 0 or greater",
+        )
+    if limit > 1000:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Limit cannot exceed 1000"
+        )
+
     try:
+
         # Get all email addresses from the legacy database
         emails = get_all_emails(db)
 
         if not emails:
-            return {}
+            return {
+                "pagination": {
+                    "limit": limit,
+                    "offset": offset,
+                    "total_duplicates": 0,
+                    "has_more": False,
+                }
+            }
 
         # Find duplicates after normalization (case-insensitive)
         duplicates = find_duplicate_emails(emails)
 
+        # Apply pagination to duplicate emails
+        total_duplicates = len(duplicates)
+        duplicate_items = list(duplicates.items())
+        paginated_duplicates = duplicate_items[offset : offset + limit]
+
         # Enhance with log information
         enhanced_duplicates = {}
 
-        for normalized_email, original_emails in duplicates.items():
+        for normalized_email, original_emails in paginated_duplicates:
             # Get all users with this email address
             users_with_email = get_users_by_email(db, normalized_email)
 
@@ -218,6 +263,14 @@ def get_email_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
                 "original_emails": original_emails,
                 "users": users_with_logs,
             }
+
+        # Add pagination information
+        enhanced_duplicates["pagination"] = {
+            "limit": limit,
+            "offset": offset,
+            "total_duplicates": total_duplicates,
+            "has_more": offset + limit < total_duplicates,
+        }
 
         return enhanced_duplicates
 
