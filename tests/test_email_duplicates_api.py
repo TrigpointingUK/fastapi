@@ -5,24 +5,36 @@ Tests for email duplicates API endpoints.
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.core.security import create_access_token
 from app.main import app
 from app.models.user import User
 
 client = TestClient(app)
 
 
+def get_auth_headers(user: User) -> dict:
+    """Create authorization headers for a user."""
+    from datetime import timedelta
+
+    access_token = create_access_token(
+        subject=user.id, expires_delta=timedelta(minutes=30)
+    )
+    return {"Authorization": f"Bearer {access_token}"}
+
+
 class TestEmailDuplicatesAPI:
     """Test cases for the email duplicates API endpoint."""
 
-    def test_get_email_duplicates_empty_database(self, db: Session):
+    def test_get_email_duplicates_empty_database(self, db: Session, test_admin_user):
         """Test getting email duplicates with empty database."""
-        response = client.get("/api/v1/analysis/email-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
         assert response.status_code == 200
         result = response.json()
         assert "pagination" in result
         assert result["pagination"]["total_duplicates"] == 0
 
-    def test_get_email_duplicates_no_duplicates(self, db: Session):
+    def test_get_email_duplicates_no_duplicates(self, db: Session, test_admin_user):
         """Test getting email duplicates with no duplicates."""
         # Create test users with unique email addresses
         users = [
@@ -34,13 +46,14 @@ class TestEmailDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/email-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
         assert response.status_code == 200
         result = response.json()
         assert "pagination" in result
         assert result["pagination"]["total_duplicates"] == 0
 
-    def test_get_email_duplicates_with_duplicates(self, db: Session):
+    def test_get_email_duplicates_with_duplicates(self, db: Session, test_admin_user):
         """Test getting email duplicates with actual duplicates."""
         # Create test users with duplicate email addresses (case variations)
         users = [
@@ -55,7 +68,8 @@ class TestEmailDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/email-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
         assert response.status_code == 200
 
         result = response.json()
@@ -93,7 +107,9 @@ class TestEmailDuplicatesAPI:
         assert result["pagination"]["offset"] == 0
         assert result["pagination"]["has_more"] is False
 
-    def test_get_email_duplicates_with_whitespace_variations(self, db: Session):
+    def test_get_email_duplicates_with_whitespace_variations(
+        self, db: Session, test_admin_user
+    ):
         """Test getting email duplicates with whitespace variations."""
         # Create test users with email addresses that differ only in whitespace
         users = [
@@ -105,14 +121,15 @@ class TestEmailDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/email-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
         assert response.status_code == 200
 
         result = response.json()
         assert "user@example.com" in result
         assert len(result["user@example.com"]["original_emails"]) == 3
 
-    def test_get_email_duplicates_with_empty_emails(self, db: Session):
+    def test_get_email_duplicates_with_empty_emails(self, db: Session, test_admin_user):
         """Test getting email duplicates with empty or None emails."""
         # Create test users with valid emails (can't create users with empty emails due to DB constraints)
         users = [
@@ -123,7 +140,8 @@ class TestEmailDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/email-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
         assert response.status_code == 200
 
         result = response.json()
@@ -131,7 +149,7 @@ class TestEmailDuplicatesAPI:
         assert "pagination" in result
         assert result["pagination"]["total_duplicates"] == 0
 
-    def test_get_email_duplicates_large_dataset(self, db: Session):
+    def test_get_email_duplicates_large_dataset(self, db: Session, test_admin_user):
         """Test getting email duplicates with a large dataset."""
         # Create test users with some duplicate emails
         users = []
@@ -147,7 +165,8 @@ class TestEmailDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/email-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
         assert response.status_code == 200
 
         result = response.json()
@@ -164,7 +183,9 @@ class TestEmailDuplicatesAPI:
             assert "log_count" in user_info
             assert "latest_log_timestamp" in user_info
 
-    def test_get_email_duplicates_error_handling(self, db: Session, monkeypatch):
+    def test_get_email_duplicates_error_handling(
+        self, db: Session, test_admin_user, monkeypatch
+    ):
         """Test error handling in the email duplicates endpoint."""
 
         # Mock the get_all_emails function to raise an exception
@@ -176,12 +197,13 @@ class TestEmailDuplicatesAPI:
             mock_get_all_emails,
         )
 
-        response = client.get("/api/v1/analysis/email-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
         assert response.status_code == 500
         assert "Error analyzing email duplicates" in response.json()["detail"]
 
     def test_get_email_duplicates_with_log_information(
-        self, db: Session, test_tlog_entries
+        self, db: Session, test_admin_user, test_tlog_entries
     ):
         """Test that email duplicates include log information."""
         # Create test users with duplicate emails
@@ -193,7 +215,8 @@ class TestEmailDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/email-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
         assert response.status_code == 200
 
         result = response.json()
@@ -206,7 +229,7 @@ class TestEmailDuplicatesAPI:
             # Should have log information from test_tlog_entries fixture
             assert user_info["log_count"] >= 0
 
-    def test_get_email_duplicates_pagination(self, db: Session):
+    def test_get_email_duplicates_pagination(self, db: Session, test_admin_user):
         """Test pagination functionality."""
         # Create test users with multiple duplicate emails
         users = []
@@ -220,7 +243,10 @@ class TestEmailDuplicatesAPI:
         db.commit()
 
         # Test first page
-        response = client.get("/api/v1/analysis/email-duplicates?limit=1&offset=0")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get(
+            "/api/v1/analysis/email-duplicates?limit=1&offset=0", headers=headers
+        )
         assert response.status_code == 200
         result = response.json()
         assert "pagination" in result
@@ -230,24 +256,36 @@ class TestEmailDuplicatesAPI:
         assert result["pagination"]["has_more"] is False
         assert len([k for k in result.keys() if k != "pagination"]) == 1
 
-    def test_get_email_duplicates_pagination_validation(self, db: Session):
+    def test_get_email_duplicates_pagination_validation(
+        self, db: Session, test_admin_user
+    ):
         """Test pagination parameter validation."""
+        headers = get_auth_headers(test_admin_user)
+
         # Test invalid limit
-        response = client.get("/api/v1/analysis/email-duplicates?limit=0")
+        response = client.get(
+            "/api/v1/analysis/email-duplicates?limit=0", headers=headers
+        )
         assert response.status_code == 400
         assert "Limit must be greater than 0" in response.json()["detail"]
 
         # Test negative offset
-        response = client.get("/api/v1/analysis/email-duplicates?offset=-1")
+        response = client.get(
+            "/api/v1/analysis/email-duplicates?offset=-1", headers=headers
+        )
         assert response.status_code == 400
         assert "Offset must be 0 or greater" in response.json()["detail"]
 
         # Test limit too high
-        response = client.get("/api/v1/analysis/email-duplicates?limit=1001")
+        response = client.get(
+            "/api/v1/analysis/email-duplicates?limit=1001", headers=headers
+        )
         assert response.status_code == 400
         assert "Limit cannot exceed 1000" in response.json()["detail"]
 
-    def test_get_email_duplicates_pagination_large_dataset(self, db: Session):
+    def test_get_email_duplicates_pagination_large_dataset(
+        self, db: Session, test_admin_user
+    ):
         """Test pagination with a larger dataset."""
         # Create test users with multiple duplicate emails
         users = []
@@ -262,7 +300,10 @@ class TestEmailDuplicatesAPI:
         db.commit()
 
         # Test pagination with limit=2
-        response = client.get("/api/v1/analysis/email-duplicates?limit=2&offset=0")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get(
+            "/api/v1/analysis/email-duplicates?limit=2&offset=0", headers=headers
+        )
         assert response.status_code == 200
         result = response.json()
         assert "pagination" in result
@@ -270,3 +311,16 @@ class TestEmailDuplicatesAPI:
         assert result["pagination"]["offset"] == 0
         assert result["pagination"]["total_duplicates"] == 2
         assert result["pagination"]["has_more"] is False
+
+    def test_get_email_duplicates_requires_authentication(self, db: Session):
+        """Test that email duplicates endpoint requires authentication."""
+        response = client.get("/api/v1/analysis/email-duplicates")
+        assert response.status_code == 401
+        assert "Not authenticated" in response.json()["detail"]
+
+    def test_get_email_duplicates_requires_admin(self, db: Session, test_user):
+        """Test that email duplicates endpoint requires admin privileges."""
+        headers = get_auth_headers(test_user)
+        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
+        assert response.status_code == 403
+        assert "Admin privileges required" in response.json()["detail"]

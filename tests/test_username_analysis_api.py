@@ -5,22 +5,34 @@ Tests for username analysis API endpoints.
 from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
+from app.core.security import create_access_token
 from app.main import app
 from app.models.user import User
 
 client = TestClient(app)
 
 
+def get_auth_headers(user: User) -> dict:
+    """Create authorization headers for a user."""
+    from datetime import timedelta
+
+    access_token = create_access_token(
+        subject=user.id, expires_delta=timedelta(minutes=30)
+    )
+    return {"Authorization": f"Bearer {access_token}"}
+
+
 class TestUsernameDuplicatesAPI:
     """Test cases for the username duplicates API endpoint."""
 
-    def test_get_username_duplicates_empty_database(self, db: Session):
+    def test_get_username_duplicates_empty_database(self, db: Session, test_admin_user):
         """Test getting username duplicates with empty database."""
-        response = client.get("/api/v1/analysis/username-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
         assert response.status_code == 200
         assert response.json() == {}
 
-    def test_get_username_duplicates_no_duplicates(self, db: Session):
+    def test_get_username_duplicates_no_duplicates(self, db: Session, test_admin_user):
         """Test getting username duplicates with no duplicates."""
         # Create test users with unique usernames
         users = [
@@ -32,11 +44,14 @@ class TestUsernameDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/username-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
         assert response.status_code == 200
         assert response.json() == {}
 
-    def test_get_username_duplicates_with_duplicates(self, db: Session):
+    def test_get_username_duplicates_with_duplicates(
+        self, db: Session, test_admin_user
+    ):
         """Test getting username duplicates with actual duplicates."""
         # Create test users with usernames that will sanitize to the same value
         users = [
@@ -51,7 +66,8 @@ class TestUsernameDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/username-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
         assert response.status_code == 200
 
         result = response.json()
@@ -81,7 +97,9 @@ class TestUsernameDuplicatesAPI:
             assert "log_count" in user_info
             assert "latest_log_timestamp" in user_info
 
-    def test_get_username_duplicates_with_email_duplicates(self, db: Session):
+    def test_get_username_duplicates_with_email_duplicates(
+        self, db: Session, test_admin_user
+    ):
         """Test getting username duplicates with email addresses."""
         # Create test users with email addresses as usernames
         users = [
@@ -93,14 +111,17 @@ class TestUsernameDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/username-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
         assert response.status_code == 200
 
         result = response.json()
         # Email addresses should not create duplicates unless they sanitize to the same value
         assert result == {}
 
-    def test_get_username_duplicates_with_mixed_characters(self, db: Session):
+    def test_get_username_duplicates_with_mixed_characters(
+        self, db: Session, test_admin_user
+    ):
         """Test getting username duplicates with mixed character types."""
         # Create test users with various character combinations
         users = [
@@ -119,7 +140,8 @@ class TestUsernameDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/username-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
         assert response.status_code == 200
 
         result = response.json()
@@ -139,7 +161,7 @@ class TestUsernameDuplicatesAPI:
             "user*name",
         }
 
-    def test_get_username_duplicates_with_unicode(self, db: Session):
+    def test_get_username_duplicates_with_unicode(self, db: Session, test_admin_user):
         """Test getting username duplicates with unicode characters."""
         # Create test users with unicode characters
         users = [
@@ -151,14 +173,17 @@ class TestUsernameDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/username-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
         assert response.status_code == 200
 
         result = response.json()
         # Unicode characters should be normalized and not create duplicates
         assert result == {}
 
-    def test_get_username_duplicates_with_empty_names(self, db: Session):
+    def test_get_username_duplicates_with_empty_names(
+        self, db: Session, test_admin_user
+    ):
         """Test getting username duplicates with empty or None names."""
         # Create test users with valid names (can't create users with empty names due to DB constraints)
         users = [
@@ -169,14 +194,15 @@ class TestUsernameDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/username-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
         assert response.status_code == 200
 
         result = response.json()
         # No duplicates for these usernames
         assert result == {}
 
-    def test_get_username_duplicates_large_dataset(self, db: Session):
+    def test_get_username_duplicates_large_dataset(self, db: Session, test_admin_user):
         """Test getting username duplicates with a large dataset."""
         # Create a smaller number of test users to avoid database transaction issues
         users = []
@@ -193,7 +219,8 @@ class TestUsernameDuplicatesAPI:
             db.add(user)
         db.commit()
 
-        response = client.get("/api/v1/analysis/username-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
         assert response.status_code == 200
 
         result = response.json()
@@ -213,7 +240,9 @@ class TestUsernameDuplicatesAPI:
                     assert "log_count" in user_info
                     assert "latest_log_timestamp" in user_info
 
-    def test_get_username_duplicates_error_handling(self, db: Session, monkeypatch):
+    def test_get_username_duplicates_error_handling(
+        self, db: Session, test_admin_user, monkeypatch
+    ):
         """Test error handling in the username duplicates endpoint."""
 
         # Mock the get_all_usernames function to raise an exception
@@ -225,6 +254,20 @@ class TestUsernameDuplicatesAPI:
             mock_get_all_usernames,
         )
 
-        response = client.get("/api/v1/analysis/username-duplicates")
+        headers = get_auth_headers(test_admin_user)
+        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
         assert response.status_code == 500
         assert "Error analyzing username duplicates" in response.json()["detail"]
+
+    def test_get_username_duplicates_requires_authentication(self, db: Session):
+        """Test that username duplicates endpoint requires authentication."""
+        response = client.get("/api/v1/analysis/username-duplicates")
+        assert response.status_code == 401
+        assert "Not authenticated" in response.json()["detail"]
+
+    def test_get_username_duplicates_requires_admin(self, db: Session, test_user):
+        """Test that username duplicates endpoint requires admin privileges."""
+        headers = get_auth_headers(test_user)
+        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
+        assert response.status_code == 403
+        assert "Admin privileges required" in response.json()["detail"]

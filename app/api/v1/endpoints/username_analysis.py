@@ -6,6 +6,7 @@ from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_current_admin_user
 from app.crud.user import (
     find_duplicate_emails,
     get_all_emails,
@@ -15,6 +16,7 @@ from app.crud.user import (
     get_users_by_email,
 )
 from app.db.database import get_db
+from app.models.user import User
 from app.utils.username_sanitizer import find_duplicate_sanitized_usernames
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -22,9 +24,14 @@ router = APIRouter()
 
 
 @router.get("/username-duplicates")
-def get_username_duplicates(db: Session = Depends(get_db)) -> Dict[str, Any]:
+def get_username_duplicates(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_admin_user),
+) -> Dict[str, Any]:
     """
     Get all usernames from the legacy database and identify duplicates after sanitization.
+
+    **Requires admin privileges (admin_ind='Y')**
 
     This endpoint:
     1. Retrieves all usernames from the legacy database
@@ -132,9 +139,12 @@ def get_email_duplicates(
     db: Session = Depends(get_db),
     limit: int = 50,
     offset: int = 0,
+    current_user: User = Depends(get_current_admin_user),
 ) -> Dict[str, Any]:
     """
     Get all email addresses from the legacy database and identify duplicates.
+
+    **Requires admin privileges (admin_ind='Y')**
 
     This endpoint:
     1. Retrieves all email addresses from the legacy database
@@ -199,7 +209,6 @@ def get_email_duplicates(
         )
 
     try:
-
         # Get all email addresses from the legacy database
         emails = get_all_emails(db)
 
