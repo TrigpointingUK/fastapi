@@ -381,3 +381,63 @@ def get_user_log_stats(db: Session, user_ids: List[int]) -> Dict[int, Dict[str, 
         }
 
     return result
+
+
+def get_all_emails(db: Session) -> List[str]:
+    """
+    Get all email addresses from the legacy database.
+
+    Args:
+        db: Database session
+
+    Returns:
+        List of all email addresses in the database
+    """
+    users = db.query(User).all()
+    return [str(user.email) for user in users if user.email]
+
+
+def find_duplicate_emails(emails: List[str]) -> Dict[str, List[str]]:
+    """
+    Find duplicate email addresses (case-insensitive).
+
+    Args:
+        emails: List of email addresses
+
+    Returns:
+        Dictionary mapping email addresses to lists of original email addresses
+        that are duplicates (case-insensitive). Only includes entries where
+        multiple email addresses map to the same normalized email.
+    """
+    email_to_originals: Dict[str, List[str]] = {}
+
+    for email in emails:
+        if not email:
+            continue
+        # Normalize email to lowercase for comparison
+        normalized = email.lower().strip()
+        if normalized not in email_to_originals:
+            email_to_originals[normalized] = []
+        email_to_originals[normalized].append(email)
+
+    # Return only duplicates
+    duplicates = {
+        normalized: originals
+        for normalized, originals in email_to_originals.items()
+        if len(originals) > 1
+    }
+    return duplicates
+
+
+def get_users_by_email(db: Session, email: str) -> List[User]:
+    """
+    Get all users with a specific email address (case-insensitive).
+
+    Args:
+        db: Database session
+        email: Email address to search for
+
+    Returns:
+        List of User objects with the specified email address
+    """
+    return db.query(User).filter(func.lower(User.email) == email.lower()).all()
