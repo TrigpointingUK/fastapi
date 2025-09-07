@@ -3,7 +3,7 @@ CRUD operations for users with Unix crypt authentication.
 """
 
 import crypt
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
@@ -326,3 +326,17 @@ def has_gc_premium(user: User) -> bool:
         True if user has GC premium, False otherwise
     """
     return str(user.gc_premium_ind) == "Y"
+
+
+def get_all_usernames(db: Session) -> List[str]:
+    """
+    Get all usernames from the legacy database.
+
+    Args:
+        db: Database session
+
+    Returns:
+        List of all usernames in the database
+    """
+    users = db.query(User).all()
+    return [str(user.name) for user in users if user.name]
