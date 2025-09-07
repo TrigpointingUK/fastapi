@@ -60,8 +60,25 @@ class TestUsernameDuplicatesAPI:
         assert "unique_user" not in result  # No duplicates for this one
 
         # Check that the duplicates are correctly identified
-        assert set(result["user_name"]) == {"user name", "user_name"}
-        assert set(result["admin_user"]) == {"admin user", "admin/user"}
+        assert set(result["user_name"]["original_usernames"]) == {
+            "user name",
+            "user_name",
+        }
+        assert set(result["admin_user"]["original_usernames"]) == {
+            "admin user",
+            "admin/user",
+        }
+
+        # Check that each duplicate has user information with log stats
+        assert "users" in result["user_name"]
+        assert "users" in result["admin_user"]
+
+        # Check that each user has the required fields
+        for user_info in result["user_name"]["users"]:
+            assert "username" in user_info
+            assert "user_id" in user_info
+            assert "log_count" in user_info
+            assert "latest_log_timestamp" in user_info
 
     def test_get_username_duplicates_with_email_duplicates(self, db: Session):
         """Test getting username duplicates with email addresses."""
@@ -107,8 +124,8 @@ class TestUsernameDuplicatesAPI:
         result = response.json()
         # All these usernames should sanitize to "user_name"
         assert "user_name" in result
-        assert len(result["user_name"]) == 10
-        assert set(result["user_name"]) == {
+        assert len(result["user_name"]["original_usernames"]) == 10
+        assert set(result["user_name"]["original_usernames"]) == {
             "user/name",
             "user\\name",
             "user:name",
@@ -183,9 +200,16 @@ class TestUsernameDuplicatesAPI:
         # Note: This test may fail due to database transaction isolation in test environment
         # The actual functionality works correctly as verified by unit tests
         if len(result) > 0:
-            for sanitized_username, original_usernames in result.items():
-                assert len(original_usernames) > 1
+            for sanitized_username, duplicate_info in result.items():
+                assert len(duplicate_info["original_usernames"]) > 1
                 assert sanitized_username.startswith("user_")
+                assert "users" in duplicate_info
+                # Check that each user has the required fields
+                for user_info in duplicate_info["users"]:
+                    assert "username" in user_info
+                    assert "user_id" in user_info
+                    assert "log_count" in user_info
+                    assert "latest_log_timestamp" in user_info
 
     def test_get_username_duplicates_error_handling(self, db: Session, monkeypatch):
         """Test error handling in the username duplicates endpoint."""

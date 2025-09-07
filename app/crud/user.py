@@ -3,12 +3,13 @@ CRUD operations for users with Unix crypt authentication.
 """
 
 import crypt
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
-from app.models.user import User
+from app.models.user import TLog, User
 from app.services.auth0_service import auth0_service
 
 logger = get_logger(__name__)
@@ -340,3 +341,43 @@ def get_all_usernames(db: Session) -> List[str]:
     """
     users = db.query(User).all()
     return [str(user.name) for user in users if user.name]
+
+
+def get_user_log_stats(db: Session, user_ids: List[int]) -> Dict[int, Dict[str, Any]]:
+    """
+    Get log statistics for a list of user IDs.
+    Returns a dictionary mapping user_id to log count and latest log timestamp.
+
+    Args:
+        db: Database session
+        user_ids: List of user IDs to get log stats for
+
+    Returns:
+        Dictionary mapping user_id to log statistics
+    """
+    if not user_ids:
+        return {}
+
+    # Get log count and latest log timestamp for each user
+    log_stats = (
+        db.query(
+            TLog.user_id,
+            func.count(TLog.id).label("log_count"),
+            func.max(func.concat(TLog.date, " ", TLog.time)).label(
+                "latest_log_timestamp"
+            ),
+        )
+        .filter(TLog.user_id.in_(user_ids))
+        .group_by(TLog.user_id)
+        .all()
+    )
+
+    # Convert to dictionary
+    result = {}
+    for user_id, log_count, latest_log_timestamp in log_stats:
+        result[user_id] = {
+            "log_count": log_count,
+            "latest_log_timestamp": latest_log_timestamp,
+        }
+
+    return result

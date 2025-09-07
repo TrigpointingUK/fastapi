@@ -123,12 +123,57 @@ def test_admin_user(db):
 @pytest.fixture
 def test_tlog_entries(db):
     """Create test tlog entries."""
+    from datetime import date, datetime, time
+
     entries = [
-        TLog(trig_id=1),
-        TLog(trig_id=1),
-        TLog(trig_id=1),
-        TLog(trig_id=2),
-        TLog(trig_id=2),
+        TLog(
+            trig_id=1,
+            user_id=1000,
+            date=date(2023, 12, 15),
+            time=time(14, 30, 0),
+            osgb_eastings=100000,
+            osgb_northings=200000,
+            osgb_gridref="TQ 00000 00000",
+            fb_number="",
+            condition="G",
+            comment="Test log entry 1",
+            score=7,
+            ip_addr="127.0.0.1",
+            source="W",
+            upd_timestamp=datetime(2023, 12, 15, 14, 30, 0),
+        ),
+        TLog(
+            trig_id=1,
+            user_id=1000,
+            date=date(2023, 12, 10),
+            time=time(10, 15, 0),
+            osgb_eastings=100000,
+            osgb_northings=200000,
+            osgb_gridref="TQ 00000 00000",
+            fb_number="",
+            condition="G",
+            comment="Test log entry 2",
+            score=8,
+            ip_addr="127.0.0.1",
+            source="W",
+            upd_timestamp=datetime(2023, 12, 10, 10, 15, 0),
+        ),
+        TLog(
+            trig_id=2,
+            user_id=1001,
+            date=date(2023, 11, 20),
+            time=time(9, 15, 0),
+            osgb_eastings=150000,
+            osgb_northings=250000,
+            osgb_gridref="TQ 50000 50000",
+            fb_number="",
+            condition="G",
+            comment="Test log entry 3",
+            score=6,
+            ip_addr="127.0.0.1",
+            source="W",
+            upd_timestamp=datetime(2023, 11, 20, 9, 15, 0),
+        ),
     ]
     for entry in entries:
         db.add(entry)
