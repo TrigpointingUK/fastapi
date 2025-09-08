@@ -88,27 +88,27 @@ class Auth0Service:
             }
 
             if error_code == "DecryptionFailureException":
-                log_data[
-                    "error_description"
-                ] = "Auth0 credentials could not be decrypted"
+                log_data["error_description"] = (
+                    "Auth0 credentials could not be decrypted"
+                )
             elif error_code == "InternalServiceErrorException":
-                log_data[
-                    "error_description"
-                ] = "AWS internal service error retrieving Auth0 credentials"
+                log_data["error_description"] = (
+                    "AWS internal service error retrieving Auth0 credentials"
+                )
             elif error_code == "InvalidParameterException":
-                log_data[
-                    "error_description"
-                ] = "Invalid parameter retrieving Auth0 credentials"
+                log_data["error_description"] = (
+                    "Invalid parameter retrieving Auth0 credentials"
+                )
             elif error_code == "InvalidRequestException":
-                log_data[
-                    "error_description"
-                ] = "Invalid request retrieving Auth0 credentials"
+                log_data["error_description"] = (
+                    "Invalid request retrieving Auth0 credentials"
+                )
             elif error_code == "ResourceNotFoundException":
                 log_data["error_description"] = "Auth0 secret not found"
             else:
-                log_data[
-                    "error_description"
-                ] = "Unexpected error retrieving Auth0 credentials"
+                log_data["error_description"] = (
+                    "Unexpected error retrieving Auth0 credentials"
+                )
 
             logger.error(json.dumps(log_data))
             return None
