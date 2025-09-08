@@ -45,12 +45,38 @@ def custom_openapi():
         }
     }
 
-    # Add security requirement to all protected endpoints
+    # Define public endpoints that should not have security requirements
+    public_endpoints = {
+        "/health",
+        "/api/v1/auth/login",
+    }
+
+    # Define endpoints with optional auth (should not have required security)
+    optional_auth_endpoints = {
+        "/debug/auth",
+    }
+
+    # Add security requirement to protected endpoints only
     for path in openapi_schema["paths"]:
         for method in openapi_schema["paths"][path]:
             if method in ["get", "post", "put", "delete", "patch"]:
                 endpoint = openapi_schema["paths"][path][method]
+
+                # Skip public endpoints
+                if path in public_endpoints:
+                    continue
+
+                # For optional auth endpoints, remove any existing security requirements
+                if path in optional_auth_endpoints:
+                    if "security" in endpoint:
+                        del endpoint["security"]
+                    continue
+
+                # Add security requirement to all other endpoints
                 if "security" not in endpoint:
+                    endpoint["security"] = [{"BearerAuth": []}]
+                else:
+                    # Replace any existing security with BearerAuth
                     endpoint["security"] = [{"BearerAuth": []}]
 
     app.openapi_schema = openapi_schema

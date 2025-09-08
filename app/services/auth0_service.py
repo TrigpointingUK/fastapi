@@ -36,11 +36,11 @@ class Auth0Service:
         self._token_expires_at = None
 
         if not self.enabled:
-            logger.info("Auth0 integration is disabled")
+            logger.error("Auth0 integration is disabled")
             return
 
         if not self.domain or not self.secret_name:
-            logger.warning("Auth0 domain or secret name not configured")
+            logger.error("Auth0 domain or secret name not configured")
             self.enabled = False
             return
 
@@ -71,7 +71,7 @@ class Auth0Service:
                 "secret_name": self.secret_name,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.info(json.dumps(log_data))
+            logger.debug(json.dumps(log_data))
             return secret_data
 
         except ClientError as e:
@@ -88,27 +88,27 @@ class Auth0Service:
             }
 
             if error_code == "DecryptionFailureException":
-                log_data["error_description"] = (
-                    "Auth0 credentials could not be decrypted"
-                )
+                log_data[
+                    "error_description"
+                ] = "Auth0 credentials could not be decrypted"
             elif error_code == "InternalServiceErrorException":
-                log_data["error_description"] = (
-                    "AWS internal service error retrieving Auth0 credentials"
-                )
+                log_data[
+                    "error_description"
+                ] = "AWS internal service error retrieving Auth0 credentials"
             elif error_code == "InvalidParameterException":
-                log_data["error_description"] = (
-                    "Invalid parameter retrieving Auth0 credentials"
-                )
+                log_data[
+                    "error_description"
+                ] = "Invalid parameter retrieving Auth0 credentials"
             elif error_code == "InvalidRequestException":
-                log_data["error_description"] = (
-                    "Invalid request retrieving Auth0 credentials"
-                )
+                log_data[
+                    "error_description"
+                ] = "Invalid request retrieving Auth0 credentials"
             elif error_code == "ResourceNotFoundException":
                 log_data["error_description"] = "Auth0 secret not found"
             else:
-                log_data["error_description"] = (
-                    "Unexpected error retrieving Auth0 credentials"
-                )
+                log_data[
+                    "error_description"
+                ] = "Unexpected error retrieving Auth0 credentials"
 
             logger.error(json.dumps(log_data))
             return None
@@ -174,7 +174,7 @@ class Auth0Service:
                 "domain": self.domain,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.info(json.dumps(log_data))
+            logger.debug(json.dumps(log_data))
             return self._access_token
 
         except requests.exceptions.RequestException as e:
@@ -255,7 +255,7 @@ class Auth0Service:
                     "url": url,
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
-                logger.info(json.dumps(log_data))
+                logger.debug(json.dumps(log_data))
                 return response.json()
             else:
                 # Log failed requests with detailed error information
@@ -341,7 +341,7 @@ class Auth0Service:
             "endpoint": endpoint,
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
-        logger.info(json.dumps(log_data))
+        logger.debug(json.dumps(log_data))
 
         response = self._make_auth0_request("GET", endpoint)
 
@@ -366,7 +366,7 @@ class Auth0Service:
                     "sanitized_username": sanitized_username,
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
-                logger.info(json.dumps(log_data))
+                logger.debug(json.dumps(log_data))
                 return None
         else:
             log_data = {
@@ -375,7 +375,7 @@ class Auth0Service:
                 "sanitized_username": sanitized_username,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.info(json.dumps(log_data))
+            logger.debug(json.dumps(log_data))
             return None
 
     def find_user_by_email(self, email: str) -> Optional[Dict]:
@@ -396,7 +396,7 @@ class Auth0Service:
             "email": email,
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
-        logger.info(json.dumps(log_data))
+        logger.debug(json.dumps(log_data))
 
         # Search for user by email
         endpoint = f'users?q=email:"{email}"&search_engine=v3'
@@ -421,7 +421,7 @@ class Auth0Service:
                     "email": email,
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
-                logger.info(json.dumps(log_data))
+                logger.debug(json.dumps(log_data))
                 return None
         else:
             log_data = {
@@ -429,7 +429,7 @@ class Auth0Service:
                 "email": email,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.info(json.dumps(log_data))
+            logger.debug(json.dumps(log_data))
             return None
 
     def find_user_comprehensive(
@@ -457,7 +457,7 @@ class Auth0Service:
             ),  # Convert to string to handle MagicMock in tests
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
-        logger.info(json.dumps(log_data))
+        logger.debug(json.dumps(log_data))
 
         user = self.find_user_by_username(username)
         if user:
@@ -467,7 +467,7 @@ class Auth0Service:
                 "auth0_user_id": user.get("user_id", ""),
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.info(json.dumps(log_data))
+            logger.debug(json.dumps(log_data))
             return user
 
         # If email provided, try email search
@@ -481,7 +481,7 @@ class Auth0Service:
                 ),  # Convert to string to handle MagicMock in tests
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.info(json.dumps(log_data))
+            logger.debug(json.dumps(log_data))
 
             user = self.find_user_by_email(email)
             if user:
@@ -492,7 +492,7 @@ class Auth0Service:
                     "auth0_user_id": user.get("user_id", ""),
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
-                logger.info(json.dumps(log_data))
+                logger.debug(json.dumps(log_data))
                 return user
 
         # Try searching by username without quotes (fallback)
@@ -502,7 +502,7 @@ class Auth0Service:
                 "username": username,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.info(json.dumps(log_data))
+            logger.debug(json.dumps(log_data))
             try:
                 endpoint = f"users?q=username:{username}&search_engine=v3"
                 response = self._make_auth0_request("GET", endpoint)
@@ -527,7 +527,7 @@ class Auth0Service:
                             "username": username,
                             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                         }
-                        logger.info(json.dumps(log_data))
+                        logger.debug(json.dumps(log_data))
             except Exception as e:
                 log_data = {
                     "event": "auth0_user_search_fallback_failed",
@@ -535,7 +535,7 @@ class Auth0Service:
                     "error": str(e),
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
-                logger.warning(json.dumps(log_data))
+                logger.debug(json.dumps(log_data))
 
         log_data = {
             "event": "auth0_comprehensive_search_no_user_found",
@@ -599,7 +599,7 @@ class Auth0Service:
             ),  # Convert to string to handle MagicMock in tests
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
-        logger.info(json.dumps(log_data))
+        logger.debug(json.dumps(log_data))
 
         return filtered_users
 
@@ -673,7 +673,7 @@ class Auth0Service:
             "user_data": safe_user_data,
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
-        logger.info(json.dumps(log_data))
+        logger.debug(json.dumps(log_data))
 
         response = self._make_auth0_request("POST", "users", user_data)
 
@@ -683,6 +683,8 @@ class Auth0Service:
                 "original_username": username,
                 "sanitized_username": sanitized_username,
                 "email": email or "",
+                "connection": self.connection,
+                "user_data": safe_user_data,
                 "auth0_user_id": response.get("user_id") or "",
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
@@ -869,7 +871,7 @@ class Auth0Service:
             "name": name,
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
-        logger.info(json.dumps(log_data))
+        logger.debug(json.dumps(log_data))
 
         try:
             # Use comprehensive search to find user
@@ -880,7 +882,7 @@ class Auth0Service:
                 "connection": str(self.connection),
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.info(json.dumps(log_data))
+            logger.debug(json.dumps(log_data))
 
             auth0_user = self.find_user_comprehensive(username, email)
 
@@ -891,7 +893,7 @@ class Auth0Service:
                 "user_found": str(auth0_user is not None),
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.info(json.dumps(log_data))
+            logger.debug(json.dumps(log_data))
 
             if auth0_user:
                 log_data = {
@@ -938,7 +940,7 @@ class Auth0Service:
                         "new_nickname": username or "",
                         "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                     }
-                    logger.info(json.dumps(log_data))
+                    logger.debug(json.dumps(log_data))
                     self.update_user_profile(
                         auth0_user["user_id"],
                         firstname=firstname,
@@ -964,7 +966,7 @@ class Auth0Service:
                     "email": email or "",
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
-                logger.info(json.dumps(log_data))
+                logger.debug(json.dumps(log_data))
 
                 log_data = {
                     "event": "auth0_user_creation_started",
@@ -972,7 +974,7 @@ class Auth0Service:
                     "email": email or "",
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
-                logger.info(json.dumps(log_data))
+                logger.debug(json.dumps(log_data))
                 return self.create_user(
                     username, email, name, password, user_id, firstname, surname
                 )

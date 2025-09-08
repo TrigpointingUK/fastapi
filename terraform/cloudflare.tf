@@ -9,11 +9,11 @@ data "http" "cloudflare_ips_v4" {
 locals {
   # Parse CloudFlare IP ranges from their public API
   cloudflare_ips_v4 = split("\n", chomp(data.http.cloudflare_ips_v4.response_body))
-  
+
   # CloudFlare IPv4 ranges (fallback if API fails)
   cloudflare_ips_fallback = [
     "103.21.244.0/22",
-    "103.22.200.0/22", 
+    "103.22.200.0/22",
     "103.31.4.0/22",
     "104.16.0.0/13",
     "104.24.0.0/14",

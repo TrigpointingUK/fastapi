@@ -17,7 +17,7 @@ make ci
 ### 3. Only Commit if All Checks Pass
 The `make ci` command must complete successfully with:
 - ✅ **black** - Code formatting
-- ✅ **isort** - Import sorting  
+- ✅ **isort** - Import sorting
 - ✅ **flake8** - Code linting
 - ✅ **mypy** - Type checking
 - ✅ **bandit** - Security scanning
@@ -33,7 +33,7 @@ The `make ci` command must complete successfully with:
 ### 5. No Exceptions
 This rule applies to:
 - Feature commits
-- Bug fixes  
+- Bug fixes
 - Documentation changes
 - Configuration updates
 - Any code modification

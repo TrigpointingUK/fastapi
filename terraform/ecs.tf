@@ -49,7 +49,7 @@ resource "aws_ecs_task_definition" "app" {
           name  = "DEBUG"
           value = var.environment == "production" ? "false" : "true"
         }
-      ], 
+      ],
       # Add Auth0 configuration if enabled
       var.auth0_domain != null ? [
         {
@@ -82,7 +82,7 @@ resource "aws_ecs_task_definition" "app" {
         }
       ]
       )
-      
+
       # Secrets from AWS Secrets Manager
       secrets = concat(
         # External database secret (if using external database)

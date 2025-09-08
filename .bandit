@@ -13,6 +13,6 @@ exclude_dirs = tests
 # Only report MEDIUM and HIGH confidence issues
 confidence = MEDIUM
 
-# Set severity level (LOW, MEDIUM, HIGH) 
+# Set severity level (LOW, MEDIUM, HIGH)
 # Only report MEDIUM and HIGH severity issues
 level = MEDIUM

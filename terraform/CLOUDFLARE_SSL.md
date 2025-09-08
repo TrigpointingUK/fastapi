@@ -16,7 +16,7 @@ This infrastructure follows security best practices:
 1. **CloudFlare Dashboard** → **SSL/TLS** → **Origin Server**
 2. **Create Certificate** with:
    - **Hostnames**: `fastapi.trigpointing.me`, `*.trigpointing.me`
-   - **Key Type**: RSA (2048) 
+   - **Key Type**: RSA (2048)
    - **Validity**: 15 years
 
 ### 2. Configure Terraform
@@ -71,7 +71,7 @@ The database schema is configurable to support migration from legacy systems:
 # Update terraform/staging.tfvars
 db_schema = "fastapi"  # New clean schema name
 
-# Update terraform/production.tfvars  
+# Update terraform/production.tfvars
 db_schema = "fastapi"  # New clean schema name
 
 # Apply changes

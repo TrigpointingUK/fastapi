@@ -14,7 +14,7 @@ This document explains how to manage staging and production environments with se
 ```
 terraform/
 ├── backend-staging.conf         # Staging state config
-├── backend-production.conf      # Production state config  
+├── backend-production.conf      # Production state config
 ├── staging.tfvars              # Staging variables
 ├── production.tfvars           # Production variables
 ├── cloudflare-cert-trigpointing-me.tfvars    # Staging SSL cert
@@ -29,7 +29,7 @@ terraform/
 # For staging
 make tf-init env=staging
 
-# For production  
+# For production
 make tf-init env=production
 ```
 
