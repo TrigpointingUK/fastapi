@@ -47,7 +47,7 @@ fi
 # Check if Docker is available
 if command -v docker &> /dev/null; then
     echo "🐳 Docker is available"
-    
+
     # Check if Docker Compose is available
     if command -v docker-compose &> /dev/null; then
         echo "🐳 Docker Compose is available"

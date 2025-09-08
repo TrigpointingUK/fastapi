@@ -12,10 +12,10 @@ source venv/bin/activate && make ci
 
 ### What `make ci` Validates
 1. **Black Formatting**: `black --check app tests`
-2. **Import Sorting**: `isort --check-only app tests` 
+2. **Import Sorting**: `isort --check-only app tests`
 3. **Linting**: `flake8 app tests`
 4. **Type Checking**: `mypy app --ignore-missing-imports` (run twice)
-5. **Security Scan**: `bandit -r app` 
+5. **Security Scan**: `bandit -r app`
 6. **Dependency Scan**: `safety check` (non-blocking but reported)
 7. **Test Suite**: `pytest` (all tests must pass)
 
@@ -80,7 +80,7 @@ make ci
 
 Breaking this rule causes:
 - ❌ Failed GitHub Actions
-- ❌ Blocked deployments  
+- ❌ Blocked deployments
 - ❌ Development delays
 - ❌ Technical debt accumulation
 

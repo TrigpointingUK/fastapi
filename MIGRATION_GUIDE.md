@@ -115,11 +115,11 @@ def get_user_profile(
 ):
     if current_user.user_id != user_id and not is_admin(current_user):
         raise HTTPException(status_code=403, detail="Access denied")
-    
+
     user = get_user_by_id(db, user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
+
     return user
 ```
 
@@ -131,7 +131,7 @@ Add new models for additional tables:
 # app/models/legacy.py
 class LegacyTable(Base):
     __tablename__ = "legacy_table_name"
-    
+
     id = Column(Integer, primary_key=True)
     # Add columns matching your existing schema
 ```
@@ -149,7 +149,7 @@ def compare_endpoints(php_url, fastapi_url, test_cases):
     for case in test_cases:
         php_response = requests.get(f"{php_url}/{case}")
         fastapi_response = requests.get(f"{fastapi_url}/{case}")
-        
+
         assert php_response.status_code == fastapi_response.status_code
         # Add more validation as needed
 ```
@@ -165,10 +165,10 @@ Use feature flags or routing to gradually switch to new endpoints:
 const USE_NEW_API = true; // Feature flag
 
 function getUserProfile(userId) {
-    const baseUrl = USE_NEW_API 
-        ? 'https://api.yourdomain.com/api/v1' 
+    const baseUrl = USE_NEW_API
+        ? 'https://api.yourdomain.com/api/v1'
         : 'https://yourdomain.com/legacy';
-    
+
     return fetch(`${baseUrl}/users/profile/${userId}`);
 }
 ```
@@ -291,7 +291,7 @@ mv old_php_files/* legacy_backup/
 ```python
 class ResponseModel(BaseModel):
     count: int
-    
+
     @validator('count', pre=True)
     def parse_count(cls, v):
         return int(v) if isinstance(v, str) else v

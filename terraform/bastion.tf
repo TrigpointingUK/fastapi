@@ -3,7 +3,7 @@ resource "aws_eip" "bastion" {
   count = var.environment == "staging" && var.admin_ip_address != null ? 1 : 0
 
   domain = "vpc"
-  
+
   tags = {
     Name = "${var.project_name}-${var.environment}-bastion-eip"
   }
@@ -24,7 +24,7 @@ resource "aws_instance" "bastion" {
 
   # Enable detailed monitoring and serial console access
   monitoring                = true
-  
+
   metadata_options {
     http_endpoint = "enabled"
     http_tokens   = "required"

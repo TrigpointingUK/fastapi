@@ -13,7 +13,7 @@ PASTE_YOUR_CLOUDFLARE_ORIGIN_CERTIFICATE_HERE
 EOF
 
 # CloudFlare Origin Private Key
-# Replace with your actual private key from CloudFlare dashboard  
+# Replace with your actual private key from CloudFlare dashboard
 cloudflare_origin_key = <<EOF
 -----BEGIN PRIVATE KEY-----
 PASTE_YOUR_CLOUDFLARE_PRIVATE_KEY_HERE

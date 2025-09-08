@@ -23,11 +23,11 @@ CREATE TABLE IF NOT EXISTS tlog (
 );
 
 -- Insert some sample data for testing
-INSERT INTO user (email, password_hash, admin_ind) VALUES 
+INSERT INTO user (email, password_hash, admin_ind) VALUES
 ('admin@example.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj5w6iuF.Tay', 'Y'),
 ('user@example.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj5w6iuF.Tay', 'N');
 
-INSERT INTO tlog (trig_id, log_data) VALUES 
+INSERT INTO tlog (trig_id, log_data) VALUES
 (1, 'Sample log entry 1'),
 (1, 'Sample log entry 2'),
 (1, 'Sample log entry 3'),

@@ -24,11 +24,11 @@ key_pair_name = "fastapi-staging-bastion"
 # DMS access
 enable_dms_access = true
 dms_replication_instance_sg_id = "sg-0439b939713d7c283"  # fastapi-staging-dms-sg for serverless DMS
-# dms_cidr_block = "172.31.0.0/16"  # CIDR block for cross-VPC DMS access  
+# dms_cidr_block = "172.31.0.0/16"  # CIDR block for cross-VPC DMS access
 # dms_instance_ip = "10.0.11.50"  # Specific IP of fastapi-2 DMS instance (legacy)
 
 # CloudFlare SSL Configuration (disabled for staging)
-domain_name = "fastapi.trigpointing.me" 
+domain_name = "fastapi.trigpointing.me"
 enable_cloudflare_ssl = false  # Disabled for staging - will use HTTP for testing
 # For production, enable CloudFlare SSL and set:
 # cloudflare_origin_cert = "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----"

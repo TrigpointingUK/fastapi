@@ -154,7 +154,7 @@ black app tests && isort app tests
 
 # Check remaining issues
 flake8 app tests                    # Fix linting errors
-mypy app --ignore-missing-imports   # Fix type errors  
+mypy app --ignore-missing-imports   # Fix type errors
 pytest                             # Fix failing tests
 
 # Final validation (must pass)
@@ -330,7 +330,7 @@ The GitHub Actions pipeline includes:
 Add these secrets to your GitHub repository:
 
 - `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY` 
+- `AWS_SECRET_ACCESS_KEY`
 - `AWS_REGION`
 
 ## 🤝 Contributing

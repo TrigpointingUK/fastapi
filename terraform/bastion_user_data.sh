@@ -67,9 +67,9 @@ SELECT "=== TABLES ===" as '';
 SHOW TABLES;
 
 SELECT "=== TABLE STRUCTURES ===" as '';
-SELECT table_name, table_rows, data_length, index_length 
-FROM information_schema.tables 
-WHERE table_schema = 'fastapi_staging' 
+SELECT table_name, table_rows, data_length, index_length
+FROM information_schema.tables
+WHERE table_schema = 'fastapi_staging'
 ORDER BY table_name;
 
 SELECT "=== USERS TABLE STRUCTURE ===" as '';
@@ -80,7 +80,7 @@ DESCRIBE tlog;
 
 SELECT "=== INDEXES ===" as '';
 SELECT table_name, index_name, column_name, seq_in_index
-FROM information_schema.statistics 
+FROM information_schema.statistics
 WHERE table_schema = 'fastapi_staging'
 ORDER BY table_name, index_name, seq_in_index;
 SQL
