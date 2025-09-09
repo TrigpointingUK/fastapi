@@ -33,8 +33,8 @@ resource "aws_instance" "bastion" {
 
   user_data = base64encode(templatefile("${path.module}/bastion_user_data.sh", {
     db_endpoint = var.use_external_database ? "external-mysql-host" : aws_db_instance.main[0].endpoint
-    db_username = var.db_username
-    db_password = var.db_password
+    db_username = "fastapi_user"  # Default username for managed RDS
+    db_password = "temp-password-change-this"  # Will be updated via AWS Console/CLI
   }))
 
   tags = {
