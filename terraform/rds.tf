@@ -59,8 +59,8 @@ resource "aws_db_instance" "main" {
 
   # Database
   db_name  = "${var.project_name}_${var.environment}"
-  username = var.db_username
-  password = var.db_password
+  username = "fastapi_user"  # Default username for managed RDS
+  password = "temp-password-change-this"  # Will be updated via AWS Console/CLI
 
   # Storage
   allocated_storage     = var.environment == "production" ? 100 : 20

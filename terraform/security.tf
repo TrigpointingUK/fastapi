@@ -90,6 +90,11 @@ resource "aws_security_group" "rds" {
   # Note: Admin access via bastion host - see bastion.tf
   # Note: DMS access via separate security group rules below
 
+  # Ignore changes to ingress rules to prevent instability
+  lifecycle {
+    ignore_changes = [ingress]
+  }
+
   tags = {
     Name = "${var.project_name}-${var.environment}-rds-sg"
   }

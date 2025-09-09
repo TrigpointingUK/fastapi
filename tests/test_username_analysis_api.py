@@ -2,12 +2,12 @@
 Tests for username analysis API endpoints.
 """
 
-from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.security import create_access_token
 from app.main import app
 from app.models.user import User
+from fastapi.testclient import TestClient
 
 client = TestClient(app)
 

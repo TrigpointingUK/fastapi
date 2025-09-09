@@ -2,9 +2,8 @@
 Tests for main application debug endpoints.
 """
 
-from fastapi.testclient import TestClient
-
 from app.core.security import create_access_token
+from fastapi.testclient import TestClient
 
 
 def test_debug_auth_no_credentials(client: TestClient):

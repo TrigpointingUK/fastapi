@@ -5,17 +5,8 @@ aws_region  = "us-west-2"
 container_image = "ghcr.io/trigpointinguk/fastapi:main"
 
 # External database configuration (MySQL 5.5 on EC2)
-use_external_database        = true
-external_database_secret_name = "fastapi-production-external-db"
+use_external_database = true
 db_schema = "trigpoin_trigs"  # Legacy schema name for migration compatibility
-
-# Database credentials (not used when use_external_database = true)
-# These are kept for staging/development environments
-db_username = "fastapi_user"
-db_password = "secure-production-password-change-this"
-
-# JWT secret (use AWS Secrets Manager in production)
-jwt_secret_key = "super-secure-production-jwt-secret-key"
 
 # Scaling settings
 desired_count = 2
@@ -32,5 +23,5 @@ enable_cloudflare_ssl = true  # REQUIRED for production security
 
 # Auth0 Configuration
 auth0_domain = "trigpointing.eu.auth0.com"
-auth0_secret_name = "auth0-fastapi-tuk"
 auth0_connection = "tuk-users"
+auth0_api_audience = "https://api.trigpointing.uk/api/v1/"

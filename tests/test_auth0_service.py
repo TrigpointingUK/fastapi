@@ -38,25 +38,24 @@ class TestAuth0Service:
         """Test service initialization when Auth0 is disabled."""
         mock_settings.AUTH0_ENABLED = False
         mock_settings.AUTH0_DOMAIN = None
-        mock_settings.AUTH0_SECRET_NAME = None
 
         service = Auth0Service()
         assert not service.enabled
         assert service.domain is None
-        assert service.secret_name is None
 
     @patch("app.services.auth0_service.settings")
     def test_init_enabled(self, mock_settings):
         """Test service initialization when Auth0 is enabled."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
-        mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "tme-users"
+        mock_settings.AUTH0_MANAGEMENT_API_AUDIENCE = (
+            "https://test-domain.auth0.com/api/v2/"
+        )
 
         service = Auth0Service()
         assert service.enabled
         assert service.domain == "test-domain.auth0.com"
-        assert service.secret_name == "test-secret"
         assert service.connection == "tme-users"
 
     @patch("app.services.auth0_service.settings")
@@ -75,12 +74,21 @@ class TestAuth0Service:
         """Test successful retrieval of Auth0 credentials."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
-        mock_settings.AUTH0_SECRET_NAME = "test-secret"
+        mock_settings.ENVIRONMENT = "staging"
+
+        # Mock unified app secrets
+        mock_app_secrets = {
+            "jwt_secret_key": "test-jwt-secret",
+            "database_url": "mysql://test:test@localhost/test",
+            "auth0_client_id": "test-client-id",
+            "auth0_client_secret": "test-client-secret",
+            "auth0_domain": "test-domain.auth0.com",
+        }
 
         # Mock AWS client
         mock_client = Mock()
         mock_client.get_secret_value.return_value = {
-            "SecretString": json.dumps(self.mock_credentials)
+            "SecretString": json.dumps(mock_app_secrets)
         }
         mock_session = Mock()
         mock_session.client.return_value = mock_client
@@ -89,8 +97,15 @@ class TestAuth0Service:
         service = Auth0Service()
         result = service._get_auth0_credentials()
 
-        assert result == self.mock_credentials
-        mock_client.get_secret_value.assert_called_once_with(SecretId="test-secret")
+        expected_credentials = {
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "domain": "test-domain.auth0.com",
+        }
+        assert result == expected_credentials
+        mock_client.get_secret_value.assert_called_once_with(
+            SecretId="fastapi-staging-app-secrets"
+        )
 
     @patch("boto3.session.Session")
     @patch("app.services.auth0_service.settings")

@@ -6,17 +6,16 @@ API dependencies for authentication and database access.
 
 from typing import Optional
 
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from jose import JWTError, jwt
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
-from app.crud.user import get_user_by_id, is_admin
+from app.core.security import validate_any_token
+from app.crud.user import get_user_by_auth0_id, get_user_by_id, is_admin
 from app.db.database import get_db
 from app.models.user import User
 
 # from app.schemas.user import TokenData
 from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 security = HTTPBearer(auto_error=False)
 
@@ -25,7 +24,7 @@ def get_current_user(
     db: Session = Depends(get_db),
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> User:
-    """Get current authenticated user from JWT token."""
+    """Get current authenticated user from either legacy JWT or Auth0 token."""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -39,52 +38,62 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    try:
-        payload = jwt.decode(
-            credentials.credentials,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM],
-        )
-        user_id_str: str = payload.get("sub")
-        if user_id_str is None:
-            raise credentials_exception
-        user_id = int(user_id_str)
-    except (JWTError, ValueError):
+    # Validate token (supports both legacy JWT and Auth0)
+    token_payload = validate_any_token(credentials.credentials)
+    if not token_payload:
         raise credentials_exception
 
-    if user_id is None:
-        raise credentials_exception
-    user = get_user_by_id(db, user_id=user_id)
-    if user is None:
-        raise credentials_exception
-    return user
+    # For legacy tokens, user_id is the database user ID
+    if token_payload.get("token_type") == "legacy":
+        user_id = token_payload.get("user_id")
+        if user_id is None:
+            raise credentials_exception
+        user = get_user_by_id(db, user_id=user_id)
+        if user is None:
+            raise credentials_exception
+        return user
+
+    # For Auth0 tokens, find user by Auth0 user ID
+    elif token_payload.get("token_type") == "auth0":
+        auth0_user_id = token_payload.get("auth0_user_id")
+        if not auth0_user_id:
+            raise credentials_exception
+        user = get_user_by_auth0_id(db, auth0_user_id=auth0_user_id)
+        if user is None:
+            raise credentials_exception
+        return user
+
+    raise credentials_exception
 
 
 def get_current_user_optional(
     db: Session = Depends(get_db),
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> Optional[User]:
-    """Get current user from JWT token, returning None if not authenticated."""
+    """Get current user from token, returning None if not authenticated."""
     if credentials is None:
         return None
 
     try:
-        payload = jwt.decode(
-            credentials.credentials,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM],
-        )
-        user_id_str: str = payload.get("sub")
-        if user_id_str is None:
+        token_payload = validate_any_token(credentials.credentials)
+        if not token_payload:
             return None
-        user_id = int(user_id_str)
-    except (JWTError, ValueError):
+
+        if token_payload.get("token_type") == "legacy":
+            user_id = token_payload.get("user_id")
+            if user_id is None:
+                return None
+            return get_user_by_id(db, user_id=user_id)
+        elif token_payload.get("token_type") == "auth0":
+            auth0_user_id = token_payload.get("auth0_user_id")
+            if not auth0_user_id:
+                return None
+            return get_user_by_auth0_id(db, auth0_user_id=auth0_user_id)
+
+    except Exception:
         return None
 
-    if user_id is None:
-        return None
-    user = get_user_by_id(db, user_id=user_id)
-    return user
+    return None
 
 
 def get_current_admin_user(

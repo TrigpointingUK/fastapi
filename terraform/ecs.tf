@@ -34,8 +34,8 @@ resource "aws_ecs_task_definition" "app" {
       ]
       environment = concat([
         {
-          name  = "JWT_SECRET_KEY"
-          value = var.jwt_secret_key
+          name  = "ENVIRONMENT"
+          value = var.environment
         },
         {
           name  = "JWT_ALGORITHM"
@@ -57,16 +57,20 @@ resource "aws_ecs_task_definition" "app" {
           value = var.auth0_domain
         },
         {
-          name  = "AUTH0_SECRET_NAME"
-          value = var.auth0_secret_name
-        },
-        {
           name  = "AUTH0_CONNECTION"
           value = var.auth0_connection
         },
         {
           name  = "AUTH0_ENABLED"
           value = "true"
+        },
+        {
+          name  = "AUTH0_MANAGEMENT_API_AUDIENCE"
+          value = "https://${var.auth0_domain}/api/v2/"
+        },
+        {
+          name  = "AUTH0_API_AUDIENCE"
+          value = var.auth0_api_audience
         }
       ] : [
         {
@@ -74,39 +78,32 @@ resource "aws_ecs_task_definition" "app" {
           value = "false"
         }
       ],
-      # Add DATABASE_URL for managed RDS (when not using external database)
-      var.use_external_database ? [] : [
-        {
-          name  = "DATABASE_URL"
-          value = "mysql+pymysql://${var.db_username}:${var.db_password}@${aws_db_instance.main[0].endpoint}/${var.db_schema}"
-        }
-      ]
       )
 
       # Secrets from AWS Secrets Manager
-      secrets = concat(
-        # External database secret (if using external database)
-        var.use_external_database ? [
-          {
-            name      = "DATABASE_URL"
-            valueFrom = "${aws_secretsmanager_secret.external_database[0].arn}:database_url::"
-          }
-        ] : [],
-        # Auth0 secrets (if Auth0 is enabled)
-        var.auth0_domain != null ? [
-          {
-            name      = "AUTH0_CLIENT_ID"
-            valueFrom = "${aws_secretsmanager_secret.auth0_credentials[0].arn}:client_id::"
-          },
-          {
-            name      = "AUTH0_CLIENT_SECRET"
-            valueFrom = "${aws_secretsmanager_secret.auth0_credentials[0].arn}:client_secret::"
-          },
-          {
-            name      = "AUTH0_AUDIENCE"
-            valueFrom = "${aws_secretsmanager_secret.auth0_credentials[0].arn}:audience::"
-          }
-        ] : []
+      secrets = concat([
+        # JWT Secret
+        {
+          name      = "JWT_SECRET_KEY"
+          valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:jwt_secret_key::"
+        },
+        # Database URL
+        {
+          name      = "DATABASE_URL"
+          valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:database_url::"
+        }
+      ],
+      # Auth0 secrets (if Auth0 is enabled)
+      var.auth0_domain != null ? [
+        {
+          name      = "AUTH0_CLIENT_ID"
+          valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:auth0_client_id::"
+        },
+        {
+          name      = "AUTH0_CLIENT_SECRET"
+          valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:auth0_client_secret::"
+        }
+      ] : []
       )
       logConfiguration = {
         logDriver = "awslogs"

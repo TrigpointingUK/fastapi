@@ -2,13 +2,12 @@
 Main FastAPI application entry point.
 """
 
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # Configure logging first
 setup_logging()
@@ -114,7 +113,7 @@ def debug_auth(
         return {"authenticated": False, "error": "No credentials provided"}
 
     try:
-        from jose import jwt
+        import jwt
 
         from app.core.config import settings
 

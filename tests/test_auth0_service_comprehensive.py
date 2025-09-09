@@ -29,13 +29,11 @@ class TestAuth0ServiceComprehensive:
         """Test Auth0Service initialization when disabled."""
         mock_settings.AUTH0_ENABLED = False
         mock_settings.AUTH0_DOMAIN = None
-        mock_settings.AUTH0_SECRET_NAME = None
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         service = Auth0Service()
         assert not service.enabled
         assert service.domain is None
-        assert service.secret_name is None
 
     @patch("app.services.auth0_service.settings")
     def test_init_missing_config(self, mock_settings):
@@ -49,12 +47,12 @@ class TestAuth0ServiceComprehensive:
         assert not service.enabled
 
     @patch("app.services.auth0_service.settings")
-    def test_init_missing_secret_name(self, mock_settings):
-        """Test Auth0Service initialization with missing secret name."""
+    def test_init_missing_management_api_audience(self, mock_settings):
+        """Test Auth0Service initialization with missing management API audience."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
-        mock_settings.AUTH0_SECRET_NAME = None
         mock_settings.AUTH0_CONNECTION = "test-connection"
+        mock_settings.AUTH0_MANAGEMENT_API_AUDIENCE = None
 
         service = Auth0Service()
         assert not service.enabled
