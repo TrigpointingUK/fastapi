@@ -4,6 +4,8 @@ Debug script for Auth0 token validation.
 
 This script helps debug Auth0 token issues by providing detailed information
 about token validation without requiring the full FastAPI application.
+Uses PyJWT for JWT handling (migrated from python-jose for better security
+and Auth0 compatibility).
 
 Usage:
     python debug_auth0_token.py "your_auth0_token_here"
@@ -16,7 +18,7 @@ from datetime import datetime, timezone
 # Add the app directory to the path so we can import modules
 sys.path.insert(0, "/home/ianh/dev/fastapi")
 
-from jose import jwt  # noqa: E402
+import jwt  # noqa: E402
 
 from app.core.config import settings  # noqa: E402
 from app.core.security import auth0_validator, validate_any_token  # noqa: E402

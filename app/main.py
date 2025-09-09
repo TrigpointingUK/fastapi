@@ -113,7 +113,7 @@ def debug_auth(
         return {"authenticated": False, "error": "No credentials provided"}
 
     try:
-        from jose import jwt
+        import jwt
 
         from app.core.config import settings
 

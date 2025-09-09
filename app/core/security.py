@@ -1,13 +1,17 @@
 """
 Security utilities for JWT authentication and password hashing.
+
+This module uses PyJWT for JWT token handling, which is the recommended library
+for FastAPI applications and is sponsored by Auth0 for long-term compatibility.
 """
 
+import base64
 import json
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional, Union
 
+import jwt
 import requests
-from jose import jwt
 from passlib.context import CryptContext
 
 from app.core.config import settings
@@ -55,6 +59,38 @@ class Auth0TokenValidator:
         )
         self._jwks_cache = None
         self._jwks_cache_expires = None
+
+    def _jwk_to_public_key(self, jwk: Dict[str, Any]) -> Any:
+        """Convert a JWK to a public key for PyJWT validation."""
+        try:
+            # For RSA keys, we need to construct the public key from the JWK components
+            if jwk.get("kty") == "RSA":
+                # Decode the base64url encoded values
+                n = base64.urlsafe_b64decode(jwk["n"] + "==")
+                e = base64.urlsafe_b64decode(jwk["e"] + "==")
+
+                # Convert to integers
+                n_int = int.from_bytes(n, byteorder="big")
+                e_int = int.from_bytes(e, byteorder="big")
+
+                # Create RSA public key
+                from cryptography.hazmat.primitives.asymmetric import rsa
+
+                public_key = rsa.RSAPublicNumbers(e_int, n_int).public_key()
+                return public_key
+            else:
+                # For other key types, we might need different handling
+                # For now, return the JWK as-is and let PyJWT handle it
+                return jwk
+        except Exception as e:
+            log_data = {
+                "event": "jwk_to_public_key_failed",
+                "error": str(e),
+                "jwk_kty": jwk.get("kty"),
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
+            return None
 
     def _get_jwks(self) -> Optional[Dict]:
         """Get JWKS (JSON Web Key Set) from Auth0 with caching."""
@@ -165,9 +201,19 @@ class Auth0TokenValidator:
                 logger.error(json.dumps(log_data))
                 return None
 
-            # Use python-jose's get_unverified_header to get the key ID
-            unverified_header = jwt.get_unverified_header(token)
-            kid = unverified_header.get("kid")
+            # Decode the token header to get the key ID
+            try:
+                unverified_header = jwt.get_unverified_header(token)
+                kid = unverified_header.get("kid")
+            except Exception as e:
+                log_data = {
+                    "event": "auth0_token_validation_failed",
+                    "reason": "invalid_token_header",
+                    "error": str(e),
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
+                return None
 
             if not kid:
                 log_data = {
@@ -180,14 +226,14 @@ class Auth0TokenValidator:
                 return None
 
             # Find the correct key from JWKS
-            key = None
-            available_kids = [jwk.get("kid") for jwk in jwks.get("keys", [])]
-            for jwk in jwks.get("keys", []):
-                if jwk.get("kid") == kid:
-                    key = jwk
+            jwk = None
+            available_kids = [key.get("kid") for key in jwks.get("keys", [])]
+            for key in jwks.get("keys", []):
+                if key.get("kid") == kid:
+                    jwk = key
                     break
 
-            if not key:
+            if not jwk:
                 log_data = {
                     "event": "auth0_token_validation_failed",
                     "reason": "key_not_found",
@@ -198,10 +244,22 @@ class Auth0TokenValidator:
                 logger.error(json.dumps(log_data))
                 return None
 
-            # Validate token using the JWK
+            # Convert JWK to public key for PyJWT
+            public_key = self._jwk_to_public_key(jwk)
+            if not public_key:
+                log_data = {
+                    "event": "auth0_token_validation_failed",
+                    "reason": "jwk_conversion_failed",
+                    "kid": kid,
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
+                return None
+
+            # Validate token using PyJWT
             payload = jwt.decode(
                 token,
-                key,
+                public_key,
                 algorithms=["RS256"],
                 audience=audience,
                 issuer=f"https://{self.domain}/",
@@ -226,20 +284,10 @@ class Auth0TokenValidator:
             }
             logger.error(json.dumps(log_data))
             return None
-        except jwt.JWTClaimsError as e:
+        except jwt.InvalidTokenError as e:
             log_data = {
                 "event": "auth0_token_validation_failed",
-                "reason": "jwt_claims_error",
-                "error": str(e),
-                "error_type": type(e).__name__,
-                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-            }
-            logger.error(json.dumps(log_data))
-            return None
-        except jwt.JWTError as e:
-            log_data = {
-                "event": "auth0_token_validation_failed",
-                "reason": "jwt_error",
+                "reason": "invalid_token",
                 "error": str(e),
                 "error_type": type(e).__name__,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
@@ -296,10 +344,10 @@ def validate_legacy_jwt_token(token: str) -> Optional[Dict[str, Any]]:
         }
         logger.debug(json.dumps(log_data))
         return None
-    except jwt.JWTError as e:
+    except jwt.InvalidTokenError as e:
         log_data = {
             "event": "legacy_jwt_token_validation_failed",
-            "reason": "jwt_error",
+            "reason": "invalid_token",
             "error": str(e),
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }

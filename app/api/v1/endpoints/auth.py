@@ -4,7 +4,7 @@ Authentication endpoints.
 
 from datetime import datetime, timedelta, timezone
 
-from jose import jwt
+import jwt
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
