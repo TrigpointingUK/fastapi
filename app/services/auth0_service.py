@@ -29,7 +29,6 @@ class Auth0Service:
     def __init__(self):
         """Initialize the Auth0 service."""
         self.domain = settings.AUTH0_DOMAIN
-        self.secret_name = settings.AUTH0_SECRET_NAME
         self.connection = settings.AUTH0_CONNECTION
         self.enabled = settings.AUTH0_ENABLED
         self.management_api_audience = settings.AUTH0_MANAGEMENT_API_AUDIENCE
@@ -40,8 +39,8 @@ class Auth0Service:
             logger.error("Auth0 integration is disabled")
             return
 
-        if not self.domain or not self.secret_name:
-            logger.error("Auth0 domain or secret name not configured")
+        if not self.domain:
+            logger.error("Auth0 domain not configured")
             self.enabled = False
             return
 
@@ -68,17 +67,25 @@ class Auth0Service:
                 region_name="us-west-2",  # TODO: Make this configurable
             )
 
-            # Retrieve the secret
-            response = client.get_secret_value(SecretId=self.secret_name)
+            # Retrieve the unified app secrets
+            secret_name = f"fastapi-{settings.ENVIRONMENT}-app-secrets"
+            response = client.get_secret_value(SecretId=secret_name)
             secret_data = json.loads(response["SecretString"])
+
+            # Extract Auth0 credentials from the unified secret
+            auth0_credentials = {
+                "client_id": secret_data.get("auth0_client_id"),
+                "client_secret": secret_data.get("auth0_client_secret"),
+                "domain": secret_data.get("auth0_domain"),
+            }
 
             log_data = {
                 "event": "auth0_credentials_retrieved",
-                "secret_name": self.secret_name,
+                "secret_name": secret_name,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.debug(json.dumps(log_data))
-            return secret_data
+            return auth0_credentials
 
         except ClientError as e:
             error_code = e.response["Error"]["Code"]
@@ -89,31 +96,27 @@ class Auth0Service:
                 "error_type": "ClientError",
                 "error_code": error_code,
                 "error_message": error_message,
-                "secret_name": self.secret_name,
+                "secret_name": secret_name,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
 
             if error_code == "DecryptionFailureException":
-                log_data["error_description"] = (
-                    "Auth0 credentials could not be decrypted"
-                )
+                log_data["error_description"] = "App secrets could not be decrypted"
             elif error_code == "InternalServiceErrorException":
                 log_data["error_description"] = (
-                    "AWS internal service error retrieving Auth0 credentials"
+                    "AWS internal service error retrieving app secrets"
                 )
             elif error_code == "InvalidParameterException":
                 log_data["error_description"] = (
-                    "Invalid parameter retrieving Auth0 credentials"
+                    "Invalid parameter retrieving app secrets"
                 )
             elif error_code == "InvalidRequestException":
-                log_data["error_description"] = (
-                    "Invalid request retrieving Auth0 credentials"
-                )
+                log_data["error_description"] = "Invalid request retrieving app secrets"
             elif error_code == "ResourceNotFoundException":
-                log_data["error_description"] = "Auth0 secret not found"
+                log_data["error_description"] = "App secrets not found"
             else:
                 log_data["error_description"] = (
-                    "Unexpected error retrieving Auth0 credentials"
+                    "Unexpected error retrieving app secrets"
                 )
 
             logger.error(json.dumps(log_data))
@@ -124,7 +127,7 @@ class Auth0Service:
                 "event": "auth0_credentials_retrieval_failed",
                 "error_type": "UnexpectedError",
                 "error_message": str(e),
-                "secret_name": self.secret_name,
+                "secret_name": secret_name,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))

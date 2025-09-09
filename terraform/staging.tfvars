@@ -4,13 +4,8 @@ aws_region  = "us-west-2"
 # Container image (built by GitHub Actions CI/CD)
 container_image = "ghcr.io/trigpointinguk/fastapi:develop"
 
-# Database credentials (use AWS Secrets Manager in production)
-db_username = "fastapi_user"
-db_password = "change-this-password-in-production"
+# Database configuration
 db_schema = "trigpoin_trigs"  # Legacy schema name for migration compatibility
-
-# JWT secret (use AWS Secrets Manager in production)
-jwt_secret_key = "staging-jwt-secret-key-change-this"
 
 # Scaling settings
 desired_count = 1
@@ -36,6 +31,5 @@ enable_cloudflare_ssl = false  # Disabled for staging - will use HTTP for testin
 
 # Auth0 Configuration
 auth0_domain = "trigpointing.eu.auth0.com"
-auth0_secret_name = "auth0-fastapi-tme"
 auth0_connection = "tme-users"
 auth0_api_audience = "https://fastapi.trigpointing.me/api/v1/"

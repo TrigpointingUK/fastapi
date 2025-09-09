@@ -20,28 +20,10 @@ variable "container_image" {
   type        = string
 }
 
-variable "db_username" {
-  description = "Database username"
-  type        = string
-  default     = "fastapi_user"
-}
-
-variable "db_password" {
-  description = "Database password"
-  type        = string
-  sensitive   = true
-}
-
 variable "db_schema" {
   description = "Database schema name (legacy: trigpoin_trigs)"
   type        = string
   default     = "trigpoin_trigs"
-}
-
-variable "jwt_secret_key" {
-  description = "JWT secret key"
-  type        = string
-  sensitive   = true
 }
 
 variable "vpc_cidr" {
@@ -155,11 +137,6 @@ variable "use_external_database" {
   default     = false
 }
 
-variable "external_database_secret_name" {
-  description = "Name of the AWS Secrets Manager secret containing external database URL"
-  type        = string
-  default     = null
-}
 
 # Auth0 Configuration
 variable "auth0_domain" {
@@ -168,11 +145,6 @@ variable "auth0_domain" {
   default     = null
 }
 
-variable "auth0_secret_name" {
-  description = "Name of the AWS Secrets Manager secret containing Auth0 credentials"
-  type        = string
-  default     = null
-}
 
 variable "auth0_connection" {
   description = "Auth0 connection name for user database (e.g., tme-users, Username-Password-Authentication)"
