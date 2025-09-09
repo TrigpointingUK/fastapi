@@ -38,3 +38,4 @@ enable_cloudflare_ssl = false  # Disabled for staging - will use HTTP for testin
 auth0_domain = "trigpointing.eu.auth0.com"
 auth0_secret_name = "auth0-fastapi-tme"
 auth0_connection = "tme-users"
+auth0_api_audience = "https://fastapi.trigpointing.me/api/v1/"

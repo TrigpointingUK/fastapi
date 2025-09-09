@@ -179,3 +179,9 @@ variable "auth0_connection" {
   type        = string
   default     = "Username-Password-Authentication"
 }
+
+variable "auth0_api_audience" {
+  description = "Auth0 API audience for token validation (e.g., https://api.yourdomain.com/api/v1/)"
+  type        = string
+  default     = null
+}

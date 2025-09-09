@@ -67,6 +67,14 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "AUTH0_ENABLED"
           value = "true"
+        },
+        {
+          name  = "AUTH0_MANAGEMENT_API_AUDIENCE"
+          value = "https://${var.auth0_domain}/api/v2/"
+        },
+        {
+          name  = "AUTH0_API_AUDIENCE"
+          value = var.auth0_api_audience
         }
       ] : [
         {
@@ -101,10 +109,6 @@ resource "aws_ecs_task_definition" "app" {
           {
             name      = "AUTH0_CLIENT_SECRET"
             valueFrom = "${aws_secretsmanager_secret.auth0_credentials[0].arn}:client_secret::"
-          },
-          {
-            name      = "AUTH0_AUDIENCE"
-            valueFrom = "${aws_secretsmanager_secret.auth0_credentials[0].arn}:audience::"
           }
         ] : []
       )

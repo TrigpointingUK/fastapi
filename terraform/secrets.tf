@@ -80,7 +80,6 @@ resource "aws_secretsmanager_secret_version" "auth0_credentials" {
   secret_string = jsonencode({
     client_id     = "your-auth0-client-id"
     client_secret = "your-auth0-client-secret"
-    audience      = "https://${var.auth0_domain}/api/v2/"
     domain        = var.auth0_domain
   })
 
