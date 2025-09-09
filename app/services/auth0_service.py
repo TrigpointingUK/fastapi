@@ -32,6 +32,7 @@ class Auth0Service:
         self.secret_name = settings.AUTH0_SECRET_NAME
         self.connection = settings.AUTH0_CONNECTION
         self.enabled = settings.AUTH0_ENABLED
+        self.management_api_audience = settings.AUTH0_MANAGEMENT_API_AUDIENCE
         self._access_token = None
         self._token_expires_at = None
 
@@ -41,6 +42,11 @@ class Auth0Service:
 
         if not self.domain or not self.secret_name:
             logger.error("Auth0 domain or secret name not configured")
+            self.enabled = False
+            return
+
+        if not self.management_api_audience:
+            logger.error("Auth0 Management API audience not configured")
             self.enabled = False
             return
 
@@ -153,7 +159,7 @@ class Auth0Service:
             payload = {
                 "client_id": credentials["client_id"],
                 "client_secret": credentials["client_secret"],
-                "audience": credentials["audience"],
+                "audience": self.management_api_audience,  # Use configured audience instead of secret
                 "grant_type": "client_credentials",
             }
 

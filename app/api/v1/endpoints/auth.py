@@ -293,7 +293,7 @@ def auth0_debug(access_token: str):
         try:
             from app.core.security import auth0_validator
 
-            audience = auth0_validator._get_auth0_audience()
+            audience = auth0_validator.api_audience
             debug_info["audience"] = audience
         except Exception as e:
             debug_info["audience_error"] = str(e)

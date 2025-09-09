@@ -53,7 +53,7 @@ class Auth0TokenValidator:
 
     def __init__(self):
         self.domain = settings.AUTH0_DOMAIN
-        self.audience = None  # Will be set from Auth0 credentials
+        self.api_audience = settings.AUTH0_API_AUDIENCE  # Use configured API audience
         self.jwks_url = (
             f"https://{self.domain}/.well-known/jwks.json" if self.domain else None
         )
@@ -133,29 +133,6 @@ class Auth0TokenValidator:
             logger.error(json.dumps(log_data))
             return None
 
-    def _get_auth0_audience(self) -> Optional[str]:
-        """Get Auth0 audience from credentials."""
-        if self.audience:
-            return self.audience
-
-        # Try to get audience from Auth0 credentials
-        try:
-            from app.services.auth0_service import auth0_service
-
-            credentials = auth0_service._get_auth0_credentials()
-            if credentials and "audience" in credentials:
-                self.audience = credentials["audience"]
-                return self.audience
-        except Exception as e:
-            log_data = {
-                "event": "auth0_audience_retrieval_failed",
-                "error": str(e),
-                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-            }
-            logger.debug(json.dumps(log_data))
-
-        return None
-
     def validate_auth0_token(self, token: str) -> Optional[Dict[str, Any]]:
         """
         Validate an Auth0 access token and return user information.
@@ -179,11 +156,11 @@ class Auth0TokenValidator:
 
         try:
             # Get audience for validation
-            audience = self._get_auth0_audience()
+            audience = self.api_audience
             if not audience:
                 log_data = {
                     "event": "auth0_token_validation_failed",
-                    "reason": "no_audience_configured",
+                    "reason": "no_api_audience_configured",
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.error(json.dumps(log_data))

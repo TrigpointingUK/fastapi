@@ -72,8 +72,14 @@ def debug_auth0_token(token: str):
     # Audience information
     print("AUDIENCE INFORMATION:")
     try:
-        audience = auth0_validator._get_auth0_audience()
-        print(f"  Audience: {audience}")
+        api_audience = auth0_validator.api_audience
+        print(f"  API Audience (for token validation): {api_audience}")
+
+        # Also show management API audience from settings
+        from app.core.config import settings
+
+        management_audience = settings.AUTH0_MANAGEMENT_API_AUDIENCE
+        print(f"  Management API Audience (for user sync): {management_audience}")
     except Exception as e:
         print(f"  Error getting audience: {e}")
     print()
