@@ -441,3 +441,56 @@ def get_users_by_email(db: Session, email: str) -> List[User]:
         List of User objects with the specified email address
     """
     return db.query(User).filter(func.lower(User.email) == email.lower()).all()
+
+
+def get_user_by_auth0_id(db: Session, auth0_user_id: str) -> Optional[User]:
+    """
+    Get a user by Auth0 user ID.
+
+    Args:
+        db: Database session
+        auth0_user_id: Auth0 user ID
+
+    Returns:
+        User object or None if not found
+    """
+    return db.query(User).filter(User.auth0_user_id == auth0_user_id).first()
+
+
+def update_user_auth0_id(db: Session, user_id: int, auth0_user_id: str) -> bool:
+    """
+    Update user's Auth0 user ID.
+
+    Args:
+        db: Database session
+        user_id: Database user ID
+        auth0_user_id: Auth0 user ID
+
+    Returns:
+        True if successful, False otherwise
+    """
+    user = get_user_by_id(db, user_id=user_id)
+    if not user:
+        return False
+
+    user.auth0_user_id = auth0_user_id  # type: ignore
+    db.commit()
+
+    return True
+
+
+def get_user_auth0_id(db: Session, user_id: int) -> Optional[str]:
+    """
+    Get Auth0 user ID for a database user.
+
+    Args:
+        db: Database session
+        user_id: Database user ID
+
+    Returns:
+        Auth0 user ID or None if not found
+    """
+    user = get_user_by_id(db, user_id=user_id)
+    if not user:
+        return None
+    return user.auth0_user_id  # type: ignore

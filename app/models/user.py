@@ -61,6 +61,9 @@ class User(Base):
     # Authentication - Unix crypt format password
     cryptpw = Column(String(34), nullable=False, default="")
 
+    # Auth0 integration
+    auth0_user_id = Column(CHAR(24), nullable=True, index=True)
+
     # User type indicators
     cacher_ind = Column(CHAR(1), nullable=False, default="N")
     trigger_ind = Column(CHAR(1), nullable=False, default="N")
