@@ -49,9 +49,9 @@ output "rds_port" {
   value       = var.use_external_database ? null : aws_db_instance.main[0].port
 }
 
-output "external_database_secret_arn" {
-  description = "ARN of the external database secret"
-  value       = var.use_external_database ? aws_secretsmanager_secret.external_database[0].arn : null
+output "app_secrets_arn" {
+  description = "ARN of the unified app secrets"
+  value       = aws_secretsmanager_secret.app_secrets.arn
   sensitive   = true
 }
 

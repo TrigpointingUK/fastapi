@@ -57,10 +57,6 @@ resource "aws_ecs_task_definition" "app" {
           value = var.auth0_domain
         },
         {
-          name  = "AUTH0_SECRET_NAME"
-          value = var.auth0_secret_name
-        },
-        {
           name  = "AUTH0_CONNECTION"
           value = var.auth0_connection
         },
