@@ -131,15 +131,41 @@ class Auth0TokenValidator:
             Dictionary containing user information or None if invalid
         """
         if not self.domain or not settings.AUTH0_ENABLED:
+            log_data = {
+                "event": "auth0_token_validation_failed",
+                "reason": "auth0_disabled_or_no_domain",
+                "domain": self.domain,
+                "enabled": settings.AUTH0_ENABLED,
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.debug(json.dumps(log_data))
             return None
 
         try:
+            # Get audience for validation
+            audience = self._get_auth0_audience()
+            if not audience:
+                log_data = {
+                    "event": "auth0_token_validation_failed",
+                    "reason": "no_audience_configured",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
+                return None
+
             # Get JWKS for token validation
             jwks = self._get_jwks()
             if not jwks:
+                log_data = {
+                    "event": "auth0_token_validation_failed",
+                    "reason": "jwks_retrieval_failed",
+                    "domain": self.domain,
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
                 return None
 
-            # Decode token header to get key ID
+            # Use python-jose's get_unverified_header to get the key ID
             unverified_header = jwt.get_unverified_header(token)
             kid = unverified_header.get("kid")
 
@@ -147,16 +173,18 @@ class Auth0TokenValidator:
                 log_data = {
                     "event": "auth0_token_validation_failed",
                     "reason": "no_kid_in_header",
+                    "header": unverified_header,
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
-                logger.debug(json.dumps(log_data))
+                logger.error(json.dumps(log_data))
                 return None
 
-            # Find the correct key
+            # Find the correct key from JWKS
             key = None
+            available_kids = [jwk.get("kid") for jwk in jwks.get("keys", [])]
             for jwk in jwks.get("keys", []):
                 if jwk.get("kid") == kid:
-                    key = jwt.construct_jwk(jwk)
+                    key = jwk
                     break
 
             if not key:
@@ -164,15 +192,13 @@ class Auth0TokenValidator:
                     "event": "auth0_token_validation_failed",
                     "reason": "key_not_found",
                     "kid": kid,
+                    "available_kids": available_kids,
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
-                logger.debug(json.dumps(log_data))
+                logger.error(json.dumps(log_data))
                 return None
 
-            # Get audience for validation
-            audience = self._get_auth0_audience()
-
-            # Validate token
+            # Validate token using the JWK
             payload = jwt.decode(
                 token,
                 key,
@@ -184,9 +210,11 @@ class Auth0TokenValidator:
             log_data = {
                 "event": "auth0_token_validated",
                 "sub": payload.get("sub", ""),
+                "aud": payload.get("aud", ""),
+                "iss": payload.get("iss", ""),
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.debug(json.dumps(log_data))
+            logger.info(json.dumps(log_data))
 
             return payload
 
@@ -196,22 +224,34 @@ class Auth0TokenValidator:
                 "reason": "expired_signature",
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.debug(json.dumps(log_data))
+            logger.error(json.dumps(log_data))
+            return None
+        except jwt.JWTClaimsError as e:
+            log_data = {
+                "event": "auth0_token_validation_failed",
+                "reason": "jwt_claims_error",
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
             return None
         except jwt.JWTError as e:
             log_data = {
                 "event": "auth0_token_validation_failed",
                 "reason": "jwt_error",
                 "error": str(e),
+                "error_type": type(e).__name__,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.debug(json.dumps(log_data))
+            logger.error(json.dumps(log_data))
             return None
         except Exception as e:
             log_data = {
                 "event": "auth0_token_validation_failed",
                 "reason": "unexpected_error",
                 "error": str(e),
+                "error_type": type(e).__name__,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))

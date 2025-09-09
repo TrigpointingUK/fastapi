@@ -2,10 +2,10 @@
 Tests for user endpoints.
 """
 
-from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models.user import User
+from fastapi.testclient import TestClient
 
 
 def test_get_user_not_found(client: TestClient, db: Session):

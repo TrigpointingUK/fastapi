@@ -5,10 +5,10 @@ Tests for trig endpoints.
 from datetime import date, time
 from decimal import Decimal
 
-from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.models.trig import Trig
+from fastapi.testclient import TestClient
 
 
 def test_get_trig_success(client: TestClient, db: Session):

@@ -4,11 +4,11 @@ Tests for flexible authentication (email or username).
 
 import crypt
 
-from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.user import User
+from fastapi.testclient import TestClient
 
 
 def test_login_with_email_success(client: TestClient, db: Session):

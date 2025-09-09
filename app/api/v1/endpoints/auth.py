@@ -4,7 +4,7 @@ Authentication endpoints.
 
 from datetime import datetime, timedelta, timezone
 
-from fastapi.security import OAuth2PasswordRequestForm
+from jose import jwt
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -18,6 +18,7 @@ from app.db.database import get_db
 from app.schemas.user import LoginResponse
 from app.services.auth0_service import auth0_service
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter()
 
@@ -116,37 +117,94 @@ def auth0_login(access_token: str, db: Session = Depends(get_db)):
     Returns:
         LoginResponse with user data
     """
+    import json
+
     from app.api.v1.endpoints.user import filter_user_fields
+    from app.core.logging import get_logger
+
+    logger = get_logger(__name__)
+
+    # Log the attempt
+    log_data = {
+        "event": "auth0_login_attempt",
+        "token_length": len(access_token),
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+    }
+    logger.info(json.dumps(log_data))
 
     # Validate the Auth0 token
     token_payload = validate_any_token(access_token)
-    if not token_payload or token_payload.get("token_type") != "auth0":
+    if not token_payload:
+        log_data = {
+            "event": "auth0_login_failed",
+            "reason": "token_validation_failed",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        }
+        logger.error(json.dumps(log_data))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Auth0 token",
+            detail="Invalid Auth0 token - validation failed",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    if token_payload.get("token_type") != "auth0":
+        log_data = {
+            "event": "auth0_login_failed",
+            "reason": "not_auth0_token",
+            "token_type": token_payload.get("token_type"),
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        }
+        logger.error(json.dumps(log_data))
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"Invalid token type: {token_payload.get('token_type')}",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
     # Get Auth0 user ID from token
     auth0_user_id = token_payload.get("auth0_user_id")
     if not auth0_user_id:
+        log_data = {
+            "event": "auth0_login_failed",
+            "reason": "no_auth0_user_id",
+            "token_payload": {
+                k: v for k, v in token_payload.items() if k != "auth0_user_id"
+            },
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        }
+        logger.error(json.dumps(log_data))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid Auth0 token format",
+            detail="Invalid Auth0 token format - no user ID",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
     # Find user in database by Auth0 ID
     user = get_user_by_auth0_id(db, auth0_user_id=auth0_user_id)
     if not user:
+        log_data = {
+            "event": "auth0_login_failed",
+            "reason": "user_not_found",
+            "auth0_user_id": auth0_user_id,
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        }
+        logger.error(json.dumps(log_data))
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found for Auth0 account",
+            detail=f"User not found for Auth0 account: {auth0_user_id}",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
     # Build user response
     user_data = filter_user_fields(user, current_user=user)
+
+    log_data = {
+        "event": "auth0_login_success",
+        "auth0_user_id": auth0_user_id,
+        "user_id": user.id,
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+    }
+    logger.info(json.dumps(log_data))
 
     return LoginResponse(
         access_token=access_token,  # Return the Auth0 token
@@ -155,3 +213,93 @@ def auth0_login(access_token: str, db: Session = Depends(get_db)):
         expires_in=token_payload.get("exp", 0)
         - int(datetime.now(timezone.utc).timestamp()),
     )
+
+
+@router.post("/auth0-debug")
+def auth0_debug(access_token: str):
+    """
+    Debug endpoint for Auth0 token validation.
+
+    This endpoint provides detailed information about Auth0 token validation
+    without requiring database access. Useful for troubleshooting.
+
+    Args:
+        access_token: Auth0 access token
+
+    Returns:
+        Detailed debug information about the token
+    """
+    import json
+
+    from app.core.logging import get_logger
+
+    logger = get_logger(__name__)
+
+    # Log the debug attempt
+    log_data = {
+        "event": "auth0_debug_attempt",
+        "token_length": len(access_token),
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+    }
+    logger.info(json.dumps(log_data))
+
+    debug_info: dict = {
+        "token_length": len(access_token),
+        "auth0_enabled": settings.AUTH0_ENABLED,
+        "auth0_domain": settings.AUTH0_DOMAIN,
+        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+    }
+
+    try:
+        # Try to decode the token header
+        try:
+            unverified_header = jwt.get_unverified_header(access_token)
+            debug_info["token_header"] = unverified_header
+        except Exception as e:
+            debug_info["header_decode_error"] = str(e)
+
+        # Try to validate the token
+        token_payload = validate_any_token(access_token)
+        if token_payload:
+            debug_info["validation_success"] = True
+            debug_info["token_type"] = token_payload.get("token_type")
+            debug_info["payload"] = {
+                k: v
+                for k, v in token_payload.items()
+                if k
+                not in ["iat", "exp", "nbf"]  # Exclude timestamp fields for brevity
+            }
+        else:
+            debug_info["validation_success"] = False
+            debug_info["validation_error"] = "Token validation failed"
+
+        # Try to get JWKS info
+        try:
+            from app.core.security import auth0_validator
+
+            jwks = auth0_validator._get_jwks()
+            if jwks:
+                debug_info["jwks_available"] = True
+                debug_info["jwks_keys_count"] = len(jwks.get("keys", []))
+                debug_info["jwks_kids"] = [
+                    key.get("kid") for key in jwks.get("keys", [])
+                ]
+            else:
+                debug_info["jwks_available"] = False
+        except Exception as e:
+            debug_info["jwks_error"] = str(e)
+
+        # Try to get audience
+        try:
+            from app.core.security import auth0_validator
+
+            audience = auth0_validator._get_auth0_audience()
+            debug_info["audience"] = audience
+        except Exception as e:
+            debug_info["audience_error"] = str(e)
+
+    except Exception as e:
+        debug_info["unexpected_error"] = str(e)
+        logger.error(f"Auth0 debug error: {e}")
+
+    return debug_info
