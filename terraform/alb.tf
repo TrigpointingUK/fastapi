@@ -44,7 +44,6 @@ resource "aws_lb_target_group" "app" {
 # CloudFlare Origin Certificate
 resource "aws_acm_certificate" "cloudflare_origin" {
   count           = var.enable_cloudflare_ssl ? 1 : 0
-  domain_name     = var.domain_name
   certificate_body = var.cloudflare_origin_cert
   private_key     = var.cloudflare_origin_key
 
