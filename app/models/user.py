@@ -63,6 +63,8 @@ class User(Base):
 
     # Auth0 integration
     auth0_user_id = Column(CHAR(24), nullable=True, index=True)
+    # New: store the username from Auth0 for traceability/debugging
+    auth0_username = Column(String(128), nullable=True, index=True)
 
     # User type indicators
     cacher_ind = Column(CHAR(1), nullable=False, default="N")

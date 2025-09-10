@@ -12,7 +12,7 @@ from app.core.security import create_access_token, validate_any_token
 from app.crud.user import (
     authenticate_user_flexible,
     get_user_by_auth0_id,
-    update_user_auth0_id,
+    update_user_auth0_mapping,
 )
 from app.db.database import get_db
 from app.schemas.user import LoginResponse
@@ -68,11 +68,16 @@ def login_for_access_token(
             )
 
             if auth0_user:
-                # Store Auth0 user ID mapping in the database
-                update_user_auth0_id(
+                # Store Auth0 user ID mapping and username in the database
+                update_user_auth0_mapping(
                     db=db,
                     user_id=int(user.id),
                     auth0_user_id=str(auth0_user.get("user_id")),
+                    auth0_username=(
+                        str(auth0_user.get("username"))
+                        if auth0_user.get("username") is not None
+                        else None
+                    ),
                 )
         except Exception as e:
             # Log error but don't fail the login

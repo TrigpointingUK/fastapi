@@ -32,6 +32,20 @@ if [[ "$current_branch" == "main" || "$current_branch" == "develop" ]]; then
     if make ci; then
         echo "✅ All CI checks passed! Push approved for $current_branch"
 
+        # Ensure we have the latest base branch reference
+        echo "⬇️  Fetching latest origin/main for diff coverage comparison..."
+        git fetch -q origin main || true
+
+        # Enforce diff coverage threshold
+        echo "📈 Checking diff coverage (>= 90% required)..."
+        if make diff-cov; then
+            echo "✅ Diff coverage meets threshold"
+        else
+            echo "❌ Diff coverage check failed (threshold 90%)"
+            echo "   Tip: Run 'make diff-cov' locally to see details and improve tests."
+            exit 1
+        fi
+
         # Additional check for main branch
         if [[ "$current_branch" == "main" ]]; then
             echo "⚠️  WARNING: Direct push to main branch detected!"
