@@ -15,6 +15,7 @@ from app.crud.user import (
     get_user_by_id,
     get_user_by_name,
     is_admin,
+    update_user_auth0_mapping,
 )
 from app.db.database import get_db
 from app.models.user import User
@@ -82,7 +83,6 @@ def get_current_user(
         if user is None:
             # User not found in database - try to sync from Auth0
             from app.core.logging import get_logger
-            from app.crud.user import update_user_auth0_id
             from app.services.auth0_service import auth0_service
 
             logger = get_logger(__name__)
@@ -128,9 +128,14 @@ def get_current_user(
                             f"Found user by username: {username} -> user_id {user.id}"
                         )
 
-                # If user found, update their Auth0 ID
+                # If user found, update their Auth0 mapping (ID + username)
                 if user:
-                    update_user_auth0_id(db, int(user.id), auth0_user_id)
+                    update_user_auth0_mapping(
+                        db,
+                        int(user.id),
+                        auth0_user_id,
+                        auth0_user.get("username") or auth0_user.get("nickname"),
+                    )
                     logger.info(f"Updated user {user.id} with Auth0 ID {auth0_user_id}")
                     return user
                 else:
@@ -178,7 +183,6 @@ def get_current_user_optional(
             user = get_user_by_auth0_id(db, auth0_user_id=auth0_user_id)
             if user is None:
                 # User not found in database - try to sync from Auth0
-                from app.crud.user import update_user_auth0_id
                 from app.services.auth0_service import auth0_service
 
                 # Get Auth0 user details
@@ -196,9 +200,14 @@ def get_current_user_optional(
                     if not user and username:
                         user = get_user_by_name(db, username)
 
-                    # If user found, update their Auth0 ID
+                    # If user found, update their Auth0 mapping (ID + username)
                     if user:
-                        update_user_auth0_id(db, int(user.id), auth0_user_id)
+                        update_user_auth0_mapping(
+                            db,
+                            int(user.id),
+                            auth0_user_id,
+                            auth0_user.get("username") or auth0_user.get("nickname"),
+                        )
                         return user
             return user
 
