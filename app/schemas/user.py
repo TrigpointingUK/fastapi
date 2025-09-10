@@ -172,3 +172,35 @@ class UserEmail(BaseModel):
 
     user_id: int  # Keep as user_id for API compatibility
     email: str
+
+
+class Auth0UserInfo(BaseModel):
+    """Auth0 user information from token without database lookup."""
+
+    # Auth0 user details
+    auth0_user_id: str = Field(..., description="Auth0 user ID")
+    email: Optional[str] = Field(None, description="Email address from Auth0")
+    username: Optional[str] = Field(None, description="Username from Auth0")
+    nickname: Optional[str] = Field(None, description="Nickname from Auth0")
+    name: Optional[str] = Field(None, description="Display name from Auth0")
+    given_name: Optional[str] = Field(None, description="Given name from Auth0")
+    family_name: Optional[str] = Field(None, description="Family name from Auth0")
+    email_verified: Optional[bool] = Field(None, description="Email verified status")
+
+    # Token metadata
+    token_type: str = Field(..., description="Token type (auth0 or legacy)")
+    audience: Optional[list] = Field(None, description="Token audience")
+    issuer: Optional[str] = Field(None, description="Token issuer")
+    expires_at: Optional[int] = Field(None, description="Token expiration timestamp")
+
+    # Database lookup status
+    database_user_found: bool = Field(
+        ..., description="Whether user was found in database"
+    )
+    database_user_id: Optional[int] = Field(
+        None, description="Database user ID if found"
+    )
+    database_username: Optional[str] = Field(
+        None, description="Database username if found"
+    )
+    database_email: Optional[str] = Field(None, description="Database email if found")

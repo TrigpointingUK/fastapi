@@ -387,6 +387,49 @@ class Auth0Service:
             logger.debug(json.dumps(log_data))
             return None
 
+    def find_user_by_auth0_id(self, auth0_user_id: str) -> Optional[Dict]:
+        """
+        Find a user by Auth0 user ID.
+
+        Args:
+            auth0_user_id: Auth0 user ID to search for
+
+        Returns:
+            User data dictionary or None if not found
+        """
+        if not self.enabled:
+            return None
+
+        log_data = {
+            "event": "auth0_find_user_by_id_called",
+            "auth0_user_id": auth0_user_id,
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        }
+        logger.debug(json.dumps(log_data))
+
+        # Get user by ID
+        endpoint = f"users/{auth0_user_id}"
+        response = self._make_auth0_request("GET", endpoint)
+
+        if response:
+            log_data = {
+                "event": "auth0_user_found_by_id",
+                "auth0_user_id": auth0_user_id,
+                "username": response.get("username", ""),
+                "email": response.get("email", ""),
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
+            return response
+        else:
+            log_data = {
+                "event": "auth0_user_not_found_by_id",
+                "auth0_user_id": auth0_user_id,
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.debug(json.dumps(log_data))
+            return None
+
     def find_user_by_email(self, email: str) -> Optional[Dict]:
         """
         Find a user by email in Auth0.

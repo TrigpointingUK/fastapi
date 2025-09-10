@@ -7,12 +7,114 @@ from typing import List, Optional
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_current_user_optional, get_db
+from app.core.security import validate_any_token
 from app.crud import user as user_crud
+from app.crud.user import get_user_by_auth0_id, get_user_by_email, get_user_by_name
 from app.models.user import User
-from app.schemas.user import UserResponse, UserSummary
-from fastapi import APIRouter, Depends, HTTPException, Query
+from app.schemas.user import Auth0UserInfo, UserResponse, UserSummary
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 router = APIRouter()
+security = HTTPBearer(auto_error=False)
+
+
+@router.get("/auth0-info", response_model=Auth0UserInfo)
+def get_auth0_user_info(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    db: Session = Depends(get_db),
+):
+    """
+    Get Auth0 user information directly from token without requiring database lookup.
+
+    This endpoint is designed to help with debugging Auth0 integration and understanding
+    what user information is available from Auth0 tokens. It returns:
+    - All Auth0 user details from the token
+    - Token metadata (audience, issuer, expiration)
+    - Database lookup status and any matching user information
+
+    This is useful for:
+    - Understanding what Auth0 provides vs what's in the legacy database
+    - Identifying data cleansing needs for Auth0 migration
+    - Debugging authentication issues
+    """
+    if not credentials:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Validate token and get payload
+    token_payload = validate_any_token(credentials.credentials)
+    if not token_payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Extract token information
+    token_type = token_payload.get("token_type", "unknown")
+    auth0_user_id = token_payload.get("auth0_user_id") or token_payload.get("sub", "")
+
+    # Try to find user in database (but don't fail if not found)
+    database_user_found = False
+    database_user_id = None
+    database_username = None
+    database_email = None
+
+    if token_type == "auth0" and auth0_user_id:  # nosec B105
+        # Try direct Auth0 ID lookup
+        user = get_user_by_auth0_id(db, auth0_user_id=auth0_user_id)
+        if user:
+            database_user_found = True
+            database_user_id = int(user.id)
+            database_username = str(user.name)
+            database_email = str(user.email) if user.email else None
+        else:
+            # Try to find by email or username from Auth0 data
+            email = token_payload.get("email")
+            username = token_payload.get("username") or token_payload.get("nickname")
+
+            if email:
+                user = get_user_by_email(db, email)
+                if user:
+                    database_user_found = True
+                    database_user_id = int(user.id)
+                    database_username = str(user.name)
+                    database_email = str(user.email) if user.email else None
+
+            if not database_user_found and username:
+                user = get_user_by_name(db, username)
+                if user:
+                    database_user_found = True
+                    database_user_id = int(user.id)
+                    database_username = str(user.name)
+                    database_email = str(user.email) if user.email else None
+
+    # Build response
+    return Auth0UserInfo(
+        # Auth0 user details
+        auth0_user_id=auth0_user_id,
+        email=token_payload.get("email"),
+        username=token_payload.get("username"),
+        nickname=token_payload.get("nickname"),
+        name=token_payload.get("name"),
+        given_name=token_payload.get("given_name"),
+        family_name=token_payload.get("family_name"),
+        email_verified=token_payload.get("email_verified"),
+        # Token metadata
+        token_type=token_type,
+        audience=token_payload.get("aud"),
+        issuer=token_payload.get("iss"),
+        expires_at=token_payload.get("exp"),
+        # Database lookup status
+        database_user_found=database_user_found,
+        database_user_id=database_user_id,
+        database_username=database_username,
+        database_email=database_email,
+    )
 
 
 @router.get("/me", response_model=UserResponse)
@@ -89,7 +191,7 @@ def get_user(
 
 
 @router.get("/name/{username}", response_model=UserResponse)
-def get_user_by_name(
+def get_user_by_username(
     username: str,
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional),

@@ -9,7 +9,13 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.core.security import validate_any_token
-from app.crud.user import get_user_by_auth0_id, get_user_by_id, is_admin
+from app.crud.user import (
+    get_user_by_auth0_id,
+    get_user_by_email,
+    get_user_by_id,
+    get_user_by_name,
+    is_admin,
+)
 from app.db.database import get_db
 from app.models.user import User
 
@@ -25,6 +31,9 @@ def get_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> User:
     """Get current authenticated user from either legacy JWT or Auth0 token."""
+    from app.core.logging import get_logger
+
+    logger = get_logger(__name__)
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -32,6 +41,7 @@ def get_current_user(
     )
 
     if credentials is None:
+        logger.warning("No credentials provided to get_current_user")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
@@ -41,7 +51,17 @@ def get_current_user(
     # Validate token (supports both legacy JWT and Auth0)
     token_payload = validate_any_token(credentials.credentials)
     if not token_payload:
+        logger.warning("Token validation failed in get_current_user")
         raise credentials_exception
+
+    logger.info(
+        f"Token validated successfully, type: {token_payload.get('token_type')}",
+        extra={
+            "token_type": token_payload.get("token_type"),
+            "auth0_user_id": token_payload.get("auth0_user_id"),
+            "legacy_user_id": token_payload.get("user_id"),
+        },
+    )
 
     # For legacy tokens, user_id is the database user ID
     if token_payload.get("token_type") == "legacy":
@@ -60,6 +80,73 @@ def get_current_user(
             raise credentials_exception
         user = get_user_by_auth0_id(db, auth0_user_id=auth0_user_id)
         if user is None:
+            # User not found in database - try to sync from Auth0
+            from app.core.logging import get_logger
+            from app.crud.user import update_user_auth0_id
+            from app.services.auth0_service import auth0_service
+
+            logger = get_logger(__name__)
+            logger.info(
+                f"Auth0 user not found in database, attempting sync: {auth0_user_id}",
+                extra={
+                    "auth0_user_id": auth0_user_id,
+                    "token_email": token_payload.get("email"),
+                    "token_username": token_payload.get("username"),
+                    "token_nickname": token_payload.get("nickname"),
+                },
+            )
+
+            # Get Auth0 user details
+            auth0_user = auth0_service.find_user_by_auth0_id(auth0_user_id)
+            if auth0_user:
+                # Try to find user by email or username from Auth0 data
+                email = auth0_user.get("email")
+                username = auth0_user.get("username") or auth0_user.get("nickname")
+
+                logger.info(
+                    "Auth0 user details retrieved, searching database",
+                    extra={
+                        "auth0_email": email,
+                        "auth0_username": username,
+                        "auth0_nickname": auth0_user.get("nickname"),
+                    },
+                )
+
+                # Try to find existing user by email first
+                if email:
+                    user = get_user_by_email(db, email)
+                    if user:
+                        logger.info(
+                            f"Found user by email: {email} -> user_id {user.id}"
+                        )
+
+                # If not found by email, try by username
+                if not user and username:
+                    user = get_user_by_name(db, username)
+                    if user:
+                        logger.info(
+                            f"Found user by username: {username} -> user_id {user.id}"
+                        )
+
+                # If user found, update their Auth0 ID
+                if user:
+                    update_user_auth0_id(db, int(user.id), auth0_user_id)
+                    logger.info(f"Updated user {user.id} with Auth0 ID {auth0_user_id}")
+                    return user
+                else:
+                    logger.warning(
+                        f"No matching user found in database for Auth0 user {auth0_user_id}",
+                        extra={
+                            "auth0_email": email,
+                            "auth0_username": username,
+                        },
+                    )
+            else:
+                logger.warning(
+                    f"Could not retrieve Auth0 user details for {auth0_user_id}"
+                )
+
+            # If no user found or Auth0 sync failed, raise credentials exception
             raise credentials_exception
         return user
 
@@ -88,7 +175,32 @@ def get_current_user_optional(
             auth0_user_id = token_payload.get("auth0_user_id")
             if not auth0_user_id:
                 return None
-            return get_user_by_auth0_id(db, auth0_user_id=auth0_user_id)
+            user = get_user_by_auth0_id(db, auth0_user_id=auth0_user_id)
+            if user is None:
+                # User not found in database - try to sync from Auth0
+                from app.crud.user import update_user_auth0_id
+                from app.services.auth0_service import auth0_service
+
+                # Get Auth0 user details
+                auth0_user = auth0_service.find_user_by_auth0_id(auth0_user_id)
+                if auth0_user:
+                    # Try to find user by email or username from Auth0 data
+                    email = auth0_user.get("email")
+                    username = auth0_user.get("username") or auth0_user.get("nickname")
+
+                    # Try to find existing user by email first
+                    if email:
+                        user = get_user_by_email(db, email)
+
+                    # If not found by email, try by username
+                    if not user and username:
+                        user = get_user_by_name(db, username)
+
+                    # If user found, update their Auth0 ID
+                    if user:
+                        update_user_auth0_id(db, int(user.id), auth0_user_id)
+                        return user
+            return user
 
     except Exception:
         return None
