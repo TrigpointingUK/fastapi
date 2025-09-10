@@ -36,7 +36,11 @@ def _make_user(
 @patch("app.api.v1.endpoints.auth.update_user_auth0_mapping")
 @patch("app.api.v1.endpoints.auth.auth0_service")
 def test_login_persists_auth0_username(
-    mock_auth0_service, mock_update_mapping, client: TestClient, db: Session
+    mock_auth0_service,
+    mock_update_mapping,
+    client: TestClient,
+    db: Session,
+    monkeypatch,
 ):
     # Arrange
     user = _make_user(
@@ -46,7 +50,8 @@ def test_login_persists_auth0_username(
         email="login@example.com",
         password="pw123456",
     )
-    # Ensure legacy user has no auth0 linkage before
+    # Ensure feature flag is enabled and legacy user has no auth0 linkage before
+    monkeypatch.setattr(settings, "AUTH0_ENABLED", True, raising=False)
     assert user.auth0_user_id is None
 
     # Enable Auth0 and mock sync to return user id + username
