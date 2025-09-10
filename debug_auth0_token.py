@@ -36,9 +36,12 @@ def debug_auth0_token(token: str):
 
     # Configuration info
     print("CONFIGURATION:")
-    print(f"  Auth0 enabled: {settings.AUTH0_ENABLED}")
-    print(f"  Auth0 domain: {settings.AUTH0_DOMAIN}")
-    print(f"  Auth0 connection: {settings.AUTH0_CONNECTION}")
+    try:
+        print(f"  Auth0 enabled: {settings.AUTH0_ENABLED}")
+        print(f"  Auth0 domain: {settings.AUTH0_DOMAIN}")
+        print(f"  Auth0 connection: {settings.AUTH0_CONNECTION}")
+    except Exception as e:
+        print(f"  Error loading settings: {e}")
     print()
 
     # Token header
@@ -76,8 +79,6 @@ def debug_auth0_token(token: str):
         print(f"  API Audience (for token validation): {api_audience}")
 
         # Also show management API audience from settings
-        from app.core.config import settings
-
         management_audience = settings.AUTH0_MANAGEMENT_API_AUDIENCE
         print(f"  Management API Audience (for user sync): {management_audience}")
     except Exception as e:
@@ -109,7 +110,7 @@ def debug_auth0_token(token: str):
     # Try to decode without validation
     print("UNVERIFIED TOKEN DECODE:")
     try:
-        unverified_payload = jwt.get_unverified_claims(token)
+        unverified_payload = jwt.decode(token, options={"verify_signature": False})
         print(f"  Subject: {unverified_payload.get('sub', 'N/A')}")
         print(f"  Audience: {unverified_payload.get('aud', 'N/A')}")
         print(f"  Issuer: {unverified_payload.get('iss', 'N/A')}")
