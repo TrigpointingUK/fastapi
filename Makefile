@@ -1,4 +1,4 @@
-.PHONY: help install install-dev test test-cov lint format type-check security build run clean docker-build docker-run docker-down mysql-client
+.PHONY: help install install-dev test test-cov lint format type-check security build run clean docker-build docker-run docker-down mysql-client diff-cov
 
 # Default target
 help: ## Show this help message
@@ -20,7 +20,16 @@ test: ## Run tests
 	pytest
 
 test-cov: ## Run tests with coverage
-	pytest --cov=app --cov-report=term-missing --cov-report=html
+	pytest --cov=app --cov-report=term-missing --cov-report=html --cov-report=xml:coverage.xml
+
+diff-cov: ## Check diff coverage against origin/main (fail if < 90%)
+	@if [ ! -f coverage.xml ]; then \
+		echo "Generating coverage.xml via pytest..."; \
+		pytest --cov=app --cov-report=xml:coverage.xml >/dev/null; \
+	fi
+	@BASE_REF=$$(git merge-base HEAD origin/main); \
+	echo "Comparing coverage against $$BASE_REF"; \
+	diff-cover coverage.xml --compare-branch $$BASE_REF --fail-under=90
 
 # Code quality
 lint: ## Run linting
