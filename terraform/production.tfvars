@@ -23,5 +23,5 @@ enable_cloudflare_ssl = true  # REQUIRED for production security
 
 # Auth0 Configuration
 auth0_domain = "trigpointing.eu.auth0.com"
-auth0_connection = "tuk-users"
+auth0_connection = "tme-users"
 auth0_api_audience = "https://fastapi.trigpointing.uk/api/v1/"
