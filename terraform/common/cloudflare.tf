@@ -24,11 +24,11 @@ resource "cloudflare_record" "api_staging" {
 
   comment = "API endpoint for staging environment - managed by Terraform"
 
-  tags = {
-    Environment = "staging"
-    Project     = var.project_name
-    ManagedBy   = "terraform"
-  }
+  tags = [
+    "staging",
+    var.project_name,
+    "terraform"
+  ]
 }
 
 # CNAME record for production domain
@@ -41,9 +41,9 @@ resource "cloudflare_record" "api_production" {
 
   comment = "API endpoint for production environment - managed by Terraform"
 
-  tags = {
-    Environment = "production"
-    Project     = var.project_name
-    ManagedBy   = "terraform"
-  }
+  tags = [
+    "production",
+    var.project_name,
+    "terraform"
+  ]
 }
