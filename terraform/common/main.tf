@@ -9,6 +9,10 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
   }
 
   backend "s3" {
@@ -27,6 +31,11 @@ provider "aws" {
       ManagedBy   = "terraform"
     }
   }
+}
+
+provider "cloudflare" {
+  # API token will be read from CLOUDFLARE_API_TOKEN environment variable
+  # or from ~/.cloudflare/credentials file
 }
 
 # Data sources

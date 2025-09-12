@@ -113,5 +113,26 @@ output "dynamodb_table_name" {
   value       = aws_dynamodb_table.terraform_state_lock.name
 }
 
+# CloudFlare DNS Records
+output "api_staging_domain" {
+  description = "Staging API domain (api.trigpointing.me)"
+  value       = "api.trigpointing.me"
+}
+
+output "api_production_domain" {
+  description = "Production API domain (api.trigpointing.uk)"
+  value       = "api.trigpointing.uk"
+}
+
+output "api_staging_record_id" {
+  description = "CloudFlare record ID for staging API"
+  value       = cloudflare_record.api_staging.id
+}
+
+output "api_production_record_id" {
+  description = "CloudFlare record ID for production API"
+  value       = cloudflare_record.api_production.id
+}
+
 # Note: S3 bucket is managed externally
 # Bucket: tuk-terraform-state (in eu-west-1)
