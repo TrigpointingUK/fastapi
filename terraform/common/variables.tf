@@ -51,3 +51,51 @@ variable "db_max_allocated_storage" {
   type        = number
   default     = 100
 }
+
+# DMS Variables
+variable "legacy_mysql_host" {
+  description = "Hostname or IP of the legacy MySQL server"
+  type        = string
+  default     = ""
+}
+
+variable "legacy_mysql_username" {
+  description = "Username for the legacy MySQL server"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "legacy_mysql_password" {
+  description = "Password for the legacy MySQL server"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
+
+variable "legacy_mysql_database" {
+  description = "Database name on the legacy MySQL server"
+  type        = string
+  default     = ""
+}
+
+variable "dms_table_mappings" {
+  description = "DMS table mappings for replication"
+  type        = string
+  default     = <<EOF
+{
+  "rules": [
+    {
+      "rule-type": "selection",
+      "rule-id": "1",
+      "rule-name": "1",
+      "object-locator": {
+        "schema-name": "%",
+        "table-name": "%"
+      },
+      "rule-action": "include"
+    }
+  ]
+}
+EOF
+}
