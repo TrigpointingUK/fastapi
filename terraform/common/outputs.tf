@@ -57,10 +57,6 @@ output "rds_security_group_id" {
   value       = aws_security_group.rds.id
 }
 
-output "dms_security_group_id" {
-  description = "ID of the DMS security group"
-  value       = aws_security_group.dms.id
-}
 
 # Bastion Outputs
 output "bastion_public_ip" {
