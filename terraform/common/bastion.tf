@@ -37,6 +37,14 @@ resource "aws_instance" "bastion" {
   # Enable detailed monitoring and serial console access
   monitoring = true
 
+  # Root block device with more storage
+  root_block_device {
+    volume_type           = "gp3"
+    volume_size           = 20
+    delete_on_termination = true
+    encrypted             = true
+  }
+
   metadata_options {
     http_endpoint = "enabled"
     http_tokens   = "required"

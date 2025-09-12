@@ -27,17 +27,25 @@ provider "aws" {
   default_tags {
     tags = {
       Project     = var.project_name
-      Environment = "common"
+      Environment = "mysql"
       ManagedBy   = "terraform"
     }
   }
 }
 
-# Data sources
-data "aws_caller_identity" "current" {}
-data "aws_availability_zones" "available" {
-  state = "available"
+# Data sources for remote state
+data "terraform_remote_state" "common" {
+  backend = "s3"
+  config = {
+    bucket = "tuk-terraform-state"
+    key    = "fastapi-common/terraform.tfstate"
+    region = "eu-west-1"
+  }
 }
 
-# Note: S3 bucket and DynamoDB table are managed externally
-# Using existing tuk-terraform-state bucket in eu-west-1
+# MySQL provider for database management
+provider "mysql" {
+  endpoint = data.terraform_remote_state.common.outputs.rds_endpoint
+  username = "admin"
+  password = jsondecode(data.terraform_remote_state.common.outputs.admin_credentials)["password"]
+}

@@ -53,8 +53,6 @@ resource "aws_db_instance" "main" {
 
   # Database
   db_name  = "fastapi_common"
-  username = "fastapi_user"
-  password = "temp-password-change-this"  # Will be updated via AWS Console/CLI
 
   # Storage
   allocated_storage     = var.db_allocated_storage
@@ -79,9 +77,13 @@ resource "aws_db_instance" "main" {
   monitoring_role_arn = aws_iam_role.rds_enhanced_monitoring.arn
 
   # Security
-  deletion_protection = true
+  deletion_protection = false
   skip_final_snapshot = false
   final_snapshot_identifier = "${var.project_name}-final-snapshot"
+
+  # Initial admin user
+  username = "admin"
+  password = random_password.admin_password.result
 
   # Performance Insights (disabled for t3.micro)
   performance_insights_enabled = false
