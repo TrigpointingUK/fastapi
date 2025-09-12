@@ -165,13 +165,13 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: eu-west-2
 
     - name: Deploy to AWS Fargate (Staging)
       run: |
         # Update ECS service with new image
         aws ecs update-service \
-          --cluster fastapi-staging-cluster \
+          --cluster fastapi-cluster \
           --service fastapi-staging-service \
           --force-new-deployment
 
@@ -190,12 +190,12 @@ jobs:
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: ${{ secrets.AWS_REGION }}
+        aws-region: eu-west-2
 
     - name: Deploy to AWS Fargate (Production)
       run: |
         # Update ECS service with new image
         aws ecs update-service \
-          --cluster fastapi-production-cluster \
+          --cluster fastapi-cluster \
           --service fastapi-production-service \
           --force-new-deployment
