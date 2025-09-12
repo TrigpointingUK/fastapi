@@ -9,10 +9,6 @@ terraform {
       source  = "hashicorp/random"
       version = "~> 3.0"
     }
-    mysql = {
-      source  = "petoju/mysql"
-      version = "~> 3.0"
-    }
   }
 
   backend "s3" {
