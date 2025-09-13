@@ -1,22 +1,16 @@
-# MySQL provider for database management
-provider "mysql" {
-  endpoint = aws_db_instance.main.endpoint
-  username = "admin"
-  password = jsondecode(aws_secretsmanager_secret_version.admin_credentials.secret_string)["password"]
-}
 
 # Create production schema
 resource "mysql_database" "production" {
   name = "tuk_production"
 
-  depends_on = [aws_db_instance.main]
+  depends_on = [data.terraform_remote_state.common]
 }
 
 # Create staging schema
 resource "mysql_database" "staging" {
   name = "tuk_staging"
 
-  depends_on = [aws_db_instance.main]
+  depends_on = [data.terraform_remote_state.common]
 }
 
 # Create production user
@@ -25,7 +19,7 @@ resource "mysql_user" "production" {
   host               = "%"
   plaintext_password = random_password.production_password.result
 
-  depends_on = [aws_db_instance.main]
+  depends_on = [data.terraform_remote_state.common]
 }
 
 # Grant full permissions to production user on production schema
@@ -44,7 +38,7 @@ resource "mysql_user" "staging" {
   host               = "%"
   plaintext_password = random_password.staging_password.result
 
-  depends_on = [aws_db_instance.main]
+  depends_on = [data.terraform_remote_state.common]
 }
 
 # Grant full permissions to staging user on staging schema
@@ -63,7 +57,7 @@ resource "mysql_user" "backups" {
   host               = "%"
   plaintext_password = random_password.backups_password.result
 
-  depends_on = [aws_db_instance.main]
+  depends_on = [data.terraform_remote_state.common]
 }
 
 # Grant SELECT permissions to backups user on production schema

@@ -53,8 +53,13 @@ resource "aws_secretsmanager_secret" "admin_credentials" {
 resource "aws_secretsmanager_secret_version" "admin_credentials" {
   secret_id = aws_secretsmanager_secret.admin_credentials.id
   secret_string = jsonencode({
-    username = "admin"
-    password = random_password.admin_password.result
+    username                = "admin"
+    password                = random_password.admin_password.result
+    engine                  = "mysql"
+    host                    = data.terraform_remote_state.common.outputs.rds_endpoint
+    port                    = data.terraform_remote_state.common.outputs.rds_port
+    dbname                  = data.terraform_remote_state.common.outputs.rds_db_name
+    dbInstanceIdentifier    = data.terraform_remote_state.common.outputs.rds_identifier
   })
 }
 
@@ -82,8 +87,13 @@ resource "aws_secretsmanager_secret" "production_credentials" {
 resource "aws_secretsmanager_secret_version" "production_credentials" {
   secret_id = aws_secretsmanager_secret.production_credentials.id
   secret_string = jsonencode({
-    username = "fastapi_production"
-    password = random_password.production_password.result
+    username                = "fastapi_production"
+    password                = random_password.production_password.result
+    engine                  = "mysql"
+    host                    = data.terraform_remote_state.common.outputs.rds_endpoint
+    port                    = data.terraform_remote_state.common.outputs.rds_port
+    dbname                  = "tuk_production"
+    dbInstanceIdentifier    = data.terraform_remote_state.common.outputs.rds_identifier
   })
 }
 
@@ -101,8 +111,13 @@ resource "aws_secretsmanager_secret" "staging_credentials" {
 resource "aws_secretsmanager_secret_version" "staging_credentials" {
   secret_id = aws_secretsmanager_secret.staging_credentials.id
   secret_string = jsonencode({
-    username = "fastapi_staging"
-    password = random_password.staging_password.result
+    username                = "fastapi_staging"
+    password                = random_password.staging_password.result
+    engine                  = "mysql"
+    host                    = data.terraform_remote_state.common.outputs.rds_endpoint
+    port                    = data.terraform_remote_state.common.outputs.rds_port
+    dbname                  = "tuk_staging"
+    dbInstanceIdentifier    = data.terraform_remote_state.common.outputs.rds_identifier
   })
 }
 
@@ -120,8 +135,13 @@ resource "aws_secretsmanager_secret" "backups_credentials" {
 resource "aws_secretsmanager_secret_version" "backups_credentials" {
   secret_id = aws_secretsmanager_secret.backups_credentials.id
   secret_string = jsonencode({
-    username = "backups"
-    password = random_password.backups_password.result
+    username                = "backups"
+    password                = random_password.backups_password.result
+    engine                  = "mysql"
+    host                    = data.terraform_remote_state.common.outputs.rds_endpoint
+    port                    = data.terraform_remote_state.common.outputs.rds_port
+    dbname                  = "tuk_production"  # Backups user has access to both schemas
+    dbInstanceIdentifier    = data.terraform_remote_state.common.outputs.rds_identifier
   })
 }
 
@@ -207,7 +227,7 @@ resource "aws_iam_role_policy" "lambda_rotation" {
           "rds:DescribeDBInstances",
           "rds:ModifyDBInstance"
         ]
-        Resource = aws_db_instance.main.arn
+        Resource = data.terraform_remote_state.common.outputs.rds_arn
       }
     ]
   })

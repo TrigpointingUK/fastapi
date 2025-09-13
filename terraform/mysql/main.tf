@@ -47,5 +47,5 @@ data "terraform_remote_state" "common" {
 provider "mysql" {
   endpoint = data.terraform_remote_state.common.outputs.rds_endpoint
   username = "admin"
-  password = jsondecode(data.terraform_remote_state.common.outputs.admin_credentials)["password"]
+  password = random_password.admin_password.result
 }

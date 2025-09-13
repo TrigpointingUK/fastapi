@@ -52,6 +52,21 @@ output "rds_port" {
   value       = aws_db_instance.main.port
 }
 
+output "rds_db_name" {
+  description = "RDS database name"
+  value       = aws_db_instance.main.db_name
+}
+
+output "rds_identifier" {
+  description = "RDS instance identifier"
+  value       = aws_db_instance.main.identifier
+}
+
+output "rds_arn" {
+  description = "RDS instance ARN"
+  value       = aws_db_instance.main.arn
+}
+
 output "rds_security_group_id" {
   description = "ID of the RDS security group"
   value       = aws_security_group.rds.id
