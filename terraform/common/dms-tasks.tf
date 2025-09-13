@@ -73,6 +73,7 @@ resource "aws_dms_replication_config" "staging" {
           schema-name = "trigpoin_trigs"
         }
         rule-action = "rename"
+        rule-target = "schema"
         value       = "tuk_staging"
       }
     ]
@@ -80,7 +81,6 @@ resource "aws_dms_replication_config" "staging" {
 
   replication_settings = jsonencode({
     TargetMetadata = {
-      TargetSchema = "tuk_staging"
       SupportLobs  = true
       FullLobMode   = false
     }
@@ -136,6 +136,7 @@ resource "aws_dms_replication_config" "production" {
           schema-name = "trigpoin_trigs"
         }
         rule-action = "rename"
+        rule-target = "schema"
         value       = "tuk_production"
       }
     ]
@@ -143,7 +144,6 @@ resource "aws_dms_replication_config" "production" {
 
   replication_settings = jsonencode({
     TargetMetadata = {
-      TargetSchema = "tuk_production"
       SupportLobs  = true
       FullLobMode   = false
     }
