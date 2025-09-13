@@ -22,6 +22,18 @@ variable "availability_zones" {
   default     = ["eu-west-2a", "eu-west-2b"]
 }
 
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs"
+  type        = list(string)
+  default     = []
+}
+
+variable "vpc_id" {
+  description = "VPC ID"
+  type        = string
+  default     = ""
+}
+
 variable "admin_ip_address" {
   description = "IP address allowed to connect to bastion host"
   type        = string
