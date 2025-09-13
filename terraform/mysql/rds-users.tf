@@ -65,7 +65,7 @@ resource "aws_secretsmanager_secret_version" "admin_credentials" {
 
 # Auto-rotation for admin credentials
 resource "aws_secretsmanager_secret_rotation" "admin_credentials" {
-  secret_id           = aws_secretsmanager_secret.admin_credentials.id
+  secret_id           = aws_secretsmanager_secret.admin_credentials.name
   rotation_lambda_arn = aws_lambda_function.rotation_lambda.arn
 
   rotation_rules {
