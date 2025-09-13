@@ -25,7 +25,7 @@ resource "aws_dms_endpoint" "staging_user" {
   endpoint_id   = "${var.project_name}-staging-user"
   endpoint_type = "target"
   engine_name   = "mysql"
-  server_name   = aws_db_instance.main.endpoint
+  server_name   = split(":", aws_db_instance.main.endpoint)[0]
   port          = aws_db_instance.main.port
   username      = "fastapi_staging"
   password      = jsondecode(data.aws_secretsmanager_secret_version.staging_credentials.secret_string)["password"]
@@ -44,7 +44,7 @@ resource "aws_dms_endpoint" "production_user" {
   endpoint_id   = "${var.project_name}-production-user"
   endpoint_type = "target"
   engine_name   = "mysql"
-  server_name   = aws_db_instance.main.endpoint
+  server_name   = split(":", aws_db_instance.main.endpoint)[0]
   port          = aws_db_instance.main.port
   username      = "fastapi_production"
   password      = jsondecode(data.aws_secretsmanager_secret_version.production_credentials.secret_string)["password"]
