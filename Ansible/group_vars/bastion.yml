@@ -1,0 +1,17 @@
+---
+# Variables specific to bastion host
+instance_type: "bastion"
+public_ip: "3.9.71.10"
+private_ip: "10.0.0.143"
+
+# Bastion-specific packages
+bastion_packages:
+  - mysql
+  - htop
+  - vim
+  - wget
+  - curl
+  - jq
+  - awscli
+  - python3
+  - python3-pip

@@ -1,0 +1,108 @@
+---
+- name: Update database connection script to use AWS Secrets Manager
+  hosts: bastion
+  become: yes
+  vars:
+    aws_region: "eu-west-2"
+    secret_name: "fastapi-admin-credentials"
+  tasks:
+    - name: Install AWS CLI and jq if not present
+      yum:
+        name:
+          - awscli
+          - jq
+        state: present
+
+    - name: Create updated database connection script
+      copy:
+        content: |
+          #!/bin/bash
+
+          # Database connection script using AWS Secrets Manager
+          # This script retrieves credentials from AWS Secrets Manager
+
+          set -e
+
+          AWS_REGION="{{ aws_region }}"
+          SECRET_NAME="{{ secret_name }}"
+
+          echo "================================================"
+          echo "FastAPI Database Connection Script"
+          echo "================================================"
+          echo "Retrieving credentials from AWS Secrets Manager..."
+          echo "Secret: $SECRET_NAME"
+          echo "Region: $AWS_REGION"
+          echo ""
+
+          # Retrieve credentials from Secrets Manager
+          SECRET_JSON=$(aws secretsmanager get-secret-value \
+            --secret-id "$SECRET_NAME" \
+            --region "$AWS_REGION" \
+            --query SecretString \
+            --output text)
+
+          if [ $? -ne 0 ]; then
+            echo "Error: Failed to retrieve credentials from AWS Secrets Manager"
+            echo "Make sure AWS CLI is configured and you have permissions to access the secret"
+            exit 1
+          fi
+
+          # Parse credentials from JSON
+          DB_HOST=$(echo "$SECRET_JSON" | jq -r '.host' | cut -d: -f1)
+          DB_PORT=$(echo "$SECRET_JSON" | jq -r '.port')
+          DB_USER=$(echo "$SECRET_JSON" | jq -r '.username')
+          DB_PASS=$(echo "$SECRET_JSON" | jq -r '.password')
+          DB_NAME=$(echo "$SECRET_JSON" | jq -r '.dbname')
+
+          echo "Connection details:"
+          echo "Host: $DB_HOST"
+          echo "Port: $DB_PORT"
+          echo "Username: $DB_USER"
+          echo "Database: $DB_NAME"
+          echo ""
+          echo "Connecting to database..."
+          echo "================================================"
+
+          # Connect to database
+          mysql -h "$DB_HOST" -P "$DB_PORT" -u "$DB_USER" -p"$DB_PASS" "$DB_NAME"
+        dest: /home/ec2-user/connect_to_db.sh
+        owner: ec2-user
+        group: ec2-user
+        mode: '0755'
+
+    - name: Create webserver connection script
+      copy:
+        content: |
+          #!/bin/bash
+          echo "================================================"
+          echo "FastAPI Webserver Connection"
+          echo "================================================"
+          echo "To connect to the webserver, use:"
+          echo "ssh -i ~/.ssh/fastapi-bastion.pem ec2-user@10.0.10.132"
+          echo ""
+          echo "Or use Ansible to manage the webserver:"
+          echo "ansible-playbook -i inventory.yml playbooks/main.yml --limit webserver"
+          echo "================================================"
+        dest: /home/ec2-user/connect_to_webserver.sh
+        owner: ec2-user
+        group: ec2-user
+        mode: '0755'
+
+    - name: Create AWS CLI configuration helper
+      copy:
+        content: |
+          #!/bin/bash
+          echo "================================================"
+          echo "AWS CLI Configuration Helper"
+          echo "================================================"
+          echo "To configure AWS CLI on this instance:"
+          echo "1. Copy your AWS credentials from your laptop:"
+          echo "   scp -i ~/.ssh/fastapi-bastion.pem ~/.aws/credentials ec2-user@3.9.71.10:~/.aws/"
+          echo "   scp -i ~/.ssh/fastapi-bastion.pem ~/.aws/config ec2-user@3.9.71.10:~/.aws/"
+          echo ""
+          echo "2. Or run 'aws configure' and enter your credentials"
+          echo "================================================"
+        dest: /home/ec2-user/aws_setup.sh
+        owner: ec2-user
+        group: ec2-user
+        mode: '0755'

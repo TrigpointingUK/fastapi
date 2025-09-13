@@ -1,0 +1,18 @@
+---
+# Variables specific to webserver host
+instance_type: "webserver"
+private_ip: "10.0.10.132"
+
+# Webserver-specific packages
+webserver_packages:
+  - mysql
+  - htop
+  - vim
+  - wget
+  - curl
+  - jq
+  - awscli
+  - python3
+  - python3-pip
+  - nginx
+  - git
