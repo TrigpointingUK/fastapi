@@ -17,7 +17,7 @@ all:
         ansible_python_interpreter: /usr/bin/python3
         instance_group: fastapi
 
-    bastion:
+    bastions:
       hosts:
         bastion:
           ansible_host: 3.9.71.10
@@ -28,7 +28,7 @@ all:
         ansible_python_interpreter: /usr/bin/python3
         instance_group: bastion
 
-    webserver:
+    webservers:
       hosts:
         webserver:
           ansible_host: 10.0.10.132

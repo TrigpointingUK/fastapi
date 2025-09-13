@@ -6,8 +6,8 @@ This document provides comprehensive instructions for managing the FastAPI infra
 
 The Ansible setup is configured to manage three instance groups:
 - **fastapi**: Both bastion and webserver instances
-- **bastion**: Bastion host only (public subnet)
-- **webserver**: Webserver instance only (private subnet, accessed via bastion)
+- **bastions**: Bastion host only (public subnet)
+- **webservers**: Webserver instance only (private subnet, accessed via bastion)
 
 ## Prerequisites
 
@@ -44,8 +44,8 @@ Ansible/
 ├── inventory.yml            # Host inventory
 ├── group_vars/              # Group-specific variables
 │   ├── fastapi.yml
-│   ├── bastion.yml
-│   └── webserver.yml
+│   ├── bastions.yml
+│   └── webservers.yml
 ├── host_vars/               # Host-specific variables (if needed)
 └── playbooks/               # Ansible playbooks
     ├── main.yml
@@ -70,8 +70,8 @@ ansible all -m ping
 
 # Test connection to specific groups
 ansible fastapi -m ping
-ansible bastion -m ping
-ansible webserver -m ping
+ansible bastions -m ping
+ansible webservers -m ping
 ```
 
 ### Run Playbooks
@@ -82,8 +82,8 @@ ansible-playbook playbooks/main.yml
 
 # Run main playbook on specific groups
 ansible-playbook playbooks/main.yml --limit fastapi
-ansible-playbook playbooks/main.yml --limit bastion
-ansible-playbook playbooks/main.yml --limit webserver
+ansible-playbook playbooks/main.yml --limit bastions
+ansible-playbook playbooks/main.yml --limit webservers
 
 # Run specific playbook
 ansible-playbook playbooks/update-db-script.yml
@@ -142,10 +142,10 @@ To install additional packages on specific groups:
 
 ```bash
 # Install packages on bastion only
-ansible bastion -m yum -a "name=tree state=present" --become
+ansible bastions -m yum -a "name=tree state=present" --become
 
 # Install packages on webserver only
-ansible webserver -m yum -a "name=nginx state=present" --become
+ansible webservers -m yum -a "name=nginx state=present" --become
 
 # Install packages on all FastAPI instances
 ansible fastapi -m yum -a "name=git state=present" --become

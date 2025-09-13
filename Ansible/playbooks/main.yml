@@ -27,9 +27,9 @@
       yum:
         update_cache: yes
 
-    - name: Install MySQL client
+    - name: Install MariaDB client (MySQL compatible)
       yum:
-        name: mysql
+        name: mariadb1011
         state: present
 
     - name: Install additional useful tools
@@ -38,7 +38,6 @@
           - htop
           - vim
           - wget
-          - curl
           - jq
           - awscli
         state: present

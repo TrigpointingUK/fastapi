@@ -1,6 +1,6 @@
 ---
 - name: Update database connection script to use AWS Secrets Manager
-  hosts: bastion
+  hosts: bastions
   become: yes
   vars:
     aws_region: "eu-west-2"
