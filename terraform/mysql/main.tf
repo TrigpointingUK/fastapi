@@ -45,7 +45,7 @@ data "terraform_remote_state" "common" {
 
 # MySQL provider for database management
 provider "mysql" {
-  endpoint = data.terraform_remote_state.common.outputs.rds_endpoint
+  endpoint = split(":", data.terraform_remote_state.common.outputs.rds_endpoint)[0]
   username = "admin"
-  password = random_password.admin_password.result
+  password = data.terraform_remote_state.common.outputs.admin_password
 }

@@ -67,6 +67,12 @@ output "rds_arn" {
   value       = aws_db_instance.main.arn
 }
 
+output "admin_password" {
+  description = "RDS admin password"
+  value       = random_password.admin_password.result
+  sensitive   = true
+}
+
 output "rds_security_group_id" {
   description = "ID of the RDS security group"
   value       = aws_security_group.rds.id
