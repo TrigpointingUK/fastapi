@@ -112,20 +112,15 @@ output "dms_production_endpoint_arn" {
   value       = aws_dms_endpoint.production_user.endpoint_arn
 }
 
-# DMS Tasks
-output "dms_staging_task_arn" {
-  description = "ARN of the DMS staging migration task"
-  value       = aws_dms_replication_task.staging.replication_task_arn
+# DMS Replication Configs
+output "dms_staging_config_arn" {
+  description = "ARN of the DMS staging replication config"
+  value       = aws_dms_replication_config.staging.arn
 }
 
-output "dms_production_task_arn" {
-  description = "ARN of the DMS production migration task"
-  value       = aws_dms_replication_task.production.replication_task_arn
-}
-
-output "dms_serverless_instance_arn" {
-  description = "ARN of the DMS serverless replication instance"
-  value       = aws_dms_replication_instance.serverless.replication_instance_arn
+output "dms_production_config_arn" {
+  description = "ARN of the DMS production replication config"
+  value       = aws_dms_replication_config.production.arn
 }
 
 # ALB Outputs
