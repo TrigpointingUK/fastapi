@@ -151,7 +151,7 @@ resource "aws_lambda_function" "rotation_lambda" {
   function_name    = "${var.project_name}-secret-rotation"
   role            = aws_iam_role.lambda_rotation.arn
   handler         = "index.handler"
-  runtime         = "python3.9"
+  runtime         = "python3.11"
   timeout         = 60
 
   environment {
