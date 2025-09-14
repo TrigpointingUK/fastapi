@@ -23,10 +23,12 @@ class TestConfigComprehensive:
         assert model_fields["API_V1_STR"].default == "/api/v1"
         assert model_fields["PROJECT_NAME"].default == "Legacy API Migration"
         assert model_fields["DEBUG"].default is False
-        assert (
-            model_fields["DATABASE_URL"].default
-            == "mysql+pymysql://user:pass@localhost/db"
-        )
+        # DATABASE_URL is now a property, so test the individual DB components
+        assert model_fields["DB_HOST"].default == "localhost"
+        assert model_fields["DB_PORT"].default == 3306
+        assert model_fields["DB_USER"].default == "user"
+        assert model_fields["DB_PASSWORD"].default == "pass"
+        assert model_fields["DB_NAME"].default == "db"
         assert (
             model_fields["JWT_SECRET_KEY"].default
             == "default-secret-change-in-production"
@@ -127,8 +129,14 @@ class TestConfigComprehensive:
 
     def test_database_configuration(self):
         """Test database configuration."""
-        settings = Settings(DATABASE_URL="postgresql://user:pass@localhost/db")
-        assert settings.DATABASE_URL == "postgresql://user:pass@localhost/db"
+        settings = Settings(
+            DB_HOST="localhost",
+            DB_PORT=5432,
+            DB_USER="user",
+            DB_PASSWORD="pass",
+            DB_NAME="db",
+        )
+        assert settings.DATABASE_URL == "mysql+pymysql://user:pass@localhost:5432/db"
 
     def test_environment_variable_override(self):
         """Test that environment variables override default values."""
@@ -136,7 +144,11 @@ class TestConfigComprehensive:
 
         # Set environment variables
         os.environ["JWT_SECRET_KEY"] = "env-secret-key"
-        os.environ["DATABASE_URL"] = "env-database-url"
+        os.environ["DB_HOST"] = "env-host"
+        os.environ["DB_PORT"] = "5432"
+        os.environ["DB_USER"] = "env-user"
+        os.environ["DB_PASSWORD"] = "env-pass"
+        os.environ["DB_NAME"] = "env-db"
         os.environ["AUTH0_DOMAIN"] = "env.auth0.com"
 
         try:
@@ -144,7 +156,15 @@ class TestConfigComprehensive:
 
             # These should be overridden by environment variables
             assert settings.JWT_SECRET_KEY == "env-secret-key"
-            assert settings.DATABASE_URL == "env-database-url"
+            assert settings.DB_HOST == "env-host"
+            assert settings.DB_PORT == 5432
+            assert settings.DB_USER == "env-user"
+            assert settings.DB_PASSWORD == "env-pass"
+            assert settings.DB_NAME == "env-db"
+            assert (
+                settings.DATABASE_URL
+                == "mysql+pymysql://env-user:env-pass@env-host:5432/env-db"
+            )
             assert settings.AUTH0_DOMAIN == "env.auth0.com"
 
             # These should still be defaults
@@ -153,7 +173,15 @@ class TestConfigComprehensive:
             assert settings.DEBUG is False
         finally:
             # Clean up environment variables
-            for var in ["JWT_SECRET_KEY", "DATABASE_URL", "AUTH0_DOMAIN"]:
+            for var in [
+                "JWT_SECRET_KEY",
+                "DB_HOST",
+                "DB_PORT",
+                "DB_USER",
+                "DB_PASSWORD",
+                "DB_NAME",
+                "AUTH0_DOMAIN",
+            ]:
                 os.environ.pop(var, None)
 
     def test_settings_instantiation_with_env_vars(self):
@@ -165,6 +193,11 @@ class TestConfigComprehensive:
         assert hasattr(settings, "API_V1_STR")
         assert hasattr(settings, "PROJECT_NAME")
         assert hasattr(settings, "DEBUG")
+        assert hasattr(settings, "DB_HOST")
+        assert hasattr(settings, "DB_PORT")
+        assert hasattr(settings, "DB_USER")
+        assert hasattr(settings, "DB_PASSWORD")
+        assert hasattr(settings, "DB_NAME")
         assert hasattr(settings, "DATABASE_URL")
         assert hasattr(settings, "JWT_SECRET_KEY")
         assert hasattr(settings, "JWT_ALGORITHM")
@@ -180,6 +213,11 @@ class TestConfigComprehensive:
         assert isinstance(settings.API_V1_STR, str)
         assert isinstance(settings.PROJECT_NAME, str)
         assert isinstance(settings.DEBUG, bool)
+        assert isinstance(settings.DB_HOST, str)
+        assert isinstance(settings.DB_PORT, int)
+        assert isinstance(settings.DB_USER, str)
+        assert isinstance(settings.DB_PASSWORD, str)
+        assert isinstance(settings.DB_NAME, str)
         assert isinstance(settings.DATABASE_URL, str)
         assert isinstance(settings.JWT_SECRET_KEY, str)
         assert isinstance(settings.JWT_ALGORITHM, str)
