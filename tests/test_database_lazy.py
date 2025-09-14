@@ -49,10 +49,10 @@ class TestLazyDatabaseConnection:
             # Verify create_engine was called with correct parameters
             mock_create_engine.assert_called_once()
             call_args = mock_create_engine.call_args
-            
+
             # Check positional arguments (DATABASE_URL)
             assert call_args[0][0] == settings.DATABASE_URL
-            
+
             # Check keyword arguments
             assert call_args[1]["pool_pre_ping"] is True
             assert call_args[1]["pool_recycle"] == 300
