@@ -55,7 +55,7 @@ resource "aws_cloudwatch_log_group" "app" {
   }
 }
 
-# CloudFlare module for security groups and SSL
+# CloudFlare module for security groups
 module "cloudflare" {
   source = "../modules/cloudflare"
 
@@ -65,6 +65,18 @@ module "cloudflare" {
   enable_cloudflare_ssl = var.enable_cloudflare_ssl
 }
 
+# HTTPS Listener module (creates listener with staging certificate)
+module "listener" {
+  source = "../modules/listener"
+
+  project_name           = var.project_name
+  environment           = "staging"
+  alb_arn               = data.terraform_remote_state.common.outputs.alb_arn
+  enable_cloudflare_ssl = var.enable_cloudflare_ssl
+  cloudflare_origin_cert = var.cloudflare_origin_cert
+  cloudflare_origin_key  = var.cloudflare_origin_key
+}
+
 # Target Group module (for shared ALB)
 module "target_group" {
   source = "../modules/target-group"
@@ -72,7 +84,7 @@ module "target_group" {
   project_name      = var.project_name
   environment       = "staging"
   vpc_id           = data.terraform_remote_state.common.outputs.vpc_id
-  alb_listener_arn = data.terraform_remote_state.common.outputs.alb_listener_arn
+  alb_listener_arn = module.listener.listener_arn
   domain_name      = var.domain_name
   priority         = 100  # Staging gets priority 100
 }

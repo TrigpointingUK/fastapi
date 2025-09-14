@@ -19,28 +19,44 @@ resource "aws_security_group" "alb" {
   description = "Security group for Application Load Balancer"
   vpc_id      = aws_vpc.main.id
 
-  ingress {
-    description = "HTTP from CloudFlare"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = [
-      "173.245.48.0/20",
-      "103.21.244.0/22",
-      "103.22.200.0/22",
-      "103.31.4.0/22",
-      "141.101.64.0/18",
-      "108.162.192.0/18",
-      "190.93.240.0/20",
-      "188.114.96.0/20",
-      "197.234.240.0/22",
-      "198.41.128.0/17",
-      "162.158.0.0/15",
-      "104.16.0.0/13",
-      "104.24.0.0/14",
-      "172.64.0.0/13",
-      "131.0.72.0/22"
-    ]
+  # HTTP access (only when CloudFlare SSL is disabled - for testing)
+  dynamic "ingress" {
+    for_each = var.enable_cloudflare_ssl ? [] : [1]
+    content {
+      description = "HTTP access"
+      from_port   = 80
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+
+  # HTTPS access (only when CloudFlare SSL is enabled)
+  dynamic "ingress" {
+    for_each = var.enable_cloudflare_ssl ? [1] : []
+    content {
+      description = "HTTPS from CloudFlare"
+      from_port   = 443
+      to_port     = 443
+      protocol    = "tcp"
+      cidr_blocks = [
+        "173.245.48.0/20",
+        "103.21.244.0/22",
+        "103.22.200.0/22",
+        "103.31.4.0/22",
+        "141.101.64.0/18",
+        "108.162.192.0/18",
+        "190.93.240.0/20",
+        "188.114.96.0/20",
+        "197.234.240.0/22",
+        "198.41.128.0/17",
+        "162.158.0.0/15",
+        "104.16.0.0/13",
+        "104.24.0.0/14",
+        "172.64.0.0/13",
+        "131.0.72.0/22"
+      ]
+    }
   }
 
   egress {
@@ -55,44 +71,8 @@ resource "aws_security_group" "alb" {
   }
 }
 
-# CloudFlare Origin Certificate
-resource "aws_acm_certificate" "cloudflare_origin" {
-  count           = var.enable_cloudflare_ssl ? 1 : 0
-  certificate_body = var.cloudflare_origin_cert
-  private_key     = var.cloudflare_origin_key
-
-  lifecycle {
-    create_before_destroy = true
-  }
-
-  tags = {
-    Name = "${var.project_name}-cloudflare-cert"
-    Type = "CloudFlare Origin Certificate"
-  }
-}
-
-# HTTPS Listener with CloudFlare Origin Certificate
-resource "aws_lb_listener" "app_https" {
-  count             = var.enable_cloudflare_ssl ? 1 : 0
-  load_balancer_arn = aws_lb.main.arn
-  port              = "443"
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
-  certificate_arn   = aws_acm_certificate.cloudflare_origin[0].arn
-
-  default_action {
-    type = "fixed-response"
-    fixed_response {
-      content_type = "text/plain"
-      message_body = "No target group configured"
-      status_code  = "503"
-    }
-  }
-
-  tags = {
-    Name = "${var.project_name}-https-listener"
-  }
-}
+# Note: HTTPS listeners are now managed by individual environment modules
+# (staging and production) to support multiple certificates and host-based routing
 
 # HTTP Listener (only when CloudFlare SSL is disabled - for testing)
 resource "aws_lb_listener" "app_http" {

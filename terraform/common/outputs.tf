@@ -144,10 +144,8 @@ output "alb_security_group_id" {
   value       = aws_security_group.alb.id
 }
 
-output "alb_listener_arn" {
-  description = "ARN of the ALB listener (HTTPS if SSL enabled, HTTP otherwise)"
-  value       = var.enable_cloudflare_ssl ? aws_lb_listener.app_https[0].arn : aws_lb_listener.app_http[0].arn
-}
+# Note: ALB listener ARNs are now managed by individual environment modules
+# (staging and production) for their respective HTTPS listeners
 
 # Note: RDS user credentials and database schemas are now managed in the mysql/ directory
 
