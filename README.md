@@ -385,6 +385,16 @@ docker-compose logs db
 make docker-logs
 ```
 
+## 📚 Documentation
+
+Comprehensive documentation is available in the [`docs/`](docs/) directory:
+
+- **[Ansible Setup](docs/ANSIBLE_SETUP.md)** - Infrastructure management with Ansible
+- **[Database Schema](docs/database/schema_documentation.md)** - Complete database documentation
+- **[Infrastructure Setup](docs/infrastructure/)** - Terraform and infrastructure configuration
+- **[Security Configuration](docs/security/)** - Security best practices and setup
+- **[Migration Guides](docs/migration/)** - Migration procedures and strategies
+
 ## 📚 Additional Resources
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
@@ -392,6 +402,7 @@ make docker-logs
 - [Pytest Documentation](https://docs.pytest.org/)
 - [AWS ECS Documentation](https://docs.aws.amazon.com/ecs/)
 - [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/)
+- [Ansible Documentation](https://docs.ansible.com/)
 
 ## 📄 License
 

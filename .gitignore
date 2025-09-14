@@ -148,6 +148,8 @@ test.db
 terraform/cloudflare-cert.tfvars
 terraform/cloudflare-cert-trigpointing-uk.tfvars
 terraform/cloudflare-cert-trigpointing-me.tfvars
+terraform/staging/cloudflare-cert.tfvars
+terraform/production/cloudflare-cert.tfvars
 
 # Secrets
 *.pem

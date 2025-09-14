@@ -1,21 +1,21 @@
 # CloudFlare Origin Certificate Configuration
-# Copy this file to cloudflare-cert.tfvars and add your actual certificates
-
-# Enable CloudFlare SSL
-enable_cloudflare_ssl = true
+# Copy this file to cloudflare-cert-staging.tfvars or cloudflare-cert-production.tfvars
+# and fill in your actual certificate values
+#
+# For staging: api.trigpointing.me
+# For production: api.trigpointing.uk
 
 # CloudFlare Origin Certificate (PEM format)
-# Replace with your actual certificate from CloudFlare dashboard
+# Get this from CloudFlare Dashboard > SSL/TLS > Origin Server > Create Certificate
 cloudflare_origin_cert = <<EOF
 -----BEGIN CERTIFICATE-----
-PASTE_YOUR_CLOUDFLARE_ORIGIN_CERTIFICATE_HERE
+YOUR_CLOUDFLARE_ORIGIN_CERTIFICATE_HERE
 -----END CERTIFICATE-----
 EOF
 
-# CloudFlare Origin Private Key
-# Replace with your actual private key from CloudFlare dashboard
+# CloudFlare Origin Certificate Private Key
 cloudflare_origin_key = <<EOF
 -----BEGIN PRIVATE KEY-----
-PASTE_YOUR_CLOUDFLARE_PRIVATE_KEY_HERE
+YOUR_CLOUDFLARE_ORIGIN_PRIVATE_KEY_HERE
 -----END PRIVATE KEY-----
 EOF

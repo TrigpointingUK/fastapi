@@ -1,0 +1,21 @@
+---
+# Variables for all FastAPI instances
+aws_region: "eu-west-2"
+project_name: "fastapi"
+environment: "production"
+
+# Database configuration
+db_secret_name: "fastapi-admin-credentials"
+db_endpoint: "fastapi-db.cvsoze6aw56h.eu-west-2.rds.amazonaws.com"
+db_port: 3306
+
+# Common packages to install
+common_packages:
+  - htop
+  - vim
+  - wget
+  - curl
+  - jq
+  - awscli
+  - python3
+  - python3-pip
