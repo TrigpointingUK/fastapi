@@ -31,7 +31,7 @@ resource "aws_secretsmanager_secret_version" "app_secrets" {
   })
 
   # Temporarily allow changes to secret string to remove database_url
-  # TODO: Re-enable ignore_changes after database_url is removed
+  # TODO: Re-enable ignore_changes after database_url is removed from production
   # lifecycle {
   #   ignore_changes = [secret_string]
   # }
