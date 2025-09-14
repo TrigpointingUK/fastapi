@@ -1,17 +1,17 @@
 # RDS Subnet Group
 resource "aws_db_subnet_group" "main" {
-  name       = "${var.project_name}-db-subnet-group"
+  name       = "fastapi-db-subnet-group"
   subnet_ids = aws_subnet.private[*].id
 
   tags = {
-    Name = "${var.project_name}-db-subnet-group"
+    Name = "fastapi-db-subnet-group"
   }
 }
 
 # RDS Parameter Group
 resource "aws_db_parameter_group" "main" {
   family = "mysql8.0"
-  name   = "${var.project_name}-db-params"
+  name   = "fastapi-db-params"
 
   parameter {
     name         = "innodb_buffer_pool_size"
@@ -38,13 +38,13 @@ resource "aws_db_parameter_group" "main" {
   }
 
   tags = {
-    Name = "${var.project_name}-db-params"
+    Name = "fastapi-db-params"
   }
 }
 
 # RDS Instance
 resource "aws_db_instance" "main" {
-  identifier = "${var.project_name}-db"
+  identifier = "fastapi-db"
 
   # Engine
   engine         = "mysql"
@@ -79,7 +79,7 @@ resource "aws_db_instance" "main" {
   # Security
   deletion_protection = false
   skip_final_snapshot = false
-  final_snapshot_identifier = "${var.project_name}-final-snapshot"
+  final_snapshot_identifier = "fastapi-final-snapshot"
 
   # Initial admin user
   username = "admin"
@@ -89,13 +89,13 @@ resource "aws_db_instance" "main" {
   performance_insights_enabled = false
 
   tags = {
-    Name = "${var.project_name}-db"
+    Name = "fastapi-db"
   }
 }
 
 # RDS Enhanced Monitoring Role
 resource "aws_iam_role" "rds_enhanced_monitoring" {
-  name = "${var.project_name}-rds-monitoring-role"
+  name = "fastapi-rds-monitoring-role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -111,7 +111,7 @@ resource "aws_iam_role" "rds_enhanced_monitoring" {
   })
 
   tags = {
-    Name = "${var.project_name}-rds-monitoring-role"
+    Name = "fastapi-rds-monitoring-role"
   }
 }
 

@@ -18,7 +18,7 @@ This directory contains Terraform configuration for managing MySQL databases, us
 
 2. **SSH into bastion:**
    ```bash
-   ssh -i ~/.ssh/fastapi-bastion.pem ec2-user@<bastion-ip>
+   ssh -i ~/.ssh/trigpointing-bastion.pem ec2-user@<bastion-ip>
    ```
 
 3. **Deploy:**

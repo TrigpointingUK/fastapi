@@ -1,6 +1,6 @@
 # Security Groups
 resource "aws_security_group" "rds" {
-  name        = "${var.project_name}-rds-sg"
+  name        = "fastapi-rds-sg"
   description = "Security group for RDS database"
   vpc_id      = aws_vpc.main.id
 
@@ -40,6 +40,6 @@ resource "aws_security_group" "rds" {
   }
 
   tags = {
-    Name = "${var.project_name}-rds-sg"
+    Name = "fastapi-rds-sg"
   }
 }

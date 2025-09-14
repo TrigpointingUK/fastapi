@@ -33,7 +33,7 @@ The Ansible setup is configured to manage three instance groups:
 3. **SSH Key Setup**:
    Ensure your SSH key is properly configured:
    ```bash
-   chmod 600 ~/.ssh/fastapi-bastion.pem
+   chmod 600 ~/.ssh/trigpointing-bastion.pem
    ```
 
 ## Directory Structure
@@ -57,7 +57,7 @@ Ansible/
 The inventory is configured with:
 - **Bastion**: Direct SSH access via public IP
 - **Webserver**: SSH access via bastion proxy
-- **SSH Key**: Uses `~/.ssh/fastapi-bastion.pem` for all connections
+- **SSH Key**: Uses `~/.ssh/trigpointing-bastion.pem` for all connections
 - **User**: `ec2-user` for all instances
 
 ## Basic Ansible Commands
@@ -157,7 +157,7 @@ After updating the database connection script, you can connect to the database:
 
 ```bash
 # SSH to bastion
-ssh -i ~/.ssh/fastapi-bastion.pem ec2-user@3.9.71.10
+ssh -i ~/.ssh/trigpointing-bastion.pem ec2-user@3.9.71.10
 
 # Run the updated connection script
 ./connect_to_db.sh
@@ -200,16 +200,16 @@ ansible all -m systemd -a "name=nginx state=restarted" --become
 
 1. **SSH Key Permissions**:
    ```bash
-   chmod 600 ~/.ssh/fastapi-bastion.pem
+   chmod 600 ~/.ssh/trigpointing-bastion.pem
    ```
 
 2. **Test SSH Connection**:
    ```bash
    # Test bastion connection
-   ssh -i ~/.ssh/fastapi-bastion.pem ec2-user@3.9.71.10
+   ssh -i ~/.ssh/trigpointing-bastion.pem ec2-user@3.9.71.10
 
    # Test webserver connection via bastion
-   ssh -i ~/.ssh/fastapi-bastion.pem ec2-user@10.0.10.132
+   ssh -i ~/.ssh/trigpointing-bastion.pem ec2-user@10.0.10.132
    ```
 
 3. **Check Ansible Configuration**:

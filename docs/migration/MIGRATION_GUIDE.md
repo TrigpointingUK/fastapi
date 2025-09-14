@@ -202,7 +202,7 @@ Monitor these metrics during migration:
 
 ```bash
 # Check ECS service status
-aws ecs describe-services --cluster fastapi-cluster --services fastapi-staging-service
+aws ecs describe-services --cluster trigpointing-cluster --services fastapi-staging-service
 
 # View application logs
 aws logs tail /ecs/fastapi-staging --follow

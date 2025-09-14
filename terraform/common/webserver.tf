@@ -39,7 +39,7 @@ resource "aws_instance" "webserver" {
 
 # Security Group for Web Server
 resource "aws_security_group" "webserver" {
-  name        = "${var.project_name}-webserver-sg"
+  name        = "fastapi-webserver-sg"
   description = "Security group for web server"
   vpc_id      = aws_vpc.main.id
 
@@ -69,7 +69,7 @@ resource "aws_security_group" "webserver" {
   }
 
   tags = {
-    Name = "${var.project_name}-webserver-sg"
+    Name = "fastapi-webserver-sg"
   }
 }
 

@@ -1,6 +1,6 @@
 # Target Group for ECS Service
 resource "aws_lb_target_group" "app" {
-  name        = "${var.project_name}-${var.environment}-shared-tg"
+  name        = "${var.project_name}-${var.environment}-tg"
   port        = var.port
   protocol    = "HTTP"
   vpc_id      = var.vpc_id
