@@ -94,15 +94,22 @@ deploy_staging() {
     print_status "Initializing Terraform..."
     terraform init -backend-config=backend.conf
 
+    # Check if certificate file exists
+    if [ ! -f "cloudflare-cert.tfvars" ]; then
+        print_error "cloudflare-cert.tfvars not found in staging directory!"
+        print_error "Please ensure the CloudFlare certificate file exists."
+        exit 1
+    fi
+
     # Plan deployment
     print_status "Planning deployment..."
-    terraform plan
+    terraform plan -var-file=terraform.tfvars -var-file=cloudflare-cert.tfvars
 
     # Ask for confirmation
     read -p "Do you want to apply the staging infrastructure? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        terraform apply -auto-approve
+        terraform apply -auto-approve -var-file=terraform.tfvars -var-file=cloudflare-cert.tfvars
         print_success "Staging infrastructure deployed successfully!"
 
         # Show outputs
@@ -125,15 +132,22 @@ deploy_production() {
     print_status "Initializing Terraform..."
     terraform init -backend-config=backend.conf
 
+    # Check if certificate file exists
+    if [ ! -f "cloudflare-cert.tfvars" ]; then
+        print_error "cloudflare-cert.tfvars not found in production directory!"
+        print_error "Please ensure the CloudFlare certificate file exists."
+        exit 1
+    fi
+
     # Plan deployment
     print_status "Planning deployment..."
-    terraform plan
+    terraform plan -var-file=terraform.tfvars -var-file=cloudflare-cert.tfvars
 
     # Ask for confirmation
     read -p "Do you want to apply the production infrastructure? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        terraform apply -auto-approve
+        terraform apply -auto-approve -var-file=terraform.tfvars -var-file=cloudflare-cert.tfvars
         print_success "Production infrastructure deployed successfully!"
 
         # Show outputs
