@@ -32,3 +32,8 @@ variable "cloudflare_origin_key" {
   default     = null
   sensitive   = true
 }
+
+variable "domain_name" {
+  description = "Domain name for the certificate"
+  type        = string
+}

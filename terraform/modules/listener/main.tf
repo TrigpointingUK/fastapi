@@ -12,6 +12,7 @@ resource "aws_acm_certificate" "cloudflare_origin" {
     Name = "${var.project_name}-${var.environment}-cloudflare-cert"
     Type = "CloudFlare Origin Certificate"
     Environment = var.environment
+    Domain = var.domain_name
   }
 }
 

@@ -72,6 +72,7 @@ module "listener" {
   project_name           = var.project_name
   environment           = "staging"
   alb_arn               = data.terraform_remote_state.common.outputs.alb_arn
+  domain_name           = var.domain_name
   enable_cloudflare_ssl = var.enable_cloudflare_ssl
   cloudflare_origin_cert = var.cloudflare_origin_cert
   cloudflare_origin_key  = var.cloudflare_origin_key
