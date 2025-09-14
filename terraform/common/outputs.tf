@@ -145,8 +145,8 @@ output "alb_security_group_id" {
 }
 
 output "alb_listener_arn" {
-  description = "ARN of the HTTP listener"
-  value       = aws_lb_listener.app_http.arn
+  description = "ARN of the ALB listener (HTTPS if SSL enabled, HTTP otherwise)"
+  value       = var.enable_cloudflare_ssl ? aws_lb_listener.app_https[0].arn : aws_lb_listener.app_http[0].arn
 }
 
 # Note: RDS user credentials and database schemas are now managed in the mysql/ directory

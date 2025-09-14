@@ -63,3 +63,24 @@ variable "db_max_allocated_storage" {
   type        = number
   default     = 100
 }
+
+# CloudFlare SSL Configuration
+variable "enable_cloudflare_ssl" {
+  description = "Enable HTTPS with CloudFlare origin certificate"
+  type        = bool
+  default     = true
+}
+
+variable "cloudflare_origin_cert" {
+  description = "CloudFlare origin certificate (PEM format)"
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
+variable "cloudflare_origin_key" {
+  description = "CloudFlare origin certificate private key"
+  type        = string
+  default     = null
+  sensitive   = true
+}

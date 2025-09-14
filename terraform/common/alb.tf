@@ -55,8 +55,48 @@ resource "aws_security_group" "alb" {
   }
 }
 
-# HTTP Listener (CloudFlare handles HTTPS termination)
+# CloudFlare Origin Certificate
+resource "aws_acm_certificate" "cloudflare_origin" {
+  count           = var.enable_cloudflare_ssl ? 1 : 0
+  certificate_body = var.cloudflare_origin_cert
+  private_key     = var.cloudflare_origin_key
+
+  lifecycle {
+    create_before_destroy = true
+  }
+
+  tags = {
+    Name = "${var.project_name}-cloudflare-cert"
+    Type = "CloudFlare Origin Certificate"
+  }
+}
+
+# HTTPS Listener with CloudFlare Origin Certificate
+resource "aws_lb_listener" "app_https" {
+  count             = var.enable_cloudflare_ssl ? 1 : 0
+  load_balancer_arn = aws_lb.main.arn
+  port              = "443"
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
+  certificate_arn   = aws_acm_certificate.cloudflare_origin[0].arn
+
+  default_action {
+    type = "fixed-response"
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "No target group configured"
+      status_code  = "503"
+    }
+  }
+
+  tags = {
+    Name = "${var.project_name}-https-listener"
+  }
+}
+
+# HTTP Listener (only when CloudFlare SSL is disabled - for testing)
 resource "aws_lb_listener" "app_http" {
+  count             = var.enable_cloudflare_ssl ? 0 : 1
   load_balancer_arn = aws_lb.main.arn
   port              = "80"
   protocol          = "HTTP"
