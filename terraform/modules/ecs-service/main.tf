@@ -34,6 +34,10 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "DEBUG"
           value = var.environment == "production" ? "false" : "true"
+        },
+        {
+          name  = "UVICORN_HOST"
+          value = "0.0.0.0"
         }
       ],
       # Add Auth0 configuration if enabled

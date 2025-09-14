@@ -63,6 +63,7 @@ module "cloudflare" {
   environment           = "staging"
   vpc_id                = data.terraform_remote_state.common.outputs.vpc_id
   enable_cloudflare_ssl = var.enable_cloudflare_ssl
+  alb_security_group_id = data.terraform_remote_state.common.outputs.alb_security_group_id
 }
 
 # HTTPS Listener module (creates listener with staging certificate)

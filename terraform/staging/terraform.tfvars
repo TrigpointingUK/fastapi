@@ -8,6 +8,10 @@ desired_count = 1
 min_capacity  = 1
 max_capacity  = 3
 
+# Resource allocation (matching production)
+cpu = 1024
+memory = 2048
+
 # CloudFlare SSL Configuration (enabled for staging)
 domain_name = "api.trigpointing.me"
 enable_cloudflare_ssl = true

@@ -18,3 +18,8 @@ variable "enable_cloudflare_ssl" {
   type        = bool
   default     = true
 }
+
+variable "alb_security_group_id" {
+  description = "Security group ID of the Application Load Balancer"
+  type        = string
+}
