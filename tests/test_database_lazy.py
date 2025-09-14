@@ -4,6 +4,7 @@ Tests for lazy database connection functionality.
 
 from unittest.mock import MagicMock, patch
 
+from app.core.config import settings
 from app.db.database import get_db, get_engine, get_session_local
 
 
@@ -30,6 +31,32 @@ class TestLazyDatabaseConnection:
             engine2 = get_engine()
             assert engine2 == mock_engine
             assert mock_create_engine.call_count == 1  # Still only called once
+
+    def test_get_engine_uses_correct_parameters(self):
+        """Test that get_engine creates engine with correct parameters."""
+        # Reset global state
+        import app.db.database
+
+        app.db.database._engine = None
+
+        with patch("app.db.database.create_engine") as mock_create_engine:
+            mock_engine = MagicMock()
+            mock_create_engine.return_value = mock_engine
+
+            # Call get_engine
+            get_engine()
+
+            # Verify create_engine was called with correct parameters
+            mock_create_engine.assert_called_once()
+            call_args = mock_create_engine.call_args
+            
+            # Check positional arguments (DATABASE_URL)
+            assert call_args[0][0] == settings.DATABASE_URL
+            
+            # Check keyword arguments
+            assert call_args[1]["pool_pre_ping"] is True
+            assert call_args[1]["pool_recycle"] == 300
+            assert call_args[1]["echo"] == settings.DEBUG
 
     def test_get_session_local_creates_sessionmaker_lazily(self):
         """Test that get_session_local creates sessionmaker only when first called."""
