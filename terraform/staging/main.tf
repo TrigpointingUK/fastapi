@@ -66,13 +66,13 @@ module "cloudflare" {
   alb_security_group_id = data.terraform_remote_state.common.outputs.alb_security_group_id
 }
 
-# HTTPS Listener module (creates listener with staging certificate)
-module "listener" {
-  source = "../modules/listener"
+# Certificate module (adds staging certificate to shared listener)
+module "certificate" {
+  source = "../modules/certificate"
 
   project_name           = var.project_name
   environment           = "staging"
-  alb_arn               = data.terraform_remote_state.common.outputs.alb_arn
+  listener_arn          = data.terraform_remote_state.common.outputs.https_listener_arn
   domain_name           = var.domain_name
   enable_cloudflare_ssl = var.enable_cloudflare_ssl
   cloudflare_origin_cert = var.cloudflare_origin_cert
@@ -86,7 +86,7 @@ module "target_group" {
   project_name      = var.project_name
   environment       = "staging"
   vpc_id           = data.terraform_remote_state.common.outputs.vpc_id
-  alb_listener_arn = module.listener.listener_arn
+  alb_listener_arn = data.terraform_remote_state.common.outputs.https_listener_arn
   domain_name      = var.domain_name
   priority         = 100  # Staging gets priority 100
 }

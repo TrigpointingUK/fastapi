@@ -178,3 +178,9 @@ output "api_production_record_id" {
 
 # Note: S3 bucket is managed externally
 # Bucket: tuk-terraform-state (in eu-west-1)
+
+# HTTPS Listener ARN for environments to use
+output "https_listener_arn" {
+  description = "ARN of the shared HTTPS listener"
+  value       = var.enable_cloudflare_ssl ? aws_lb_listener.app_https[0].arn : null
+}
