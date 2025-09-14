@@ -101,6 +101,11 @@ variable "secrets_arn" {
   type        = string
 }
 
+variable "credentials_secret_arn" {
+  description = "ARN of the database credentials secret"
+  type        = string
+}
+
 variable "cloudwatch_log_group_name" {
   description = "Name of the CloudWatch log group"
   type        = string

@@ -24,9 +24,6 @@ resource "aws_secretsmanager_secret_version" "app_secrets" {
     # JWT Configuration
     jwt_secret_key = "your-jwt-secret-key-change-this"
 
-    # Database Configuration
-    database_url = var.database_url
-
     # Auth0 Configuration (if enabled)
     auth0_client_id     = var.auth0_domain != null ? "your-auth0-client-id" : null
     auth0_client_secret = var.auth0_domain != null ? "your-auth0-client-secret" : null

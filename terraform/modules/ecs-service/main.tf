@@ -73,10 +73,26 @@ resource "aws_ecs_task_definition" "app" {
           name      = "JWT_SECRET_KEY"
           valueFrom = "${var.secrets_arn}:jwt_secret_key::"
         },
-        # Database URL
+        # Database Credentials
         {
-          name      = "DATABASE_URL"
-          valueFrom = "${var.secrets_arn}:database_url::"
+          name      = "DB_HOST"
+          valueFrom = "${var.credentials_secret_arn}:host::"
+        },
+        {
+          name      = "DB_PORT"
+          valueFrom = "${var.credentials_secret_arn}:port::"
+        },
+        {
+          name      = "DB_USER"
+          valueFrom = "${var.credentials_secret_arn}:username::"
+        },
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = "${var.credentials_secret_arn}:password::"
+        },
+        {
+          name      = "DB_NAME"
+          valueFrom = "${var.credentials_secret_arn}:dbname::"
         }
       ],
       # Auth0 secrets (if Auth0 is enabled)
@@ -113,6 +129,38 @@ resource "aws_ecs_task_definition" "app" {
   tags = {
     Name = "${var.project_name}-${var.environment}-task-definition"
   }
+}
+
+# IAM policy for ECS tasks to read database credentials
+resource "aws_iam_policy" "ecs_credentials_access" {
+  name        = "${var.project_name}-${var.environment}-ecs-credentials-access"
+  description = "Allow ECS tasks to read database credentials"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue",
+          "secretsmanager:DescribeSecret"
+        ]
+        Resource = var.credentials_secret_arn
+      }
+    ]
+  })
+}
+
+# Attach the credentials policy to the ECS task role
+resource "aws_iam_role_policy_attachment" "ecs_task_credentials" {
+  role       = split("/", var.ecs_task_role_arn)[1]  # Extract role name from ARN
+  policy_arn = aws_iam_policy.ecs_credentials_access.arn
+}
+
+# Attach the credentials policy to the ECS task execution role
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_credentials" {
+  role       = split("/", var.ecs_task_execution_role_arn)[1]  # Extract role name from ARN
+  policy_arn = aws_iam_policy.ecs_credentials_access.arn
 }
 
 # ECS Service

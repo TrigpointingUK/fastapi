@@ -34,6 +34,16 @@ data "terraform_remote_state" "common" {
   }
 }
 
+# Data source for mysql remote state
+data "terraform_remote_state" "mysql" {
+  backend = "s3"
+  config = {
+    bucket = "tuk-terraform-state"
+    key    = "fastapi-mysql/terraform.tfstate"
+    region = "eu-west-1"
+  }
+}
+
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "app" {
   name              = "/ecs/${var.project_name}-production"
@@ -73,7 +83,6 @@ module "secrets" {
 
   project_name                    = var.project_name
   environment                    = "production"
-  database_url                   = "mysql+pymysql://fastapi_user:temp-password-change-this@${data.terraform_remote_state.common.outputs.rds_endpoint}:${data.terraform_remote_state.common.outputs.rds_port}/fastapi_common"
   ecs_task_role_name            = data.terraform_remote_state.common.outputs.ecs_task_role_arn
   ecs_task_execution_role_name  = data.terraform_remote_state.common.outputs.ecs_task_execution_role_arn
   auth0_domain                  = var.auth0_domain
@@ -102,6 +111,7 @@ module "ecs_service" {
   private_subnet_ids            = data.terraform_remote_state.common.outputs.private_subnet_ids
   target_group_arn              = module.target_group.target_group_arn
   secrets_arn                   = module.secrets.secrets_arn
+  credentials_secret_arn        = data.terraform_remote_state.mysql.outputs.production_credentials_arn
   cloudwatch_log_group_name     = aws_cloudwatch_log_group.app.name
   auth0_domain                  = var.auth0_domain
   auth0_connection              = var.auth0_connection
