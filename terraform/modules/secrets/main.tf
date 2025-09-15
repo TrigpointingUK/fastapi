@@ -7,11 +7,11 @@ resource "random_string" "suffix" {
 
 # AWS Secrets Manager for application secrets (JWT, Database, Auth0)
 resource "aws_secretsmanager_secret" "app_secrets" {
-  name        = "${var.project_name}-${var.environment}-app-secrets"
+  name        = "fastapi-${var.environment}-app-secrets"
   description = "Application secrets for ${var.environment} environment (JWT, Database, Auth0)"
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-app-secrets"
+    Name        = "fastapi-${var.environment}-app-secrets"
     Environment = var.environment
     Purpose     = "Application Secrets"
   }
