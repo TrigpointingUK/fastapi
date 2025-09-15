@@ -157,13 +157,13 @@ resource "aws_iam_policy" "ecs_credentials_access" {
 
 # Attach the credentials policy to the ECS task role
 resource "aws_iam_role_policy_attachment" "ecs_task_credentials" {
-  role       = split("/", var.ecs_task_role_arn)[1]  # Extract role name from ARN
+  role       = element(split("/", var.ecs_task_role_arn), length(split("/", var.ecs_task_role_arn)) - 1)  # Extract role name from ARN
   policy_arn = aws_iam_policy.ecs_credentials_access.arn
 }
 
 # Attach the credentials policy to the ECS task execution role
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_credentials" {
-  role       = split("/", var.ecs_task_execution_role_arn)[1]  # Extract role name from ARN
+  role       = element(split("/", var.ecs_task_execution_role_arn), length(split("/", var.ecs_task_execution_role_arn)) - 1)  # Extract role name from ARN
   policy_arn = aws_iam_policy.ecs_credentials_access.arn
 }
 
