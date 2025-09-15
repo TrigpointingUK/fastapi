@@ -64,7 +64,7 @@ class Auth0Service:
             session = boto3.session.Session()
             client = session.client(
                 service_name="secretsmanager",
-                region_name="us-west-2",  # TODO: Make this configurable
+                region_name="eu-west-2",  # Updated to correct region
             )
 
             # Retrieve the unified app secrets
