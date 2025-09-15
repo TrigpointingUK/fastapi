@@ -14,7 +14,7 @@ memory = 2048
 
 # CloudFlare SSL Configuration (enabled for staging)
 domain_name = "api.trigpointing.me"
-enable_cloudflare_ssl = true
+enable_cloudflare_ssl = false
 
 # Auth0 Configuration
 auth0_domain = "trigpointing.eu.auth0.com"

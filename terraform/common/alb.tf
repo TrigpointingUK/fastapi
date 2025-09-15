@@ -15,7 +15,7 @@ resource "aws_lb" "main" {
 
 # Security Group for ALB
 resource "aws_security_group" "alb" {
-  name        = "${var.project_name}-alb-sg"
+  name        = "fastapi-alb-sg"
   description = "Security group for Application Load Balancer"
   vpc_id      = aws_vpc.main.id
 
@@ -67,7 +67,7 @@ resource "aws_security_group" "alb" {
   }
 
   tags = {
-    Name = "${var.project_name}-alb-sg"
+    Name = "fastapi-alb-sg"
   }
 }
 

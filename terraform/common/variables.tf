@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "fastapi"
+  default     = "trigpointing"
 }
 
 variable "vpc_cidr" {
@@ -43,7 +43,7 @@ variable "admin_ip_address" {
 variable "key_pair_name" {
   description = "AWS key pair name for bastion host access"
   type        = string
-  default     = "fastapi-bastion"
+  default     = "trigpointing-bastion"
 }
 
 variable "db_instance_class" {

@@ -7,7 +7,7 @@ variable "aws_region" {
 variable "project_name" {
   description = "Name of the project"
   type        = string
-  default     = "fastapi"
+  default     = "trigpointing"
 }
 
 # Note: terraform_state_bucket is hardcoded to "tuk-terraform-state" in eu-west-1

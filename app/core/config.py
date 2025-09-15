@@ -50,7 +50,7 @@ class Settings(BaseSettings):
         None  # e.g., "https://trigpointing.eu.auth0.com/api/v2/"
     )
     AUTH0_API_AUDIENCE: Optional[str] = (
-        None  # e.g., "https://fastapi.trigpointing.me/api/v1/"
+        None  # e.g., "https://api.trigpointing.me/api/v1/"
     )
 
     # Logging Configuration

@@ -70,7 +70,7 @@ resource "aws_eip_association" "bastion" {
 
 # Security Group for Bastion Host
 resource "aws_security_group" "bastion" {
-  name        = "${var.project_name}-bastion-sg"
+  name        = "fastapi-bastion-sg"
   description = "Security group for bastion host"
   vpc_id      = aws_vpc.main.id
 
@@ -90,7 +90,7 @@ resource "aws_security_group" "bastion" {
   }
 
   tags = {
-    Name = "${var.project_name}-bastion-sg"
+    Name = "fastapi-bastion-sg"
   }
 }
 
