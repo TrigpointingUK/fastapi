@@ -40,7 +40,7 @@ AUTH0_API_AUDIENCE=https://your-api-domain.com/api/v1/
 AUTH0_DOMAIN=trigpointing.eu.auth0.com
 AUTH0_SECRET_NAME=trigpointing-auth0-staging
 AUTH0_MANAGEMENT_API_AUDIENCE=https://trigpointing.eu.auth0.com/api/v2/
-AUTH0_API_AUDIENCE=https://fastapi.trigpointing.me/api/v1/
+AUTH0_API_AUDIENCE=https://api.trigpointing.me/api/v1/
 ```
 
 #### Production Environment
@@ -48,7 +48,7 @@ AUTH0_API_AUDIENCE=https://fastapi.trigpointing.me/api/v1/
 AUTH0_DOMAIN=trigpointing.eu.auth0.com
 AUTH0_SECRET_NAME=trigpointing-auth0-production
 AUTH0_MANAGEMENT_API_AUDIENCE=https://trigpointing.eu.auth0.com/api/v2/
-AUTH0_API_AUDIENCE=https://api.trigpointing.me/api/v1/
+AUTH0_API_AUDIENCE=https://api.trigpointing.uk/api/v1/
 ```
 
 ## Auth0 Dashboard Configuration
@@ -61,7 +61,7 @@ AUTH0_API_AUDIENCE=https://api.trigpointing.me/api/v1/
 
 ### 2. API Application
 - **Purpose**: Your API that clients will access
-- **Audience**: `https://fastapi.trigpointing.me/api/v1/` (staging) or `https://api.trigpointing.me/api/v1/` (production)
+- **Audience**: `https://api.trigpointing.me/api/v1/` (staging) or `https://api.trigpointing.uk/api/v1/` (production)
 - **Grant Types**: Authorization Code, Client Credentials
 - **Scopes**: Custom scopes for your API
 

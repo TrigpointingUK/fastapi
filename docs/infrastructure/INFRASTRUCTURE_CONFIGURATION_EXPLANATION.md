@@ -106,7 +106,7 @@ terraform apply -var-file=production.tfvars
 ### **3. Verify Configuration**
 Check that your ECS tasks have the new environment variables:
 - `AUTH0_MANAGEMENT_API_AUDIENCE=https://trigpointing.eu.auth0.com/api/v2/`
-- `AUTH0_API_AUDIENCE=https://fastapi.trigpointing.me/api/v1/` (staging)
+- `AUTH0_API_AUDIENCE=https://api.trigpointing.me/api/v1/` (staging)
 - `AUTH0_API_AUDIENCE=https://api.trigpointing.uk/api/v1/` (production)
 
 ## 🔍 **Why This Approach?**

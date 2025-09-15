@@ -15,7 +15,7 @@ This infrastructure follows security best practices:
 
 1. **CloudFlare Dashboard** → **SSL/TLS** → **Origin Server**
 2. **Create Certificate** with:
-   - **Hostnames**: `fastapi.trigpointing.me`, `*.trigpointing.me`
+   - **Hostnames**: `trigpointing.me`, `*.trigpointing.me`
    - **Key Type**: RSA (2048)
    - **Validity**: 15 years
 
@@ -37,8 +37,8 @@ terraform apply -var-file="staging.tfvars" -var-file="cloudflare-cert.tfvars"
 
 ## ✅ Expected Results
 
-- ✅ **https://fastapi.trigpointing.me** - Secure API access
-- ❌ **http://fastapi.trigpointing.me** - CloudFlare redirects to HTTPS
+- ✅ **https://api.trigpointing.me** - Secure API access
+- ❌ **http://api.trigpointing.me** - CloudFlare redirects to HTTPS
 - ❌ **Direct ALB access** - Blocked (CloudFlare IPs only)
 
 ## 🛡️ Security Features

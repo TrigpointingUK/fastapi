@@ -171,7 +171,7 @@ jobs:
       run: |
         # Update ECS service with new image
         aws ecs update-service \
-          --cluster fastapi-cluster \
+          --cluster trigpointing-cluster \
           --service fastapi-staging-service \
           --force-new-deployment
 
@@ -196,6 +196,6 @@ jobs:
       run: |
         # Update ECS service with new image
         aws ecs update-service \
-          --cluster fastapi-cluster \
+          --cluster trigpointing-cluster \
           --service fastapi-production-service \
           --force-new-deployment
