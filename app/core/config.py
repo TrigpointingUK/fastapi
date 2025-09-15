@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     # Auth0 Configuration
     AUTH0_DOMAIN: Optional[str] = None
     AUTH0_SECRET_NAME: Optional[str] = None
-    AUTH0_CONNECTION: str = "Username-Password-Authentication"
+    AUTH0_CONNECTION: Optional[str] = None
     AUTH0_ENABLED: bool = False
 
     # Auth0 Audience Configuration

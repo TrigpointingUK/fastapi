@@ -44,6 +44,11 @@ class Auth0Service:
             self.enabled = False
             return
 
+        if not self.connection:
+            logger.error("Auth0 connection not configured")
+            self.enabled = False
+            return
+
         if not self.management_api_audience:
             # Construct Management API audience from domain
             self.management_api_audience = f"https://{self.domain}/api/v2/"

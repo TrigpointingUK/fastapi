@@ -38,10 +38,7 @@ class TestConfigComprehensive:
         assert model_fields["BACKEND_CORS_ORIGINS"].default == []
         assert model_fields["AUTH0_DOMAIN"].default is None
         assert model_fields["AUTH0_SECRET_NAME"].default is None
-        assert (
-            model_fields["AUTH0_CONNECTION"].default
-            == "Username-Password-Authentication"
-        )
+        assert model_fields["AUTH0_CONNECTION"].default is None
         assert model_fields["AUTH0_ENABLED"].default is False
         assert model_fields["LOG_LEVEL"].default == "INFO"
 
