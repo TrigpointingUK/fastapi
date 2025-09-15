@@ -7,11 +7,11 @@ resource "random_string" "suffix" {
 
 # AWS Secrets Manager for application secrets (JWT, Database, Auth0)
 resource "aws_secretsmanager_secret" "app_secrets" {
-  name        = "${var.project_name}-${var.environment}-app-secrets"
+  name        = "fastapi-${var.environment}-app-secrets"
   description = "Application secrets for ${var.environment} environment (JWT, Database, Auth0)"
 
   tags = {
-    Name        = "${var.project_name}-${var.environment}-app-secrets"
+    Name        = "fastapi-${var.environment}-app-secrets"
     Environment = var.environment
     Purpose     = "Application Secrets"
   }
@@ -59,12 +59,22 @@ resource "aws_iam_policy" "ecs_app_secrets_access" {
 
 # Attach the app secrets policy to the ECS task role (where the app runs)
 resource "aws_iam_role_policy_attachment" "ecs_task_app_secrets" {
-  role       = split("/", var.ecs_task_role_name)[1]  # Extract role name from ARN
+  role       = element(split("/", var.ecs_task_role_name), length(split("/", var.ecs_task_role_name)) - 1)  # Extract role name from ARN
   policy_arn = aws_iam_policy.ecs_app_secrets_access.arn
+
+  depends_on = [
+    aws_iam_policy.ecs_app_secrets_access,
+    aws_secretsmanager_secret.app_secrets
+  ]
 }
 
 # Attach the app secrets policy to the ECS task execution role (for ECS to retrieve secrets at startup)
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_app_secrets" {
-  role       = split("/", var.ecs_task_execution_role_name)[1]  # Extract role name from ARN
+  role       = element(split("/", var.ecs_task_execution_role_name), length(split("/", var.ecs_task_execution_role_name)) - 1)  # Extract role name from ARN
   policy_arn = aws_iam_policy.ecs_app_secrets_access.arn
+
+  depends_on = [
+    aws_iam_policy.ecs_app_secrets_access,
+    aws_secretsmanager_secret.app_secrets
+  ]
 }

@@ -44,10 +44,17 @@ class Auth0Service:
             self.enabled = False
             return
 
-        if not self.management_api_audience:
-            logger.error("Auth0 Management API audience not configured")
+        if not self.connection:
+            logger.error("Auth0 connection not configured")
             self.enabled = False
             return
+
+        if not self.management_api_audience:
+            # Construct Management API audience from domain
+            self.management_api_audience = f"https://{self.domain}/api/v2/"
+            logger.info(
+                f"Using constructed Management API audience: {self.management_api_audience}"
+            )
 
     def _get_auth0_credentials(self) -> Optional[Dict[str, str]]:
         """
@@ -64,7 +71,7 @@ class Auth0Service:
             session = boto3.session.Session()
             client = session.client(
                 service_name="secretsmanager",
-                region_name="us-west-2",  # TODO: Make this configurable
+                region_name="eu-west-2",  # Updated to correct region
             )
 
             # Retrieve the unified app secrets

@@ -55,6 +55,18 @@ class TestAuth0ServiceComprehensive:
         mock_settings.AUTH0_MANAGEMENT_API_AUDIENCE = None
 
         service = Auth0Service()
+        assert service.enabled
+        assert service.management_api_audience == "https://test.auth0.com/api/v2/"
+
+    @patch("app.services.auth0_service.settings")
+    def test_init_missing_connection(self, mock_settings):
+        """Test Auth0Service initialization with missing connection."""
+        mock_settings.AUTH0_ENABLED = True
+        mock_settings.AUTH0_DOMAIN = "test.auth0.com"
+        mock_settings.AUTH0_CONNECTION = None
+        mock_settings.AUTH0_MANAGEMENT_API_AUDIENCE = "https://test.auth0.com/api/v2/"
+
+        service = Auth0Service()
         assert not service.enabled
 
     @patch("app.services.auth0_service.boto3.session.Session")

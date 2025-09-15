@@ -39,16 +39,14 @@ class Settings(BaseSettings):
     # Auth0 Configuration
     AUTH0_DOMAIN: Optional[str] = None
     AUTH0_SECRET_NAME: Optional[str] = None
-    AUTH0_CONNECTION: str = "Username-Password-Authentication"
+    AUTH0_CONNECTION: Optional[str] = None
     AUTH0_ENABLED: bool = False
 
     # Auth0 Audience Configuration
     # These are separate audiences for different purposes:
     # - MANAGEMENT_API_AUDIENCE: For accessing Auth0 Management API (user sync, etc.)
     # - API_AUDIENCE: For validating tokens from your API clients
-    AUTH0_MANAGEMENT_API_AUDIENCE: Optional[str] = (
-        None  # e.g., "https://trigpointing.eu.auth0.com/api/v2/"
-    )
+    AUTH0_MANAGEMENT_API_AUDIENCE: Optional[str] = None
     AUTH0_API_AUDIENCE: Optional[str] = (
         None  # e.g., "https://api.trigpointing.me/api/v1/"
     )
