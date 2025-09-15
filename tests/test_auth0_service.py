@@ -104,7 +104,7 @@ class TestAuth0Service:
         }
         assert result == expected_credentials
         mock_client.get_secret_value.assert_called_once_with(
-            SecretId="fastapi-staging-app-secrets"
+            SecretId="trigpointing-staging-app-secrets"
         )
 
     @patch("boto3.session.Session")

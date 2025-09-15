@@ -68,7 +68,7 @@ class Auth0Service:
             )
 
             # Retrieve the unified app secrets
-            secret_name = f"fastapi-{settings.ENVIRONMENT}-app-secrets"
+            secret_name = f"trigpointing-{settings.ENVIRONMENT}-app-secrets"
             response = client.get_secret_value(SecretId=secret_name)
             secret_data = json.loads(response["SecretString"])
 
