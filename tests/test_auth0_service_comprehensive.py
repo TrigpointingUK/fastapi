@@ -55,7 +55,8 @@ class TestAuth0ServiceComprehensive:
         mock_settings.AUTH0_MANAGEMENT_API_AUDIENCE = None
 
         service = Auth0Service()
-        assert not service.enabled
+        assert service.enabled
+        assert service.management_api_audience == "https://test.auth0.com/api/v2/"
 
     @patch("app.services.auth0_service.boto3.session.Session")
     def test_get_auth0_credentials_client_error_decryption(self, mock_session):

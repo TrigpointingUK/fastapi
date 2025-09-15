@@ -1,0 +1,35 @@
+# Cursor Rules for FastAPI Project
+
+## Infrastructure Management
+- **AWS CLI Usage**: Agents are welcome to use AWS CLI commands for:
+  - Describing resources (describe, list, get commands)
+  - Deleting resources when explicitly requested
+  - Reading configuration and state information
+- **Resource Creation**: All resource creation MUST be done through:
+  - Terraform (preferred for AWS infrastructure)
+  - Ansible (for configuration management)
+  - Unless the user gives explicit consent for direct AWS CLI creation
+
+## Code Quality
+- Always run `make ci` locally before committing any changes
+- Use British English spelling throughout the codebase
+- Apply black and isort formatting before pushing
+- Add unit tests for any new or modified code
+
+## Git Workflow
+- Push changes to develop branch (never directly to main)
+- Commit changes frequently to avoid potential breakages
+- Main branch is protected and requires pull requests
+
+## Environment
+- Always activate the Python virtual environment: `source venv/bin/activate`
+- Use the virtual environment for all Python-related commands
+
+## Database
+- Database: trigpoin_trigs with 38 tables for trigpoint/surveying website
+- Key tables: user, trig, tlog, tphoto, attr/attrval, place/town/county, etc.
+- Full schema documentation available in docs/database/
+
+## Security
+- AWS origin server must only communicate over HTTPS (disable port 80)
+- HTTP redirects handled at Cloudflare layer

@@ -45,9 +45,11 @@ class Auth0Service:
             return
 
         if not self.management_api_audience:
-            logger.error("Auth0 Management API audience not configured")
-            self.enabled = False
-            return
+            # Construct Management API audience from domain
+            self.management_api_audience = f"https://{self.domain}/api/v2/"
+            logger.info(
+                f"Using constructed Management API audience: {self.management_api_audience}"
+            )
 
     def _get_auth0_credentials(self) -> Optional[Dict[str, str]]:
         """

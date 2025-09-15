@@ -46,9 +46,7 @@ class Settings(BaseSettings):
     # These are separate audiences for different purposes:
     # - MANAGEMENT_API_AUDIENCE: For accessing Auth0 Management API (user sync, etc.)
     # - API_AUDIENCE: For validating tokens from your API clients
-    AUTH0_MANAGEMENT_API_AUDIENCE: Optional[str] = (
-        None  # e.g., "https://trigpointing.eu.auth0.com/api/v2/"
-    )
+    AUTH0_MANAGEMENT_API_AUDIENCE: Optional[str] = None
     AUTH0_API_AUDIENCE: Optional[str] = (
         None  # e.g., "https://api.trigpointing.me/api/v1/"
     )
