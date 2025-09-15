@@ -169,7 +169,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_credentials" {
 
 # ECS Service
 resource "aws_ecs_service" "app" {
-  name            = "${var.project_name}-${var.environment}-service"
+  name            = "fastapi-${var.environment}-service"
   cluster         = var.ecs_cluster_id
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.desired_count
@@ -190,7 +190,7 @@ resource "aws_ecs_service" "app" {
   # No longer depends on ALB listener since we use shared ALB
 
   tags = {
-    Name = "${var.project_name}-${var.environment}-service"
+    Name = "fastapi-${var.environment}-service"
   }
 }
 
