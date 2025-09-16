@@ -101,27 +101,27 @@ output "webserver_security_group_id" {
   value       = aws_security_group.webserver.id
 }
 
-# DMS Endpoints
-output "dms_staging_endpoint_arn" {
-  description = "ARN of the DMS staging user endpoint"
-  value       = aws_dms_endpoint.staging_user.endpoint_arn
-}
+# DMS Endpoints - Disabled for initial deployment
+# output "dms_staging_endpoint_arn" {
+#   description = "ARN of the DMS staging user endpoint"
+#   value       = aws_dms_endpoint.staging_user.endpoint_arn
+# }
 
-output "dms_production_endpoint_arn" {
-  description = "ARN of the DMS production user endpoint"
-  value       = aws_dms_endpoint.production_user.endpoint_arn
-}
+# output "dms_production_endpoint_arn" {
+#   description = "ARN of the DMS production user endpoint"
+#   value       = aws_dms_endpoint.production_user.endpoint_arn
+# }
 
-# DMS Replication Configs
-output "dms_staging_config_arn" {
-  description = "ARN of the DMS staging replication config"
-  value       = aws_dms_replication_config.staging.arn
-}
+# DMS Replication Configs - Disabled for initial deployment
+# output "dms_staging_config_arn" {
+#   description = "ARN of the DMS staging replication config"
+#   value       = aws_dms_replication_config.staging.arn
+# }
 
-output "dms_production_config_arn" {
-  description = "ARN of the DMS production replication config"
-  value       = aws_dms_replication_config.production.arn
-}
+# output "dms_production_config_arn" {
+#   description = "ARN of the DMS production replication config"
+#   value       = aws_dms_replication_config.production.arn
+# }
 
 # ALB Outputs
 output "alb_arn" {
