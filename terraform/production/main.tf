@@ -29,20 +29,20 @@ data "terraform_remote_state" "common" {
   backend = "s3"
   config = {
     bucket = "tuk-terraform-state"
-    key    = "fastapi-common/terraform.tfstate"
+    key    = "fastapi-common-eu-west-1/terraform.tfstate"
     region = "eu-west-1"  # S3 bucket region
   }
 }
 
-# Data source for mysql remote state
-data "terraform_remote_state" "mysql" {
-  backend = "s3"
-  config = {
-    bucket = "tuk-terraform-state"
-    key    = "fastapi-mysql/terraform.tfstate"
-    region = "eu-west-1"
-  }
-}
+# Data source for mysql remote state - temporarily disabled for fresh deployment
+# data "terraform_remote_state" "mysql" {
+#   backend = "s3"
+#   config = {
+#     bucket = "tuk-terraform-state"
+#     key    = "fastapi-mysql-eu-west-1/terraform.tfstate"
+#     region = "eu-west-1"
+#   }
+# }
 
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "app" {
@@ -125,7 +125,7 @@ module "ecs_service" {
   private_subnet_ids            = data.terraform_remote_state.common.outputs.private_subnet_ids
   target_group_arn              = module.target_group.target_group_arn
   secrets_arn                   = module.secrets.secrets_arn
-  credentials_secret_arn        = data.terraform_remote_state.mysql.outputs.production_credentials_arn
+  credentials_secret_arn        = "arn:aws:secretsmanager:eu-west-1:534526983272:secret:fastapi-production-credentials-oKdss5"
   cloudwatch_log_group_name     = aws_cloudwatch_log_group.app.name
   auth0_domain                  = var.auth0_domain
   auth0_connection              = var.auth0_connection
