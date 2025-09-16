@@ -9,12 +9,7 @@ output "staging_schema_name" {
   value       = mysql_database.staging.name
 }
 
-# RDS User Credentials
-output "admin_credentials_arn" {
-  description = "ARN of the admin credentials secret"
-  value       = aws_secretsmanager_secret.admin_credentials.arn
-  sensitive   = true
-}
+# Note: Admin credentials are managed by RDS and available in common infrastructure
 
 output "production_credentials_arn" {
   description = "ARN of the production credentials secret"

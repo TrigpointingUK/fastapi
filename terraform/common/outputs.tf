@@ -67,9 +67,11 @@ output "rds_arn" {
   value       = aws_db_instance.main.arn
 }
 
-output "admin_password" {
-  description = "RDS admin password"
-  value       = random_password.admin_password.result
+# Note: admin_password output removed - use master_user_secret_arn instead
+
+output "master_user_secret_arn" {
+  description = "ARN of the RDS master user secret (for password rotation)"
+  value       = length(aws_db_instance.main.master_user_secret) > 0 ? aws_db_instance.main.master_user_secret[0].secret_arn : null
   sensitive   = true
 }
 

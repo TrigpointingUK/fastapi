@@ -125,7 +125,8 @@ module "ecs_service" {
   private_subnet_ids            = data.terraform_remote_state.common.outputs.private_subnet_ids
   target_group_arn              = module.target_group.target_group_arn
   secrets_arn                   = module.secrets.secrets_arn
-  credentials_secret_arn        = "arn:aws:secretsmanager:eu-west-1:534526983272:secret:fastapi-production-credentials-oKdss5"
+  # credentials_secret_arn        = "arn:aws:secretsmanager:eu-west-1:534526983272:secret:fastapi-production-credentials-oKdss5"
+  credentials_secret_arn        = "arn:aws:secretsmanager:eu-west-2:534526983272:secret:fastapi-legacy-credentials-jRlZt8"
   cloudwatch_log_group_name     = aws_cloudwatch_log_group.app.name
   auth0_domain                  = var.auth0_domain
   auth0_connection              = var.auth0_connection

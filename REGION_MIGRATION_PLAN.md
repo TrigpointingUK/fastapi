@@ -1,8 +1,8 @@
-# Region Migration Plan: eu-west-2 to eu-west-1
+# Fresh Deployment Plan: eu-west-1 (Ireland)
 
 ## Overview
 
-This document outlines the plan to migrate from London (eu-west-2) back to Ireland (eu-west-1) with minimal downtime. The migration involves moving infrastructure resources whilst maintaining service availability.
+This document outlines the plan to deploy fresh infrastructure in Ireland (eu-west-1). Since the staging database contains no important data, we'll deploy completely new infrastructure without complex migration procedures.
 
 ## Current State Analysis
 
@@ -29,149 +29,124 @@ Based on the codebase analysis, the following resources are currently deployed:
 - GitHub Actions CI/CD pipeline
 - DNS records pointing to ALB endpoints
 
-## Migration Strategy: Blue-Green with Staged Rollover
+## Deployment Strategy: Fresh Infrastructure
 
-### Phase 1: Infrastructure Preparation (No Downtime)
-**Estimated Time: 2-3 hours**
+### Phase 1: Deploy Infrastructure (1-2 hours)
+**No downtime - completely new deployment**
 
-1. **Update Configuration Files** ✅ **(COMPLETED)**
+1. **Configuration Updates** ✅ **(COMPLETED)**
    - All region references updated from eu-west-2 to eu-west-1
    - Availability zones updated to eu-west-1a, eu-west-1b
-   - Application configuration updated
+   - Terraform state configured for new deployment
 
-2. **Deploy New Infrastructure in eu-west-1**
+2. **Deploy Infrastructure in eu-west-1**
    ```bash
-   cd terraform
+   cd terraform/common
+   terraform apply
 
-   # Deploy common infrastructure
-   ./deploy.sh common
+   cd ../staging
+   terraform init -backend-config=backend.conf
+   terraform apply
 
-   # Deploy staging environment
-   ./deploy.sh staging
-
-   # Deploy production environment
-   ./deploy.sh production
+   cd ../production
+   terraform init -backend-config=backend.conf
+   terraform apply
    ```
 
-3. **Database Migration Setup**
-   - Create DMS (Database Migration Service) replication instance in eu-west-1
-   - Set up ongoing replication from eu-west-2 RDS to new eu-west-1 RDS
-   - This allows real-time data sync during migration
+### Phase 2: Application Setup (30 minutes)
+**Fresh setup - no migration needed**
 
-### Phase 2: Application Deployment (No Downtime)
-**Estimated Time: 1 hour**
+1. **Create Secrets in eu-west-1**
+   - Set up new secrets in AWS Secrets Manager
+   - Configure database credentials
+   - Set up Auth0 integration secrets
 
-1. **Deploy Applications to New Region**
-   - ECS services will start in eu-west-1
-   - Applications will initially connect to eu-west-2 database via DMS endpoint
-   - Verify health checks pass
+2. **Deploy Applications**
+   - ECS services will start with fresh database
+   - No data migration needed for staging
+   - Production data can be imported separately if needed
 
-2. **Update Secrets Manager**
-   - Copy all secrets from eu-west-2 to eu-west-1
-   - Update connection strings to point to new RDS instance
-   - Test secret retrieval
+### Phase 3: DNS Cutover (5-10 minutes downtime)
+**Simple DNS change**
 
-### Phase 3: Traffic Migration (Minimal Downtime)
-**Estimated Downtime: 5-10 minutes per environment**
+1. **Update DNS Records**
+   - Point `api.trigpointing.me` to new staging ALB
+   - Point `api.trigpointing.uk` to new production ALB
+   - Monitor for proper resolution
 
-#### Staging Migration First
-1. **DNS Update** (5 minutes downtime)
-   - Update DNS record for `api.trigpointing.me`
-   - Point from eu-west-2 ALB to eu-west-1 ALB
-   - Monitor for 15-30 minutes
+### Phase 4: Cleanup (Optional)
+**Clean up old resources when ready**
 
-2. **Database Cutover** (2-3 minutes downtime)
-   - Stop DMS replication
-   - Update application to use eu-west-1 RDS directly
-   - Restart ECS tasks
-   - Verify functionality
+1. **eu-west-2 Resources**
+   - Can be destroyed immediately for staging (no important data)
+   - Keep production resources until data is migrated
+   - No complex coordination needed
 
-#### Production Migration (After Staging Success)
-1. **Scheduled Maintenance Window**
-   - Announce 10-minute maintenance window
-   - Follow same process as staging
-   - Monitor closely for any issues
+## Detailed Deployment Steps
 
-### Phase 4: Cleanup and Verification
-**Estimated Time: 1 hour**
-
-1. **Resource Cleanup**
-   - Keep eu-west-2 resources running for 24-48 hours
-   - Monitor for any issues
-   - Once confirmed stable, destroy eu-west-2 resources
-
-2. **Update CI/CD Pipeline**
-   - GitHub Actions already updated to use eu-west-1
-   - Test deployment pipeline
-   - Update any remaining scripts or documentation
-
-## Detailed Migration Steps
-
-### Pre-Migration Checklist
-- [ ] Backup all databases
-- [ ] Document current DNS settings
-- [ ] Prepare rollback plan
-- [ ] Schedule maintenance window
-- [ ] Notify stakeholders
+### Pre-Deployment Checklist
+- [ ] Ensure CloudFlare API token is configured
+- [ ] Have SSH key pair ready for bastion access
+- [ ] Prepare secrets for Secrets Manager
+- [ ] Schedule brief DNS cutover window
 - [ ] Prepare monitoring dashboards
 
 ### Step-by-Step Execution
 
-#### 1. Deploy New Infrastructure
+#### 1. Deploy Common Infrastructure
 ```bash
 # Activate Python virtual environment
 source venv/bin/activate
 
 # Deploy common infrastructure
-cd terraform
-./deploy.sh common
+cd terraform/common
+terraform apply
 
 # Deploy staging
-./deploy.sh staging
+cd ../staging
+terraform init -backend-config=backend.conf
+terraform apply
 
 # Deploy production
-./deploy.sh production
+cd ../production
+terraform init -backend-config=backend.conf
+terraform apply
 ```
 
-#### 2. Set Up Database Migration
+#### 2. Set Up Secrets Manager
 ```bash
-# Create DMS replication instance
-aws dms create-replication-instance \
-    --replication-instance-identifier trigpointing-migration \
-    --replication-instance-class dms.t3.micro \
-    --allocated-storage 20 \
-    --availability-zone eu-west-1a
+# Get RDS endpoint from terraform output
+cd terraform/common
+NEW_RDS_ENDPOINT=$(terraform output -raw rds_endpoint)
+ADMIN_PASSWORD=$(terraform output -raw admin_password)
 
-# Create source endpoint (eu-west-2)
-aws dms create-endpoint \
-    --endpoint-identifier source-mysql \
-    --endpoint-type source \
-    --engine-name mysql \
-    --server-name fastapi-db.cvsoze6aw56h.eu-west-2.rds.amazonaws.com \
-    --port 3306 \
-    --username fastapi_admin \
-    --password $(aws secretsmanager get-secret-value --secret-id fastapi-admin-credentials --region eu-west-2 --query SecretString --output text | jq -r '.password')
+# Create secrets for staging
+aws secretsmanager create-secret \
+    --name "fastapi-staging-credentials" \
+    --description "FastAPI staging database credentials" \
+    --secret-string "{\"host\":\"$NEW_RDS_ENDPOINT\",\"port\":3306,\"username\":\"fastapi_staging\",\"password\":\"staging_password_here\",\"dbname\":\"tuk_staging\"}" \
+    --region eu-west-1
 
-# Create target endpoint (eu-west-1)
-# Get new RDS endpoint from terraform output
-NEW_RDS_ENDPOINT=$(cd terraform/common && terraform output -raw rds_endpoint)
-aws dms create-endpoint \
-    --endpoint-identifier target-mysql \
-    --endpoint-type target \
-    --engine-name mysql \
-    --server-name $NEW_RDS_ENDPOINT \
-    --port 3306 \
-    --username fastapi_admin \
-    --password $(aws secretsmanager get-secret-value --secret-id fastapi-admin-credentials --region eu-west-1 --query SecretString --output text | jq -r '.password')
+# Create secrets for production
+aws secretsmanager create-secret \
+    --name "fastapi-production-credentials" \
+    --description "FastAPI production database credentials" \
+    --secret-string "{\"host\":\"$NEW_RDS_ENDPOINT\",\"port\":3306,\"username\":\"fastapi_production\",\"password\":\"production_password_here\",\"dbname\":\"tuk_production\"}" \
+    --region eu-west-1
 
-# Create replication task
-aws dms create-replication-task \
-    --replication-task-identifier trigpointing-full-load-cdc \
-    --source-endpoint-arn $(aws dms describe-endpoints --filters Name=endpoint-id,Values=source-mysql --query 'Endpoints[0].EndpointArn' --output text) \
-    --target-endpoint-arn $(aws dms describe-endpoints --filters Name=endpoint-id,Values=target-mysql --query 'Endpoints[0].EndpointArn' --output text) \
-    --replication-instance-arn $(aws dms describe-replication-instances --filters Name=replication-instance-id,Values=trigpointing-migration --query 'ReplicationInstances[0].ReplicationInstanceArn' --output text) \
-    --migration-type full-load-and-cdc \
-    --table-mappings file://dms-table-mappings.json
+# Create app secrets for staging
+aws secretsmanager create-secret \
+    --name "fastapi-staging-app-secrets" \
+    --description "FastAPI staging application secrets" \
+    --secret-string "{\"jwt_secret_key\":\"your-jwt-secret\",\"auth0_client_id\":\"your-auth0-client-id\",\"auth0_client_secret\":\"your-auth0-client-secret\"}" \
+    --region eu-west-1
+
+# Create app secrets for production
+aws secretsmanager create-secret \
+    --name "fastapi-production-app-secrets" \
+    --description "FastAPI production application secrets" \
+    --secret-string "{\"jwt_secret_key\":\"your-jwt-secret\",\"auth0_client_id\":\"your-auth0-client-id\",\"auth0_client_secret\":\"your-auth0-client-secret\"}" \
+    --region eu-west-1
 ```
 
 #### 3. Application Deployment

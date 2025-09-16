@@ -1,7 +1,7 @@
 # Web Server Instance in Private Subnet
 resource "aws_instance" "webserver" {
   ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t3.micro"
+  instance_type = "t4g.nano"
   key_name      = var.key_pair_name
 
   subnet_id                   = aws_subnet.private[0].id
@@ -15,7 +15,7 @@ resource "aws_instance" "webserver" {
   # Root block device with more storage
   root_block_device {
     volume_type           = "gp3"
-    volume_size           = 30
+    volume_size           = 20
     delete_on_termination = true
     encrypted             = true
   }
@@ -26,10 +26,8 @@ resource "aws_instance" "webserver" {
     http_put_response_hop_limit = 1
   }
 
-  user_data = base64encode(templatefile("${path.module}/webserver_user_data.sh", {
-    db_endpoint = aws_db_instance.main.endpoint
-    db_username = "fastapi_user"
-    db_password = "temp-password-change-this"
+  user_data = base64encode(templatefile("${path.module}/bastion_user_data.sh", {
+    motd = "Please run the Ansible playbook to configure the bastion host."
   }))
 
   tags = {

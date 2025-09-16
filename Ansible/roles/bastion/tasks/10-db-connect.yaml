@@ -1,0 +1,7 @@
+- name: "db-connect script"
+  ansible.builtin.template:
+    src: templates/db-connect.j2
+    dest: /home/ec2-user/db-connect.sh
+    owner: root
+    group: root
+    mode: "0755"

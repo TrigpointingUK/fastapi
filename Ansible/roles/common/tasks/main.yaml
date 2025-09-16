@@ -1,0 +1,8 @@
+---
+- name: packages for yum and python
+  import_tasks: ./00-packages.yaml
+  tags: packages
+
+- name: Update MOTD
+  import_tasks: ./10-motd.yaml
+  tags: motd

@@ -1,17 +1,7 @@
 ---
-# Variables specific to bastion host
-instance_type: "bastion"
-public_ip: "3.9.71.10"
-private_ip: "10.0.0.143"
+instance_group: "bastion"
 
-# Bastion-specific packages
-bastion_packages:
-  - mysql
-  - htop
-  - vim
-  - wget
-  - curl
-  - jq
-  - awscli
-  - python3
-  - python3-pip
+db_secret_name: "rds!db-0c18e5de-035f-40af-8b12-e0ae84fedd46"
+db_host: "fastapi-db.czyrbczcs1ak.eu-west-1.rds.amazonaws.com"
+db_port: 3306
+db_schema: "tuk_production"

@@ -1,0 +1,15 @@
+---
+- hosts: all
+  roles:
+    - common
+  tags: common
+
+- hosts: bastions
+  roles:
+    - bastion
+  tags: bastion
+
+- hosts: webservers
+  roles:
+    - webserver
+  tags: webserver

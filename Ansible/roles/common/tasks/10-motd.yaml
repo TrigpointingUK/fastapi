@@ -1,0 +1,22 @@
+---
+- name: Disable update-motd timer
+  systemd:
+    name: update-motd.timer
+    enabled: no
+    state: stopped
+
+- name: Update MOTD with instance information
+  copy:
+    content: |
+      ================================================
+      TrigpointingUK - {{ instance_group | upper }} Instance
+      ================================================
+      Instance: {{ ansible_host }}
+      Description: {{ host_descr }}
+      Managed by: Ansible
+      Last updated: {{ ansible_date_time.iso8601 }}
+      ================================================
+    dest: /etc/motd
+    owner: root
+    group: root
+    mode: '0644'
