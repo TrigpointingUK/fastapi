@@ -3,7 +3,7 @@
   hosts: bastions
   become: yes
   vars:
-    aws_region: "eu-west-2"
+    aws_region: "eu-west-1"
     secret_name: "fastapi-admin-credentials"
   tasks:
     - name: Install AWS CLI and jq if not present
@@ -80,7 +80,7 @@
 
           set -e
 
-          AWS_REGION="eu-west-2"
+          AWS_REGION="eu-west-1"
           MASTER_SECRET="tuk-rds-production-fastapi"
 
           echo "================================================"
@@ -137,7 +137,7 @@
 
           set -e
 
-          AWS_REGION="eu-west-2"
+          AWS_REGION="eu-west-1"
           MASTER_SECRET="tuk-rds-production-fastapi"
           ADMIN_SECRET="fastapi-admin-credentials"
 

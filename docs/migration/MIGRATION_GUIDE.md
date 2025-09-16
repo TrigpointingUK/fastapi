@@ -1,6 +1,6 @@
 # Migration Guide: Old to New Infrastructure
 
-This guide helps you migrate from the old Oregon-based infrastructure (`terraform-old/`) to the new consolidated London-based infrastructure.
+This guide helps you migrate from the old Oregon-based infrastructure (`terraform-old/`) to the new consolidated Ireland-based infrastructure.
 
 ## Pre-Migration Checklist
 
@@ -173,7 +173,7 @@ If issues arise, you can quickly rollback by:
 - 2 separate ALBs
 - Higher costs due to duplication
 
-### New Architecture (London)
+### New Architecture (Ireland)
 - 1 shared VPC
 - 1 shared ECS cluster
 - 1 shared RDS instance
