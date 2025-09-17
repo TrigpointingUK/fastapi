@@ -125,6 +125,32 @@ output "webserver_security_group_id" {
 #   value       = aws_dms_replication_config.production.arn
 # }
 
+# DMS Target Endpoints
+output "dms_staging_target_arn" {
+  description = "ARN of the DMS staging target endpoint"
+  value       = aws_dms_endpoint.staging_target.endpoint_arn
+}
+
+output "dms_production_target_arn" {
+  description = "ARN of the DMS production target endpoint"
+  value       = aws_dms_endpoint.production_target.endpoint_arn
+}
+
+output "dms_service_role_arn" {
+  description = "ARN of the DMS service role"
+  value       = aws_iam_role.dms_service_role.arn
+}
+
+output "dms_security_group_id" {
+  description = "ID of the DMS security group"
+  value       = aws_security_group.dms.id
+}
+
+output "dms_replication_subnet_group_id" {
+  description = "ID of the DMS replication subnet group"
+  value       = aws_dms_replication_subnet_group.main.id
+}
+
 # ALB Outputs
 output "alb_arn" {
   description = "ARN of the Application Load Balancer"
