@@ -151,6 +151,17 @@ output "dms_replication_subnet_group_id" {
   value       = aws_dms_replication_subnet_group.main.id
 }
 
+# DMS Serverless Migration Tasks
+output "dms_staging_migration_arn" {
+  description = "ARN of the DMS staging migration task"
+  value       = aws_dms_replication_config.staging_migration.arn
+}
+
+output "dms_production_migration_arn" {
+  description = "ARN of the DMS production migration task"
+  value       = aws_dms_replication_config.production_migration.arn
+}
+
 # ALB Outputs
 output "alb_arn" {
   description = "ARN of the Application Load Balancer"
