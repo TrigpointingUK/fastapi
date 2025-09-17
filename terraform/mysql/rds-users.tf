@@ -50,7 +50,7 @@ resource "aws_secretsmanager_secret_version" "production_credentials" {
     username                = "fastapi_production"
     password                = random_password.production_password.result
     engine                  = "mysql"
-    host                    = data.terraform_remote_state.common.outputs.rds_endpoint
+    host                    = split(":", data.terraform_remote_state.common.outputs.rds_endpoint)[0]
     port                    = data.terraform_remote_state.common.outputs.rds_port
     dbname                  = "tuk_production"
     dbInstanceIdentifier    = data.terraform_remote_state.common.outputs.rds_identifier
@@ -74,7 +74,7 @@ resource "aws_secretsmanager_secret_version" "staging_credentials" {
     username                = "fastapi_staging"
     password                = random_password.staging_password.result
     engine                  = "mysql"
-    host                    = data.terraform_remote_state.common.outputs.rds_endpoint
+    host                    = split(":", data.terraform_remote_state.common.outputs.rds_endpoint)[0]
     port                    = data.terraform_remote_state.common.outputs.rds_port
     dbname                  = "tuk_staging"
     dbInstanceIdentifier    = data.terraform_remote_state.common.outputs.rds_identifier
@@ -98,7 +98,7 @@ resource "aws_secretsmanager_secret_version" "backups_credentials" {
     username                = "backups"
     password                = random_password.backups_password.result
     engine                  = "mysql"
-    host                    = data.terraform_remote_state.common.outputs.rds_endpoint
+    host                    = split(":", data.terraform_remote_state.common.outputs.rds_endpoint)[0]
     port                    = data.terraform_remote_state.common.outputs.rds_port
     dbname                  = "tuk_production"  # Backups user has access to both schemas
     dbInstanceIdentifier    = data.terraform_remote_state.common.outputs.rds_identifier
