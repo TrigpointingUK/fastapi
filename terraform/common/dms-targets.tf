@@ -37,17 +37,20 @@ resource "aws_security_group" "dms" {
   name_prefix = "${var.project_name}-dms-"
   vpc_id      = aws_vpc.main.id
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
   tags = {
     Name        = "${var.project_name}-dms"
     Environment = "common"
   }
+}
+
+# Allow DMS general internet access (for AWS services, etc.)
+resource "aws_security_group_rule" "dms_internet_access" {
+  type              = "egress"
+  from_port         = 0
+  to_port           = 0
+  protocol          = "-1"
+  cidr_blocks       = ["0.0.0.0/0"]
+  security_group_id = aws_security_group.dms.id
 }
 
 # Allow DMS to access RDS
