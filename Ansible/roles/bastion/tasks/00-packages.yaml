@@ -1,0 +1,11 @@
+---
+- name: Update package cache
+  yum:
+    update_cache: yes
+
+
+- name: Install additional useful tools
+  yum:
+    name:
+      - tcpdump
+    state: present

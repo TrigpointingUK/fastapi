@@ -1,6 +1,6 @@
 # FastAPI Terraform Infrastructure
 
-This directory contains the consolidated Terraform infrastructure for the FastAPI project, now located in the London (eu-west-2) region.
+This directory contains the consolidated Terraform infrastructure for the FastAPI project, now located in the Ireland (eu-west-1) region.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ The infrastructure is organized into four main directories:
 ## Key Changes from Previous Architecture
 
 1. **Consolidated Infrastructure**: Both staging and production now share the same VPC, ECS cluster, and RDS instance
-2. **London Region**: Moved from Oregon (us-west-2) to London (eu-west-2) for better UK performance
+2. **Ireland Region**: Moved from Oregon (us-west-2) to Ireland (eu-west-1) for better UK performance
 3. **Modular Design**: Reusable modules for ECS services, secrets, CloudFlare, and ALB
 4. **Remote State**: Common infrastructure state is referenced by environment-specific configurations
 5. **Shared State Storage**: Uses existing S3 bucket in Ireland (eu-west-1) for state storage

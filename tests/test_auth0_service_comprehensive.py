@@ -4,8 +4,6 @@ Comprehensive tests for Auth0Service to improve code coverage.
 
 from unittest.mock import MagicMock, patch
 
-from botocore.exceptions import ClientError
-
 from app.services.auth0_service import Auth0Service
 
 
@@ -69,188 +67,96 @@ class TestAuth0ServiceComprehensive:
         service = Auth0Service()
         assert not service.enabled
 
-    @patch("app.services.auth0_service.boto3.session.Session")
-    def test_get_auth0_credentials_client_error_decryption(self, mock_session):
-        """Test _get_auth0_credentials with DecryptionFailureException."""
-        mock_settings = MagicMock()
+    @patch("app.services.auth0_service.settings")
+    def test_get_auth0_credentials_missing_client_secret(self, mock_settings):
+        """Test _get_auth0_credentials with missing client secret."""
         mock_settings.AUTH0_ENABLED = True
-        mock_settings.AUTH0_SECRET_NAME = "test-secret"
+        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
+        mock_settings.AUTH0_CLIENT_SECRET = None  # Missing client secret
 
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            service.enabled = True
-            service.secret_name = "test-secret"
+        service = Auth0Service()
+        result = service._get_auth0_credentials()
+        assert result is None
 
-            # Mock ClientError for DecryptionFailureException
-            mock_client = MagicMock()
-            mock_client.get_secret_value.side_effect = ClientError(
-                {
-                    "Error": {
-                        "Code": "DecryptionFailureException",
-                        "Message": "Decryption failed",
-                    }
-                },
-                "GetSecretValue",
-            )
-            mock_session.return_value.client.return_value = mock_client
-
-            result = service._get_auth0_credentials()
-            assert result is None
-
-    @patch("app.services.auth0_service.boto3.session.Session")
-    def test_get_auth0_credentials_client_error_internal_service(self, mock_session):
-        """Test _get_auth0_credentials with InternalServiceErrorException."""
-        mock_settings = MagicMock()
+    @patch("app.services.auth0_service.settings")
+    def test_get_auth0_credentials_empty_client_id(self, mock_settings):
+        """Test _get_auth0_credentials with empty client ID."""
         mock_settings.AUTH0_ENABLED = True
-        mock_settings.AUTH0_SECRET_NAME = "test-secret"
+        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_CLIENT_ID = ""  # Empty client ID
+        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
 
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            service.enabled = True
-            service.secret_name = "test-secret"
+        service = Auth0Service()
+        result = service._get_auth0_credentials()
+        assert result is None
 
-            # Mock ClientError for InternalServiceErrorException
-            mock_client = MagicMock()
-            mock_client.get_secret_value.side_effect = ClientError(
-                {
-                    "Error": {
-                        "Code": "InternalServiceErrorException",
-                        "Message": "Internal error",
-                    }
-                },
-                "GetSecretValue",
-            )
-            mock_session.return_value.client.return_value = mock_client
-
-            result = service._get_auth0_credentials()
-            assert result is None
-
-    @patch("app.services.auth0_service.boto3.session.Session")
-    def test_get_auth0_credentials_client_error_invalid_parameter(self, mock_session):
-        """Test _get_auth0_credentials with InvalidParameterException."""
-        mock_settings = MagicMock()
+    @patch("app.services.auth0_service.settings")
+    def test_get_auth0_credentials_empty_client_secret(self, mock_settings):
+        """Test _get_auth0_credentials with empty client secret."""
         mock_settings.AUTH0_ENABLED = True
-        mock_settings.AUTH0_SECRET_NAME = "test-secret"
+        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
+        mock_settings.AUTH0_CLIENT_SECRET = ""  # Empty client secret
 
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            service.enabled = True
-            service.secret_name = "test-secret"
+        service = Auth0Service()
+        result = service._get_auth0_credentials()
+        assert result is None
 
-            # Mock ClientError for InvalidParameterException
-            mock_client = MagicMock()
-            mock_client.get_secret_value.side_effect = ClientError(
-                {
-                    "Error": {
-                        "Code": "InvalidParameterException",
-                        "Message": "Invalid parameter",
-                    }
-                },
-                "GetSecretValue",
-            )
-            mock_session.return_value.client.return_value = mock_client
-
-            result = service._get_auth0_credentials()
-            assert result is None
-
-    @patch("app.services.auth0_service.boto3.session.Session")
-    def test_get_auth0_credentials_client_error_invalid_request(self, mock_session):
-        """Test _get_auth0_credentials with InvalidRequestException."""
-        mock_settings = MagicMock()
+    @patch("app.services.auth0_service.settings")
+    def test_get_auth0_credentials_successful_retrieval(self, mock_settings):
+        """Test successful _get_auth0_credentials retrieval."""
         mock_settings.AUTH0_ENABLED = True
-        mock_settings.AUTH0_SECRET_NAME = "test-secret"
+        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
+        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
 
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            service.enabled = True
-            service.secret_name = "test-secret"
+        service = Auth0Service()
+        result = service._get_auth0_credentials()
 
-            # Mock ClientError for InvalidRequestException
-            mock_client = MagicMock()
-            mock_client.get_secret_value.side_effect = ClientError(
-                {
-                    "Error": {
-                        "Code": "InvalidRequestException",
-                        "Message": "Invalid request",
-                    }
-                },
-                "GetSecretValue",
-            )
-            mock_session.return_value.client.return_value = mock_client
+        expected = {
+            "client_id": "test-client-id",
+            "client_secret": "test-client-secret",
+            "domain": "test-domain.auth0.com",
+        }
+        assert result == expected
 
-            result = service._get_auth0_credentials()
-            assert result is None
-
-    @patch("app.services.auth0_service.boto3.session.Session")
-    def test_get_auth0_credentials_client_error_resource_not_found(self, mock_session):
-        """Test _get_auth0_credentials with ResourceNotFoundException."""
-        mock_settings = MagicMock()
+    @patch("app.services.auth0_service.settings")
+    def test_get_auth0_credentials_with_none_domain(self, mock_settings):
+        """Test _get_auth0_credentials with None domain."""
         mock_settings.AUTH0_ENABLED = True
-        mock_settings.AUTH0_SECRET_NAME = "test-secret"
+        mock_settings.AUTH0_DOMAIN = None
+        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
+        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
 
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            service.enabled = True
-            service.secret_name = "test-secret"
+        service = Auth0Service()
+        # Service should be disabled when domain is None
+        result = service._get_auth0_credentials()
+        assert result is None
 
-            # Mock ClientError for ResourceNotFoundException
-            mock_client = MagicMock()
-            mock_client.get_secret_value.side_effect = ClientError(
-                {
-                    "Error": {
-                        "Code": "ResourceNotFoundException",
-                        "Message": "Resource not found",
-                    }
-                },
-                "GetSecretValue",
-            )
-            mock_session.return_value.client.return_value = mock_client
+    @patch("app.services.auth0_service.settings")
+    def test_get_auth0_credentials_disabled_service(self, mock_settings):
+        """Test _get_auth0_credentials when service is disabled."""
+        mock_settings.AUTH0_ENABLED = False
+        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
+        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
 
-            result = service._get_auth0_credentials()
-            assert result is None
+        service = Auth0Service()
+        result = service._get_auth0_credentials()
+        assert result is None
 
-    @patch("app.services.auth0_service.boto3.session.Session")
-    def test_get_auth0_credentials_client_error_unknown(self, mock_session):
-        """Test _get_auth0_credentials with unknown ClientError."""
-        mock_settings = MagicMock()
+    @patch("app.services.auth0_service.settings")
+    def test_get_auth0_credentials_both_credentials_none(self, mock_settings):
+        """Test _get_auth0_credentials when both credentials are None."""
         mock_settings.AUTH0_ENABLED = True
-        mock_settings.AUTH0_SECRET_NAME = "test-secret"
+        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_CLIENT_ID = None
+        mock_settings.AUTH0_CLIENT_SECRET = None
 
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            service.enabled = True
-            service.secret_name = "test-secret"
-
-            # Mock ClientError for unknown error
-            mock_client = MagicMock()
-            mock_client.get_secret_value.side_effect = ClientError(
-                {"Error": {"Code": "UnknownError", "Message": "Unknown error"}},
-                "GetSecretValue",
-            )
-            mock_session.return_value.client.return_value = mock_client
-
-            result = service._get_auth0_credentials()
-            assert result is None
-
-    @patch("app.services.auth0_service.boto3.session.Session")
-    def test_get_auth0_credentials_general_exception(self, mock_session):
-        """Test _get_auth0_credentials with general exception."""
-        mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
-        mock_settings.AUTH0_SECRET_NAME = "test-secret"
-
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            service.enabled = True
-            service.secret_name = "test-secret"
-
-            # Mock general exception
-            mock_client = MagicMock()
-            mock_client.get_secret_value.side_effect = Exception("General error")
-            mock_session.return_value.client.return_value = mock_client
-
-            result = service._get_auth0_credentials()
-            assert result is None
+        service = Auth0Service()
+        result = service._get_auth0_credentials()
+        assert result is None
 
     @patch("app.services.auth0_service.requests.post")
     def test_get_access_token_request_exception_with_response(self, mock_post):

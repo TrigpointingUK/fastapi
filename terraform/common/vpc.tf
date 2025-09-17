@@ -44,30 +44,6 @@ resource "aws_subnet" "private" {
   }
 }
 
-resource "aws_eip" "nat" {
-  count = length(var.availability_zones)
-
-  domain = "vpc"
-
-  tags = {
-    Name = "${var.project_name}-nat-eip-${count.index + 1}"
-  }
-
-  depends_on = [aws_internet_gateway.main]
-}
-
-resource "aws_nat_gateway" "main" {
-  count = length(var.availability_zones)
-
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
-
-  tags = {
-    Name = "${var.project_name}-nat-gateway-${count.index + 1}"
-  }
-
-  depends_on = [aws_internet_gateway.main]
-}
 
 resource "aws_route_table" "public" {
   vpc_id = aws_vpc.main.id
@@ -87,10 +63,8 @@ resource "aws_route_table" "private" {
 
   vpc_id = aws_vpc.main.id
 
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main[count.index].id
-  }
+  # Routes will be added by fck-nat instances
+  # No default route to NAT gateway
 
   tags = {
     Name = "${var.project_name}-private-rt-${count.index + 1}"

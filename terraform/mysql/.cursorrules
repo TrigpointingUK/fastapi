@@ -1,0 +1,35 @@
+# Cursor Rules for MySQL Terraform Directory
+
+## CRITICAL: Remote Execution Only
+- **NEVER run terraform commands locally** in this directory
+- **ALWAYS use SSH to bastion host** for any terraform operations
+- This directory contains MySQL Terraform that requires RDS connectivity
+- RDS is in private subnet and only accessible from bastion host
+
+## Required Workflow
+1. Use `./deploy.sh` to copy files and run terraform on bastion
+2. Or manually SSH to bastion and run terraform there
+3. Never run `terraform plan`, `terraform apply`, etc. locally
+
+## Bastion Connection
+- IP: 63.32.182.69 (update as needed)
+- User: ec2-user
+- Key: ~/.ssh/trigpointing-bastion.pem
+
+## Commands to Use
+```bash
+# Deploy from local (recommended)
+./deploy.sh
+
+# Or manual SSH approach
+ssh -i ~/.ssh/trigpointing-bastion.pem ec2-user@63.32.182.69
+cd /home/ec2-user/mysql-terraform
+terraform plan
+terraform apply
+```
+
+## What This Directory Contains
+- MySQL database schemas (production, staging)
+- MySQL users (production, staging, backups)
+- AWS Secrets Manager integration
+- RDS connection via bastion host only

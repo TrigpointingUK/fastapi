@@ -14,19 +14,19 @@ data "aws_ami" "amazon_linux" {
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-x86_64"]
+    values = ["al2023-ami-2023.8.*-arm64"]
   }
 
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
+  # filter {
+  #   name   = "virtualization-type"
+  #   values = ["hvm"]
+  # }
 }
 
 # Bastion Host for secure database access
 resource "aws_instance" "bastion" {
   ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t3.micro"
+  instance_type = "t4g.nano"
   key_name      = var.key_pair_name
 
   subnet_id                   = aws_subnet.public[0].id
@@ -40,7 +40,7 @@ resource "aws_instance" "bastion" {
   # Root block device with more storage
   root_block_device {
     volume_type           = "gp3"
-    volume_size           = 30
+    volume_size           = 10
     delete_on_termination = true
     encrypted             = true
   }
@@ -52,9 +52,7 @@ resource "aws_instance" "bastion" {
   }
 
   user_data = base64encode(templatefile("${path.module}/bastion_user_data.sh", {
-    db_endpoint = aws_db_instance.main.endpoint
-    db_username = "fastapi_user"
-    db_password = "temp-password-change-this"
+    motd = "Please run the Ansible playbook to configure the bastion host."
   }))
 
   tags = {

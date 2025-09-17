@@ -42,13 +42,13 @@ Updated both credentials secrets to remove the port number from the host field:
 # Update staging credentials
 aws secretsmanager update-secret \
   --secret-id fastapi-staging-credentials \
-  --region eu-west-2 \
+  --region eu-west-1 \
   --secret-string '{"dbInstanceIdentifier":"fastapi-db","dbname":"tuk_staging","engine":"mysql","host":"fastapi-db.cvsoze6aw56h.eu-west-2.rds.amazonaws.com","password":"dhKE[&P.wSbjWFm%l=.*R4b#-a8q])F:","port":3306,"username":"fastapi_staging"}'
 
 # Update production credentials
 aws secretsmanager update-secret \
   --secret-id fastapi-production-credentials \
-  --region eu-west-2 \
+  --region eu-west-1 \
   --secret-string '{"dbInstanceIdentifier":"fastapi-db","dbname":"tuk_production","engine":"mysql","host":"fastapi-db.cvsoze6aw56h.eu-west-2.rds.amazonaws.com","password":"r7N+Y8Gk8cMsOeApt*Aux,2|x=Rc?9or","port":3306,"username":"fastapi_production"}'
 ```
 

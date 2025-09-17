@@ -3,7 +3,7 @@
 resource "random_password" "admin_password" {
   length  = 32
   special = true
-  override_special = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+  override_special = "!#$%&*()_+-=[]{}|;:,.<>?"  # Exclude @, /, and " which are not allowed in MySQL passwords
   min_special = 1
   min_upper = 1
   min_lower = 1

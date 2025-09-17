@@ -2,7 +2,6 @@
 Unit tests for Auth0 service integration.
 """
 
-import json
 from unittest.mock import Mock, patch
 
 from app.services.auth0_service import Auth0Service
@@ -68,31 +67,13 @@ class TestAuth0Service:
         service = Auth0Service()
         assert not service.enabled
 
-    @patch("boto3.session.Session")
     @patch("app.services.auth0_service.settings")
-    def test_get_auth0_credentials_success(self, mock_settings, mock_session_class):
+    def test_get_auth0_credentials_success(self, mock_settings):
         """Test successful retrieval of Auth0 credentials."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
-        mock_settings.ENVIRONMENT = "staging"
-
-        # Mock unified app secrets
-        mock_app_secrets = {
-            "jwt_secret_key": "test-jwt-secret",
-            "database_url": "mysql://test:test@localhost/test",
-            "auth0_client_id": "test-client-id",
-            "auth0_client_secret": "test-client-secret",
-            "auth0_domain": "test-domain.auth0.com",
-        }
-
-        # Mock AWS client
-        mock_client = Mock()
-        mock_client.get_secret_value.return_value = {
-            "SecretString": json.dumps(mock_app_secrets)
-        }
-        mock_session = Mock()
-        mock_session.client.return_value = mock_client
-        mock_session_class.return_value = mock_session
+        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
+        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
 
         service = Auth0Service()
         result = service._get_auth0_credentials()
@@ -103,26 +84,14 @@ class TestAuth0Service:
             "domain": "test-domain.auth0.com",
         }
         assert result == expected_credentials
-        mock_client.get_secret_value.assert_called_once_with(
-            SecretId="fastapi-staging-app-secrets"
-        )
 
-    @patch("boto3.session.Session")
     @patch("app.services.auth0_service.settings")
-    def test_get_auth0_credentials_client_error(
-        self, mock_settings, mock_session_class
-    ):
-        """Test handling of AWS client errors."""
+    def test_get_auth0_credentials_missing_credentials(self, mock_settings):
+        """Test handling of missing credentials."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
-        mock_settings.AUTH0_SECRET_NAME = "test-secret"
-
-        # Mock AWS client error
-        mock_client = Mock()
-        mock_client.get_secret_value.side_effect = Exception("AWS Error")
-        mock_session = Mock()
-        mock_session.client.return_value = mock_client
-        mock_session_class.return_value = mock_session
+        mock_settings.AUTH0_CLIENT_ID = None  # Missing client ID
+        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
 
         service = Auth0Service()
         result = service._get_auth0_credentials()

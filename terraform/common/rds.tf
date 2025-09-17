@@ -83,7 +83,10 @@ resource "aws_db_instance" "main" {
 
   # Initial admin user
   username = "admin"
-  password = random_password.admin_password.result
+  # Password is managed by AWS when manage_master_user_password is true
+
+  # Password rotation
+  manage_master_user_password = true
 
   # Performance Insights (disabled for t3.micro)
   performance_insights_enabled = false

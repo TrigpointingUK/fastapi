@@ -1,0 +1,4 @@
+---
+- name: packages for yum and python
+  import_tasks: ./00-packages.yaml
+  tags: packages

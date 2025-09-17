@@ -1,0 +1,16 @@
+---
+- hosts: all
+  roles:
+    - common
+  tags: common
+
+- hosts: bastions
+  roles:
+    - bastion
+    - diodonfrost.terraform
+  tags: bastion
+
+- hosts: webservers
+  roles:
+    - webserver
+  tags: webserver

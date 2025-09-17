@@ -37,3 +37,28 @@ resource "cloudflare_record" "api_production" {
 
   comment = "API endpoint for production environment - managed by Terraform"
 }
+
+# CNAME record for bastion
+resource "cloudflare_record" "bastion" {
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "bastion"
+  content         = aws_eip.bastion.public_ip
+  type            = "A"
+  proxied         = false # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true  # Allow overwriting existing records
+
+  comment = "Bastion host for TrigpointingUK - managed by Terraform"
+}
+
+
+# CNAME record for bastion
+resource "cloudflare_record" "webserver" {
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "webserver"
+  content         = aws_instance.webserver.private_ip
+  type            = "A"
+  proxied         = false # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true  # Allow overwriting existing records
+
+  comment = "Webserver host for TrigpointingUK - managed by Terraform"
+}

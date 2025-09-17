@@ -1,0 +1,12 @@
+---
+- name: Update package cache
+  yum:
+    update_cache: yes
+
+
+- name: Install additional packages
+  yum:
+    name:
+      - docker
+      - nginx
+    state: present

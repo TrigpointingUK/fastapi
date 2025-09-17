@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# Safety wrapper to prevent local terraform execution
+# This directory requires RDS connectivity and must be run from bastion host
+
+echo "❌ ERROR: Terraform cannot be run locally in this directory!"
+echo ""
+echo "🔒 This MySQL Terraform requires RDS connectivity and must be run from the bastion host."
+echo ""
+echo "📋 Use one of these approaches:"
+echo ""
+echo "1. Deploy automatically (recommended):"
+echo "   ./deploy.sh"
+echo ""
+echo "2. Manual SSH to bastion:"
+echo "   ssh -i ~/.ssh/trigpointing-bastion.pem ec2-user@63.32.182.69"
+echo "   cd /home/ec2-user/mysql-terraform"
+echo "   terraform $@"
+echo ""
+echo "3. Use the real terraform binary directly:"
+echo "   /usr/bin/terraform $@"
+echo ""
+
+exit 1

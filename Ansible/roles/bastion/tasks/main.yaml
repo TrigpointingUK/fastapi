@@ -1,0 +1,7 @@
+- name: packages for yum and python
+  import_tasks: ./00-packages.yaml
+  tags: packages
+
+- name: DB connection script
+  import_tasks: ./10-db-connect.yaml
+  tags: packages

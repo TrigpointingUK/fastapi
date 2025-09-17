@@ -67,9 +67,11 @@ output "rds_arn" {
   value       = aws_db_instance.main.arn
 }
 
-output "admin_password" {
-  description = "RDS admin password"
-  value       = random_password.admin_password.result
+# Note: admin_password output removed - use master_user_secret_arn instead
+
+output "master_user_secret_arn" {
+  description = "ARN of the RDS master user secret (for password rotation)"
+  value       = length(aws_db_instance.main.master_user_secret) > 0 ? aws_db_instance.main.master_user_secret[0].secret_arn : null
   sensitive   = true
 }
 
@@ -101,26 +103,63 @@ output "webserver_security_group_id" {
   value       = aws_security_group.webserver.id
 }
 
-# DMS Endpoints
-output "dms_staging_endpoint_arn" {
-  description = "ARN of the DMS staging user endpoint"
-  value       = aws_dms_endpoint.staging_user.endpoint_arn
+# DMS Endpoints - Disabled for initial deployment
+# output "dms_staging_endpoint_arn" {
+#   description = "ARN of the DMS staging user endpoint"
+#   value       = aws_dms_endpoint.staging_user.endpoint_arn
+# }
+
+# output "dms_production_endpoint_arn" {
+#   description = "ARN of the DMS production user endpoint"
+#   value       = aws_dms_endpoint.production_user.endpoint_arn
+# }
+
+# DMS Replication Configs - Disabled for initial deployment
+# output "dms_staging_config_arn" {
+#   description = "ARN of the DMS staging replication config"
+#   value       = aws_dms_replication_config.staging.arn
+# }
+
+# output "dms_production_config_arn" {
+#   description = "ARN of the DMS production replication config"
+#   value       = aws_dms_replication_config.production.arn
+# }
+
+# DMS Target Endpoints
+output "dms_staging_target_arn" {
+  description = "ARN of the DMS staging target endpoint"
+  value       = aws_dms_endpoint.staging_target.endpoint_arn
 }
 
-output "dms_production_endpoint_arn" {
-  description = "ARN of the DMS production user endpoint"
-  value       = aws_dms_endpoint.production_user.endpoint_arn
+output "dms_production_target_arn" {
+  description = "ARN of the DMS production target endpoint"
+  value       = aws_dms_endpoint.production_target.endpoint_arn
 }
 
-# DMS Replication Configs
-output "dms_staging_config_arn" {
-  description = "ARN of the DMS staging replication config"
-  value       = aws_dms_replication_config.staging.arn
+output "dms_service_role_arn" {
+  description = "ARN of the DMS service role"
+  value       = aws_iam_role.dms_service_role.arn
 }
 
-output "dms_production_config_arn" {
-  description = "ARN of the DMS production replication config"
-  value       = aws_dms_replication_config.production.arn
+output "dms_security_group_id" {
+  description = "ID of the DMS security group"
+  value       = aws_security_group.dms.id
+}
+
+output "dms_replication_subnet_group_id" {
+  description = "ID of the DMS replication subnet group"
+  value       = aws_dms_replication_subnet_group.main.id
+}
+
+# DMS Serverless Migration Tasks
+output "dms_staging_migration_arn" {
+  description = "ARN of the DMS staging migration task"
+  value       = aws_dms_replication_config.staging_migration.arn
+}
+
+output "dms_production_migration_arn" {
+  description = "ARN of the DMS production migration task"
+  value       = aws_dms_replication_config.production_migration.arn
 }
 
 # ALB Outputs

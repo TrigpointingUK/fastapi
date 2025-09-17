@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "eu-west-2"  # London region
+  default     = "eu-west-1"  # Ireland region
 }
 
 variable "project_name" {
@@ -19,7 +19,7 @@ variable "vpc_cidr" {
 variable "availability_zones" {
   description = "List of availability zones"
   type        = list(string)
-  default     = ["eu-west-2a", "eu-west-2b"]
+  default     = ["eu-west-1a", "eu-west-1b"]
 }
 
 variable "private_subnet_ids" {
