@@ -12,9 +12,7 @@ import json
 from datetime import datetime, timedelta, timezone
 from typing import Dict, List, Optional
 
-import boto3
 import requests
-from botocore.exceptions import ClientError
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -58,7 +56,7 @@ class Auth0Service:
 
     def _get_auth0_credentials(self) -> Optional[Dict[str, str]]:
         """
-        Retrieve Auth0 credentials from AWS Secrets Manager.
+        Retrieve Auth0 credentials from environment variables.
 
         Returns:
             Dictionary containing Auth0 credentials or None if failed
@@ -67,74 +65,41 @@ class Auth0Service:
             return None
 
         try:
-            # Create a Secrets Manager client
-            session = boto3.session.Session()
-            client = session.client(
-                service_name="secretsmanager",
-                region_name="eu-west-1",  # Updated to correct region
-            )
+            # Get credentials from environment variables (injected by ECS)
+            client_id = settings.AUTH0_CLIENT_ID
+            client_secret = settings.AUTH0_CLIENT_SECRET
+            domain = settings.AUTH0_DOMAIN
 
-            # Retrieve the unified app secrets
-            secret_name = f"fastapi-{settings.ENVIRONMENT}-app-secrets"
-            response = client.get_secret_value(SecretId=secret_name)
-            secret_data = json.loads(response["SecretString"])
+            if not client_id or not client_secret:
+                log_data = {
+                    "event": "auth0_credentials_missing",
+                    "client_id_present": bool(client_id),
+                    "client_secret_present": bool(client_secret),
+                    "domain_present": bool(domain),
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
+                return None
 
-            # Extract Auth0 credentials from the unified secret
             auth0_credentials = {
-                "client_id": secret_data.get("auth0_client_id"),
-                "client_secret": secret_data.get("auth0_client_secret"),
-                "domain": secret_data.get("auth0_domain"),
+                "client_id": client_id,
+                "client_secret": client_secret,
+                "domain": domain or "",
             }
 
             log_data = {
                 "event": "auth0_credentials_retrieved",
-                "secret_name": secret_name,
+                "source": "environment_variables",
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.debug(json.dumps(log_data))
             return auth0_credentials
-
-        except ClientError as e:
-            error_code = e.response["Error"]["Code"]
-            error_message = e.response["Error"]["Message"]
-
-            log_data = {
-                "event": "auth0_credentials_retrieval_failed",
-                "error_type": "ClientError",
-                "error_code": error_code,
-                "error_message": error_message,
-                "secret_name": secret_name,
-                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-            }
-
-            if error_code == "DecryptionFailureException":
-                log_data["error_description"] = "App secrets could not be decrypted"
-            elif error_code == "InternalServiceErrorException":
-                log_data["error_description"] = (
-                    "AWS internal service error retrieving app secrets"
-                )
-            elif error_code == "InvalidParameterException":
-                log_data["error_description"] = (
-                    "Invalid parameter retrieving app secrets"
-                )
-            elif error_code == "InvalidRequestException":
-                log_data["error_description"] = "Invalid request retrieving app secrets"
-            elif error_code == "ResourceNotFoundException":
-                log_data["error_description"] = "App secrets not found"
-            else:
-                log_data["error_description"] = (
-                    "Unexpected error retrieving app secrets"
-                )
-
-            logger.error(json.dumps(log_data))
-            return None
 
         except Exception as e:
             log_data = {
                 "event": "auth0_credentials_retrieval_failed",
                 "error_type": "UnexpectedError",
                 "error_message": str(e),
-                "secret_name": secret_name,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))

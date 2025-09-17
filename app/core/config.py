@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     AUTH0_SECRET_NAME: Optional[str] = None
     AUTH0_CONNECTION: Optional[str] = None
     AUTH0_ENABLED: bool = False
+    AUTH0_CLIENT_ID: Optional[str] = None
+    AUTH0_CLIENT_SECRET: Optional[str] = None
 
     # Auth0 Audience Configuration
     # These are separate audiences for different purposes:

@@ -51,7 +51,7 @@ resource "aws_iam_policy" "ecs_app_secrets_access" {
           "secretsmanager:GetSecretValue",
           "secretsmanager:DescribeSecret"
         ]
-        Resource = aws_secretsmanager_secret.app_secrets.arn
+        Resource = "${aws_secretsmanager_secret.app_secrets.arn}*"
       }
     ]
   })
@@ -59,7 +59,7 @@ resource "aws_iam_policy" "ecs_app_secrets_access" {
 
 # Attach the app secrets policy to the ECS task role (where the app runs)
 resource "aws_iam_role_policy_attachment" "ecs_task_app_secrets" {
-  role       = element(split("/", var.ecs_task_role_name), length(split("/", var.ecs_task_role_name)) - 1)  # Extract role name from ARN
+  role       = basename(var.ecs_task_role_name)  # Extract role name from ARN
   policy_arn = aws_iam_policy.ecs_app_secrets_access.arn
 
   depends_on = [
@@ -70,7 +70,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_app_secrets" {
 
 # Attach the app secrets policy to the ECS task execution role (for ECS to retrieve secrets at startup)
 resource "aws_iam_role_policy_attachment" "ecs_task_execution_app_secrets" {
-  role       = element(split("/", var.ecs_task_execution_role_name), length(split("/", var.ecs_task_execution_role_name)) - 1)  # Extract role name from ARN
+  role       = basename(var.ecs_task_execution_role_name)  # Extract role name from ARN
   policy_arn = aws_iam_policy.ecs_app_secrets_access.arn
 
   depends_on = [
