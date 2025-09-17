@@ -7,6 +7,7 @@
 - hosts: bastions
   roles:
     - bastion
+    - diodonfrost.terraform
   tags: bastion
 
 - hosts: webservers
