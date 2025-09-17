@@ -105,5 +105,16 @@ resource "aws_secretsmanager_secret_version" "backups_credentials" {
   })
 }
 
+# Legacy credentials secret (manually created, imported into Terraform)
+resource "aws_secretsmanager_secret" "legacy_credentials" {
+  name                    = "fastapi-legacy-credentials"
+  description            = "Legacy database credentials for DMS migration"
+  recovery_window_in_days = 7
+
+  tags = {
+    Name = "fastapi-legacy-credentials"
+  }
+}
+
 # Note: Lambda rotation removed - RDS master user password rotation
 # is handled by RDS built-in rotation feature

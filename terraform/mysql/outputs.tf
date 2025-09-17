@@ -28,3 +28,14 @@ output "backups_credentials_arn" {
   value       = aws_secretsmanager_secret.backups_credentials.arn
   sensitive   = true
 }
+
+output "legacy_credentials_arn" {
+  description = "ARN of the legacy credentials secret"
+  value       = aws_secretsmanager_secret.legacy_credentials.arn
+  sensitive   = true
+}
+
+output "dms_secret_access_role_arn" {
+  description = "ARN of the DMS role for secret access"
+  value       = aws_iam_role.dms_secret_access.arn
+}
