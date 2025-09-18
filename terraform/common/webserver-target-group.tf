@@ -70,3 +70,84 @@ resource "aws_lb_listener_rule" "test2" {
     Name = "${var.project_name}-test2-listener-rule"
   }
 }
+
+# Production listener rules for trigpointing.uk domains
+resource "aws_lb_listener_rule" "forum" {
+  listener_arn = aws_lb_listener.app_https[0].arn
+  priority     = 120
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.webserver.arn
+  }
+
+  condition {
+    host_header {
+      values = ["forum.trigpointing.uk"]
+    }
+  }
+
+  tags = {
+    Name = "${var.project_name}-forum-listener-rule"
+  }
+}
+
+resource "aws_lb_listener_rule" "phpmyadmin" {
+  listener_arn = aws_lb_listener.app_https[0].arn
+  priority     = 121
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.webserver.arn
+  }
+
+  condition {
+    host_header {
+      values = ["phpmyadmin.trigpointing.uk"]
+    }
+  }
+
+  tags = {
+    Name = "${var.project_name}-phpmyadmin-listener-rule"
+  }
+}
+
+resource "aws_lb_listener_rule" "static" {
+  listener_arn = aws_lb_listener.app_https[0].arn
+  priority     = 122
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.webserver.arn
+  }
+
+  condition {
+    host_header {
+      values = ["static.trigpointing.uk"]
+    }
+  }
+
+  tags = {
+    Name = "${var.project_name}-static-listener-rule"
+  }
+}
+
+resource "aws_lb_listener_rule" "wiki" {
+  listener_arn = aws_lb_listener.app_https[0].arn
+  priority     = 123
+
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.webserver.arn
+  }
+
+  condition {
+    host_header {
+      values = ["wiki.trigpointing.uk"]
+    }
+  }
+
+  tags = {
+    Name = "${var.project_name}-wiki-listener-rule"
+  }
+}
