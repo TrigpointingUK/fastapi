@@ -62,3 +62,26 @@ resource "cloudflare_record" "webserver" {
 
   comment = "Webserver host for TrigpointingUK - managed by Terraform"
 }
+
+# Test CNAMEs for ALB testing
+resource "cloudflare_record" "test1" {
+  zone_id         = data.cloudflare_zones.staging.zones[0].id
+  name            = "test1"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true  # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true  # Allow overwriting existing records
+
+  comment = "Test domain 1 for ALB testing - managed by Terraform"
+}
+
+resource "cloudflare_record" "test2" {
+  zone_id         = data.cloudflare_zones.staging.zones[0].id
+  name            = "test2"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true  # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true  # Allow overwriting existing records
+
+  comment = "Test domain 2 for ALB testing - managed by Terraform"
+}

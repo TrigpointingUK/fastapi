@@ -13,6 +13,14 @@ resource "mysql_database" "staging" {
   depends_on = [data.terraform_remote_state.common]
 }
 
+# Create phpbb schema
+resource "mysql_database" "phpbb" {
+  name = "phpbb_db"
+
+  depends_on = [data.terraform_remote_state.common]
+}
+
+
 # Create production user
 resource "mysql_user" "production" {
   user               = "fastapi_production"
@@ -51,6 +59,25 @@ resource "mysql_grant" "staging" {
   depends_on = [mysql_user.staging, mysql_database.staging]
 }
 
+
+# Create phpbb user
+resource "mysql_user" "phpbb" {
+  user               = "phpbb_user"
+  host               = "%"
+  plaintext_password = random_password.phpbb_password.result
+
+  depends_on = [data.terraform_remote_state.common]
+}
+
+# Grant full permissions to phpbb user on phpbb schema
+resource "mysql_grant" "phpbb" {
+  user       = mysql_user.staging.user
+  host       = mysql_user.staging.host
+  database   = mysql_database.phpbb.name
+  privileges = ["ALL"]
+
+  depends_on = [mysql_user.phpbb, mysql_database.phpbb]
+}
 # Create backups user
 resource "mysql_user" "backups" {
   user               = "backups"

@@ -16,11 +16,6 @@ data "aws_ami" "amazon_linux" {
     name   = "name"
     values = ["al2023-ami-2023.8.*-arm64"]
   }
-
-  # filter {
-  #   name   = "virtualization-type"
-  #   values = ["hvm"]
-  # }
 }
 
 # Bastion Host for secure database access

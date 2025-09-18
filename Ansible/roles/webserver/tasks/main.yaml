@@ -2,3 +2,152 @@
 - name: packages for yum and python
   import_tasks: ./00-packages.yaml
   tags: packages
+
+- name: Install and start NGINX
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: yes
+  notify: restart nginx
+
+- name: Start and enable NGINX
+  ansible.builtin.systemd:
+    name: nginx
+    state: started
+    enabled: yes
+
+- name: Create tme user for testing
+  ansible.builtin.user:
+    name: tme
+    comment: "Test user for ALB testing"
+    shell: /bin/bash
+    create_home: yes
+    state: present
+
+- name: Create www directory for tme user
+  ansible.builtin.file:
+    path: /home/tme/www
+    state: directory
+    owner: tme
+    group: tme
+    mode: '0755'
+
+- name: Create test1 subdirectory
+  ansible.builtin.file:
+    path: /home/tme/www/test1
+    state: directory
+    owner: tme
+    group: tme
+    mode: '0755'
+
+- name: Create test2 subdirectory
+  ansible.builtin.file:
+    path: /home/tme/www/test2
+    state: directory
+    owner: tme
+    group: tme
+    mode: '0755'
+
+- name: Create index.php for test1
+  ansible.builtin.copy:
+    content: |
+      <?php
+      echo "<h1>Test1 Domain - ALB Testing</h1>";
+      echo "<p>This is test1.trigpointing.me served from /home/tme/www/test1/</p>";
+      echo "<p>Server: " . gethostname() . "</p>";
+      echo "<p>Date: " . date('Y-m-d H:i:s') . "</p>";
+      echo "<p>Request URI: " . $_SERVER['REQUEST_URI'] . "</p>";
+      echo "<p>Host Header: " . $_SERVER['HTTP_HOST'] . "</p>";
+      ?>
+    dest: /home/tme/www/test1/index.php
+    owner: tme
+    group: tme
+    mode: '0644'
+
+- name: Create index.php for test2
+  ansible.builtin.copy:
+    content: |
+      <?php
+      echo "<h1>Test2 Domain - ALB Testing</h1>";
+      echo "<p>This is test2.trigpointing.me served from /home/tme/www/test2/</p>";
+      echo "<p>Server: " . gethostname() . "</p>";
+      echo "<p>Date: " . date('Y-m-d H:i:s') . "</p>";
+      echo "<p>Request URI: " . $_SERVER['REQUEST_URI'] . "</p>";
+      echo "<p>Host Header: " . $_SERVER['HTTP_HOST'] . "</p>";
+      ?>
+    dest: /home/tme/www/test2/index.php
+    owner: tme
+    group: tme
+    mode: '0644'
+
+- name: Create nginx virtual host for test1.trigpointing.me
+  ansible.builtin.copy:
+    content: |
+      server {
+          listen 80;
+          server_name test1.trigpointing.me;
+
+          root /home/tme/www/test1;
+          index index.php index.html index.htm;
+
+          location / {
+              try_files $uri $uri/ =404;
+          }
+
+          location ~ \.php$ {
+              include snippets/fastcgi-php.conf;
+              fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+          }
+
+          location ~ /\.ht {
+              deny all;
+          }
+      }
+    dest: /etc/nginx/sites-available/test1.trigpointing.me
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nginx
+
+- name: Create nginx virtual host for test2.trigpointing.me
+  ansible.builtin.copy:
+    content: |
+      server {
+          listen 80;
+          server_name test2.trigpointing.me;
+
+          root /home/tme/www/test2;
+          index index.php index.html index.htm;
+
+          location / {
+              try_files $uri $uri/ =404;
+          }
+
+          location ~ \.php$ {
+              include snippets/fastcgi-php.conf;
+              fastcgi_pass unix:/var/run/php/php8.3-fpm.sock;
+          }
+
+          location ~ /\.ht {
+              deny all;
+          }
+      }
+    dest: /etc/nginx/sites-available/test2.trigpointing.me
+    owner: root
+    group: root
+    mode: '0644'
+  notify: restart nginx
+
+- name: Enable test1 site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/test1.trigpointing.me
+    dest: /etc/nginx/sites-enabled/test1.trigpointing.me
+    state: link
+  notify: restart nginx
+
+- name: Enable test2 site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/test2.trigpointing.me
+    dest: /etc/nginx/sites-enabled/test2.trigpointing.me
+    state: link
+  notify: restart nginx

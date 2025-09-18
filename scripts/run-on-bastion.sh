@@ -3,22 +3,22 @@
 
 set -e
 
-BASTION_IP="35.85.75.192"
+BASTION_HOST="bastion.trigpointing.uk"
 KEY_PATH="~/.ssh/your-key.pem"
 
 echo "🚀 Copying script to bastion host..."
 
 # Copy the Python script to bastion
-scp -i $KEY_PATH scripts/export-database-schema.py ec2-user@$BASTION_IP:~/
+scp -i $KEY_PATH scripts/export-database-schema.py ec2-user@$BASTION_HOST:~/
 
 # Copy requirements for the script
 echo -e "pymysql\nsqlalchemy\npyyaml" > /tmp/schema_requirements.txt
-scp -i $KEY_PATH /tmp/schema_requirements.txt ec2-user@$BASTION_IP:~/
+scp -i $KEY_PATH /tmp/schema_requirements.txt ec2-user@$BASTION_HOST:~/
 
 echo "📦 Running script on bastion host..."
 
 # Run the script on bastion
-ssh -i $KEY_PATH ec2-user@$BASTION_IP << 'EOF'
+ssh -i $KEY_PATH ec2-user@$BASTION_HOST << 'EOF'
 # Install Python dependencies
 pip3 install --user -r schema_requirements.txt
 
@@ -38,6 +38,6 @@ EOF
 echo "📥 Copying results back..."
 
 # Copy the results back
-scp -i $KEY_PATH -r ec2-user@$BASTION_IP:~/docs/database ./docs/
+scp -i $KEY_PATH -r ec2-user@$BASTION_HOST:~/docs/database ./docs/
 
 echo "✅ Schema export complete! Check ./docs/database/"

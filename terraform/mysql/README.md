@@ -12,21 +12,21 @@ This directory contains MySQL Terraform configuration that:
 
 ## Usage
 
-### Option 1: Automatic Deployment (Recommended)
+### Option 1: Integrated Deployment (Recommended)
 ```bash
-# From your local machine
-./deploy.sh
+# From your local machine in terraform/ directory
+./deploy.sh mysql
 ```
 
 This will:
-1. Copy all files to bastion host
+1. Copy all MySQL files to bastion host (bastion.trigpointing.uk)
 2. Run terraform on bastion
 3. Deploy MySQL databases and users
 
 ### Option 2: Manual SSH Deployment
 ```bash
 # SSH to bastion
-ssh -i ~/.ssh/trigpointing-bastion.pem ec2-user@63.32.182.69
+ssh -i ~/.ssh/trigpointing-bastion.pem ec2-user@bastion.trigpointing.uk
 
 # Navigate to terraform directory
 cd /home/ec2-user/mysql-terraform
@@ -59,8 +59,8 @@ Use the credentials stored in AWS Secrets Manager:
 
 ## Safety Features
 
-- Local `terraform` command is blocked (use `./deploy.sh` instead)
-- `.cursorrules` file enforces remote execution
+- Local `terraform` command is blocked (use main `./deploy.sh mysql` instead)
+- Uses bastion.trigpointing.uk hostname (no hardcoded IPs)
 - Clear error messages guide proper usage
 
 ## Troubleshooting
@@ -70,3 +70,4 @@ If you see "could not connect to server" errors:
 2. Check RDS security groups allow bastion access
 3. Verify AWS credentials are configured on bastion
 4. Use `./connect-to-rds-master.sh` to test RDS connectivity
+5. Verify bastion.trigpointing.uk resolves correctly

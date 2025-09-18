@@ -70,3 +70,9 @@ variable "enable_cloudflare_ssl" {
   type        = bool
   default     = true
 }
+
+variable "webserver_ami" {
+  description = "AMI for the webserver"
+  type        = string
+  default     = "ami-0b35c16246996ff02"
+}
