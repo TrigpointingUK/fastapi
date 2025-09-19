@@ -4,9 +4,8 @@ User endpoints with JWT protection.
 
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_db
 from app.crud.user import get_user_by_id, is_admin
-from app.db.database import get_db
 from app.models.user import User
 from app.schemas.user import UserEmail
 from fastapi import APIRouter, Depends, HTTPException, status

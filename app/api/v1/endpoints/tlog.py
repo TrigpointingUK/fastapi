@@ -4,8 +4,8 @@ TLog endpoints for public access.
 
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_db
 from app.crud.tlog import get_trig_count
-from app.db.database import get_db
 from app.schemas.trig import TrigCountResponse
 from fastapi import APIRouter, Depends
 

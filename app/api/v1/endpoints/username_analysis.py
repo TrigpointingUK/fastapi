@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_user
+from app.api.deps import get_current_admin_user, get_db
 from app.crud.user import (
     find_duplicate_emails,
     get_all_emails,
@@ -15,7 +15,6 @@ from app.crud.user import (
     get_user_log_stats,
     get_users_by_email,
 )
-from app.db.database import get_db
 from app.models.user import User
 from app.utils.username_sanitizer import find_duplicate_sanitized_usernames
 from fastapi import APIRouter, Depends, HTTPException, status
