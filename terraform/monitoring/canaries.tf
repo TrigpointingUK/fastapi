@@ -63,6 +63,7 @@ resource "aws_synthetics_canary" "api_trig_1" {
     environment_variables = {
       EXPECTED_SUBSTRING = "\"name\":\"Fetlar\""
       TARGET_URL         = "https://api.trigpointing.uk/api/v1/trig/1"
+      USER_AGENT         = "Trigpointing-canary/1.0 (+https://trigpointing.uk)"
       CODE_HASH          = data.archive_file.api_json_contains.output_base64sha256
     }
   }
@@ -91,6 +92,7 @@ resource "aws_synthetics_canary" "web_trig_1" {
     environment_variables = {
       EXPECTED_SUBSTRING = "Fetlar"
       TARGET_URL         = "https://trigpointing.uk/trig/1"
+      USER_AGENT         = "Trigpointing-canary/1.0 (+https://trigpointing.uk)"
       CODE_HASH          = data.archive_file.html_contains.output_base64sha256
     }
   }
@@ -123,6 +125,7 @@ resource "aws_synthetics_canary" "login_me" {
       USERNAME  = local.tuk_guest_parsed.username
       PASSWORD  = local.tuk_guest_parsed.password
       LEGACY_USER_ID = tostring(local.tuk_guest_parsed.legacy_userid)
+      USER_AGENT = "Trigpointing-canary/1.0 (+https://trigpointing.uk)"
       CODE_HASH = data.archive_file.login_and_me.output_base64sha256
     }
   }

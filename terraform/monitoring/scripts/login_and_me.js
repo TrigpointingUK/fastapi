@@ -7,6 +7,7 @@ async function httpPostForm(url, form) {
   const body = new URLSearchParams(form).toString();
   const { hostname, pathname, protocol } = new URL(url);
   return new Promise((resolve, reject) => {
+    const ua = process.env.USER_AGENT || 'Trigpointing-canary/1.0 (+https://trigpointing.uk)';
     const req = https.request({
       hostname,
       path: pathname,
@@ -15,7 +16,7 @@ async function httpPostForm(url, form) {
         'Content-Type': 'application/x-www-form-urlencoded',
         'accept': 'application/json',
         'Content-Length': Buffer.byteLength(body),
-        'User-Agent': 'Trigpointing-canary/1.0 (+https://trigpointing.uk)'
+        'User-Agent': ua
       },
       timeout: 30000
     }, res => {
@@ -32,7 +33,8 @@ async function httpPostForm(url, form) {
 async function httpGet(url, headers) {
   const { hostname, pathname } = new URL(url);
   return new Promise((resolve, reject) => {
-    const req = https.request({ hostname, path: pathname, method: 'GET', headers: { ...headers, 'User-Agent': 'Trigpointing-canary/1.0 (+https://trigpointing.uk)' }, timeout: 30000 }, res => {
+    const ua = process.env.USER_AGENT || 'Trigpointing-canary/1.0 (+https://trigpointing.uk)';
+    const req = https.request({ hostname, path: pathname, method: 'GET', headers: { ...headers, 'User-Agent': ua }, timeout: 30000 }, res => {
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => resolve({ statusCode: res.statusCode, body: data }));

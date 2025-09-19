@@ -6,9 +6,10 @@ const log = require('SyntheticsLogger');
 exports.handler = async () => {
   const url = process.env.TARGET_URL;
   const expected = process.env.EXPECTED_SUBSTRING;
+  const ua = process.env.USER_AGENT || 'Trigpointing-canary/1.0 (+https://trigpointing.uk)';
 
   const page = await synthetics.getPage();
-  await page.setUserAgent('Trigpointing-canary/1.0 (+https://trigpointing.uk)');
+  await page.setUserAgent(ua);
   const response = await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
   if (!response) {
     await synthetics.takeScreenshot('no_response', 'No response from target');
