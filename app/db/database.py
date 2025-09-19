@@ -6,14 +6,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
 from app.core.config import settings
-from app.core.tracing import trace_function
+
+# from app.core.tracing import trace_function  # Removed to avoid conflicts
 
 # Lazy initialization - only create engine when first needed
 _engine = None
 _SessionLocal = None
 
 
-@trace_function("database.get_engine")
 def get_engine():
     """Get database engine, creating it if necessary."""
     global _engine
@@ -40,7 +40,6 @@ def get_session_local():
 Base = declarative_base()
 
 
-@trace_function("database.get_db")
 def get_db():
     """Dependency to get database session."""
     db = get_session_local()()

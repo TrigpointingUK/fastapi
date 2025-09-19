@@ -23,7 +23,7 @@ def setup_xray_tracing() -> bool:
 
     try:
         # Import X-Ray SDK
-        from aws_xray_sdk.core import patch_all, xray_recorder
+        from aws_xray_sdk.core import xray_recorder
 
         # Configure X-Ray recorder
         xray_recorder.configure(
@@ -32,8 +32,12 @@ def setup_xray_tracing() -> bool:
             daemon_address=settings.XRAY_DAEMON_ADDRESS,
         )
 
-        # Patch all libraries for automatic instrumentation
-        patch_all()
+        # Patch selected libraries for automatic instrumentation
+        # Avoid patching SQLAlchemy to prevent conflicts with dependency injection
+        from aws_xray_sdk.core import patch
+
+        # Patch only specific libraries that don't interfere with dependency injection
+        patch(["requests", "boto3", "botocore"])  # Avoid 'sqlalchemy' and 'psycopg2'
 
         logger.info(f"X-Ray tracing enabled for service: {settings.XRAY_SERVICE_NAME}")
         return True
@@ -65,7 +69,8 @@ def setup_opentelemetry_tracing() -> bool:
         from opentelemetry.instrumentation.boto3 import Boto3Instrumentor
         from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
         from opentelemetry.instrumentation.requests import RequestsInstrumentor
-        from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
+
+        # from opentelemetry.instrumentation.sqlalchemy import SQLAlchemyInstrumentor
         from opentelemetry.sdk.resources import Resource
         from opentelemetry.sdk.trace import TracerProvider
         from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -93,7 +98,8 @@ def setup_opentelemetry_tracing() -> bool:
 
         # Instrument libraries
         FastAPIInstrumentor.instrument()
-        SQLAlchemyInstrumentor().instrument()
+        # Skip SQLAlchemy instrumentation to avoid conflicts with X-Ray SDK
+        # SQLAlchemyInstrumentor().instrument()
         RequestsInstrumentor().instrument()
         Boto3Instrumentor().instrument()
 
