@@ -171,7 +171,7 @@ resource "aws_iam_policy" "ecs_credentials_access" {
 
 # ECS Service
 resource "aws_ecs_service" "app" {
-  name            = "${var.project_name}-${var.environment}"
+  name            = var.service_name != null ? var.service_name : "${var.project_name}-${var.environment}"
   cluster         = var.ecs_cluster_id
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.desired_count

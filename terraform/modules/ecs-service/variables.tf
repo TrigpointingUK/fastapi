@@ -8,6 +8,12 @@ variable "environment" {
   type        = string
 }
 
+variable "service_name" {
+  description = "Name of the ECS service (defaults to project_name-environment if not specified)"
+  type        = string
+  default     = null
+}
+
 variable "aws_region" {
   description = "AWS region"
   type        = string

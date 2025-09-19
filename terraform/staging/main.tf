@@ -84,6 +84,7 @@ module "ecs_service" {
 
   project_name                    = var.project_name
   environment                    = "staging"
+  service_name                   = "fastapi-staging-service"  # Keep the original service name
   aws_region                     = var.aws_region
   container_image                = var.container_image
   cpu                           = var.cpu
