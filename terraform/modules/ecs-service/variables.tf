@@ -80,6 +80,11 @@ variable "ecs_task_role_arn" {
   type        = string
 }
 
+variable "ecs_task_role_name" {
+  description = "Name of the ECS task role (for policy attachment)"
+  type        = string
+}
+
 variable "ecs_security_group_id" {
   description = "ID of the ECS security group"
   type        = string
@@ -95,6 +100,16 @@ variable "target_group_arn" {
   type        = string
 }
 
+variable "alb_listener_arn" {
+  description = "ARN of the ALB listener"
+  type        = string
+}
+
+variable "alb_rule_priority" {
+  description = "Priority for the ALB listener rule"
+  type        = number
+  default     = 100
+}
 
 variable "secrets_arn" {
   description = "ARN of the secrets manager secret"
@@ -128,4 +143,62 @@ variable "auth0_api_audience" {
   description = "Auth0 API audience for token validation"
   type        = string
   default     = null
+}
+
+# Parameter Store Configuration
+variable "enable_parameter_store" {
+  description = "Enable AWS Systems Manager Parameter Store for configuration"
+  type        = bool
+  default     = false
+}
+
+# X-Ray Configuration
+variable "xray_enabled" {
+  description = "Enable AWS X-Ray tracing"
+  type        = bool
+  default     = false
+}
+
+variable "xray_service_name" {
+  description = "X-Ray service name"
+  type        = string
+  default     = "trigpointing-api"
+}
+
+variable "xray_sampling_rate" {
+  description = "X-Ray sampling rate (0.0 to 1.0)"
+  type        = number
+  default     = 0.1
+}
+
+variable "xray_daemon_address" {
+  description = "X-Ray daemon address (optional)"
+  type        = string
+  default     = null
+}
+
+# Application Configuration
+variable "log_level" {
+  description = "Application log level"
+  type        = string
+  default     = "INFO"
+}
+
+variable "cors_origins" {
+  description = "CORS allowed origins (comma-separated)"
+  type        = string
+  default     = null
+}
+
+# Database Configuration
+variable "db_pool_size" {
+  description = "Database connection pool size"
+  type        = number
+  default     = 5
+}
+
+variable "db_pool_recycle" {
+  description = "Database connection pool recycle time (seconds)"
+  type        = number
+  default     = 300
 }

@@ -109,6 +109,49 @@ resource "aws_ecs_task_definition" "app" {
           name      = "AUTH0_CLIENT_SECRET"
           valueFrom = "${var.secrets_arn}:auth0_client_secret::"
         }
+      ] : [],
+      # Parameter Store Configuration (if enabled)
+      var.enable_parameter_store ? [
+        # X-Ray Configuration
+        {
+          name      = "XRAY_ENABLED"
+          valueFrom = aws_ssm_parameter.xray_enabled[0].arn
+        },
+        {
+          name      = "XRAY_SERVICE_NAME"
+          valueFrom = aws_ssm_parameter.xray_service_name[0].arn
+        },
+        {
+          name      = "XRAY_SAMPLING_RATE"
+          valueFrom = aws_ssm_parameter.xray_sampling_rate[0].arn
+        },
+        # Application Configuration
+        {
+          name      = "LOG_LEVEL"
+          valueFrom = aws_ssm_parameter.log_level[0].arn
+        },
+        # Database Configuration
+        {
+          name      = "DB_POOL_SIZE"
+          valueFrom = aws_ssm_parameter.db_pool_size[0].arn
+        },
+        {
+          name      = "DB_POOL_RECYCLE"
+          valueFrom = aws_ssm_parameter.db_pool_recycle[0].arn
+        }
+      ] : [],
+      # Optional Parameter Store parameters
+      var.enable_parameter_store && var.xray_daemon_address != null ? [
+        {
+          name      = "XRAY_DAEMON_ADDRESS"
+          valueFrom = aws_ssm_parameter.xray_daemon_address[0].arn
+        }
+      ] : [],
+      var.enable_parameter_store && var.cors_origins != null ? [
+        {
+          name      = "BACKEND_CORS_ORIGINS"
+          valueFrom = aws_ssm_parameter.cors_origins[0].arn
+        }
       ] : []
       )
       logConfiguration = {
@@ -149,35 +192,65 @@ resource "aws_iam_policy" "ecs_credentials_access" {
           "secretsmanager:GetSecretValue",
           "secretsmanager:DescribeSecret"
         ]
-        Resource = var.credentials_secret_arn
+        Resource = [
+          var.secrets_arn,
+          var.credentials_secret_arn
+        ]
       }
     ]
   })
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-ecs-credentials-access"
+  }
 }
 
-# Attach the credentials policy to the ECS task role
-resource "aws_iam_role_policy_attachment" "ecs_task_credentials" {
-  role       = element(split("/", var.ecs_task_role_arn), length(split("/", var.ecs_task_role_arn)) - 1)  # Extract role name from ARN
-  policy_arn = aws_iam_policy.ecs_credentials_access.arn
+# IAM policy for ECS tasks to read Parameter Store parameters
+resource "aws_iam_policy" "ecs_parameter_store_access" {
+  count = var.enable_parameter_store ? 1 : 0
+  name  = "${var.project_name}-${var.environment}-ecs-parameter-store-access"
+  description = "Allow ECS tasks to read Parameter Store parameters"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssm:GetParameter",
+          "ssm:GetParameters",
+          "ssm:GetParametersByPath"
+        ]
+        Resource = [
+          "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/${var.environment}/*"
+        ]
+      }
+    ]
+  })
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-ecs-parameter-store-access"
+  }
 }
 
-# Attach the credentials policy to the ECS task execution role
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_credentials" {
-  role       = element(split("/", var.ecs_task_execution_role_arn), length(split("/", var.ecs_task_execution_role_arn)) - 1)  # Extract role name from ARN
-  policy_arn = aws_iam_policy.ecs_credentials_access.arn
+# Attach Parameter Store policy to ECS task role
+resource "aws_iam_role_policy_attachment" "ecs_parameter_store_access" {
+  count      = var.enable_parameter_store ? 1 : 0
+  role       = var.ecs_task_role_name
+  policy_arn = aws_iam_policy.ecs_parameter_store_access[0].arn
 }
 
 # ECS Service
 resource "aws_ecs_service" "app" {
-  name            = "fastapi-${var.environment}-service"
+  name            = "${var.project_name}-${var.environment}"
   cluster         = var.ecs_cluster_id
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups  = [var.ecs_security_group_id]
     subnets          = var.private_subnet_ids
+    security_groups  = [var.ecs_security_group_id]
     assign_public_ip = false
   }
 
@@ -187,22 +260,48 @@ resource "aws_ecs_service" "app" {
     container_port   = 8000
   }
 
-  # No longer depends on ALB listener since we use shared ALB
+  depends_on = [aws_lb_listener_rule.app]
 
   tags = {
-    Name = "fastapi-${var.environment}-service"
+    Name = "${var.project_name}-${var.environment}-service"
   }
 }
 
-# Auto Scaling
+# Application Load Balancer Listener Rule
+resource "aws_lb_listener_rule" "app" {
+  listener_arn = var.alb_listener_arn
+  priority     = var.alb_rule_priority
+
+  action {
+    type             = "forward"
+    target_group_arn = var.target_group_arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/*"]
+    }
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-listener-rule"
+  }
+}
+
+# Auto Scaling Target
 resource "aws_appautoscaling_target" "ecs_target" {
   max_capacity       = var.max_capacity
   min_capacity       = var.min_capacity
   resource_id        = "service/${var.ecs_cluster_name}/${aws_ecs_service.app.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-autoscaling-target"
+  }
 }
 
+# Auto Scaling Policy - CPU
 resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
   name               = "${var.project_name}-${var.environment}-cpu-scaling"
   policy_type        = "TargetTrackingScaling"
@@ -218,6 +317,7 @@ resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
   }
 }
 
+# Auto Scaling Policy - Memory
 resource "aws_appautoscaling_policy" "ecs_policy_memory" {
   name               = "${var.project_name}-${var.environment}-memory-scaling"
   policy_type        = "TargetTrackingScaling"
