@@ -79,7 +79,8 @@ def setup_opentelemetry_tracing() -> bool:
         )
 
         # Set up tracer provider
-        trace.set_tracer_provider(TracerProvider(resource=resource))
+        tracer_provider = TracerProvider(resource=resource)
+        trace.set_tracer_provider(tracer_provider)
 
         # Set up X-Ray OTLP exporter
         otlp_exporter = OTLPSpanExporter(
@@ -88,7 +89,7 @@ def setup_opentelemetry_tracing() -> bool:
 
         # Add span processor
         span_processor = BatchSpanProcessor(otlp_exporter)
-        trace.get_tracer_provider().add_span_processor(span_processor)
+        tracer_provider.add_span_processor(span_processor)
 
         # Instrument libraries
         FastAPIInstrumentor.instrument()
