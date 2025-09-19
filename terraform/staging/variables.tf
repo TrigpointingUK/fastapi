@@ -71,6 +71,20 @@ variable "enable_cloudflare_ssl" {
   default     = false
 }
 
+# Cloudflare Origin Certificate variables (for compatibility with deploy script)
+variable "cloudflare_origin_cert" {
+  description = "Cloudflare Origin Certificate (PEM format)"
+  type        = string
+  default     = null
+}
+
+variable "cloudflare_origin_key" {
+  description = "Cloudflare Origin Certificate Private Key (PEM format)"
+  type        = string
+  default     = null
+  sensitive   = true
+}
+
 # Auth0 Configuration
 variable "auth0_domain" {
   description = "Auth0 domain (e.g., your-tenant.auth0.com)"
