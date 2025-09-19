@@ -1,6 +1,8 @@
 ---
 instance_group: "bastion"
 
+ansible_user: ec2-user
+
 db_secret_name: "rds!db-0c18e5de-035f-40af-8b12-e0ae84fedd46"
 db_host: "fastapi-db.czyrbczcs1ak.eu-west-1.rds.amazonaws.com"
 db_port: 3306

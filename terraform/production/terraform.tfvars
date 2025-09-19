@@ -10,7 +10,7 @@ max_capacity  = 10
 
 # CloudFlare SSL Configuration (REQUIRED for production)
 domain_name = "api.trigpointing.uk"
-enable_cloudflare_ssl = false
+enable_cloudflare_ssl = true
 
 # Auth0 Configuration
 auth0_domain = "trigpointing.eu.auth0.com"

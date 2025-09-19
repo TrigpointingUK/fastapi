@@ -3,5 +3,6 @@
 ## Pre-requisites
 
 ```bash
-ansible-galaxy install diodonfrost.terraform
+ansible-galaxy install --force -r requirements_collections.yml
+
 ```

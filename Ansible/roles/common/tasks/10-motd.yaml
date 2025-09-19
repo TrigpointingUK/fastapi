@@ -1,10 +1,4 @@
 ---
-- name: Disable update-motd timer
-  systemd:
-    name: update-motd.timer
-    enabled: no
-    state: stopped
-
 - name: Update MOTD with instance information
   copy:
     content: |

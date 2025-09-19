@@ -160,6 +160,103 @@ deploy_production() {
     cd ..
 }
 
+
+# Function to deploy monitoring
+deploy_monitoring() {
+    print_status "Deploying monitoring stack (CloudWatch Synthetics, SNS, Chatbot)..."
+
+    cd monitoring
+
+    # Initialize Terraform
+    print_status "Initializing Terraform..."
+    terraform init -backend-config=backend.conf
+
+    # Plan deployment
+    print_status "Planning deployment..."
+    terraform plan -var-file=terraform.tfvars
+
+    # Ask for confirmation
+    read -p "Do you want to apply the monitoring stack? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        terraform apply -auto-approve -var-file=terraform.tfvars
+        print_success "Monitoring stack deployed successfully!"
+
+        # Show outputs
+        print_status "Monitoring outputs:"
+        terraform output
+    else
+        print_warning "Monitoring deployment cancelled."
+    fi
+
+    cd ..
+}
+
+
+# Function to deploy MySQL databases
+deploy_mysql() {
+    print_status "Deploying MySQL databases..."
+
+    # Configuration
+    local bastion_host="bastion.trigpointing.uk"
+    local ssh_key_path="${SSH_KEY_PATH:-~/.ssh/trigpointing-bastion.pem}"
+    local bastion_user="ec2-user"
+    local terraform_dir="/home/ec2-user/mysql-terraform"
+
+    # Expand tilde in SSH key path
+    local ssh_key_path_expanded="${ssh_key_path/#\~/$HOME}"
+
+    # Check if SSH key exists
+    if [[ ! -f "${ssh_key_path_expanded}" ]]; then
+        print_error "SSH key not found at ${ssh_key_path_expanded}"
+        print_error "Please set SSH_KEY_PATH environment variable or ensure ~/.ssh/trigpointing-bastion.pem exists"
+        exit 1
+    fi
+
+    # Check if we can connect to bastion
+    print_status "Testing connection to bastion host..."
+    if ! ssh -i "${ssh_key_path_expanded}" -o ConnectTimeout=10 -o StrictHostKeyChecking=no "${bastion_user}@${bastion_host}" "echo 'Connection successful'" > /dev/null 2>&1; then
+        print_error "Cannot connect to bastion host at ${bastion_host}"
+        print_error "Please check:"
+        print_error "  - Bastion hostname resolves correctly"
+        print_error "  - SSH key path is correct: ${ssh_key_path_expanded}"
+        print_error "  - SSH key has access to bastion"
+        exit 1
+    fi
+
+    print_status "Copying MySQL Terraform files to bastion host..."
+
+    # Create directory on bastion
+    ssh -i "${ssh_key_path_expanded}" "${bastion_user}@${bastion_host}" "mkdir -p ${terraform_dir}"
+
+    # Copy MySQL Terraform files from mysql directory
+    if [ ! -d "mysql" ]; then
+        print_error "MySQL terraform directory not found. Please run this from the terraform directory."
+        exit 1
+    fi
+
+    cd mysql
+    print_status "Excluding .terraform directory to avoid copying providers..."
+
+    # Try rsync first (faster and more efficient)
+    if command -v rsync > /dev/null 2>&1; then
+        rsync -avz --exclude='.terraform/' --exclude='.terraform.lock.hcl' -e "ssh -i ${ssh_key_path_expanded}" ./ "${bastion_user}@${bastion_host}:${terraform_dir}/"
+    else
+        # Fallback to scp with tar for exclusions
+        print_status "Using tar+scp fallback (rsync not available)..."
+        tar --exclude='.terraform' --exclude='.terraform.lock.hcl' -czf - . | ssh -i "${ssh_key_path_expanded}" "${bastion_user}@${bastion_host}" "cd ${terraform_dir} && tar -xzf -"
+    fi
+
+    print_status "Running terraform on bastion host..."
+
+    # Execute the deployment on bastion
+    ssh -i "${ssh_key_path_expanded}" "${bastion_user}@${bastion_host}" "cd ${terraform_dir} && chmod +x deploy_mysql_on_bastion.sh && ./deploy_mysql_on_bastion.sh"
+
+    cd ..
+
+    print_success "MySQL deployment completed successfully!"
+}
+
 # Function to show status
 show_status() {
     print_status "Infrastructure Status:"
@@ -196,6 +293,17 @@ show_status() {
     else
         print_warning "Production environment: Not deployed"
     fi
+
+    # Check MySQL
+    if [ -d "mysql" ] && [ -f "mysql/terraform.tfstate" ]; then
+        print_success "MySQL databases: Deployed"
+        cd mysql
+        echo "  Production schema: $(terraform output -raw production_schema_name 2>/dev/null || echo 'Not available')"
+        echo "  Staging schema: $(terraform output -raw staging_schema_name 2>/dev/null || echo 'Not available')"
+        cd ..
+    else
+        print_warning "MySQL databases: Not deployed"
+    fi
 }
 
 # Main script
@@ -220,23 +328,35 @@ main() {
         "production")
             deploy_production
             ;;
+        "monitoring")
+            deploy_monitoring
+            ;;
+        "mysql")
+            deploy_mysql
+            ;;
         "all")
             deploy_common
             echo
             deploy_staging
             echo
             deploy_production
+            echo
+            deploy_monitoring
+            echo
+            deploy_mysql
             ;;
         "status")
             show_status
             ;;
         *)
-            echo "Usage: $0 {common|staging|production|all|status}"
+            echo "Usage: $0 {common|staging|production|monitoring|mysql|all|status}"
             echo
             echo "Commands:"
             echo "  common     - Deploy common infrastructure (VPC, ECS, RDS, etc.)"
             echo "  staging    - Deploy staging environment"
             echo "  production - Deploy production environment"
+            echo "  monitoring - Deploy monitoring stack (Synthetics, SNS, Slack)"
+            echo "  mysql      - Deploy MySQL databases (runs on bastion host)"
             echo "  all        - Deploy all infrastructure in order"
             echo "  status     - Show current deployment status"
             echo
@@ -244,6 +364,10 @@ main() {
             echo "  1. common (first time only)"
             echo "  2. staging"
             echo "  3. production"
+            echo "  4. monitoring"
+            echo "  5. mysql"
+            echo
+            echo "Note: MySQL deployment requires SSH access to bastion.trigpointing.uk"
             exit 1
             ;;
     esac

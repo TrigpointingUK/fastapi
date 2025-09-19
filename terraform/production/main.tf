@@ -34,15 +34,6 @@ data "terraform_remote_state" "common" {
   }
 }
 
-# Data source for mysql remote state - temporarily disabled for fresh deployment
-# data "terraform_remote_state" "mysql" {
-#   backend = "s3"
-#   config = {
-#     bucket = "tuk-terraform-state"
-#     key    = "fastapi-mysql-eu-west-1/terraform.tfstate"
-#     region = "eu-west-1"
-#   }
-# }
 
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "app" {

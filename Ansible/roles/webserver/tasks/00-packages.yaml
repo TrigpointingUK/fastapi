@@ -1,12 +1,22 @@
 ---
 - name: Update package cache
-  yum:
+  apt:
     update_cache: yes
-
+    cache_valid_time: 3600
 
 - name: Install additional packages
-  yum:
+  apt:
     name:
-      - docker
-      - nginx
+      - docker.io
+      - php-fpm
+      - php-cli
+      - php-common
+      - php-mysql
+      - php-mbstring
+      - php-xml
+      - php-zip
+      - php-gd
+      - php-ftp
+      - zlib1g-dev
     state: present
+    install_recommends: yes

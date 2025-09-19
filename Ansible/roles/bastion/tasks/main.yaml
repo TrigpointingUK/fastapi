@@ -5,3 +5,9 @@
 - name: DB connection script
   import_tasks: ./10-db-connect.yaml
   tags: packages
+
+- name: Disable update-motd timer
+  systemd:
+    name: update-motd.timer
+    enabled: no
+    state: stopped

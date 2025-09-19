@@ -1,5 +1,18 @@
 #!/bin/bash
 
+# OBSOLETE: This script has been superseded by the main terraform/deploy.sh script
+# Use: cd ../; ./deploy.sh mysql
+#
+# This file is kept for reference but should not be used for new deployments
+
+echo "⚠️  This script is OBSOLETE!"
+echo "   Please use the main deployment script instead:"
+echo "   cd ../ && ./deploy.sh mysql"
+echo ""
+exit 1
+
+# ===== OBSOLETE CODE BELOW - DO NOT USE =====
+
 # MySQL Database Deployment Script
 # This script can be run locally and will automatically deploy to the bastion host
 
@@ -55,12 +68,10 @@ function deploy_from_local() {
 
     # Execute the deployment script on bastion
     echo "🚀 Running MySQL Terraform on bastion host..."
-    ssh -i "${SSH_KEY_PATH_EXPANDED}" "${BASTION_USER}@${BASTION_IP}" "cd ${TERRAFORM_DIR} && chmod +x deploy.sh connect-to-rds-master.sh && ./deploy.sh"
+    ssh -i "${SSH_KEY_PATH_EXPANDED}" "${BASTION_USER}@${BASTION_IP}" "cd ${TERRAFORM_DIR} && chmod +x deploy.sh && ./deploy.sh"
 
     echo "✅ Deployment completed successfully!"
-    echo ""
-    echo "💡 To connect to the RDS master user, run on the bastion:"
-    echo "   ./connect-to-rds-master.sh"
+
 }
 
 function run_deployment_on_bastion() {

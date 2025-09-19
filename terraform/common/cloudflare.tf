@@ -62,3 +62,71 @@ resource "cloudflare_record" "webserver" {
 
   comment = "Webserver host for TrigpointingUK - managed by Terraform"
 }
+
+# Test CNAMEs for ALB testing
+resource "cloudflare_record" "test1" {
+  zone_id         = data.cloudflare_zones.staging.zones[0].id
+  name            = "test1"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true  # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true  # Allow overwriting existing records
+
+  comment = "Test domain 1 for ALB testing - managed by Terraform"
+}
+
+resource "cloudflare_record" "test2" {
+  zone_id         = data.cloudflare_zones.staging.zones[0].id
+  name            = "test2"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true  # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true  # Allow overwriting existing records
+
+  comment = "Test domain 2 for ALB testing - managed by Terraform"
+}
+
+# Production CNAMEs for trigpointing.uk domains
+resource "cloudflare_record" "forum" {
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "forum"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true  # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true  # Allow overwriting existing records
+
+  comment = "Forum subdomain for TrigpointingUK - managed by Terraform"
+}
+
+resource "cloudflare_record" "phpmyadmin" {
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "phpmyadmin"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true  # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true  # Allow overwriting existing records
+
+  comment = "phpMyAdmin subdomain for TrigpointingUK - managed by Terraform"
+}
+
+resource "cloudflare_record" "static" {
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "static"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true  # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true  # Allow overwriting existing records
+
+  comment = "Static content subdomain for TrigpointingUK - managed by Terraform"
+}
+
+resource "cloudflare_record" "wiki" {
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "wiki"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true  # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true  # Allow overwriting existing records
+
+  comment = "Wiki subdomain for TrigpointingUK - managed by Terraform"
+}

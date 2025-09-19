@@ -1,7 +1,7 @@
 # Web Server Instance in Private Subnet
 resource "aws_instance" "webserver" {
-  ami           = data.aws_ami.amazon_linux.id
-  instance_type = "t4g.nano"
+  ami           = var.webserver_ami
+  instance_type = "c7a.medium"
   key_name      = var.key_pair_name
 
   subnet_id                   = aws_subnet.private[0].id
