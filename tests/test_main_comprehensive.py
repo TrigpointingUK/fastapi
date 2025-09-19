@@ -13,7 +13,10 @@ class TestMainModule:
     def test_health_check(self):
         """Test health check endpoint."""
         response = health_check()
-        assert response == {"status": "healthy"}
+        assert response["status"] == "healthy"
+        assert "tracing" in response
+        assert "xray_enabled" in response["tracing"]
+        assert "otel_enabled" in response["tracing"]
 
     def test_app_creation(self):
         """Test FastAPI app creation."""

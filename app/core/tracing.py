@@ -154,6 +154,9 @@ def trace_function(name: Optional[str] = None):
     """
 
     def decorator(func):
+        from functools import wraps
+
+        @wraps(func)
         def wrapper(*args, **kwargs):
             if not settings.XRAY_ENABLED:
                 return func(*args, **kwargs)
