@@ -34,6 +34,13 @@ variable "slack_channel_id" {
   default     = null
 }
 
+variable "slack_configuration_name" {
+  description = "Existing Chatbot Slack configuration_name (e.g., Teasel-TrigpointingUK)"
+  type        = string
+  default     = null
+}
+
+
 variable "tuk_guest_secret_name" {
   description = "Name of the existing Secrets Manager secret for guest credentials"
   type        = string
