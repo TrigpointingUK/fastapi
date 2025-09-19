@@ -79,7 +79,6 @@ resource "aws_ssm_parameter" "parameters" {
     Environment = var.environment
     Component   = "parameter-store"
     Purpose     = each.key
-    Description = each.value.description
   }
 }
 
