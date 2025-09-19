@@ -161,6 +161,38 @@ deploy_production() {
 }
 
 
+# Function to deploy monitoring
+deploy_monitoring() {
+    print_status "Deploying monitoring stack (CloudWatch Synthetics, SNS, Chatbot)..."
+
+    cd monitoring
+
+    # Initialize Terraform
+    print_status "Initializing Terraform..."
+    terraform init -backend-config=backend.conf
+
+    # Plan deployment
+    print_status "Planning deployment..."
+    terraform plan -var-file=terraform.tfvars
+
+    # Ask for confirmation
+    read -p "Do you want to apply the monitoring stack? (y/N): " -n 1 -r
+    echo
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        terraform apply -auto-approve -var-file=terraform.tfvars
+        print_success "Monitoring stack deployed successfully!"
+
+        # Show outputs
+        print_status "Monitoring outputs:"
+        terraform output
+    else
+        print_warning "Monitoring deployment cancelled."
+    fi
+
+    cd ..
+}
+
+
 # Function to deploy MySQL databases
 deploy_mysql() {
     print_status "Deploying MySQL databases..."
@@ -296,6 +328,9 @@ main() {
         "production")
             deploy_production
             ;;
+        "monitoring")
+            deploy_monitoring
+            ;;
         "mysql")
             deploy_mysql
             ;;
@@ -306,18 +341,21 @@ main() {
             echo
             deploy_production
             echo
+            deploy_monitoring
+            echo
             deploy_mysql
             ;;
         "status")
             show_status
             ;;
         *)
-            echo "Usage: $0 {common|staging|production|mysql|all|status}"
+            echo "Usage: $0 {common|staging|production|monitoring|mysql|all|status}"
             echo
             echo "Commands:"
             echo "  common     - Deploy common infrastructure (VPC, ECS, RDS, etc.)"
             echo "  staging    - Deploy staging environment"
             echo "  production - Deploy production environment"
+            echo "  monitoring - Deploy monitoring stack (Synthetics, SNS, Slack)"
             echo "  mysql      - Deploy MySQL databases (runs on bastion host)"
             echo "  all        - Deploy all infrastructure in order"
             echo "  status     - Show current deployment status"
@@ -326,7 +364,8 @@ main() {
             echo "  1. common (first time only)"
             echo "  2. staging"
             echo "  3. production"
-            echo "  4. mysql"
+            echo "  4. monitoring"
+            echo "  5. mysql"
             echo
             echo "Note: MySQL deployment requires SSH access to bastion.trigpointing.uk"
             exit 1
