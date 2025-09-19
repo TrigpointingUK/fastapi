@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     DB_PASSWORD: str = "pass"
     DB_NAME: str = "db"
 
+    # Database Pool Configuration
+    DATABASE_POOL_SIZE: int = 5
+    DATABASE_POOL_RECYCLE: int = 300
+
     @property
     def DATABASE_URL(self) -> str:
         """Construct DATABASE_URL from individual database components."""
@@ -55,6 +59,13 @@ class Settings(BaseSettings):
 
     # Logging Configuration
     LOG_LEVEL: str = "INFO"
+
+    # AWS X-Ray Configuration
+    XRAY_ENABLED: bool = False
+    XRAY_SERVICE_NAME: str = "trigpointing-api"
+    XRAY_SAMPLING_RATE: float = 0.1  # 10% sampling rate
+    XRAY_DAEMON_ADDRESS: Optional[str] = None  # e.g., "127.0.0.1:2000"
+    XRAY_TRACE_HEADER: str = "X-Amzn-Trace-Id"
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod

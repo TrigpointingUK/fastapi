@@ -1,21 +1,19 @@
-variable "aws_region" {
-  description = "AWS region"
-  type        = string
-  default     = "eu-west-1"
-}
-
 variable "project_name" {
   description = "Name of the project"
   type        = string
   default     = "trigpointing"
 }
 
-# Note: terraform_state_bucket is hardcoded to "tuk-terraform-state" in eu-west-1
+variable "aws_region" {
+  description = "AWS region"
+  type        = string
+  default     = "eu-west-1"
+}
 
 variable "container_image" {
   description = "Docker image for the application"
   type        = string
-  default     = "ghcr.io/trigpointinguk/fastapi:develop"
+  default     = "534526983272.dkr.ecr.eu-west-1.amazonaws.com/trigpointing-staging:latest"
 }
 
 variable "cpu" {
@@ -33,7 +31,7 @@ variable "memory" {
 variable "desired_count" {
   description = "Desired number of tasks in the ECS service"
   type        = number
-  default     = 1
+  default     = 2
 }
 
 variable "min_capacity" {
@@ -45,7 +43,7 @@ variable "min_capacity" {
 variable "max_capacity" {
   description = "Maximum number of tasks for auto scaling"
   type        = number
-  default     = 3
+  default     = 10
 }
 
 variable "cpu_target_value" {
@@ -60,47 +58,73 @@ variable "memory_target_value" {
   default     = 80
 }
 
-variable "enable_cloudflare_ssl" {
-  description = "Enable HTTPS with CloudFlare origin certificate"
-  type        = bool
-  default     = true
-}
-
-variable "cloudflare_origin_cert" {
-  description = "CloudFlare origin certificate (PEM format)"
-  type        = string
-  default     = null
-  sensitive   = true
-}
-
-variable "cloudflare_origin_key" {
-  description = "CloudFlare origin certificate private key"
-  type        = string
-  default     = null
-  sensitive   = true
-}
-
+# Domain Configuration
 variable "domain_name" {
   description = "Domain name for the API"
   type        = string
-  default     = "api.trigpointing.me"
+  default     = "api-staging.trigpointing.uk"
+}
+
+variable "enable_cloudflare_ssl" {
+  description = "Enable Cloudflare SSL termination"
+  type        = bool
+  default     = false
+}
+
+# Cloudflare Origin Certificate variables (for compatibility with deploy script)
+variable "cloudflare_origin_cert" {
+  description = "Cloudflare Origin Certificate (PEM format)"
+  type        = string
+  default     = null
+}
+
+variable "cloudflare_origin_key" {
+  description = "Cloudflare Origin Certificate Private Key (PEM format)"
+  type        = string
+  default     = null
+  sensitive   = true
 }
 
 # Auth0 Configuration
 variable "auth0_domain" {
   description = "Auth0 domain (e.g., your-tenant.auth0.com)"
   type        = string
-  default     = "trigpointing.eu.auth0.com"
+  default     = "trigpointing.auth0.com"
 }
 
 variable "auth0_connection" {
   description = "Auth0 connection name for user database"
   type        = string
-  default     = "tme-users"
+  default     = "Username-Password-Authentication"
 }
 
 variable "auth0_api_audience" {
   description = "Auth0 API audience for token validation"
   type        = string
   default     = "https://api.trigpointing.me/api/v1/"
+}
+
+# Parameter Store Configuration - Clean Object-Based Approach
+variable "parameter_store_config" {
+  description = "Parameter Store configuration for the application"
+  type = object({
+    enabled = optional(bool, false)
+    parameters = optional(object({
+      xray = optional(object({
+        enabled        = optional(bool, false)
+        service_name   = optional(string, "trigpointing-api")
+        sampling_rate  = optional(number, 0.1)
+        daemon_address = optional(string, null)
+      }), {})
+      app = optional(object({
+        log_level    = optional(string, "INFO")
+        cors_origins = optional(string, null)
+      }), {})
+      database = optional(object({
+        pool_size    = optional(number, 5)
+        pool_recycle = optional(number, 300)
+      }), {})
+    }), {})
+  })
+  default = {}
 }

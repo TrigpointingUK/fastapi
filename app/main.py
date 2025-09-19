@@ -5,12 +5,18 @@ Main FastAPI application entry point.
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
+from app.core.tracing import setup_opentelemetry_tracing, setup_xray_tracing
+from app.core.xray_middleware import XRayMiddleware
 from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 # Configure logging first
 setup_logging()
+
+# Set up tracing
+xray_enabled = setup_xray_tracing()
+otel_enabled = setup_opentelemetry_tracing()
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -94,6 +100,10 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
+# Add X-Ray middleware if enabled
+if xray_enabled:
+    app.add_middleware(XRayMiddleware, service_name=settings.XRAY_SERVICE_NAME)
+
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
@@ -101,7 +111,13 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 @app.get("/health")
 def health_check():
     """Health check endpoint."""
-    return {"status": "healthy"}
+    return {
+        "status": "healthy",
+        "tracing": {
+            "xray_enabled": xray_enabled,
+            "otel_enabled": otel_enabled,
+        },
+    }
 
 
 @app.get("/debug/auth")

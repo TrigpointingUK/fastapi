@@ -7,6 +7,8 @@ from typing import List
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
+
+# from app.core.tracing import add_trace_metadata, trace_function  # Removed to avoid conflicts
 from app.crud import trig as trig_crud
 from app.schemas.trig import TrigResponse, TrigSummary
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -22,6 +24,7 @@ def get_trig(trig_id: int, db: Session = Depends(get_db)):
     Returns all trigpoint data including coordinates, classification,
     and audit information.
     """
+    # add_trace_metadata({"trig_id": trig_id, "endpoint": "get_trig"})  # Removed to avoid conflicts
     trig = trig_crud.get_trig_by_id(db, trig_id=trig_id)
     if trig is None:
         raise HTTPException(status_code=404, detail="Trigpoint not found")
@@ -57,6 +60,9 @@ def search_trigs_by_name(
     Returns a list of trigpoints matching the search query.
     Limited to essential fields for performance.
     """
+    # add_trace_metadata(
+    #     {"query": q, "skip": skip, "limit": limit, "endpoint": "search_trigs_by_name"}
+    # )  # Removed to avoid conflicts
     trigs = trig_crud.search_trigs_by_name(db, name_pattern=q, skip=skip, limit=limit)
     return trigs
 

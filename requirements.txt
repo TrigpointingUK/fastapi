@@ -23,6 +23,16 @@ requests==2.32.5
 boto3==1.40.25
 types-requests==2.32.4.20250809
 
+# AWS X-Ray and OpenTelemetry tracing
+opentelemetry-api==1.37.0
+opentelemetry-sdk==1.37.0
+opentelemetry-instrumentation-fastapi==0.58b0
+opentelemetry-instrumentation-sqlalchemy==0.58b0
+opentelemetry-instrumentation-requests==0.58b0
+opentelemetry-instrumentation-boto==0.58b0
+opentelemetry-exporter-otlp==1.37.0
+aws-xray-sdk==2.12.1
+
 # Development dependencies
 black==25.1.0
 isort==6.0.1

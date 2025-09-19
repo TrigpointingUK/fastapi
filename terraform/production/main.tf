@@ -88,8 +88,8 @@ module "secrets" {
 
   project_name                    = var.project_name
   environment                    = "production"
-  ecs_task_role_name            = data.terraform_remote_state.common.outputs.ecs_task_role_arn
-  ecs_task_execution_role_name  = data.terraform_remote_state.common.outputs.ecs_task_execution_role_arn
+  ecs_task_role_name            = data.terraform_remote_state.common.outputs.ecs_task_role_name
+  ecs_task_execution_role_name  = data.terraform_remote_state.common.outputs.ecs_task_execution_role_name
   auth0_domain                  = var.auth0_domain
 }
 
@@ -99,6 +99,7 @@ module "ecs_service" {
 
   project_name                    = var.project_name
   environment                    = "production"
+  service_name                   = "fastapi-production-service"  # Keep the original service name
   aws_region                     = var.aws_region
   container_image                = var.container_image
   cpu                           = var.cpu
@@ -111,10 +112,14 @@ module "ecs_service" {
   ecs_cluster_id                = data.terraform_remote_state.common.outputs.ecs_cluster_id
   ecs_cluster_name              = data.terraform_remote_state.common.outputs.ecs_cluster_name
   ecs_task_execution_role_arn   = data.terraform_remote_state.common.outputs.ecs_task_execution_role_arn
+  ecs_task_execution_role_name  = data.terraform_remote_state.common.outputs.ecs_task_execution_role_name
   ecs_task_role_arn             = data.terraform_remote_state.common.outputs.ecs_task_role_arn
+  ecs_task_role_name            = data.terraform_remote_state.common.outputs.ecs_task_role_name
   ecs_security_group_id         = module.cloudflare.ecs_security_group_id
   private_subnet_ids            = data.terraform_remote_state.common.outputs.private_subnet_ids
   target_group_arn              = module.target_group.target_group_arn
+  alb_listener_arn              = data.terraform_remote_state.common.outputs.https_listener_arn
+  alb_rule_priority             = 201
   secrets_arn                   = module.secrets.secrets_arn
   credentials_secret_arn        = "arn:aws:secretsmanager:eu-west-1:534526983272:secret:fastapi-legacy-credentials-p9KGQI"
   # credentials_secret_arn        = "arn:aws:secretsmanager:eu-west-1:534526983272:secret:fastapi-production-credentials-oKdss5"
@@ -122,4 +127,6 @@ module "ecs_service" {
   auth0_domain                  = var.auth0_domain
   auth0_connection              = var.auth0_connection
   auth0_api_audience            = var.auth0_api_audience
+
+  parameter_store_config        = var.parameter_store_config
 }

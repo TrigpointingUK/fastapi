@@ -8,6 +8,12 @@ variable "environment" {
   type        = string
 }
 
+variable "service_name" {
+  description = "Name of the ECS service (defaults to project_name-environment if not specified)"
+  type        = string
+  default     = null
+}
+
 variable "aws_region" {
   description = "AWS region"
   type        = string
@@ -80,6 +86,16 @@ variable "ecs_task_role_arn" {
   type        = string
 }
 
+variable "ecs_task_role_name" {
+  description = "Name of the ECS task role (for policy attachment)"
+  type        = string
+}
+
+variable "ecs_task_execution_role_name" {
+  description = "Name of the ECS task execution role (for policy attachment)"
+  type        = string
+}
+
 variable "ecs_security_group_id" {
   description = "ID of the ECS security group"
   type        = string
@@ -95,6 +111,16 @@ variable "target_group_arn" {
   type        = string
 }
 
+variable "alb_listener_arn" {
+  description = "ARN of the ALB listener"
+  type        = string
+}
+
+variable "alb_rule_priority" {
+  description = "Priority for the ALB listener rule"
+  type        = number
+  default     = 100
+}
 
 variable "secrets_arn" {
   description = "ARN of the secrets manager secret"
@@ -128,4 +154,29 @@ variable "auth0_api_audience" {
   description = "Auth0 API audience for token validation"
   type        = string
   default     = null
+}
+
+# Parameter Store Configuration - Clean Object-Based Approach
+variable "parameter_store_config" {
+  description = "Parameter Store configuration for the application"
+  type = object({
+    enabled = optional(bool, false)
+    parameters = optional(object({
+      xray = optional(object({
+        enabled        = optional(bool, false)
+        service_name   = optional(string, "trigpointing-api")
+        sampling_rate  = optional(number, 0.1)
+        daemon_address = optional(string, null)
+      }), {})
+      app = optional(object({
+        log_level    = optional(string, "INFO")
+        cors_origins = optional(string, null)
+      }), {})
+      database = optional(object({
+        pool_size    = optional(number, 5)
+        pool_recycle = optional(number, 300)
+      }), {})
+    }), {})
+  })
+  default = {}
 }

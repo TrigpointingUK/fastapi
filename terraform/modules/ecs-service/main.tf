@@ -109,6 +109,13 @@ resource "aws_ecs_task_definition" "app" {
           name      = "AUTH0_CLIENT_SECRET"
           valueFrom = "${var.secrets_arn}:auth0_client_secret::"
         }
+      ] : [],
+      # Parameter Store Configuration (if enabled)
+      var.parameter_store_config.enabled ? [
+        for key, param in local.parameter_map : {
+          name      = upper(replace(key, "/", "_"))
+          valueFrom = aws_ssm_parameter.parameters[key].arn
+        }
       ] : []
       )
       logConfiguration = {
@@ -149,35 +156,30 @@ resource "aws_iam_policy" "ecs_credentials_access" {
           "secretsmanager:GetSecretValue",
           "secretsmanager:DescribeSecret"
         ]
-        Resource = var.credentials_secret_arn
+        Resource = [
+          var.secrets_arn,
+          var.credentials_secret_arn
+        ]
       }
     ]
   })
-}
 
-# Attach the credentials policy to the ECS task role
-resource "aws_iam_role_policy_attachment" "ecs_task_credentials" {
-  role       = element(split("/", var.ecs_task_role_arn), length(split("/", var.ecs_task_role_arn)) - 1)  # Extract role name from ARN
-  policy_arn = aws_iam_policy.ecs_credentials_access.arn
-}
-
-# Attach the credentials policy to the ECS task execution role
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_credentials" {
-  role       = element(split("/", var.ecs_task_execution_role_arn), length(split("/", var.ecs_task_execution_role_arn)) - 1)  # Extract role name from ARN
-  policy_arn = aws_iam_policy.ecs_credentials_access.arn
+  tags = {
+    Name = "${var.project_name}-${var.environment}-ecs-credentials-access"
+  }
 }
 
 # ECS Service
 resource "aws_ecs_service" "app" {
-  name            = "fastapi-${var.environment}-service"
+  name            = var.service_name != null ? var.service_name : "${var.project_name}-${var.environment}"
   cluster         = var.ecs_cluster_id
   task_definition = aws_ecs_task_definition.app.arn
   desired_count   = var.desired_count
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups  = [var.ecs_security_group_id]
     subnets          = var.private_subnet_ids
+    security_groups  = [var.ecs_security_group_id]
     assign_public_ip = false
   }
 
@@ -187,22 +189,48 @@ resource "aws_ecs_service" "app" {
     container_port   = 8000
   }
 
-  # No longer depends on ALB listener since we use shared ALB
+  depends_on = [aws_lb_listener_rule.app]
 
   tags = {
-    Name = "fastapi-${var.environment}-service"
+    Name = "${var.project_name}-${var.environment}-service"
   }
 }
 
-# Auto Scaling
+# Application Load Balancer Listener Rule
+resource "aws_lb_listener_rule" "app" {
+  listener_arn = var.alb_listener_arn
+  priority     = var.alb_rule_priority
+
+  action {
+    type             = "forward"
+    target_group_arn = var.target_group_arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/*"]
+    }
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-listener-rule"
+  }
+}
+
+# Auto Scaling Target
 resource "aws_appautoscaling_target" "ecs_target" {
   max_capacity       = var.max_capacity
   min_capacity       = var.min_capacity
   resource_id        = "service/${var.ecs_cluster_name}/${aws_ecs_service.app.name}"
   scalable_dimension = "ecs:service:DesiredCount"
   service_namespace  = "ecs"
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-autoscaling-target"
+  }
 }
 
+# Auto Scaling Policy - CPU
 resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
   name               = "${var.project_name}-${var.environment}-cpu-scaling"
   policy_type        = "TargetTrackingScaling"
@@ -218,6 +246,7 @@ resource "aws_appautoscaling_policy" "ecs_policy_cpu" {
   }
 }
 
+# Auto Scaling Policy - Memory
 resource "aws_appautoscaling_policy" "ecs_policy_memory" {
   name               = "${var.project_name}-${var.environment}-memory-scaling"
   policy_type        = "TargetTrackingScaling"
@@ -231,4 +260,16 @@ resource "aws_appautoscaling_policy" "ecs_policy_memory" {
     }
     target_value = var.memory_target_value
   }
+}
+
+# Attach credentials access policy to ECS task role
+resource "aws_iam_role_policy_attachment" "ecs_task_credentials" {
+  role       = var.ecs_task_role_name
+  policy_arn = aws_iam_policy.ecs_credentials_access.arn
+}
+
+# Attach credentials access policy to ECS task execution role
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_credentials" {
+  role       = var.ecs_task_execution_role_name
+  policy_arn = aws_iam_policy.ecs_credentials_access.arn
 }

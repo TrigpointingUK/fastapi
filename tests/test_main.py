@@ -10,7 +10,11 @@ def test_health_check(client: TestClient):
     """Test health check endpoint."""
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json() == {"status": "healthy"}
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert "tracing" in data
+    assert "xray_enabled" in data["tracing"]
+    assert "otel_enabled" in data["tracing"]
 
 
 def test_openapi_docs(client: TestClient):

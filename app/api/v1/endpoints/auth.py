@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 import jwt
 from sqlalchemy.orm import Session
 
+from app.api.deps import get_db
 from app.core.config import settings
 from app.core.security import create_access_token, validate_any_token
 from app.crud.user import (
@@ -14,7 +15,6 @@ from app.crud.user import (
     get_user_by_auth0_id,
     update_user_auth0_mapping,
 )
-from app.db.database import get_db
 from app.schemas.user import LoginResponse
 from app.services.auth0_service import auth0_service
 from fastapi import APIRouter, Depends, HTTPException, status
