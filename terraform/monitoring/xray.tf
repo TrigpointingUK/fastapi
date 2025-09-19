@@ -3,7 +3,7 @@
 
 # X-Ray sampling rule for the API service
 resource "aws_xray_sampling_rule" "api_sampling" {
-  rule_name      = "${var.project_name}-${var.environment}-api-sampling"
+  rule_name      = "trigpointing-api-sampling"
   priority       = 1000
   version        = 1
   reservoir_size = 100
@@ -15,15 +15,15 @@ resource "aws_xray_sampling_rule" "api_sampling" {
   service_name   = "trigpointing-api"
   resource_arn   = "*"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Component = "monitoring"
     Purpose   = "xray-sampling"
-  })
+  }
 }
 
 # X-Ray sampling rule for the web service
 resource "aws_xray_sampling_rule" "web_sampling" {
-  rule_name      = "${var.project_name}-${var.environment}-web-sampling"
+  rule_name      = "trigpointing-web-sampling"
   priority       = 1001
   version        = 1
   reservoir_size = 50
@@ -35,10 +35,10 @@ resource "aws_xray_sampling_rule" "web_sampling" {
   service_name   = "trigpointing-web"
   resource_arn   = "*"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Component = "monitoring"
     Purpose   = "xray-sampling"
-  })
+  }
 }
 
 # IAM role for X-Ray daemon (if running on EC2)
@@ -59,10 +59,10 @@ resource "aws_iam_role" "xray_daemon" {
     ]
   })
 
-  tags = merge(local.common_tags, {
+  tags = {
     Component = "monitoring"
     Purpose   = "xray-daemon"
-  })
+  }
 }
 
 # Attach X-Ray daemon policy to the role
@@ -78,10 +78,10 @@ resource "aws_iam_instance_profile" "xray_daemon" {
   name  = "${var.project_name}-${var.environment}-xray-daemon-profile"
   role  = aws_iam_role.xray_daemon[0].name
 
-  tags = merge(local.common_tags, {
+  tags = {
     Component = "monitoring"
     Purpose   = "xray-daemon"
-  })
+  }
 }
 
 # CloudWatch Log Group for X-Ray daemon logs
@@ -90,10 +90,10 @@ resource "aws_cloudwatch_log_group" "xray_daemon" {
   name              = "/aws/xray/daemon"
   retention_in_days = var.log_retention_days
 
-  tags = merge(local.common_tags, {
+  tags = {
     Component = "monitoring"
     Purpose   = "xray-daemon-logs"
-  })
+  }
 }
 
 # X-Ray group for API traces
@@ -101,10 +101,10 @@ resource "aws_xray_group" "api_group" {
   group_name        = "${var.project_name}-${var.environment}-api"
   filter_expression = "service(\"trigpointing-api\")"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Component = "monitoring"
     Purpose   = "xray-group"
-  })
+  }
 }
 
 # X-Ray group for web traces
@@ -112,10 +112,10 @@ resource "aws_xray_group" "web_group" {
   group_name        = "${var.project_name}-${var.environment}-web"
   filter_expression = "service(\"trigpointing-web\")"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Component = "monitoring"
     Purpose   = "xray-group"
-  })
+  }
 }
 
 # X-Ray group for database traces
@@ -123,8 +123,8 @@ resource "aws_xray_group" "database_group" {
   group_name        = "${var.project_name}-${var.environment}-database"
   filter_expression = "service(\"trigpointing-database\")"
 
-  tags = merge(local.common_tags, {
+  tags = {
     Component = "monitoring"
     Purpose   = "xray-group"
-  })
+  }
 }
