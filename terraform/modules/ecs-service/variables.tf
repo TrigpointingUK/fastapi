@@ -145,60 +145,27 @@ variable "auth0_api_audience" {
   default     = null
 }
 
-# Parameter Store Configuration
-variable "enable_parameter_store" {
-  description = "Enable AWS Systems Manager Parameter Store for configuration"
-  type        = bool
-  default     = false
-}
-
-# X-Ray Configuration
-variable "xray_enabled" {
-  description = "Enable AWS X-Ray tracing"
-  type        = bool
-  default     = false
-}
-
-variable "xray_service_name" {
-  description = "X-Ray service name"
-  type        = string
-  default     = "trigpointing-api"
-}
-
-variable "xray_sampling_rate" {
-  description = "X-Ray sampling rate (0.0 to 1.0)"
-  type        = number
-  default     = 0.1
-}
-
-variable "xray_daemon_address" {
-  description = "X-Ray daemon address (optional)"
-  type        = string
-  default     = null
-}
-
-# Application Configuration
-variable "log_level" {
-  description = "Application log level"
-  type        = string
-  default     = "INFO"
-}
-
-variable "cors_origins" {
-  description = "CORS allowed origins (comma-separated)"
-  type        = string
-  default     = null
-}
-
-# Database Configuration
-variable "db_pool_size" {
-  description = "Database connection pool size"
-  type        = number
-  default     = 5
-}
-
-variable "db_pool_recycle" {
-  description = "Database connection pool recycle time (seconds)"
-  type        = number
-  default     = 300
+# Parameter Store Configuration - Clean Object-Based Approach
+variable "parameter_store_config" {
+  description = "Parameter Store configuration for the application"
+  type = object({
+    enabled = optional(bool, false)
+    parameters = optional(object({
+      xray = optional(object({
+        enabled        = optional(bool, false)
+        service_name   = optional(string, "trigpointing-api")
+        sampling_rate  = optional(number, 0.1)
+        daemon_address = optional(string, null)
+      }), {})
+      app = optional(object({
+        log_level    = optional(string, "INFO")
+        cors_origins = optional(string, null)
+      }), {})
+      database = optional(object({
+        pool_size    = optional(number, 5)
+        pool_recycle = optional(number, 300)
+      }), {})
+    }), {})
+  })
+  default = {}
 }

@@ -28,67 +28,43 @@ provider "aws" {
 data "terraform_remote_state" "common" {
   backend = "s3"
   config = {
-    bucket = "tuk-terraform-state"
-    key    = "fastapi-common-eu-west-1/terraform.tfstate"
-    region = "eu-west-1"  # S3 bucket region
+    bucket = "trigpointing-terraform-state"
+    key    = "common/terraform.tfstate"
+    region = "eu-west-1"
   }
 }
-
-# Data source for mysql remote state - temporarily disabled for fresh deployment
-# data "terraform_remote_state" "mysql" {
-#   backend = "s3"
-#   config = {
-#     bucket = "tuk-terraform-state"
-#     key    = "fastapi-mysql-eu-west-1/terraform.tfstate"
-#     region = "eu-west-1"
-#   }
-# }
 
 # CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "app" {
-  name              = "/ecs/${var.project_name}-staging"
-  retention_in_days = 7
+  name              = "/aws/ecs/${var.project_name}-staging"
+  retention_in_days = 14
 
   tags = {
-    Name        = "${var.project_name}-staging-logs"
-    Environment = "staging"
+    Name = "${var.project_name}-staging-log-group"
   }
 }
 
-# CloudFlare module for security groups
-module "cloudflare" {
-  source = "../modules/cloudflare"
-
-  project_name           = var.project_name
-  environment           = "staging"
-  vpc_id                = data.terraform_remote_state.common.outputs.vpc_id
-  enable_cloudflare_ssl = var.enable_cloudflare_ssl
-  alb_security_group_id = data.terraform_remote_state.common.outputs.alb_security_group_id
-}
-
-# Certificate module (adds staging certificate to shared listener)
-module "certificate" {
-  source = "../modules/certificate"
-
-  project_name           = var.project_name
-  environment           = "staging"
-  listener_arn          = data.terraform_remote_state.common.outputs.https_listener_arn
-  domain_name           = var.domain_name
-  enable_cloudflare_ssl = var.enable_cloudflare_ssl
-  cloudflare_origin_cert = var.cloudflare_origin_cert
-  cloudflare_origin_key  = var.cloudflare_origin_key
-}
-
-# Target Group module (for shared ALB)
+# Target Group module
 module "target_group" {
   source = "../modules/target-group"
 
   project_name      = var.project_name
   environment       = "staging"
   vpc_id           = data.terraform_remote_state.common.outputs.vpc_id
-  alb_listener_arn = data.terraform_remote_state.common.outputs.https_listener_arn
-  domain_name      = var.domain_name
-  priority         = 100  # Staging gets priority 100
+  alb_listener_arn = data.terraform_remote_state.common.outputs.alb_listener_arn
+  domain_name      = "api-staging.trigpointing.uk"
+  priority         = 100
+  health_check_path = "/health"
+}
+
+# Cloudflare module
+module "cloudflare" {
+  source = "../modules/cloudflare"
+
+  project_name           = var.project_name
+  environment            = "staging"
+  vpc_id                = data.terraform_remote_state.common.outputs.vpc_id
+  alb_security_group_id = data.terraform_remote_state.common.outputs.alb_security_group_id
 }
 
 # Secrets module
@@ -121,13 +97,19 @@ module "ecs_service" {
   ecs_cluster_name              = data.terraform_remote_state.common.outputs.ecs_cluster_name
   ecs_task_execution_role_arn   = data.terraform_remote_state.common.outputs.ecs_task_execution_role_arn
   ecs_task_role_arn             = data.terraform_remote_state.common.outputs.ecs_task_role_arn
+  ecs_task_role_name            = data.terraform_remote_state.common.outputs.ecs_task_role_name
   ecs_security_group_id         = module.cloudflare.ecs_security_group_id
   private_subnet_ids            = data.terraform_remote_state.common.outputs.private_subnet_ids
   target_group_arn              = module.target_group.target_group_arn
+  alb_listener_arn              = data.terraform_remote_state.common.outputs.alb_listener_arn
+  alb_rule_priority             = 100
   secrets_arn                   = module.secrets.secrets_arn
   credentials_secret_arn        = "arn:aws:secretsmanager:eu-west-1:534526983272:secret:fastapi-staging-credentials-udrQoU"
   cloudwatch_log_group_name     = aws_cloudwatch_log_group.app.name
   auth0_domain                  = var.auth0_domain
   auth0_connection              = var.auth0_connection
   auth0_api_audience            = var.auth0_api_audience
+
+  # New Parameter Store configuration
+  parameter_store_config        = var.parameter_store_config
 }

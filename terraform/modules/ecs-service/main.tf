@@ -111,46 +111,10 @@ resource "aws_ecs_task_definition" "app" {
         }
       ] : [],
       # Parameter Store Configuration (if enabled)
-      var.enable_parameter_store ? [
-        # X-Ray Configuration
-        {
-          name      = "XRAY_ENABLED"
-          valueFrom = aws_ssm_parameter.xray_enabled[0].arn
-        },
-        {
-          name      = "XRAY_SERVICE_NAME"
-          valueFrom = aws_ssm_parameter.xray_service_name[0].arn
-        },
-        {
-          name      = "XRAY_SAMPLING_RATE"
-          valueFrom = aws_ssm_parameter.xray_sampling_rate[0].arn
-        },
-        # Application Configuration
-        {
-          name      = "LOG_LEVEL"
-          valueFrom = aws_ssm_parameter.log_level[0].arn
-        },
-        # Database Configuration
-        {
-          name      = "DB_POOL_SIZE"
-          valueFrom = aws_ssm_parameter.db_pool_size[0].arn
-        },
-        {
-          name      = "DB_POOL_RECYCLE"
-          valueFrom = aws_ssm_parameter.db_pool_recycle[0].arn
-        }
-      ] : [],
-      # Optional Parameter Store parameters
-      var.enable_parameter_store && var.xray_daemon_address != null ? [
-        {
-          name      = "XRAY_DAEMON_ADDRESS"
-          valueFrom = aws_ssm_parameter.xray_daemon_address[0].arn
-        }
-      ] : [],
-      var.enable_parameter_store && var.cors_origins != null ? [
-        {
-          name      = "BACKEND_CORS_ORIGINS"
-          valueFrom = aws_ssm_parameter.cors_origins[0].arn
+      var.parameter_store_config.enabled ? [
+        for key, param in local.parameter_map : {
+          name      = upper(replace(key, "/", "_"))
+          valueFrom = aws_ssm_parameter.parameters[key].arn
         }
       ] : []
       )
@@ -203,41 +167,6 @@ resource "aws_iam_policy" "ecs_credentials_access" {
   tags = {
     Name = "${var.project_name}-${var.environment}-ecs-credentials-access"
   }
-}
-
-# IAM policy for ECS tasks to read Parameter Store parameters
-resource "aws_iam_policy" "ecs_parameter_store_access" {
-  count = var.enable_parameter_store ? 1 : 0
-  name  = "${var.project_name}-${var.environment}-ecs-parameter-store-access"
-  description = "Allow ECS tasks to read Parameter Store parameters"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "ssm:GetParameter",
-          "ssm:GetParameters",
-          "ssm:GetParametersByPath"
-        ]
-        Resource = [
-          "arn:aws:ssm:${var.aws_region}:*:parameter/${var.project_name}/${var.environment}/*"
-        ]
-      }
-    ]
-  })
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-ecs-parameter-store-access"
-  }
-}
-
-# Attach Parameter Store policy to ECS task role
-resource "aws_iam_role_policy_attachment" "ecs_parameter_store_access" {
-  count      = var.enable_parameter_store ? 1 : 0
-  role       = var.ecs_task_role_name
-  policy_arn = aws_iam_policy.ecs_parameter_store_access[0].arn
 }
 
 # ECS Service
