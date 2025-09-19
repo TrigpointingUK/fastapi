@@ -127,4 +127,6 @@ module "ecs_service" {
   auth0_domain                  = var.auth0_domain
   auth0_connection              = var.auth0_connection
   auth0_api_audience            = var.auth0_api_audience
+
+  parameter_store_config        = var.parameter_store_config
 }

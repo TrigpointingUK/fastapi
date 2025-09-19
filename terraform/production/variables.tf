@@ -104,3 +104,28 @@ variable "auth0_api_audience" {
   type        = string
   default     = "https://api.trigpointing.uk/api/v1/"
 }
+
+# Parameter Store Configuration
+variable "parameter_store_config" {
+  description = "Parameter Store configuration for the application"
+  type = object({
+    enabled = optional(bool, false)
+    parameters = optional(object({
+      xray = optional(object({
+        enabled        = optional(bool, false)
+        service_name   = optional(string, "trigpointing-api")
+        sampling_rate  = optional(number, 0.1)
+        daemon_address = optional(string, null)
+      }), {})
+      app = optional(object({
+        log_level    = optional(string, "INFO")
+        cors_origins = optional(string, null)
+      }), {})
+      database = optional(object({
+        pool_size    = optional(number, 5)
+        pool_recycle = optional(number, 300)
+      }), {})
+    }), {})
+  })
+  default = {}
+}
