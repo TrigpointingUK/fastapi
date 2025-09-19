@@ -261,3 +261,15 @@ resource "aws_appautoscaling_policy" "ecs_policy_memory" {
     target_value = var.memory_target_value
   }
 }
+
+# Attach credentials access policy to ECS task role
+resource "aws_iam_role_policy_attachment" "ecs_task_credentials" {
+  role       = var.ecs_task_role_name
+  policy_arn = aws_iam_policy.ecs_credentials_access.arn
+}
+
+# Attach credentials access policy to ECS task execution role
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_credentials" {
+  role       = var.ecs_task_execution_role_name
+  policy_arn = aws_iam_policy.ecs_credentials_access.arn
+}

@@ -91,6 +91,11 @@ variable "ecs_task_role_name" {
   type        = string
 }
 
+variable "ecs_task_execution_role_name" {
+  description = "Name of the ECS task execution role (for policy attachment)"
+  type        = string
+}
+
 variable "ecs_security_group_id" {
   description = "ID of the ECS security group"
   type        = string

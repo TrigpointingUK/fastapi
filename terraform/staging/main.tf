@@ -97,6 +97,7 @@ module "ecs_service" {
   ecs_cluster_id                = data.terraform_remote_state.common.outputs.ecs_cluster_id
   ecs_cluster_name              = data.terraform_remote_state.common.outputs.ecs_cluster_name
   ecs_task_execution_role_arn   = data.terraform_remote_state.common.outputs.ecs_task_execution_role_arn
+  ecs_task_execution_role_name  = data.terraform_remote_state.common.outputs.ecs_task_execution_role_name
   ecs_task_role_arn             = data.terraform_remote_state.common.outputs.ecs_task_role_arn
   ecs_task_role_name            = data.terraform_remote_state.common.outputs.ecs_task_role_name
   ecs_security_group_id         = module.cloudflare.ecs_security_group_id
