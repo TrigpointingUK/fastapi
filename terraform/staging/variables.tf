@@ -65,6 +65,12 @@ variable "domain_name" {
   default     = "api-staging.trigpointing.uk"
 }
 
+variable "enable_cloudflare_ssl" {
+  description = "Enable Cloudflare SSL termination"
+  type        = bool
+  default     = false
+}
+
 # Auth0 Configuration
 variable "auth0_domain" {
   description = "Auth0 domain (e.g., your-tenant.auth0.com)"

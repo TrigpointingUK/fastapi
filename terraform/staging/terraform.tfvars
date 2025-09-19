@@ -1,4 +1,6 @@
-# Note: Using existing tuk-terraform-state bucket in eu-west-1
+# Basic Configuration
+project_name = "trigpointing"
+aws_region   = "eu-west-1"
 
 # Container image (built by GitHub Actions CI/CD)
 container_image = "ghcr.io/trigpointinguk/fastapi:develop"
@@ -20,3 +22,24 @@ enable_cloudflare_ssl = false
 auth0_domain = "trigpointing.eu.auth0.com"
 auth0_connection = "tme-users"
 auth0_api_audience = "https://api.trigpointing.me/api/v1/"
+
+
+parameter_store_config = {
+  enabled = true
+  parameters = {
+    xray = {
+      enabled        = true
+      service_name   = "trigpointing-api-staging"
+      sampling_rate  = 0.2
+      daemon_address = null
+    }
+    app = {
+      log_level    = "DEBUG"
+      cors_origins = "https://staging.trigpointing.uk,https://api-staging.trigpointing.uk"
+    }
+    database = {
+      pool_size    = 5
+      pool_recycle = 300
+    }
+  }
+}

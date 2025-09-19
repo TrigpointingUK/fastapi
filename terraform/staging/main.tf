@@ -28,8 +28,8 @@ provider "aws" {
 data "terraform_remote_state" "common" {
   backend = "s3"
   config = {
-    bucket = "trigpointing-terraform-state"
-    key    = "common/terraform.tfstate"
+    bucket = "tuk-terraform-state"
+    key    = "fastapi-common-eu-west-1/terraform.tfstate"
     region = "eu-west-1"
   }
 }
@@ -51,7 +51,7 @@ module "target_group" {
   project_name      = var.project_name
   environment       = "staging"
   vpc_id           = data.terraform_remote_state.common.outputs.vpc_id
-  alb_listener_arn = data.terraform_remote_state.common.outputs.alb_listener_arn
+  alb_listener_arn = data.terraform_remote_state.common.outputs.https_listener_arn
   domain_name      = "api-staging.trigpointing.uk"
   priority         = 100
   health_check_path = "/health"
@@ -73,7 +73,7 @@ module "secrets" {
 
   project_name                    = var.project_name
   environment                    = "staging"
-  ecs_task_role_name            = data.terraform_remote_state.common.outputs.ecs_task_role_arn
+  ecs_task_role_name            = data.terraform_remote_state.common.outputs.ecs_task_role_name
   ecs_task_execution_role_name  = data.terraform_remote_state.common.outputs.ecs_task_execution_role_arn
   auth0_domain                  = var.auth0_domain
 }
@@ -101,7 +101,7 @@ module "ecs_service" {
   ecs_security_group_id         = module.cloudflare.ecs_security_group_id
   private_subnet_ids            = data.terraform_remote_state.common.outputs.private_subnet_ids
   target_group_arn              = module.target_group.target_group_arn
-  alb_listener_arn              = data.terraform_remote_state.common.outputs.alb_listener_arn
+  alb_listener_arn              = data.terraform_remote_state.common.outputs.https_listener_arn
   alb_rule_priority             = 100
   secrets_arn                   = module.secrets.secrets_arn
   credentials_secret_arn        = "arn:aws:secretsmanager:eu-west-1:534526983272:secret:fastapi-staging-credentials-udrQoU"
