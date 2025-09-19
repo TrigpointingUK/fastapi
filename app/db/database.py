@@ -20,8 +20,9 @@ def get_engine():
     if _engine is None:
         _engine = create_engine(
             settings.DATABASE_URL,
+            pool_size=settings.DATABASE_POOL_SIZE,
             pool_pre_ping=True,
-            pool_recycle=300,
+            pool_recycle=settings.DATABASE_POOL_RECYCLE,
             echo=settings.DEBUG,
         )
     return _engine

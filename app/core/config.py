@@ -23,6 +23,10 @@ class Settings(BaseSettings):
     DB_PASSWORD: str = "pass"
     DB_NAME: str = "db"
 
+    # Database Pool Configuration
+    DATABASE_POOL_SIZE: int = 5
+    DATABASE_POOL_RECYCLE: int = 300
+
     @property
     def DATABASE_URL(self) -> str:
         """Construct DATABASE_URL from individual database components."""
