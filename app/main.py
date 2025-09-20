@@ -136,10 +136,9 @@ if xray_enabled:
                 # Start a segment for this request
                 segment = None
                 try:
-                    # Use the async-compatible segment creation
+                    # Start a new root segment; let the recorder extract or generate trace id
                     segment = self.recorder.begin_segment(
                         name=segment_name,
-                        traceid=request.headers.get("X-Amzn-Trace-Id"),
                     )
                     # Store segment in request state for async context
                     request.state.xray_segment = segment

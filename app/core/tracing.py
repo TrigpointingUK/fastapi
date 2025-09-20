@@ -24,6 +24,7 @@ def setup_xray_tracing() -> bool:
     try:
         # Import X-Ray SDK
         from aws_xray_sdk.core import xray_recorder
+        from aws_xray_sdk.core.async_context import AsyncContext
 
         # Configure X-Ray recorder for AWS Fargate
         # If no daemon address is specified, use the default local daemon address
@@ -36,6 +37,7 @@ def setup_xray_tracing() -> bool:
             sampling=settings.XRAY_SAMPLING_RATE,
             daemon_address=daemon_address,
             context_missing="LOG_ERROR",  # Log error instead of raising exception
+            context=AsyncContext(),  # Ensure async-safe context handling
         )
 
         # Patch selected libraries for automatic instrumentation
