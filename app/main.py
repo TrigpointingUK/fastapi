@@ -163,9 +163,17 @@ if xray_enabled:
                     return response
 
                 except Exception as e:
-                    # Mark segment as error
-                    if segment:
-                        segment.add_exception(e)
+                    # Mark segment as error with traceback stack
+                    try:
+                        import sys
+                        import traceback
+
+                        if segment:
+                            _, _, tb = sys.exc_info()
+                            stack = traceback.extract_tb(tb) if tb else None
+                            segment.add_exception(e, stack)
+                    except Exception as add_exc_err:
+                        logger.debug(f"Failed to record X-Ray exception: {add_exc_err}")
                     raise
                 finally:
                     # Always end the segment
