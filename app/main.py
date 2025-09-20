@@ -121,26 +121,16 @@ if xray_enabled:
                 if request.url.path == "/debug/xray":
                     return await call_next(request)
 
-                # Create segment name from the path pattern
-                path = request.url.path
-                # Normalize API paths
-                if path.startswith("/api/v1/"):
-                    # Keep the API prefix and endpoint name
-                    parts = path.split("/")
-                    if len(parts) > 4:
-                        # e.g., /api/v1/trigs/123 -> /api/v1/trigs/{id}
-                        path = "/".join(parts[:4]) + "/{id}"
-
-                segment_name = f"{request.method} {path}"
-
-                # Start a segment for this request
+                # Start a segment for this request only if one doesn't already exist
+                segment_created_here = False
                 segment = None
                 try:
-                    # Start a new root segment; let the recorder extract or generate trace id
-                    segment = self.recorder.begin_segment(
-                        name=segment_name,
-                    )
-                    # Store segment in request state for async context
+                    # Reuse existing segment if present; otherwise begin a new root segment
+                    segment = self.recorder.current_segment()
+                    if segment is None:
+                        segment = self.recorder.begin_segment()
+                        segment_created_here = True
+                    # Store reference for downstream usage
                     request.state.xray_segment = segment
                 except Exception as e:
                     logger.warning(f"Failed to create X-Ray segment: {e}")
@@ -180,15 +170,19 @@ if xray_enabled:
                 finally:
                     # Always end the segment
                     try:
-                        # Restore current entity before ending to handle async context switches
-                        if segment is not None and hasattr(self.recorder, "_context"):
-                            try:
-                                self.recorder._context.set_trace_entity(segment)  # type: ignore[attr-defined]
-                            except Exception as context_err:
-                                logger.debug(
-                                    f"Could not set X-Ray current entity before end: {context_err}"
-                                )
-                        self.recorder.end_segment()
+                        # Only end the segment if we created it in this middleware
+                        if segment_created_here:
+                            # Restore current entity before ending to handle async context switches
+                            if segment is not None and hasattr(
+                                self.recorder, "_context"
+                            ):
+                                try:
+                                    self.recorder._context.set_trace_entity(segment)  # type: ignore[attr-defined]
+                                except Exception as context_err:
+                                    logger.debug(
+                                        f"Could not set X-Ray current entity before end: {context_err}"
+                                    )
+                            self.recorder.end_segment()
                     except Exception as e:
                         logger.warning(f"Failed to end X-Ray segment: {e}")
 
