@@ -25,18 +25,25 @@ def setup_xray_tracing() -> bool:
         # Import X-Ray SDK
         from aws_xray_sdk.core import xray_recorder
 
-        # Configure X-Ray recorder
+        # Configure X-Ray recorder for AWS Fargate
+        # If no daemon address is specified, use the default local daemon address
+        # The X-Ray daemon sidecar container will be available at 127.0.0.1:2000
+        daemon_address = settings.XRAY_DAEMON_ADDRESS or "127.0.0.1:2000"
+        logger.info(f"Using X-Ray daemon address: {daemon_address}")
+
         xray_recorder.configure(
             service=settings.XRAY_SERVICE_NAME,
             sampling=settings.XRAY_SAMPLING_RATE,
-            daemon_address=settings.XRAY_DAEMON_ADDRESS,
+            daemon_address=daemon_address,
+            context_missing="LOG_ERROR",  # Log error instead of raising exception
         )
 
         # Patch selected libraries for automatic instrumentation
         # Avoid patching SQLAlchemy to prevent conflicts with dependency injection
         from aws_xray_sdk.core import patch
 
-        # Patch only specific libraries that don't interfere with dependency injection
+        # Patch specific libraries for automatic instrumentation
+        # Note: FastAPI patching is handled in main.py to avoid import issues
         patch(["requests", "boto3", "botocore"])  # Avoid 'sqlalchemy' and 'psycopg2'
 
         logger.info(f"X-Ray tracing enabled for service: {settings.XRAY_SERVICE_NAME}")
