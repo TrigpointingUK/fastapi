@@ -158,3 +158,5 @@ secrets.txt
 
 # Local development
 docker-compose.override.yml
+
+locust/
