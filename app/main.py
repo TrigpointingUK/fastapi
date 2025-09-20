@@ -157,7 +157,7 @@ if xray_enabled:
                                 "user_agent", request.headers.get("user-agent")
                             )
                         if request.client:
-                            segment.put_http_meta("client_address", request.client.host)
+                            segment.put_http_meta("client_ip", request.client.host)
 
                     # Process the request
                     response: Response = await call_next(request)
@@ -180,6 +180,14 @@ if xray_enabled:
                 finally:
                     # Always end the segment
                     try:
+                        # Restore current entity before ending to handle async context switches
+                        if segment is not None and hasattr(self.recorder, "_context"):
+                            try:
+                                self.recorder._context.set_trace_entity(segment)  # type: ignore[attr-defined]
+                            except Exception as context_err:
+                                logger.debug(
+                                    f"Could not set X-Ray current entity before end: {context_err}"
+                                )
                         self.recorder.end_segment()
                     except Exception as e:
                         logger.warning(f"Failed to end X-Ray segment: {e}")
