@@ -209,6 +209,7 @@ def health_check():
     tracing_info = {
         "xray_enabled": xray_enabled,
         "otel_enabled": otel_enabled,
+        "environment": settings.ENVIRONMENT,
     }
 
     # Add X-Ray configuration details if enabled

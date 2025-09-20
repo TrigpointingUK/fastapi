@@ -4,6 +4,47 @@ locals {
   # Use recommended runtime
   canary_runtime = "syn-nodejs-puppeteer-11.0"
 }
+data "archive_file" "health_check" {
+  type        = "zip"
+  source_file = "${path.module}/scripts/health_check.js"
+  output_path = "${path.module}/scripts/health_check.zip"
+}
+
+resource "aws_s3_object" "health_check_src" {
+  bucket = aws_s3_bucket.synthetics_artifacts.id
+  key    = "sources/health_check.zip"
+  source = data.archive_file.health_check.output_path
+  etag   = filemd5(data.archive_file.health_check.output_path)
+}
+
+resource "aws_synthetics_canary" "api_health" {
+  name                 = "${var.project_name}-${var.environment}-api-health"
+  artifact_s3_location = "s3://${aws_s3_bucket.synthetics_artifacts.bucket}/canaries/api-health/"
+  execution_role_arn   = aws_iam_role.canary_role.arn
+  handler              = "health_check.handler"
+  runtime_version      = local.canary_runtime
+  s3_bucket            = aws_s3_bucket.synthetics_artifacts.bucket
+  s3_key               = aws_s3_object.health_check_src.key
+  s3_version           = aws_s3_object.health_check_src.version_id
+  start_canary         = true
+  schedule {
+    expression = "rate(1 minute)"
+  }
+  run_config {
+    timeout_in_seconds = 20
+    environment_variables = {
+      TARGET_URL          = var.environment == "production" ? "https://api.trigpointing.uk/health" : "https://api.trigpointing.me/health"
+      EXPECTED_ENVIRONMENT = var.environment
+      USER_AGENT          = "Trigpointing-canary/1.0 (+https://trigpointing.uk)"
+      CODE_HASH           = data.archive_file.health_check.output_base64sha256
+    }
+  }
+  failure_retention_period = 31
+  success_retention_period = 7
+  tags = {
+    CheckType = "api-health"
+  }
+}
 
 data "archive_file" "api_json_contains" {
   type        = "zip"
