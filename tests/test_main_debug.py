@@ -2,6 +2,8 @@
 Tests for main application debug endpoints.
 """
 
+from unittest.mock import patch
+
 from app.core.security import create_access_token
 from fastapi.testclient import TestClient
 
@@ -102,3 +104,33 @@ def test_debug_auth_short_token_no_truncation(client: TestClient):
     assert data["authenticated"] is False
     assert "error" in data
     assert data["token"] == short_token
+
+
+def test_debug_xray_disabled(client: TestClient):
+    """Test debug xray endpoint when X-Ray is disabled."""
+    with patch("app.main.xray_enabled", False):
+        response = client.get("/debug/xray")
+        assert response.status_code == 200
+        data = response.json()
+        assert data["error"] == "X-Ray is not enabled"
+
+
+def test_debug_xray_import_error(client: TestClient):
+    """Test debug xray endpoint when X-Ray SDK import fails."""
+    with patch("app.main.xray_enabled", True), patch(
+        "app.main.settings"
+    ) as mock_settings:
+
+        mock_settings.XRAY_SERVICE_NAME = "test-service"
+        mock_settings.XRAY_SAMPLING_RATE = 0.1
+        mock_settings.XRAY_DAEMON_ADDRESS = "127.0.0.1:2000"
+
+        # Since the X-Ray SDK isn't installed in test environment,
+        # this will naturally trigger an ImportError
+        response = client.get("/debug/xray")
+        assert response.status_code == 200
+        data = response.json()
+
+        assert "error" in data
+        assert data["debug_info"]["xray_enabled"] is True
+        assert data["debug_info"]["service_name"] == "test-service"
