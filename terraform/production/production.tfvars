@@ -1,6 +1,4 @@
 environment  = "production"
-project_name = "trigpointing"
-aws_region   = "eu-west-1"
 
 # Container image (built by GitHub Actions CI/CD)
 container_image = "ghcr.io/trigpointinguk/fastapi:main"
