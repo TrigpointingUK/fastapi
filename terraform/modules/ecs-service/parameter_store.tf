@@ -116,3 +116,11 @@ resource "aws_iam_role_policy_attachment" "ecs_parameter_store_access" {
   role       = var.ecs_task_role_name
   policy_arn = aws_iam_policy.ecs_parameter_store_access[0].arn
 }
+
+# Attach Parameter Store policy to ECS task execution role as well,
+# because secrets/ssm references in task definitions are fetched by the execution role
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_parameter_store_access" {
+  count      = var.parameter_store_config.enabled ? 1 : 0
+  role       = var.ecs_task_execution_role_name
+  policy_arn = aws_iam_policy.ecs_parameter_store_access[0].arn
+}
