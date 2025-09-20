@@ -1,4 +1,4 @@
-environment  = "production"
+environment = "production"
 
 # Container image (built by GitHub Actions CI/CD)
 container_image = "ghcr.io/trigpointinguk/fastapi:main"

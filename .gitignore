@@ -145,11 +145,8 @@ test.db
 .terraform.lock.hcl
 
 # CloudFlare certificates (keep private)
-terraform/cloudflare-cert.tfvars
-terraform/cloudflare-cert-trigpointing-uk.tfvars
-terraform/cloudflare-cert-trigpointing-me.tfvars
-terraform/staging/cloudflare-cert.tfvars
-terraform/production/cloudflare-cert.tfvars
+*cert*.tfvars
+
 
 # Secrets
 *.pem

@@ -94,22 +94,15 @@ deploy_staging() {
     print_status "Initializing Terraform..."
     terraform init -backend-config=backend.conf
 
-    # Check if certificate file exists
-    if [ ! -f "cloudflare-cert.tfvars" ]; then
-        print_error "cloudflare-cert.tfvars not found in staging directory!"
-        print_error "Please ensure the CloudFlare certificate file exists."
-        exit 1
-    fi
-
     # Plan deployment
     print_status "Planning deployment..."
-    terraform plan -var-file=staging.tfvars -var-file=cloudflare-cert.tfvars
+    terraform plan
 
     # Ask for confirmation
     read -p "Do you want to apply the staging infrastructure? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        terraform apply -auto-approve -var-file=staging.tfvars -var-file=cloudflare-cert.tfvars
+        terraform apply -auto-approve
         print_success "Staging infrastructure deployed successfully!"
 
         # Show outputs
@@ -132,22 +125,15 @@ deploy_production() {
     print_status "Initializing Terraform..."
     terraform init -backend-config=backend.conf
 
-    # Check if certificate file exists
-    if [ ! -f "cloudflare-cert.tfvars" ]; then
-        print_error "cloudflare-cert.tfvars not found in production directory!"
-        print_error "Please ensure the CloudFlare certificate file exists."
-        exit 1
-    fi
-
     # Plan deployment
     print_status "Planning deployment..."
-    terraform plan -var-file=production.tfvars -var-file=cloudflare-cert.tfvars
+    terraform plan
 
     # Ask for confirmation
     read -p "Do you want to apply the production infrastructure? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        terraform apply -auto-approve -var-file=production.tfvars -var-file=cloudflare-cert.tfvars
+        terraform apply -auto-approve
         print_success "Production infrastructure deployed successfully!"
 
         # Show outputs
@@ -155,38 +141,6 @@ deploy_production() {
         terraform output
     else
         print_warning "Production infrastructure deployment cancelled."
-    fi
-
-    cd ..
-}
-
-
-# Function to deploy monitoring
-deploy_monitoring() {
-    print_status "Deploying monitoring stack (CloudWatch Synthetics, SNS, Chatbot)..."
-
-    cd monitoring
-
-    # Initialize Terraform
-    print_status "Initializing Terraform..."
-    terraform init -backend-config=backend.conf
-
-    # Plan deployment
-    print_status "Planning deployment..."
-    terraform plan -var-file=monitoring.tfvars
-
-    # Ask for confirmation
-    read -p "Do you want to apply the monitoring stack? (y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        terraform apply -auto-approve -var-file=monitoring.tfvars
-        print_success "Monitoring stack deployed successfully!"
-
-        # Show outputs
-        print_status "Monitoring outputs:"
-        terraform output
-    else
-        print_warning "Monitoring deployment cancelled."
     fi
 
     cd ..

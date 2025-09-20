@@ -1,19 +1,16 @@
 variable "aws_region" {
   description = "AWS region for monitoring resources (Ireland preferred)"
   type        = string
-  default     = "eu-west-1" # Ireland
 }
 
 variable "project_name" {
   description = "Project name"
   type        = string
-  default     = "trigpointing"
 }
 
 variable "environment" {
   description = "Environment name"
   type        = string
-  default     = "production"
 }
 
 variable "enable_slack_notifications" {

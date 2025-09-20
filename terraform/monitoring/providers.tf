@@ -5,10 +5,10 @@ terraform {
       source  = "hashicorp/aws"
       version = "~> 5.0"
     }
-  }
-
-  backend "s3" {
-    # Backend configuration will be provided via backend.conf
+    archive = {
+      source  = "hashicorp/archive"
+      version = "~> 2.4"
+    }
   }
 }
 
@@ -20,16 +20,17 @@ provider "aws" {
       Project     = var.project_name
       Environment = var.environment
       ManagedBy   = "terraform"
+      Component   = "monitoring"
     }
   }
 }
 
-# Data source for common infrastructure
+# Reference common stack for VPC/roles if needed
 data "terraform_remote_state" "common" {
   backend = "s3"
   config = {
     bucket = "tuk-terraform-state"
     key    = "fastapi-common-eu-west-1/terraform.tfstate"
-    region = "eu-west-1" # S3 bucket region
+    region = "eu-west-1"
   }
 }

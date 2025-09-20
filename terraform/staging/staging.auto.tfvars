@@ -1,4 +1,4 @@
-environment  = "staging"
+environment = "staging"
 
 # Container image (built by GitHub Actions CI/CD)
 container_image = "ghcr.io/trigpointinguk/fastapi:develop"

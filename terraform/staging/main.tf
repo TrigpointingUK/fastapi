@@ -1,4 +1,3 @@
-# CloudWatch Log Group
 resource "aws_cloudwatch_log_group" "app" {
   name              = "/aws/ecs/${var.project_name}-${var.environment}"
   retention_in_days = 14
@@ -8,22 +7,21 @@ resource "aws_cloudwatch_log_group" "app" {
   }
 }
 
-# Cloudflare module
 module "cloudflare" {
   source = "../modules/cloudflare"
 
   project_name          = var.project_name
-  environment           = "staging"
+  environment           = var.environment
   vpc_id                = data.terraform_remote_state.common.outputs.vpc_id
+  enable_cloudflare_ssl = var.enable_cloudflare_ssl
   alb_security_group_id = data.terraform_remote_state.common.outputs.alb_security_group_id
 }
 
-# Target Group module
 module "target_group" {
   source = "../modules/target-group"
 
   project_name      = var.project_name
-  environment       = "staging"
+  environment       = var.environment
   vpc_id            = data.terraform_remote_state.common.outputs.vpc_id
   alb_listener_arn  = data.terraform_remote_state.common.outputs.https_listener_arn
   domain_name       = "api.trigpointing.me"
@@ -31,12 +29,23 @@ module "target_group" {
   health_check_path = "/health"
 }
 
-# Secrets module
+module "certificate" {
+  source = "../modules/certificate"
+
+  project_name           = var.project_name
+  environment            = var.environment
+  listener_arn           = data.terraform_remote_state.common.outputs.https_listener_arn
+  domain_name            = var.domain_name
+  enable_cloudflare_ssl  = var.enable_cloudflare_ssl
+  cloudflare_origin_cert = var.cloudflare_origin_cert
+  cloudflare_origin_key  = var.cloudflare_origin_key
+}
+
 module "secrets" {
   source = "../modules/secrets"
 
   project_name                 = var.project_name
-  environment                  = "staging"
+  environment                  = var.environment
   ecs_task_role_name           = data.terraform_remote_state.common.outputs.ecs_task_role_name
   ecs_task_execution_role_name = data.terraform_remote_state.common.outputs.ecs_task_execution_role_arn
   auth0_domain                 = var.auth0_domain
@@ -47,8 +56,8 @@ module "ecs_service" {
   source = "../modules/ecs-service"
 
   project_name                 = var.project_name
-  environment                  = "staging"
-  service_name                 = "fastapi-staging-service" # Keep the original service name
+  environment                  = var.environment
+  service_name                 = "fastapi-${var.environment}-service"
   aws_region                   = var.aws_region
   container_image              = var.container_image
   cpu                          = var.cpu
@@ -75,20 +84,17 @@ module "ecs_service" {
   auth0_domain                 = var.auth0_domain
   auth0_connection             = var.auth0_connection
   auth0_api_audience           = var.auth0_api_audience
-
-  # New Parameter Store configuration
   parameter_store_config = var.parameter_store_config
 }
 
-# Monitoring module for X-Ray groups and sampling rules
 module "monitoring" {
   source = "../monitoring"
 
   project_name            = var.project_name
-  environment             = "staging"
+  environment             = var.environment
   aws_region              = var.aws_region
   xray_sampling_rate      = var.parameter_store_config.parameters.xray.sampling_rate
   enable_xray_daemon_role = false # Not needed for Fargate
   enable_xray_daemon_logs = false # Not needed for Fargate
-  log_retention_days      = 14
+  log_retention_days      = 7
 }
