@@ -3,7 +3,7 @@
 
 # X-Ray sampling rule for the API service
 resource "aws_xray_sampling_rule" "api_sampling" {
-  rule_name      = "trigpointing-api-sampling-${var.environment}"
+  rule_name      = "trig-api-${var.environment}"
   priority       = var.environment == "production" ? 1000 : 1100
   version        = 1
   reservoir_size = 100
@@ -23,7 +23,7 @@ resource "aws_xray_sampling_rule" "api_sampling" {
 
 # X-Ray sampling rule for the web service
 resource "aws_xray_sampling_rule" "web_sampling" {
-  rule_name      = "trigpointing-web-sampling-${var.environment}"
+  rule_name      = "trig-web-${var.environment}"
   priority       = var.environment == "production" ? 1001 : 1101
   version        = 1
   reservoir_size = 50
