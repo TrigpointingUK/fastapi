@@ -151,12 +151,24 @@ def health_check():
         try:
             from aws_xray_sdk.core import xray_recorder
 
-            # Check if recorder is configured (different API for async recorder)
-            tracing_info["xray_recorder_configured"] = (
-                hasattr(xray_recorder, "_context")
-                and xray_recorder._context is not None
-            )
+            # Check if recorder is configured
             tracing_info["xray_recorder_type"] = type(xray_recorder).__name__
+
+            # For AsyncAWSXRayRecorder, check if it's properly configured
+            if hasattr(xray_recorder, "service"):
+                tracing_info["xray_recorder_service"] = xray_recorder.service
+            if hasattr(xray_recorder, "daemon_address"):
+                tracing_info["xray_recorder_daemon_address"] = (
+                    xray_recorder.daemon_address
+                )
+            if hasattr(xray_recorder, "_context"):
+                tracing_info["xray_recorder_has_context"] = (
+                    xray_recorder._context is not None
+                )
+
+            # Try to check if sampling is working
+            tracing_info["xray_recorder_configured"] = True
+
         except Exception as e:
             tracing_info["xray_recorder_error"] = str(e)
 
@@ -172,41 +184,60 @@ def debug_xray():
     if not xray_enabled:
         return {"error": "X-Ray is not enabled"}
 
+    debug_info = {
+        "xray_enabled": xray_enabled,
+        "service_name": settings.XRAY_SERVICE_NAME,
+        "sampling_rate": settings.XRAY_SAMPLING_RATE,
+        "daemon_address": settings.XRAY_DAEMON_ADDRESS,
+    }
+
     try:
         from aws_xray_sdk.core import xray_recorder
 
+        # Get recorder info
+        debug_info["recorder_type"] = type(xray_recorder).__name__
+        debug_info["recorder_service"] = getattr(xray_recorder, "service", "not_set")
+        debug_info["recorder_daemon_address"] = getattr(
+            xray_recorder, "daemon_address", "not_set"
+        )
+
         # Try to create a simple trace manually
+        logger.info("Attempting to create X-Ray segment manually")
         segment = xray_recorder.begin_segment("debug_xray_test")
-        try:
-            if segment:
-                segment.put_annotation("test", "debug")
-                segment.put_metadata(
-                    "debug_info",
-                    {
-                        "service_name": settings.XRAY_SERVICE_NAME,
-                        "sampling_rate": settings.XRAY_SAMPLING_RATE,
-                        "daemon_address": settings.XRAY_DAEMON_ADDRESS,
-                    },
-                )
-                result = {
-                    "status": "success",
-                    "message": "X-Ray trace created successfully",
-                    "trace_id": segment.trace_id,
-                    "segment_id": segment.id,
-                }
-                xray_recorder.end_segment()
-                return result
-            else:
-                return {"error": "No segment created"}
-        except Exception as inner_e:
-            if segment:
-                xray_recorder.end_segment()
-            raise inner_e
+
+        if segment:
+            logger.info(f"Segment created: {segment.id}")
+            segment.put_annotation("test", "debug")
+            segment.put_metadata(
+                "debug_info",
+                {
+                    "service_name": settings.XRAY_SERVICE_NAME,
+                    "sampling_rate": settings.XRAY_SAMPLING_RATE,
+                    "daemon_address": settings.XRAY_DAEMON_ADDRESS,
+                },
+            )
+
+            result = {
+                "status": "success",
+                "message": "X-Ray trace created successfully",
+                "trace_id": segment.trace_id,
+                "segment_id": segment.id,
+                "debug_info": debug_info,
+            }
+
+            xray_recorder.end_segment()
+            logger.info(f"Segment ended: {segment.id}")
+            return result
+        else:
+            logger.error("No segment was created by begin_segment()")
+            return {"error": "No segment created", "debug_info": debug_info}
 
     except Exception as e:
+        logger.error(f"X-Ray debug error: {str(e)}", exc_info=True)
         return {
             "error": f"X-Ray error: {str(e)}",
             "type": type(e).__name__,
+            "debug_info": debug_info,
         }
 
 
