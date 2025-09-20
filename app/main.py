@@ -134,45 +134,42 @@ if xray_enabled:
                 segment_name = f"{request.method} {path}"
 
                 # Start a segment for this request
+                segment = None
                 try:
+                    # Use the async-compatible segment creation
                     segment = self.recorder.begin_segment(
                         name=segment_name,
                         traceid=request.headers.get("X-Amzn-Trace-Id"),
                     )
+                    # Store segment in request state for async context
+                    request.state.xray_segment = segment
                 except Exception as e:
                     logger.warning(f"Failed to create X-Ray segment: {e}")
                     # If segment creation fails, continue without tracing
                     return await call_next(request)
 
                 try:
-                    # Add request metadata
+                    # Add HTTP metadata the correct way for X-Ray
                     if segment:
-                        segment.put_http_meta(
-                            "request",
-                            {
-                                "method": request.method,
-                                "url": str(request.url),
-                                "user_agent": request.headers.get("user-agent", ""),
-                                "remote_addr": (
-                                    request.client.host if request.client else ""
-                                ),
-                            },
-                        )
+                        segment.put_http_meta("method", request.method)
+                        segment.put_http_meta("url", str(request.url))
+                        if request.headers.get("user-agent"):
+                            segment.put_http_meta(
+                                "user_agent", request.headers.get("user-agent")
+                            )
+                        if request.client:
+                            segment.put_http_meta("client_address", request.client.host)
 
                     # Process the request
                     response: Response = await call_next(request)
 
                     # Add response metadata
                     if segment:
-                        segment.put_http_meta(
-                            "response",
-                            {
-                                "status": response.status_code,
-                                "content_length": response.headers.get(
-                                    "content-length", ""
-                                ),
-                            },
-                        )
+                        segment.put_http_meta("status", response.status_code)
+                        if response.headers.get("content-length"):
+                            segment.put_http_meta(
+                                "content_length", response.headers.get("content-length")
+                            )
 
                     return response
 
