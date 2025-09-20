@@ -10,10 +10,6 @@ terraform {
       version = "~> 2.4"
     }
   }
-
-  backend "s3" {
-    # Backend configuration will be provided via backend.conf
-  }
 }
 
 provider "aws" {
