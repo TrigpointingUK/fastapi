@@ -106,24 +106,27 @@ if settings.BACKEND_CORS_ORIGINS:
 # Add X-Ray middleware if enabled
 if xray_enabled:
     try:
-        from aws_xray_sdk.core import xray_recorder
-        from aws_xray_sdk.ext.fastapi import XRayMiddleware as FastAPIXRayMiddleware
+        from aws_xray_sdk.core import patch, xray_recorder
 
-        # Use the official AWS X-Ray FastAPI middleware
-        app.add_middleware(FastAPIXRayMiddleware, recorder=xray_recorder)
-        logger.info("X-Ray middleware added successfully")
-    except ImportError as e:
-        logger.warning(f"X-Ray FastAPI middleware not available: {e}")
-        # Fallback: Try to patch FastAPI directly
+        # Use X-Ray patching for FastAPI - more reliable than middleware
+        patch(["fastapi"])
+        logger.info("X-Ray patching applied to FastAPI")
+
+        # Also try to add the middleware as backup
         try:
-            from aws_xray_sdk.core import patch
+            from aws_xray_sdk.ext.fastapi import XRayMiddleware as FastAPIXRayMiddleware
 
-            patch(["fastapi"])
-            logger.info("X-Ray patching applied to FastAPI")
-        except Exception as patch_error:
-            logger.error(f"Failed to patch FastAPI with X-Ray: {patch_error}")
+            app.add_middleware(FastAPIXRayMiddleware, recorder=xray_recorder)
+            logger.info("X-Ray FastAPI middleware also added")
+        except ImportError:
+            logger.info("X-Ray FastAPI middleware not available, using patching only")
+        except Exception as middleware_error:
+            logger.warning(
+                f"X-Ray middleware failed, using patching only: {middleware_error}"
+            )
+
     except Exception as e:
-        logger.error(f"Error setting up X-Ray middleware: {e}")
+        logger.error(f"Error setting up X-Ray instrumentation: {e}")
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
