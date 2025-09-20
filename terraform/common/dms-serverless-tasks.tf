@@ -44,10 +44,10 @@ resource "aws_dms_replication_config" "staging_migration" {
           schema-name = "trigpoin_trigs"
           table-name  = "%"
         }
-        rule-action = "rename"
-        value       = "tuk_staging"
+        rule-action        = "rename"
+        value              = "tuk_staging"
         target-schema-name = "tuk_staging"
-        rule-target = "schema"
+        rule-target        = "schema"
       }
     ]
   })
@@ -100,10 +100,10 @@ resource "aws_dms_replication_config" "production_migration" {
           schema-name = "trigpoin_trigs"
           table-name  = "%"
         }
-        rule-action = "rename"
-        value       = "tuk_production"
+        rule-action        = "rename"
+        value              = "tuk_production"
         target-schema-name = "tuk_production"
-        rule-target = "schema"
+        rule-target        = "schema"
       }
     ]
   })

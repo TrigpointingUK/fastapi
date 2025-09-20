@@ -7,18 +7,18 @@ locals {
     # X-Ray parameters
     var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? {
       "xray/enabled" = {
-        value = tostring(var.parameter_store_config.parameters.xray.enabled)
-        type  = "String"
+        value       = tostring(var.parameter_store_config.parameters.xray.enabled)
+        type        = "String"
         description = "Enable X-Ray tracing"
       }
       "xray/service_name" = {
-        value = var.parameter_store_config.parameters.xray.service_name
-        type  = "String"
+        value       = var.parameter_store_config.parameters.xray.service_name
+        type        = "String"
         description = "X-Ray service name"
       }
       "xray/sampling_rate" = {
-        value = tostring(var.parameter_store_config.parameters.xray.sampling_rate)
-        type  = "String"
+        value       = tostring(var.parameter_store_config.parameters.xray.sampling_rate)
+        type        = "String"
         description = "X-Ray sampling rate (0.0 to 1.0)"
       }
     } : {},
@@ -26,8 +26,8 @@ locals {
     # Optional X-Ray daemon address
     var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.daemon_address != null ? {
       "xray/daemon_address" = {
-        value = var.parameter_store_config.parameters.xray.daemon_address
-        type  = "String"
+        value       = var.parameter_store_config.parameters.xray.daemon_address
+        type        = "String"
         description = "X-Ray daemon address (optional)"
       }
     } : {},
@@ -35,8 +35,8 @@ locals {
     # Application parameters
     var.parameter_store_config.enabled ? {
       "app/log_level" = {
-        value = var.parameter_store_config.parameters.app.log_level
-        type  = "String"
+        value       = var.parameter_store_config.parameters.app.log_level
+        type        = "String"
         description = "Application log level (DEBUG, INFO, WARNING, ERROR)"
       }
     } : {},
@@ -44,8 +44,8 @@ locals {
     # Optional CORS origins
     var.parameter_store_config.enabled && var.parameter_store_config.parameters.app.cors_origins != null ? {
       "app/cors_origins" = {
-        value = var.parameter_store_config.parameters.app.cors_origins
-        type  = "String"
+        value       = var.parameter_store_config.parameters.app.cors_origins
+        type        = "String"
         description = "CORS allowed origins (comma-separated)"
       }
     } : {},
@@ -53,13 +53,13 @@ locals {
     # Database parameters
     var.parameter_store_config.enabled ? {
       "database/pool_size" = {
-        value = tostring(var.parameter_store_config.parameters.database.pool_size)
-        type  = "String"
+        value       = tostring(var.parameter_store_config.parameters.database.pool_size)
+        type        = "String"
         description = "Database connection pool size"
       }
       "database/pool_recycle" = {
-        value = tostring(var.parameter_store_config.parameters.database.pool_recycle)
-        type  = "String"
+        value       = tostring(var.parameter_store_config.parameters.database.pool_recycle)
+        type        = "String"
         description = "Database connection pool recycle time (seconds)"
       }
     } : {}
@@ -84,8 +84,8 @@ resource "aws_ssm_parameter" "parameters" {
 
 # IAM policy for ECS tasks to read Parameter Store parameters
 resource "aws_iam_policy" "ecs_parameter_store_access" {
-  count = var.parameter_store_config.enabled ? 1 : 0
-  name  = "${var.project_name}-${var.environment}-ecs-parameter-store-access"
+  count       = var.parameter_store_config.enabled ? 1 : 0
+  name        = "${var.project_name}-${var.environment}-ecs-parameter-store-access"
   description = "Allow ECS tasks to read Parameter Store parameters"
 
   policy = jsonencode({

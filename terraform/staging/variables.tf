@@ -4,6 +4,12 @@ variable "project_name" {
   default     = "trigpointing"
 }
 
+variable "environment" {
+  description = "Environment"
+  type        = string
+  default     = "dev"
+}
+
 variable "aws_region" {
   description = "AWS region"
   type        = string

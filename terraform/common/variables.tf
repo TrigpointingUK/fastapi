@@ -1,7 +1,7 @@
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "eu-west-1"  # Ireland region
+  default     = "eu-west-1" # Ireland region
 }
 
 variable "project_name" {
@@ -37,7 +37,7 @@ variable "vpc_id" {
 variable "admin_ip_address" {
   description = "IP address allowed to connect to bastion host"
   type        = string
-  default     = "86.162.34.238"  # Your admin IP
+  default     = "86.162.34.238" # Your admin IP
 }
 
 variable "key_pair_name" {

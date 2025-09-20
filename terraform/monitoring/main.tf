@@ -37,7 +37,7 @@ data "terraform_remote_state" "common" {
 
 # S3 bucket for Synthetics artifacts (scripts, results)
 resource "aws_s3_bucket" "synthetics_artifacts" {
-  bucket = "${var.project_name}-${var.environment}-synthetics-artifacts"
+  bucket        = "${var.project_name}-${var.environment}-synthetics-artifacts"
   force_destroy = false
 }
 
@@ -58,7 +58,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "synthetics_artifa
 }
 
 resource "aws_s3_bucket_public_access_block" "synthetics_artifacts" {
-  bucket = aws_s3_bucket.synthetics_artifacts.id
+  bucket                  = aws_s3_bucket.synthetics_artifacts.id
   block_public_acls       = true
   block_public_policy     = true
   ignore_public_acls      = true
@@ -73,13 +73,13 @@ resource "aws_sns_topic" "alerts" {
 # Optional: AWS Chatbot Slack integration (Slack channel must be pre-authorised)
 resource "aws_iam_role" "chatbot" {
   count = var.enable_slack_notifications ? 1 : 0
-  name               = "${var.project_name}-${var.environment}-chatbot-role"
+  name  = "${var.project_name}-${var.environment}-chatbot-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Effect = "Allow",
+      Effect    = "Allow",
       Principal = { Service = "chatbot.amazonaws.com" },
-      Action = "sts:AssumeRole"
+      Action    = "sts:AssumeRole"
     }]
   })
 }
@@ -91,13 +91,13 @@ resource "aws_iam_role_policy_attachment" "chatbot_readonly" {
 }
 
 resource "aws_chatbot_slack_channel_configuration" "slack" {
-  count               = var.enable_slack_notifications ? 1 : 0
-  configuration_name  = coalesce(var.slack_configuration_name, "${var.project_name}-${var.environment}-slack")
-  slack_channel_id    = var.slack_channel_id
-  slack_team_id       = var.slack_workspace_id
-  iam_role_arn        = aws_iam_role.chatbot[0].arn
-  sns_topic_arns      = [aws_sns_topic.alerts.arn]
-  logging_level       = "ERROR"
+  count              = var.enable_slack_notifications ? 1 : 0
+  configuration_name = coalesce(var.slack_configuration_name, "${var.project_name}-${var.environment}-slack")
+  slack_channel_id   = var.slack_channel_id
+  slack_team_id      = var.slack_workspace_id
+  iam_role_arn       = aws_iam_role.chatbot[0].arn
+  sns_topic_arns     = [aws_sns_topic.alerts.arn]
+  logging_level      = "ERROR"
 }
 
 # IAM role for CloudWatch Synthetics canaries

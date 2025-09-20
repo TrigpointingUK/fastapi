@@ -19,8 +19,8 @@ resource "aws_cloudwatch_metric_alarm" "api_trig_1_failed" {
     CanaryName = aws_synthetics_canary.api_trig_1.name
   }
   treat_missing_data = "notBreaching"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
-  ok_actions          = [aws_sns_topic.alerts.arn]
+  alarm_actions      = [aws_sns_topic.alerts.arn]
+  ok_actions         = [aws_sns_topic.alerts.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "web_trig_1_failed" {
@@ -37,8 +37,8 @@ resource "aws_cloudwatch_metric_alarm" "web_trig_1_failed" {
     CanaryName = aws_synthetics_canary.web_trig_1.name
   }
   treat_missing_data = "notBreaching"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
-  ok_actions          = [aws_sns_topic.alerts.arn]
+  alarm_actions      = [aws_sns_topic.alerts.arn]
+  ok_actions         = [aws_sns_topic.alerts.arn]
 }
 
 resource "aws_cloudwatch_metric_alarm" "login_me_failed" {
@@ -55,6 +55,6 @@ resource "aws_cloudwatch_metric_alarm" "login_me_failed" {
     CanaryName = aws_synthetics_canary.login_me.name
   }
   treat_missing_data = "notBreaching"
-  alarm_actions       = [aws_sns_topic.alerts.arn]
-  ok_actions          = [aws_sns_topic.alerts.arn]
+  alarm_actions      = [aws_sns_topic.alerts.arn]
+  ok_actions         = [aws_sns_topic.alerts.arn]
 }

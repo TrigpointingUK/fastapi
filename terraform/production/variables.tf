@@ -10,6 +10,12 @@ variable "project_name" {
   default     = "trigpointing"
 }
 
+variable "environment" {
+  description = "Environment"
+  type        = string
+  default     = "dev"
+}
+
 # Note: terraform_state_bucket is hardcoded to "tuk-terraform-state" in eu-west-1
 
 variable "container_image" {

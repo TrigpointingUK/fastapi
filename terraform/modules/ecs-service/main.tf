@@ -39,35 +39,35 @@ resource "aws_ecs_task_definition" "app" {
           name  = "UVICORN_HOST"
           value = "0.0.0.0"
         }
-      ],
-      # Add Auth0 configuration if enabled
-      var.auth0_domain != null ? [
-        {
-          name  = "AUTH0_DOMAIN"
-          value = var.auth0_domain
-        },
-        {
-          name  = "AUTH0_CONNECTION"
-          value = var.auth0_connection
-        },
-        {
-          name  = "AUTH0_ENABLED"
-          value = "true"
-        },
-        {
-          name  = "AUTH0_MANAGEMENT_API_AUDIENCE"
-          value = "https://${var.auth0_domain}/api/v2/"
-        },
-        {
-          name  = "AUTH0_API_AUDIENCE"
-          value = var.auth0_api_audience
-        }
-      ] : [
-        {
-          name  = "AUTH0_ENABLED"
-          value = "false"
-        }
-      ],
+        ],
+        # Add Auth0 configuration if enabled
+        var.auth0_domain != null ? [
+          {
+            name  = "AUTH0_DOMAIN"
+            value = var.auth0_domain
+          },
+          {
+            name  = "AUTH0_CONNECTION"
+            value = var.auth0_connection
+          },
+          {
+            name  = "AUTH0_ENABLED"
+            value = "true"
+          },
+          {
+            name  = "AUTH0_MANAGEMENT_API_AUDIENCE"
+            value = "https://${var.auth0_domain}/api/v2/"
+          },
+          {
+            name  = "AUTH0_API_AUDIENCE"
+            value = var.auth0_api_audience
+          }
+          ] : [
+          {
+            name  = "AUTH0_ENABLED"
+            value = "false"
+          }
+        ],
       )
 
       # Secrets from AWS Secrets Manager
@@ -98,25 +98,25 @@ resource "aws_ecs_task_definition" "app" {
           name      = "DB_NAME"
           valueFrom = "${var.credentials_secret_arn}:dbname::"
         }
-      ],
-      # Auth0 secrets (if Auth0 is enabled)
-      var.auth0_domain != null ? [
-        {
-          name      = "AUTH0_CLIENT_ID"
-          valueFrom = "${var.secrets_arn}:auth0_client_id::"
-        },
-        {
-          name      = "AUTH0_CLIENT_SECRET"
-          valueFrom = "${var.secrets_arn}:auth0_client_secret::"
-        }
-      ] : [],
-      # Parameter Store Configuration (if enabled)
-      var.parameter_store_config.enabled ? [
-        for key, param in local.parameter_map : {
-          name      = upper(replace(key, "/", "_"))
-          valueFrom = aws_ssm_parameter.parameters[key].arn
-        }
-      ] : []
+        ],
+        # Auth0 secrets (if Auth0 is enabled)
+        var.auth0_domain != null ? [
+          {
+            name      = "AUTH0_CLIENT_ID"
+            valueFrom = "${var.secrets_arn}:auth0_client_id::"
+          },
+          {
+            name      = "AUTH0_CLIENT_SECRET"
+            valueFrom = "${var.secrets_arn}:auth0_client_secret::"
+          }
+        ] : [],
+        # Parameter Store Configuration (if enabled)
+        var.parameter_store_config.enabled ? [
+          for key, param in local.parameter_map : {
+            name      = upper(replace(key, "/", "_"))
+            valueFrom = aws_ssm_parameter.parameters[key].arn
+          }
+        ] : []
       )
       logConfiguration = {
         logDriver = "awslogs"
@@ -127,46 +127,46 @@ resource "aws_ecs_task_definition" "app" {
         }
       }
       healthCheck = {
-        command = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=10)\" || exit 1"]
-        interval = 30
-        timeout = 10
-        retries = 3
+        command     = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=10)\" || exit 1"]
+        interval    = 30
+        timeout     = 10
+        retries     = 3
         startPeriod = 60
       }
       essential = true
     }
-  ],
-  # Add X-Ray daemon container if X-Ray is enabled
-  var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? [
-    {
-      name  = "${var.project_name}-xray-daemon"
-      image = "amazon/aws-xray-daemon:latest"
-      cpu   = 32
-      memory = 256
-      portMappings = [
-        {
-          containerPort = 2000
-          protocol      = "udp"
+    ],
+    # Add X-Ray daemon container if X-Ray is enabled
+    var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? [
+      {
+        name   = "${var.project_name}-xray-daemon"
+        image  = "amazon/aws-xray-daemon:latest"
+        cpu    = 32
+        memory = 256
+        portMappings = [
+          {
+            containerPort = 2000
+            protocol      = "udp"
+          }
+        ]
+        logConfiguration = {
+          logDriver = "awslogs"
+          options = {
+            awslogs-group         = var.cloudwatch_log_group_name
+            awslogs-region        = var.aws_region
+            awslogs-stream-prefix = "xray-daemon"
+          }
         }
-      ]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = var.cloudwatch_log_group_name
-          awslogs-region        = var.aws_region
-          awslogs-stream-prefix = "xray-daemon"
+        healthCheck = {
+          command     = ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/2000' || exit 1"]
+          interval    = 30
+          timeout     = 5
+          retries     = 3
+          startPeriod = 10
         }
+        essential = false
       }
-      healthCheck = {
-        command = ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/2000' || exit 1"]
-        interval = 30
-        timeout = 5
-        retries = 3
-        startPeriod = 10
-      }
-      essential = false
-    }
-  ] : []
+    ] : []
   ))
 
   tags = {

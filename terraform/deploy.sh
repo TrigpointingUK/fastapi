@@ -103,13 +103,13 @@ deploy_staging() {
 
     # Plan deployment
     print_status "Planning deployment..."
-    terraform plan -var-file=terraform.tfvars -var-file=cloudflare-cert.tfvars
+    terraform plan -var-file=staging.tfvars -var-file=cloudflare-cert.tfvars
 
     # Ask for confirmation
     read -p "Do you want to apply the staging infrastructure? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        terraform apply -auto-approve -var-file=terraform.tfvars -var-file=cloudflare-cert.tfvars
+        terraform apply -auto-approve -var-file=staging.tfvars -var-file=cloudflare-cert.tfvars
         print_success "Staging infrastructure deployed successfully!"
 
         # Show outputs
@@ -141,13 +141,13 @@ deploy_production() {
 
     # Plan deployment
     print_status "Planning deployment..."
-    terraform plan -var-file=terraform.tfvars -var-file=cloudflare-cert.tfvars
+    terraform plan -var-file=production.tfvars -var-file=cloudflare-cert.tfvars
 
     # Ask for confirmation
     read -p "Do you want to apply the production infrastructure? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        terraform apply -auto-approve -var-file=terraform.tfvars -var-file=cloudflare-cert.tfvars
+        terraform apply -auto-approve -var-file=production.tfvars -var-file=cloudflare-cert.tfvars
         print_success "Production infrastructure deployed successfully!"
 
         # Show outputs
@@ -173,13 +173,13 @@ deploy_monitoring() {
 
     # Plan deployment
     print_status "Planning deployment..."
-    terraform plan -var-file=terraform.tfvars
+    terraform plan -var-file=monitoring.tfvars
 
     # Ask for confirmation
     read -p "Do you want to apply the monitoring stack? (y/N): " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
-        terraform apply -auto-approve -var-file=terraform.tfvars
+        terraform apply -auto-approve -var-file=monitoring.tfvars
         print_success "Monitoring stack deployed successfully!"
 
         # Show outputs

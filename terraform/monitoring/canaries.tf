@@ -33,10 +33,10 @@ resource "aws_synthetics_canary" "api_health" {
   run_config {
     timeout_in_seconds = 20
     environment_variables = {
-      TARGET_URL          = var.environment == "production" ? "https://api.trigpointing.uk/health" : "https://api.trigpointing.me/health"
+      TARGET_URL           = var.environment == "production" ? "https://api.trigpointing.uk/health" : "https://api.trigpointing.me/health"
       EXPECTED_ENVIRONMENT = var.environment
-      USER_AGENT          = "Trigpointing-canary/1.0 (+https://trigpointing.uk)"
-      CODE_HASH           = data.archive_file.health_check.output_base64sha256
+      USER_AGENT           = "Trigpointing-canary/1.0 (+https://trigpointing.uk)"
+      CODE_HASH            = data.archive_file.health_check.output_base64sha256
     }
   }
   failure_retention_period = 31
@@ -163,11 +163,11 @@ resource "aws_synthetics_canary" "login_me" {
       LOGIN_URL = "https://api.trigpointing.uk/api/v1/auth/login"
       ME_URL    = "https://api.trigpointing.uk/api/v1/user/me"
       # Provide credentials via env vars to avoid bundling SDK
-      USERNAME  = local.tuk_guest_parsed.username
-      PASSWORD  = local.tuk_guest_parsed.password
+      USERNAME       = local.tuk_guest_parsed.username
+      PASSWORD       = local.tuk_guest_parsed.password
       LEGACY_USER_ID = tostring(local.tuk_guest_parsed.legacy_userid)
-      USER_AGENT = "Trigpointing-canary/1.0 (+https://trigpointing.uk)"
-      CODE_HASH = data.archive_file.login_and_me.output_base64sha256
+      USER_AGENT     = "Trigpointing-canary/1.0 (+https://trigpointing.uk)"
+      CODE_HASH      = data.archive_file.login_and_me.output_base64sha256
     }
   }
   failure_retention_period = 31
