@@ -52,7 +52,7 @@ module "target_group" {
   environment       = "staging"
   vpc_id           = data.terraform_remote_state.common.outputs.vpc_id
   alb_listener_arn = data.terraform_remote_state.common.outputs.https_listener_arn
-  domain_name      = "api-staging.trigpointing.uk"
+  domain_name      = "api.trigpointing.me"
   priority         = 100
   health_check_path = "/health"
 }

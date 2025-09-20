@@ -235,33 +235,14 @@ resource "aws_ecs_service" "app" {
     container_port   = 8000
   }
 
-  depends_on = [aws_lb_listener_rule.app]
+  # Listener rules are managed by the target-group module (host-based routing)
 
   tags = {
     Name = "${var.project_name}-${var.environment}-service"
   }
 }
 
-# Application Load Balancer Listener Rule
-resource "aws_lb_listener_rule" "app" {
-  listener_arn = var.alb_listener_arn
-  priority     = var.alb_rule_priority
-
-  action {
-    type             = "forward"
-    target_group_arn = var.target_group_arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/*"]
-    }
-  }
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-listener-rule"
-  }
-}
+# Removed path-based listener rule; host-based rules are managed by target-group module
 
 # Auto Scaling Target
 resource "aws_appautoscaling_target" "ecs_target" {
