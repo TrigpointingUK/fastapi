@@ -174,39 +174,8 @@ resource "aws_ecs_task_definition" "app" {
   }
 }
 
-# IAM policy for X-Ray daemon access (if X-Ray is enabled)
-resource "aws_iam_policy" "ecs_xray_access" {
-  count = var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? 1 : 0
-  name  = "${var.project_name}-${var.environment}-ecs-xray-access"
-  description = "Allow ECS tasks to send traces to X-Ray"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "xray:PutTraceSegments",
-          "xray:PutTelemetryRecords",
-          "xray:GetSamplingRules",
-          "xray:GetSamplingTargets"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-ecs-xray-access"
-  }
-}
-
-# Attach X-Ray policy to ECS task role
-resource "aws_iam_role_policy_attachment" "ecs_xray_access" {
-  count      = var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? 1 : 0
-  role       = var.ecs_task_role_name
-  policy_arn = aws_iam_policy.ecs_xray_access[0].arn
-}
+## X-Ray permissions are included in the ecs_credentials_access policy below
+## to avoid hitting the AWS limit of 10 managed policy attachments per role.
 
 # IAM policy for ECS tasks to read database credentials
 resource "aws_iam_policy" "ecs_credentials_access" {
@@ -226,6 +195,17 @@ resource "aws_iam_policy" "ecs_credentials_access" {
           var.secrets_arn,
           var.credentials_secret_arn
         ]
+      },
+      # X-Ray permissions folded into this policy to reduce managed attachments
+      {
+        Effect = "Allow",
+        Action = [
+          "xray:PutTraceSegments",
+          "xray:PutTelemetryRecords",
+          "xray:GetSamplingRules",
+          "xray:GetSamplingTargets"
+        ],
+        Resource = "*"
       }
     ]
   })
