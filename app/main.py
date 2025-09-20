@@ -151,7 +151,12 @@ def health_check():
         try:
             from aws_xray_sdk.core import xray_recorder
 
-            tracing_info["xray_recorder_configured"] = xray_recorder.is_enabled()
+            # Check if recorder is configured (different API for async recorder)
+            tracing_info["xray_recorder_configured"] = (
+                hasattr(xray_recorder, "_context")
+                and xray_recorder._context is not None
+            )
+            tracing_info["xray_recorder_type"] = type(xray_recorder).__name__
         except Exception as e:
             tracing_info["xray_recorder_error"] = str(e)
 
@@ -170,8 +175,9 @@ def debug_xray():
     try:
         from aws_xray_sdk.core import xray_recorder
 
-        # Try to create a simple trace
-        with xray_recorder.capture("debug_xray_test") as segment:
+        # Try to create a simple trace manually
+        segment = xray_recorder.begin_segment("debug_xray_test")
+        try:
             if segment:
                 segment.put_annotation("test", "debug")
                 segment.put_metadata(
@@ -182,14 +188,20 @@ def debug_xray():
                         "daemon_address": settings.XRAY_DAEMON_ADDRESS,
                     },
                 )
-                return {
+                result = {
                     "status": "success",
                     "message": "X-Ray trace created successfully",
                     "trace_id": segment.trace_id,
                     "segment_id": segment.id,
                 }
+                xray_recorder.end_segment()
+                return result
             else:
                 return {"error": "No segment created"}
+        except Exception as inner_e:
+            if segment:
+                xray_recorder.end_segment()
+            raise inner_e
 
     except Exception as e:
         return {

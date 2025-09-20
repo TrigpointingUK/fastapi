@@ -157,6 +157,13 @@ resource "aws_ecs_task_definition" "app" {
           awslogs-stream-prefix = "xray-daemon"
         }
       }
+      healthCheck = {
+        command = ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/2000' || exit 1"]
+        interval = 30
+        timeout = 5
+        retries = 3
+        startPeriod = 10
+      }
       essential = false
     }
   ] : []

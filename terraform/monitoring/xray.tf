@@ -99,7 +99,7 @@ resource "aws_cloudwatch_log_group" "xray_daemon" {
 # X-Ray group for API traces
 resource "aws_xray_group" "api_group" {
   group_name        = "${var.project_name}-${var.environment}-api"
-  filter_expression = "service(\"trigpointing-api\")"
+  filter_expression = "service(\"trigpointing-api-${var.environment}\")"
 
   tags = {
     Component = "monitoring"
