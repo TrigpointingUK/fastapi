@@ -43,8 +43,10 @@ def setup_xray_tracing() -> bool:
         from aws_xray_sdk.core import patch
 
         # Patch specific libraries for automatic instrumentation
-        # Note: FastAPI patching is handled in main.py to avoid import issues
-        patch(["requests", "boto3", "botocore"])  # Avoid 'sqlalchemy' and 'psycopg2'
+        # Include FastAPI patching here to ensure it uses the configured service name
+        patch(
+            ["fastapi", "requests", "boto3", "botocore"]
+        )  # Avoid 'sqlalchemy' and 'psycopg2'
 
         logger.info(f"X-Ray tracing enabled for service: {settings.XRAY_SERVICE_NAME}")
         return True

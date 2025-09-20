@@ -103,30 +103,9 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Add X-Ray middleware if enabled
+# X-Ray instrumentation is handled in tracing.py setup
 if xray_enabled:
-    try:
-        from aws_xray_sdk.core import patch, xray_recorder
-
-        # Use X-Ray patching for FastAPI - more reliable than middleware
-        patch(["fastapi"])
-        logger.info("X-Ray patching applied to FastAPI")
-
-        # Also try to add the middleware as backup
-        try:
-            from aws_xray_sdk.ext.fastapi import XRayMiddleware as FastAPIXRayMiddleware
-
-            app.add_middleware(FastAPIXRayMiddleware, recorder=xray_recorder)
-            logger.info("X-Ray FastAPI middleware also added")
-        except ImportError:
-            logger.info("X-Ray FastAPI middleware not available, using patching only")
-        except Exception as middleware_error:
-            logger.warning(
-                f"X-Ray middleware failed, using patching only: {middleware_error}"
-            )
-
-    except Exception as e:
-        logger.error(f"Error setting up X-Ray instrumentation: {e}")
+    logger.info("X-Ray tracing is enabled and configured")
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
