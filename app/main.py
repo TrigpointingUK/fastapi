@@ -117,49 +117,76 @@ if xray_enabled:
                 self.recorder = recorder or xray_recorder
 
             async def dispatch(self, request: Request, call_next):
+                # Skip X-Ray for the debug endpoint (it creates its own segment)
+                if request.url.path == "/debug/xray":
+                    return await call_next(request)
+
+                # Create segment name from the path pattern
+                path = request.url.path
+                # Normalize API paths
+                if path.startswith("/api/v1/"):
+                    # Keep the API prefix and endpoint name
+                    parts = path.split("/")
+                    if len(parts) > 4:
+                        # e.g., /api/v1/trigs/123 -> /api/v1/trigs/{id}
+                        path = "/".join(parts[:4]) + "/{id}"
+
+                segment_name = f"{request.method} {path}"
+
                 # Start a segment for this request
-                segment = self.recorder.begin_segment(
-                    name=f"{request.method} {request.url.path}",
-                    traceid=request.headers.get("X-Amzn-Trace-Id"),
-                )
+                try:
+                    segment = self.recorder.begin_segment(
+                        name=segment_name,
+                        traceid=request.headers.get("X-Amzn-Trace-Id"),
+                    )
+                except Exception as e:
+                    logger.warning(f"Failed to create X-Ray segment: {e}")
+                    # If segment creation fails, continue without tracing
+                    return await call_next(request)
 
                 try:
                     # Add request metadata
-                    segment.put_http_meta(
-                        "request",
-                        {
-                            "method": request.method,
-                            "url": str(request.url),
-                            "user_agent": request.headers.get("user-agent", ""),
-                            "remote_addr": (
-                                request.client.host if request.client else ""
-                            ),
-                        },
-                    )
+                    if segment:
+                        segment.put_http_meta(
+                            "request",
+                            {
+                                "method": request.method,
+                                "url": str(request.url),
+                                "user_agent": request.headers.get("user-agent", ""),
+                                "remote_addr": (
+                                    request.client.host if request.client else ""
+                                ),
+                            },
+                        )
 
                     # Process the request
                     response: Response = await call_next(request)
 
                     # Add response metadata
-                    segment.put_http_meta(
-                        "response",
-                        {
-                            "status": response.status_code,
-                            "content_length": response.headers.get(
-                                "content-length", ""
-                            ),
-                        },
-                    )
+                    if segment:
+                        segment.put_http_meta(
+                            "response",
+                            {
+                                "status": response.status_code,
+                                "content_length": response.headers.get(
+                                    "content-length", ""
+                                ),
+                            },
+                        )
 
                     return response
 
                 except Exception as e:
                     # Mark segment as error
-                    segment.add_exception(e)
+                    if segment:
+                        segment.add_exception(e)
                     raise
                 finally:
                     # Always end the segment
-                    self.recorder.end_segment()
+                    try:
+                        self.recorder.end_segment()
+                    except Exception as e:
+                        logger.warning(f"Failed to end X-Ray segment: {e}")
 
         app.add_middleware(XRayMiddleware, recorder=xray_recorder)
         logger.info("X-Ray custom middleware added successfully")
