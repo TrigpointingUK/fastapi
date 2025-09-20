@@ -103,16 +103,66 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Add X-Ray middleware for FastAPI since patching is not supported
+# Add X-Ray middleware for FastAPI using custom middleware
 if xray_enabled:
     try:
         from aws_xray_sdk.core import xray_recorder
-        from aws_xray_sdk.ext.fastapi import XRayMiddleware as FastAPIXRayMiddleware
+        from starlette.middleware.base import BaseHTTPMiddleware
+        from starlette.requests import Request
+        from starlette.responses import Response
 
-        app.add_middleware(FastAPIXRayMiddleware, recorder=xray_recorder)
-        logger.info("X-Ray FastAPI middleware added successfully")
-    except ImportError:
-        logger.warning("X-Ray FastAPI middleware not available")
+        class XRayMiddleware(BaseHTTPMiddleware):
+            def __init__(self, app, recorder=None):
+                super().__init__(app)
+                self.recorder = recorder or xray_recorder
+
+            async def dispatch(self, request: Request, call_next):
+                # Start a segment for this request
+                segment = self.recorder.begin_segment(
+                    name=f"{request.method} {request.url.path}",
+                    traceid=request.headers.get("X-Amzn-Trace-Id"),
+                )
+
+                try:
+                    # Add request metadata
+                    segment.put_http_meta(
+                        "request",
+                        {
+                            "method": request.method,
+                            "url": str(request.url),
+                            "user_agent": request.headers.get("user-agent", ""),
+                            "remote_addr": (
+                                request.client.host if request.client else ""
+                            ),
+                        },
+                    )
+
+                    # Process the request
+                    response: Response = await call_next(request)
+
+                    # Add response metadata
+                    segment.put_http_meta(
+                        "response",
+                        {
+                            "status": response.status_code,
+                            "content_length": response.headers.get(
+                                "content-length", ""
+                            ),
+                        },
+                    )
+
+                    return response
+
+                except Exception as e:
+                    # Mark segment as error
+                    segment.add_exception(e)
+                    raise
+                finally:
+                    # Always end the segment
+                    self.recorder.end_segment()
+
+        app.add_middleware(XRayMiddleware, recorder=xray_recorder)
+        logger.info("X-Ray custom middleware added successfully")
     except Exception as e:
         logger.error(f"Error setting up X-Ray middleware: {e}")
 
