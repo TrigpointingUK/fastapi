@@ -18,6 +18,45 @@ class TestMainModule:
         assert "xray_enabled" in response["tracing"]
         assert "otel_enabled" in response["tracing"]
 
+    @patch("app.main.xray_enabled", True)
+    @patch("app.main.settings")
+    def test_health_check_xray_enabled_success(self, mock_settings):
+        """Test health check endpoint when X-Ray is enabled and working."""
+        mock_settings.XRAY_SERVICE_NAME = "test-service"
+        mock_settings.XRAY_SAMPLING_RATE = 0.2
+        mock_settings.XRAY_DAEMON_ADDRESS = "127.0.0.1:2000"
+
+        response = health_check()
+
+        assert response["status"] == "healthy"
+        tracing = response["tracing"]
+        assert tracing["xray_enabled"] is True
+        assert tracing["xray_service_name"] == "test-service"
+        assert tracing["xray_sampling_rate"] == 0.2
+        assert tracing["xray_daemon_address"] == "127.0.0.1:2000"
+        # Should either be configured successfully or have an error
+        assert (
+            tracing.get("xray_recorder_configured") is True
+            or "xray_recorder_error" in tracing
+        )
+
+    @patch("app.main.xray_enabled", True)
+    @patch("app.main.settings")
+    def test_health_check_xray_enabled_with_none_daemon_address(self, mock_settings):
+        """Test health check endpoint when X-Ray is enabled with None daemon address."""
+        mock_settings.XRAY_SERVICE_NAME = "test-service-2"
+        mock_settings.XRAY_SAMPLING_RATE = 0.5
+        mock_settings.XRAY_DAEMON_ADDRESS = None  # Test None case
+
+        response = health_check()
+
+        assert response["status"] == "healthy"
+        tracing = response["tracing"]
+        assert tracing["xray_enabled"] is True
+        assert tracing["xray_service_name"] == "test-service-2"
+        assert tracing["xray_sampling_rate"] == 0.5
+        assert tracing["xray_daemon_address"] is None
+
     def test_app_creation(self):
         """Test FastAPI app creation."""
         assert app is not None

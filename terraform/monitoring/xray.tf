@@ -3,16 +3,16 @@
 
 # X-Ray sampling rule for the API service
 resource "aws_xray_sampling_rule" "api_sampling" {
-  rule_name      = "trigpointing-api-sampling"
-  priority       = 1000
+  rule_name      = "trig-api-${var.environment}"
+  priority       = var.environment == "production" ? 1000 : 1100
   version        = 1
   reservoir_size = 100
   fixed_rate     = var.xray_sampling_rate
   url_path       = "/api/*"
-  host           = "api.trigpointing.uk"
+  host           = var.environment == "production" ? "api.trigpointing.uk" : "api.trigpointing.me"
   http_method    = "*"
   service_type   = "*"
-  service_name   = "trigpointing-api"
+  service_name   = "trigpointing-api-${var.environment}"
   resource_arn   = "*"
 
   tags = {
@@ -23,16 +23,16 @@ resource "aws_xray_sampling_rule" "api_sampling" {
 
 # X-Ray sampling rule for the web service
 resource "aws_xray_sampling_rule" "web_sampling" {
-  rule_name      = "trigpointing-web-sampling"
-  priority       = 1001
+  rule_name      = "trig-web-${var.environment}"
+  priority       = var.environment == "production" ? 1001 : 1101
   version        = 1
   reservoir_size = 50
   fixed_rate     = var.xray_sampling_rate
   url_path       = "/*"
-  host           = "trigpointing.uk"
+  host           = var.environment == "production" ? "trigpointing.uk" : "staging.trigpointing.uk"
   http_method    = "*"
   service_type   = "*"
-  service_name   = "trigpointing-web"
+  service_name   = "trigpointing-web-${var.environment}"
   resource_arn   = "*"
 
   tags = {
@@ -99,7 +99,7 @@ resource "aws_cloudwatch_log_group" "xray_daemon" {
 # X-Ray group for API traces
 resource "aws_xray_group" "api_group" {
   group_name        = "${var.project_name}-${var.environment}-api"
-  filter_expression = "service(\"trigpointing-api\")"
+  filter_expression = "service(\"trigpointing-api-${var.environment}\")"
 
   tags = {
     Component = "monitoring"

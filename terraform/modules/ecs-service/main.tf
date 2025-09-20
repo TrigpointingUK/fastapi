@@ -8,7 +8,7 @@ resource "aws_ecs_task_definition" "app" {
   execution_role_arn       = var.ecs_task_execution_role_arn
   task_role_arn            = var.ecs_task_role_arn
 
-  container_definitions = jsonencode([
+  container_definitions = jsonencode(concat([
     {
       name  = "${var.project_name}-app"
       image = var.container_image
@@ -135,11 +135,77 @@ resource "aws_ecs_task_definition" "app" {
       }
       essential = true
     }
-  ])
+  ],
+  # Add X-Ray daemon container if X-Ray is enabled
+  var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? [
+    {
+      name  = "${var.project_name}-xray-daemon"
+      image = "amazon/aws-xray-daemon:latest"
+      cpu   = 32
+      memory = 256
+      portMappings = [
+        {
+          containerPort = 2000
+          protocol      = "udp"
+        }
+      ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = var.cloudwatch_log_group_name
+          awslogs-region        = var.aws_region
+          awslogs-stream-prefix = "xray-daemon"
+        }
+      }
+      healthCheck = {
+        command = ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/2000' || exit 1"]
+        interval = 30
+        timeout = 5
+        retries = 3
+        startPeriod = 10
+      }
+      essential = false
+    }
+  ] : []
+  ))
 
   tags = {
     Name = "${var.project_name}-${var.environment}-task-definition"
   }
+}
+
+# IAM policy for X-Ray daemon access (if X-Ray is enabled)
+resource "aws_iam_policy" "ecs_xray_access" {
+  count = var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? 1 : 0
+  name  = "${var.project_name}-${var.environment}-ecs-xray-access"
+  description = "Allow ECS tasks to send traces to X-Ray"
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "xray:PutTraceSegments",
+          "xray:PutTelemetryRecords",
+          "xray:GetSamplingRules",
+          "xray:GetSamplingTargets"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-ecs-xray-access"
+  }
+}
+
+# Attach X-Ray policy to ECS task role
+resource "aws_iam_role_policy_attachment" "ecs_xray_access" {
+  count      = var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? 1 : 0
+  role       = var.ecs_task_role_name
+  policy_arn = aws_iam_policy.ecs_xray_access[0].arn
 }
 
 # IAM policy for ECS tasks to read database credentials

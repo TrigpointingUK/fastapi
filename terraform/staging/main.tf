@@ -115,3 +115,16 @@ module "ecs_service" {
   # New Parameter Store configuration
   parameter_store_config        = var.parameter_store_config
 }
+
+# Monitoring module for X-Ray groups and sampling rules
+module "monitoring" {
+  source = "../monitoring"
+
+  project_name           = var.project_name
+  environment           = "staging"
+  aws_region            = var.aws_region
+  xray_sampling_rate    = var.parameter_store_config.parameters.xray.sampling_rate
+  enable_xray_daemon_role = false  # Not needed for Fargate
+  enable_xray_daemon_logs = false  # Not needed for Fargate
+  log_retention_days    = 14
+}
