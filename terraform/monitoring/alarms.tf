@@ -1,7 +1,7 @@
 # Alarms: trigger if 3 consecutive failures; notify OK as well
 
 locals {
-  alarm_eval_periods = 3
+  alarm_eval_periods = 1
   alarm_period_sec   = 3600
 }
 
