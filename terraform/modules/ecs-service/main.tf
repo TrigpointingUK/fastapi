@@ -39,35 +39,35 @@ resource "aws_ecs_task_definition" "app" {
           name  = "UVICORN_HOST"
           value = "0.0.0.0"
         }
-      ],
-      # Add Auth0 configuration if enabled
-      var.auth0_domain != null ? [
-        {
-          name  = "AUTH0_DOMAIN"
-          value = var.auth0_domain
-        },
-        {
-          name  = "AUTH0_CONNECTION"
-          value = var.auth0_connection
-        },
-        {
-          name  = "AUTH0_ENABLED"
-          value = "true"
-        },
-        {
-          name  = "AUTH0_MANAGEMENT_API_AUDIENCE"
-          value = "https://${var.auth0_domain}/api/v2/"
-        },
-        {
-          name  = "AUTH0_API_AUDIENCE"
-          value = var.auth0_api_audience
-        }
-      ] : [
-        {
-          name  = "AUTH0_ENABLED"
-          value = "false"
-        }
-      ],
+        ],
+        # Add Auth0 configuration if enabled
+        var.auth0_domain != null ? [
+          {
+            name  = "AUTH0_DOMAIN"
+            value = var.auth0_domain
+          },
+          {
+            name  = "AUTH0_CONNECTION"
+            value = var.auth0_connection
+          },
+          {
+            name  = "AUTH0_ENABLED"
+            value = "true"
+          },
+          {
+            name  = "AUTH0_MANAGEMENT_API_AUDIENCE"
+            value = "https://${var.auth0_domain}/api/v2/"
+          },
+          {
+            name  = "AUTH0_API_AUDIENCE"
+            value = var.auth0_api_audience
+          }
+          ] : [
+          {
+            name  = "AUTH0_ENABLED"
+            value = "false"
+          }
+        ],
       )
 
       # Secrets from AWS Secrets Manager
@@ -98,25 +98,25 @@ resource "aws_ecs_task_definition" "app" {
           name      = "DB_NAME"
           valueFrom = "${var.credentials_secret_arn}:dbname::"
         }
-      ],
-      # Auth0 secrets (if Auth0 is enabled)
-      var.auth0_domain != null ? [
-        {
-          name      = "AUTH0_CLIENT_ID"
-          valueFrom = "${var.secrets_arn}:auth0_client_id::"
-        },
-        {
-          name      = "AUTH0_CLIENT_SECRET"
-          valueFrom = "${var.secrets_arn}:auth0_client_secret::"
-        }
-      ] : [],
-      # Parameter Store Configuration (if enabled)
-      var.parameter_store_config.enabled ? [
-        for key, param in local.parameter_map : {
-          name      = upper(replace(key, "/", "_"))
-          valueFrom = aws_ssm_parameter.parameters[key].arn
-        }
-      ] : []
+        ],
+        # Auth0 secrets (if Auth0 is enabled)
+        var.auth0_domain != null ? [
+          {
+            name      = "AUTH0_CLIENT_ID"
+            valueFrom = "${var.secrets_arn}:auth0_client_id::"
+          },
+          {
+            name      = "AUTH0_CLIENT_SECRET"
+            valueFrom = "${var.secrets_arn}:auth0_client_secret::"
+          }
+        ] : [],
+        # Parameter Store Configuration (if enabled)
+        var.parameter_store_config.enabled ? [
+          for key, param in local.parameter_map : {
+            name      = upper(replace(key, "/", "_"))
+            valueFrom = aws_ssm_parameter.parameters[key].arn
+          }
+        ] : []
       )
       logConfiguration = {
         logDriver = "awslogs"
@@ -127,46 +127,46 @@ resource "aws_ecs_task_definition" "app" {
         }
       }
       healthCheck = {
-        command = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=10)\" || exit 1"]
-        interval = 30
-        timeout = 10
-        retries = 3
+        command     = ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=10)\" || exit 1"]
+        interval    = 30
+        timeout     = 10
+        retries     = 3
         startPeriod = 60
       }
       essential = true
     }
-  ],
-  # Add X-Ray daemon container if X-Ray is enabled
-  var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? [
-    {
-      name  = "${var.project_name}-xray-daemon"
-      image = "amazon/aws-xray-daemon:latest"
-      cpu   = 32
-      memory = 256
-      portMappings = [
-        {
-          containerPort = 2000
-          protocol      = "udp"
+    ],
+    # Add X-Ray daemon container if X-Ray is enabled
+    var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? [
+      {
+        name   = "${var.project_name}-xray-daemon"
+        image  = "amazon/aws-xray-daemon:latest"
+        cpu    = 32
+        memory = 256
+        portMappings = [
+          {
+            containerPort = 2000
+            protocol      = "udp"
+          }
+        ]
+        logConfiguration = {
+          logDriver = "awslogs"
+          options = {
+            awslogs-group         = var.cloudwatch_log_group_name
+            awslogs-region        = var.aws_region
+            awslogs-stream-prefix = "xray-daemon"
+          }
         }
-      ]
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = var.cloudwatch_log_group_name
-          awslogs-region        = var.aws_region
-          awslogs-stream-prefix = "xray-daemon"
+        healthCheck = {
+          command     = ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/2000' || exit 1"]
+          interval    = 30
+          timeout     = 5
+          retries     = 3
+          startPeriod = 10
         }
+        essential = false
       }
-      healthCheck = {
-        command = ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/2000' || exit 1"]
-        interval = 30
-        timeout = 5
-        retries = 3
-        startPeriod = 10
-      }
-      essential = false
-    }
-  ] : []
+    ] : []
   ))
 
   tags = {
@@ -174,39 +174,8 @@ resource "aws_ecs_task_definition" "app" {
   }
 }
 
-# IAM policy for X-Ray daemon access (if X-Ray is enabled)
-resource "aws_iam_policy" "ecs_xray_access" {
-  count = var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? 1 : 0
-  name  = "${var.project_name}-${var.environment}-ecs-xray-access"
-  description = "Allow ECS tasks to send traces to X-Ray"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "xray:PutTraceSegments",
-          "xray:PutTelemetryRecords",
-          "xray:GetSamplingRules",
-          "xray:GetSamplingTargets"
-        ]
-        Resource = "*"
-      }
-    ]
-  })
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-ecs-xray-access"
-  }
-}
-
-# Attach X-Ray policy to ECS task role
-resource "aws_iam_role_policy_attachment" "ecs_xray_access" {
-  count      = var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? 1 : 0
-  role       = var.ecs_task_role_name
-  policy_arn = aws_iam_policy.ecs_xray_access[0].arn
-}
+## X-Ray permissions are included in the ecs_credentials_access policy below
+## to avoid hitting the AWS limit of 10 managed policy attachments per role.
 
 # IAM policy for ECS tasks to read database credentials
 resource "aws_iam_policy" "ecs_credentials_access" {
@@ -226,6 +195,17 @@ resource "aws_iam_policy" "ecs_credentials_access" {
           var.secrets_arn,
           var.credentials_secret_arn
         ]
+      },
+      # X-Ray permissions folded into this policy to reduce managed attachments
+      {
+        Effect = "Allow",
+        Action = [
+          "xray:PutTraceSegments",
+          "xray:PutTelemetryRecords",
+          "xray:GetSamplingRules",
+          "xray:GetSamplingTargets"
+        ],
+        Resource = "*"
       }
     ]
   })
@@ -255,33 +235,14 @@ resource "aws_ecs_service" "app" {
     container_port   = 8000
   }
 
-  depends_on = [aws_lb_listener_rule.app]
+  # Listener rules are managed by the target-group module (host-based routing)
 
   tags = {
     Name = "${var.project_name}-${var.environment}-service"
   }
 }
 
-# Application Load Balancer Listener Rule
-resource "aws_lb_listener_rule" "app" {
-  listener_arn = var.alb_listener_arn
-  priority     = var.alb_rule_priority
-
-  action {
-    type             = "forward"
-    target_group_arn = var.target_group_arn
-  }
-
-  condition {
-    path_pattern {
-      values = ["/*"]
-    }
-  }
-
-  tags = {
-    Name = "${var.project_name}-${var.environment}-listener-rule"
-  }
-}
+# Removed path-based listener rule; host-based rules are managed by target-group module
 
 # Auto Scaling Target
 resource "aws_appautoscaling_target" "ecs_target" {

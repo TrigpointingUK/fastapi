@@ -20,8 +20,8 @@ resource "cloudflare_record" "api_staging" {
   name            = "api"
   content         = aws_lb.main.dns_name
   type            = "CNAME"
-  proxied         = true  # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true  # Allow overwriting existing records
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
 
   comment = "API endpoint for staging environment - managed by Terraform"
 }
@@ -32,8 +32,8 @@ resource "cloudflare_record" "api_production" {
   name            = "api"
   content         = aws_lb.main.dns_name
   type            = "CNAME"
-  proxied         = true  # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true  # Allow overwriting existing records
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
 
   comment = "API endpoint for production environment - managed by Terraform"
 }
@@ -69,8 +69,8 @@ resource "cloudflare_record" "test1" {
   name            = "test1"
   content         = aws_lb.main.dns_name
   type            = "CNAME"
-  proxied         = true  # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true  # Allow overwriting existing records
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
 
   comment = "Test domain 1 for ALB testing - managed by Terraform"
 }
@@ -80,8 +80,8 @@ resource "cloudflare_record" "test2" {
   name            = "test2"
   content         = aws_lb.main.dns_name
   type            = "CNAME"
-  proxied         = true  # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true  # Allow overwriting existing records
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
 
   comment = "Test domain 2 for ALB testing - managed by Terraform"
 }
@@ -92,8 +92,8 @@ resource "cloudflare_record" "forum" {
   name            = "forum"
   content         = aws_lb.main.dns_name
   type            = "CNAME"
-  proxied         = true  # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true  # Allow overwriting existing records
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
 
   comment = "Forum subdomain for TrigpointingUK - managed by Terraform"
 }
@@ -103,8 +103,8 @@ resource "cloudflare_record" "phpmyadmin" {
   name            = "phpmyadmin"
   content         = aws_lb.main.dns_name
   type            = "CNAME"
-  proxied         = true  # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true  # Allow overwriting existing records
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
 
   comment = "phpMyAdmin subdomain for TrigpointingUK - managed by Terraform"
 }
@@ -114,8 +114,8 @@ resource "cloudflare_record" "static" {
   name            = "static"
   content         = aws_lb.main.dns_name
   type            = "CNAME"
-  proxied         = true  # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true  # Allow overwriting existing records
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
 
   comment = "Static content subdomain for TrigpointingUK - managed by Terraform"
 }
@@ -125,8 +125,8 @@ resource "cloudflare_record" "wiki" {
   name            = "wiki"
   content         = aws_lb.main.dns_name
   type            = "CNAME"
-  proxied         = true  # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true  # Allow overwriting existing records
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
 
   comment = "Wiki subdomain for TrigpointingUK - managed by Terraform"
 }

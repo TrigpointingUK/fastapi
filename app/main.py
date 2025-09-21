@@ -248,6 +248,7 @@ def health_check():
 
     return {
         "status": "healthy",
+        "environment": settings.ENVIRONMENT,
         "tracing": tracing_info,
     }
 

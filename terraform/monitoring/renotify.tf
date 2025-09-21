@@ -7,14 +7,14 @@ variable "enable_hourly_renotify" {
 }
 
 resource "aws_iam_role" "renotify_role" {
-  count              = var.enable_hourly_renotify ? 1 : 0
-  name               = "${var.project_name}-${var.environment}-renotify-role"
+  count = var.enable_hourly_renotify ? 1 : 0
+  name  = "${var.project_name}-${var.environment}-renotify-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Effect = "Allow",
+      Effect    = "Allow",
       Principal = { Service = "lambda.amazonaws.com" },
-      Action = "sts:AssumeRole"
+      Action    = "sts:AssumeRole"
     }]
   })
 }
@@ -28,7 +28,7 @@ resource "aws_iam_role_policy" "renotify_policy" {
     Statement = [
       { Effect = "Allow", Action = ["cloudwatch:DescribeAlarms"], Resource = "*" },
       { Effect = "Allow", Action = ["sns:Publish"], Resource = aws_sns_topic.alerts.arn },
-      { Effect = "Allow", Action = ["logs:CreateLogGroup","logs:CreateLogStream","logs:PutLogEvents"], Resource = "*" }
+      { Effect = "Allow", Action = ["logs:CreateLogGroup", "logs:CreateLogStream", "logs:PutLogEvents"], Resource = "*" }
     ]
   })
 }

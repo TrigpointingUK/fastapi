@@ -38,7 +38,7 @@ resource "aws_lb_listener" "app_https" {
   }
 
   tags = {
-    Name = "${var.project_name}-shared-https-listener"
+    Name      = "${var.project_name}-shared-https-listener"
     CreatedBy = var.environment
   }
 }
