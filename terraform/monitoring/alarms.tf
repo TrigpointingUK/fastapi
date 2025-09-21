@@ -2,7 +2,7 @@
 
 locals {
   alarm_eval_periods = 3
-  alarm_period_sec   = 60
+  alarm_period_sec   = 3600
 }
 
 resource "aws_cloudwatch_metric_alarm" "api_trig_1" {
