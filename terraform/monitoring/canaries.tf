@@ -3,7 +3,7 @@
 locals {
   # Use recommended runtime
   canary_runtime = "syn-nodejs-puppeteer-11.0"
-  canary_schedule = "rate(60 minutes)"
+  canary_schedule = "rate(1 hour)"
   api_url_base   = var.environment == "production" ? "https://api.trigpointing.uk" : "https://api.trigpointing.me"
   web_url_base   = var.environment == "production" ? "https://trigpointing.uk" : "https://trigpointing.me"
   s3_base_path   = "s3://${aws_s3_bucket.synthetics_artifacts.bucket}/${var.environment}/canaries"
