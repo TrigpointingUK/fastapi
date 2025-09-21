@@ -1,4 +1,5 @@
-.PHONY: help install install-dev test test-cov lint format type-check security build run clean docker-build docker-run docker-down mysql-client diff-cov
+.PHONY: help install install-dev test test-cov lint format type-check security build run clean docker-build docker-run docker-down mysql-client diff-cov \
+	run-staging db-tunnel-staging-start db-tunnel-staging-stop mysql-staging
 
 # Default target
 help: ## Show this help message
@@ -6,6 +7,70 @@ help: ## Show this help message
 	@echo ''
 	@echo 'Targets:'
 	@egrep '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
+
+# ---------------------------------------------------------------------------
+# Local development against STAGING via Bastion SSH tunnel (no Docker)
+# ---------------------------------------------------------------------------
+
+# Defaults (override on the command line or environment as needed)
+AWS_REGION ?= eu-west-1
+STAGING_SECRET_ARN ?= arn:aws:secretsmanager:eu-west-1:534526983272:secret:fastapi-staging-credentials-udrQoU
+SSH_BASTION_HOST ?= bastion.trigpointing.uk
+SSH_BASTION_USER ?= ec2-user
+SSH_KEY_PATH ?= ~/.ssh/trigpointing-bastion.pem
+LOCAL_DB_TUNNEL_PORT ?= 3307
+
+# Start an SSH tunnel through the bastion to the staging RDS endpoint
+db-tunnel-staging-start: ## Start SSH tunnel to staging RDS on localhost:$(LOCAL_DB_TUNNEL_PORT)
+	@command -v aws >/dev/null 2>&1 || { echo "❌ aws CLI not found. Install and configure AWS credentials."; exit 1; }
+	@command -v jq >/dev/null 2>&1 || { echo "❌ jq not found. Please install jq."; exit 1; }
+	@mkdir -p .ssh
+	@echo "🔎 Fetching staging DB host/port from Secrets Manager ($(STAGING_SECRET_ARN))"
+	@SECRET_JSON=$$(aws --region $(AWS_REGION) secretsmanager get-secret-value --secret-id $(STAGING_SECRET_ARN) --query SecretString --output text); \
+	RDS_HOST=$$(echo "$$SECRET_JSON" | jq -r '.host'); \
+	RDS_PORT=$$(echo "$$SECRET_JSON" | jq -r '.port'); \
+	echo "🌐 Tunnelling 127.0.0.1:$(LOCAL_DB_TUNNEL_PORT) → $$RDS_HOST:$$RDS_PORT via $(SSH_BASTION_USER)@$(SSH_BASTION_HOST)"; \
+	# Reuse an existing control socket if present; otherwise create it and forward the port
+	if ssh -S .ssh/fastapi-staging-tunnel -O check $(SSH_BASTION_USER)@$(SSH_BASTION_HOST) 2>/dev/null; then \
+	  echo "✅ Tunnel already running"; \
+	else \
+	  ssh -i $(SSH_KEY_PATH) -o ExitOnForwardFailure=yes -M -S .ssh/fastapi-staging-tunnel -f -N \
+	    -L 127.0.0.1:$(LOCAL_DB_TUNNEL_PORT):$$RDS_HOST:$$RDS_PORT \
+	    $(SSH_BASTION_USER)@$(SSH_BASTION_HOST) && echo "✅ Tunnel started"; \
+	fi
+
+# Stop the SSH tunnel
+db-tunnel-staging-stop: ## Stop SSH tunnel to staging RDS if running
+	@ssh -S .ssh/fastapi-staging-tunnel -O exit $(SSH_BASTION_USER)@$(SSH_BASTION_HOST) 2>/dev/null || true
+	@rm -f .ssh/fastapi-staging-tunnel
+	@echo "🛑 Tunnel stopped (if it was running)"
+
+# Run FastAPI locally with live reload, using staging credentials via the tunnel
+run-staging: ## Run FastAPI locally against staging DB (requires db-tunnel-staging-start)
+	@command -v aws >/dev/null 2>&1 || { echo "❌ aws CLI not found. Install and configure AWS credentials."; exit 1; }
+	@command -v jq >/dev/null 2>&1 || { echo "❌ jq not found. Please install jq."; exit 1; }
+	@SECRET_JSON=$$(aws --region $(AWS_REGION) secretsmanager get-secret-value --secret-id $(STAGING_SECRET_ARN) --query SecretString --output text); \
+	DB_USER=$$(echo "$$SECRET_JSON" | jq -r '.username'); \
+	DB_PASSWORD=$$(echo "$$SECRET_JSON" | jq -r '.password'); \
+	DB_NAME=$$(echo "$$SECRET_JSON" | jq -r '.dbname // .database'); \
+	echo "🚀 Starting FastAPI with hot reload on http://127.0.0.1:8000"; \
+	. venv/bin/activate && \
+	ENVIRONMENT=development \
+	DB_HOST=127.0.0.1 DB_PORT=$(LOCAL_DB_TUNNEL_PORT) \
+	DB_USER="$$DB_USER" DB_PASSWORD="$$DB_PASSWORD" DB_NAME="$$DB_NAME" \
+	uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+
+# Open a MySQL client to staging via the tunnel
+mysql-staging: ## Open MySQL client against staging via tunnel (requires db-tunnel-staging-start)
+	@command -v aws >/dev/null 2>&1 || { echo "❌ aws CLI not found. Install and configure AWS credentials."; exit 1; }
+	@command -v jq >/dev/null 2>&1 || { echo "❌ jq not found. Please install jq."; exit 1; }
+	@command -v mysql >/dev/null 2>&1 || { echo "❌ mysql client not found. Install mysql-client."; exit 1; }
+	@SECRET_JSON=$$(aws --region $(AWS_REGION) secretsmanager get-secret-value --secret-id $(STAGING_SECRET_ARN) --query SecretString --output text); \
+	DB_USER=$$(echo "$$SECRET_JSON" | jq -r '.username'); \
+	DB_PASSWORD=$$(echo "$$SECRET_JSON" | jq -r '.password'); \
+	DB_NAME=$$(echo "$$SECRET_JSON" | jq -r '.dbname // .database'); \
+	echo "🐬 Connecting mysql to 127.0.0.1:$(LOCAL_DB_TUNNEL_PORT) as $$DB_USER to $$DB_NAME"; \
+	mysql -h 127.0.0.1 -P $(LOCAL_DB_TUNNEL_PORT) -u "$$DB_USER" -p"$$DB_PASSWORD" "$$DB_NAME"
 
 # Development setup
 install: ## Install production dependencies
