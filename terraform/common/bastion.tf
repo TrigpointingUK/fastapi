@@ -85,6 +85,11 @@ resource "aws_security_group" "bastion" {
   tags = {
     Name = "fastapi-bastion-sg"
   }
+
+  lifecycle {
+    # Allow manual maintenance of SSH ingress (dynamic admin IPs) without TF overwriting
+    ignore_changes = [ingress]
+  }
 }
 
 # IAM Role for Bastion Host (SSM Access)

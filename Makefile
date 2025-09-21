@@ -1,5 +1,6 @@
 .PHONY: help install install-dev test test-cov lint format type-check security build run clean docker-build docker-run docker-down mysql-client diff-cov \
-	run-staging db-tunnel-staging-start db-tunnel-staging-stop mysql-staging
+	run-staging db-tunnel-staging-start db-tunnel-staging-stop mysql-staging \
+	bastion-ssm-shell db-tunnel-staging-ssm-start bastion-allow-my-ip bastion-revoke-my-ip
 
 # Default target
 help: ## Show this help message
@@ -19,6 +20,10 @@ SSH_BASTION_HOST ?= bastion.trigpointing.uk
 SSH_BASTION_USER ?= ec2-user
 SSH_KEY_PATH ?= ~/.ssh/trigpointing-bastion.pem
 LOCAL_DB_TUNNEL_PORT ?= 3307
+BASTION_SG_ID ?=
+
+# Discover bastion instance id (cached per invocation) using Name tag contains 'bastion'
+_bastion_instance := $(shell aws --region $(AWS_REGION) ec2 describe-instances --filters Name=tag:Name,Values='*bastion*' Name=instance-state-name,Values=running --query 'Reservations[0].Instances[0].InstanceId' --output text 2>/dev/null)
 
 # Start an SSH tunnel through the bastion to the staging RDS endpoint
 db-tunnel-staging-start: ## Start SSH tunnel to staging RDS on localhost:$(LOCAL_DB_TUNNEL_PORT)
@@ -30,11 +35,17 @@ db-tunnel-staging-start: ## Start SSH tunnel to staging RDS on localhost:$(LOCAL
 	RDS_HOST=$$(echo "$$SECRET_JSON" | jq -r '.host'); \
 	RDS_PORT=$$(echo "$$SECRET_JSON" | jq -r '.port'); \
 	echo "🌐 Tunnelling 127.0.0.1:$(LOCAL_DB_TUNNEL_PORT) → $$RDS_HOST:$$RDS_PORT via $(SSH_BASTION_USER)@$(SSH_BASTION_HOST)"; \
-	# Reuse an existing control socket if present; otherwise create it and forward the port
+	# Quick connectivity pre-check to bastion (non-interactive)
+	ssh -i $(SSH_KEY_PATH) -o BatchMode=yes -o ConnectTimeout=10 -o StrictHostKeyChecking=accept-new $(SSH_BASTION_USER)@$(SSH_BASTION_HOST) 'exit' 2>/dev/null || { \
+	  echo "❌ Unable to reach $(SSH_BASTION_HOST) via SSH. Check: SSH_KEY_PATH, IP allowlist/Security Group, and network."; \
+	  echo "   You can test manually: ssh -i $(SSH_KEY_PATH) $(SSH_BASTION_USER)@$(SSH_BASTION_HOST)"; \
+	  exit 1; \
+	}; \
+	: # Reuse an existing control socket if present; otherwise create it and forward the port \
 	if ssh -S .ssh/fastapi-staging-tunnel -O check $(SSH_BASTION_USER)@$(SSH_BASTION_HOST) 2>/dev/null; then \
 	  echo "✅ Tunnel already running"; \
 	else \
-	  ssh -i $(SSH_KEY_PATH) -o ExitOnForwardFailure=yes -M -S .ssh/fastapi-staging-tunnel -f -N \
+	  ssh -i $(SSH_KEY_PATH) -o ExitOnForwardFailure=yes -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=accept-new -M -S .ssh/fastapi-staging-tunnel -f -N \
 	    -L 127.0.0.1:$(LOCAL_DB_TUNNEL_PORT):$$RDS_HOST:$$RDS_PORT \
 	    $(SSH_BASTION_USER)@$(SSH_BASTION_HOST) && echo "✅ Tunnel started"; \
 	fi
@@ -71,6 +82,48 @@ mysql-staging: ## Open MySQL client against staging via tunnel (requires db-tunn
 	DB_NAME=$$(echo "$$SECRET_JSON" | jq -r '.dbname // .database'); \
 	echo "🐬 Connecting mysql to 127.0.0.1:$(LOCAL_DB_TUNNEL_PORT) as $$DB_USER to $$DB_NAME"; \
 	mysql -h 127.0.0.1 -P $(LOCAL_DB_TUNNEL_PORT) -u "$$DB_USER" -p"$$DB_PASSWORD" "$$DB_NAME"
+
+# ---------------------------------------------------------------------------
+# SSM-based alternatives (no public SSH required)
+# ---------------------------------------------------------------------------
+
+bastion-ssm-shell: ## Start interactive shell on bastion over SSM (no SSH ingress needed)
+	@command -v aws >/dev/null 2>&1 || { echo "❌ aws CLI not found."; exit 1; }
+	@[ -n "$(_bastion_instance)" ] || { echo "❌ Could not find running bastion instance."; exit 1; }
+	@echo "🔐 Starting SSM shell to $(_bastion_instance)"
+	aws --region $(AWS_REGION) ssm start-session --target "$(_bastion_instance)"
+
+db-tunnel-staging-ssm-start: ## Start SSM remote host port forward to RDS → localhost:$(LOCAL_DB_TUNNEL_PORT)
+	@command -v aws >/dev/null 2>&1 || { echo "❌ aws CLI not found."; exit 1; }
+	@command -v jq >/dev/null 2>&1 || { echo "❌ jq not found."; exit 1; }
+	@[ -n "$(_bastion_instance)" ] || { echo "❌ Could not find running bastion instance."; exit 1; }
+	@SECRET_JSON=$$(aws --region $(AWS_REGION) secretsmanager get-secret-value --secret-id $(STAGING_SECRET_ARN) --query SecretString --output text); \
+	RDS_HOST=$$(echo "$$SECRET_JSON" | jq -r '.host'); \
+	echo "🔐 SSM forwarding: 127.0.0.1:$(LOCAL_DB_TUNNEL_PORT) → $$RDS_HOST:3306 via $(_bastion_instance)"; \
+	aws --region $(AWS_REGION) ssm start-session \
+	  --target "$(_bastion_instance)" \
+	  --document-name AWS-StartPortForwardingSessionToRemoteHost \
+	  --parameters "host=[$$RDS_HOST],portNumber=['3306'],localPortNumber=['$(LOCAL_DB_TUNNEL_PORT)']"
+
+# ---------------------------------------------------------------------------
+# Security Group helpers for dynamic admin IP (SSH) with Terraform ignore_changes
+# ---------------------------------------------------------------------------
+
+bastion-allow-my-ip: ## Add current public IP (/32) to bastion SG for SSH; set BASTION_SG_ID to override autodetect
+	@command -v aws >/dev/null 2>&1 || { echo "❌ aws CLI not found."; exit 1; }
+	@MYIP=$$(curl -s https://ifconfig.me); \
+	SG_ID=$${BASTION_SG_ID:-$$(aws --region $(AWS_REGION) ec2 describe-security-groups --filters Name=group-name,Values=fastapi-bastion-sg --query 'SecurityGroups[0].GroupId' --output text)}; \
+	[ -n "$$SG_ID" ] || { echo "❌ Could not determine bastion SG id"; exit 1; }; \
+	echo "🔓 Authorising $$MYIP/32 on $$SG_ID"; \
+	aws --region $(AWS_REGION) ec2 authorize-security-group-ingress --group-id "$$SG_ID" --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges='[{CidrIp="'$$MYIP'/32",Description="Admin dynamic IP"}]' || true
+
+bastion-revoke-my-ip: ## Remove current public IP (/32) from bastion SG ingress
+	@command -v aws >/dev/null 2>&1 || { echo "❌ aws CLI not found."; exit 1; }
+	@MYIP=$$(curl -s https://ifconfig.me); \
+	SG_ID=$${BASTION_SG_ID:-$$(aws --region $(AWS_REGION) ec2 describe-security-groups --filters Name=group-name,Values=fastapi-bastion-sg --query 'SecurityGroups[0].GroupId' --output text)}; \
+	[ -n "$$SG_ID" ] || { echo "❌ Could not determine bastion SG id"; exit 1; }; \
+	echo "🔒 Revoking $$MYIP/32 from $$SG_ID"; \
+	aws --region $(AWS_REGION) ec2 revoke-security-group-ingress --group-id "$$SG_ID" --ip-permissions IpProtocol=tcp,FromPort=22,ToPort=22,IpRanges='[{CidrIp="'$$MYIP'/32"}]' || true
 
 # Development setup
 install: ## Install production dependencies
