@@ -209,7 +209,7 @@ class TestAuth0Service:
         mock_request.return_value = [self.mock_user_data]
 
         service = Auth0Service()
-        result = service.find_user_by_username("testuser")
+        result = service.find_user_by_nickname_or_name("testuser")
 
         assert result == self.mock_user_data
         mock_request.assert_called_once_with(
@@ -227,7 +227,7 @@ class TestAuth0Service:
         mock_request.return_value = {"users": []}
 
         service = Auth0Service()
-        result = service.find_user_by_username("nonexistent")
+        result = service.find_user_by_nickname_or_name("nonexistent")
 
         assert result is None
 

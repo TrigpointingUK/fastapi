@@ -6,7 +6,7 @@ from typing import Any, Dict
 
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_admin_user, get_db
+from app.api.deps import get_db, require_scopes
 from app.crud.user import (
     find_duplicate_emails,
     get_all_emails,
@@ -25,7 +25,7 @@ router = APIRouter()
 @router.get("/username-duplicates")
 def get_username_duplicates(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_admin_user),
+    current_user: User = Depends(require_scopes("user:admin")),
 ) -> Dict[str, Any]:
     """
     Get all usernames from the legacy database and identify duplicates after sanitization.
@@ -138,7 +138,7 @@ def get_email_duplicates(
     db: Session = Depends(get_db),
     limit: int = 50,
     offset: int = 0,
-    current_user: User = Depends(get_current_admin_user),
+    current_user: User = Depends(require_scopes("user:admin")),
 ) -> Dict[str, Any]:
     """
     Get all email addresses from the legacy database and identify duplicates.

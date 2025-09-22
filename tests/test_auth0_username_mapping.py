@@ -50,8 +50,8 @@ def test_login_persists_auth0_username(
         email="login@example.com",
         password="pw123456",
     )
-    # Ensure feature flag is enabled and legacy user has no auth0 linkage before
-    monkeypatch.setattr(settings, "AUTH0_ENABLED", True, raising=False)
+    # Ensure feature flag is disabled for legacy JWT issuance during this test
+    monkeypatch.setattr(settings, "AUTH0_ENABLED", False, raising=False)
     assert user.auth0_user_id is None
 
     # Enable Auth0 and mock sync to return user id + username
@@ -118,7 +118,7 @@ def test_deps_links_and_updates_username(
 
     # Act
     headers = {"Authorization": "Bearer dummy"}
-    response = client.get(f"{settings.API_V1_STR}/user/me", headers=headers)
+    response = client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
 
     # Assert
     assert response.status_code == 200

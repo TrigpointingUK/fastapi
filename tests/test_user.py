@@ -4,13 +4,14 @@ Tests for user endpoints.
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.user import User
 from fastapi.testclient import TestClient
 
 
 def test_get_user_not_found(client: TestClient, db: Session):
     """Test getting a non-existent user returns 404."""
-    response = client.get("/api/v1/user/99999")
+    response = client.get(f"{settings.API_V1_STR}/users/99999")
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
 
@@ -33,7 +34,7 @@ def test_get_user_public_unauthenticated(client: TestClient, db: Session):
     db.add(user)
     db.commit()
 
-    response = client.get("/api/v1/user/1")
+    response = client.get(f"{settings.API_V1_STR}/users/1")
     assert response.status_code == 200
     data = response.json()
 
@@ -69,7 +70,7 @@ def test_get_user_private_unauthenticated(client: TestClient, db: Session):
     db.add(user)
     db.commit()
 
-    response = client.get("/api/v1/user/2")
+    response = client.get(f"{settings.API_V1_STR}/users/2")
     assert response.status_code == 200
     data = response.json()
 
@@ -104,7 +105,7 @@ def test_get_user_by_name(client: TestClient, db: Session):
     db.add(user)
     db.commit()
 
-    response = client.get("/api/v1/user/name/findme")
+    response = client.get(f"{settings.API_V1_STR}/users/name/findme")
     assert response.status_code == 200
     data = response.json()
 
@@ -115,7 +116,7 @@ def test_get_user_by_name(client: TestClient, db: Session):
 
 def test_get_user_by_name_not_found(client: TestClient, db: Session):
     """Test getting a non-existent user by name returns 404."""
-    response = client.get("/api/v1/user/name/nonexistent")
+    response = client.get(f"{settings.API_V1_STR}/users/name/nonexistent")
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
 
@@ -166,13 +167,13 @@ def test_search_users_by_name(client: TestClient, db: Session):
     db.commit()
 
     # Search for users containing "al"
-    response = client.get("/api/v1/user/search/name?q=al")
+    response = client.get(f"{settings.API_V1_STR}/users/search/name?q=al")
     assert response.status_code == 200
     data = response.json()
 
     # Should find alice (contains "al") and charlie (contains "arlie")
     # Actually, let's search for something that matches both
-    response = client.get("/api/v1/user/search/name?q=li")
+    response = client.get(f"{settings.API_V1_STR}/users/search/name?q=li")
     assert response.status_code == 200
     data = response.json()
 
@@ -202,7 +203,7 @@ def test_get_users_count(client: TestClient, db: Session):
         db.add(user)
     db.commit()
 
-    response = client.get("/api/v1/user/stats/count")
+    response = client.get(f"{settings.API_V1_STR}/users/stats/count")
     assert response.status_code == 200
     data = response.json()
 

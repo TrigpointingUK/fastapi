@@ -425,7 +425,7 @@ class TestAuth0ServiceComprehensive:
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            result = service.find_user_by_username("testuser")
+            result = service.find_user_by_nickname_or_name("testuser")
             assert result is None
 
     def test_find_user_by_email_disabled(self):

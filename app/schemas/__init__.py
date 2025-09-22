@@ -1,13 +1,22 @@
-from .trig import TrigCountResponse, TrigResponse, TrigSummary
-from .user import LoginResponse, Token, UserEmail, UserResponse, UserSummary
+from .trig import (
+    TrigCountResponse,
+    TrigDetails,
+    TrigMinimal,
+    TrigStats,
+    TrigSummary,
+    TrigWithIncludes,
+)
+from .user import LoginResponse, Token, UserEmail, UserResponse
 
 __all__ = [
     "LoginResponse",
     "Token",
     "UserEmail",
     "UserResponse",
-    "UserSummary",
     "TrigCountResponse",
-    "TrigResponse",
+    "TrigMinimal",
+    "TrigDetails",
+    "TrigStats",
+    "TrigWithIncludes",
     "TrigSummary",
 ]

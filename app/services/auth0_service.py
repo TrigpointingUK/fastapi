@@ -65,9 +65,11 @@ class Auth0Service:
             return None
 
         try:
-            # Get credentials from environment variables (injected by ECS)
-            client_id = settings.AUTH0_CLIENT_ID
-            client_secret = settings.AUTH0_CLIENT_SECRET
+            # Get credentials for Management API (M2M)
+            client_id = settings.AUTH0_M2M_CLIENT_ID or settings.AUTH0_CLIENT_ID
+            client_secret = (
+                settings.AUTH0_M2M_CLIENT_SECRET or settings.AUTH0_CLIENT_SECRET
+            )
             domain = settings.AUTH0_DOMAIN
 
             if not client_id or not client_secret:
@@ -297,12 +299,12 @@ class Auth0Service:
             logger.error(json.dumps(log_data))
             return None
 
-    def find_user_by_username(self, username: str) -> Optional[Dict]:
+    def find_user_by_nickname_or_name(self, nickname: str) -> Optional[Dict]:
         """
-        Find a user by username in Auth0.
+        Find a user by display identity (nickname/name) in Auth0.
 
         Args:
-            username: Username to search for
+            nickname: Display name to search for
 
         Returns:
             User data dictionary or None if not found
@@ -310,15 +312,15 @@ class Auth0Service:
         if not self.enabled:
             return None
 
-        # Sanitize username for Auth0 search
-        sanitized_username = sanitize_username_for_auth0(username)
+        # Use exact match on nickname first, then name
+        sanitized_nickname = sanitize_username_for_auth0(nickname)
 
-        # Search for user by sanitized username - try multiple search formats
-        endpoint = f'users?q=username:"{sanitized_username}"&search_engine=v3'
+        # Try nickname
+        endpoint = f'users?q=nickname:"{sanitized_nickname}"&search_engine=v3'
         log_data = {
-            "event": "auth0_user_search_by_username_started",
-            "original_username": username,
-            "sanitized_username": sanitized_username,
+            "event": "auth0_user_search_by_nickname_started",
+            "original_nickname": nickname,
+            "sanitized_nickname": sanitized_nickname,
             "endpoint": endpoint,
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
@@ -332,9 +334,9 @@ class Auth0Service:
 
             if filtered_users:
                 log_data = {
-                    "event": "auth0_user_found_by_username",
-                    "original_username": username,
-                    "sanitized_username": sanitized_username,
+                    "event": "auth0_user_found_by_nickname",
+                    "original_nickname": nickname,
+                    "sanitized_nickname": sanitized_nickname,
                     "auth0_user_id": filtered_users[0].get("user_id", ""),
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
@@ -342,21 +344,44 @@ class Auth0Service:
                 return filtered_users[0]
             else:
                 log_data = {
-                    "event": "auth0_user_not_found_by_username_connection_filtered",
-                    "original_username": username,
-                    "sanitized_username": sanitized_username,
+                    "event": "auth0_user_not_found_by_nickname_connection_filtered",
+                    "original_nickname": nickname,
+                    "sanitized_nickname": sanitized_nickname,
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.debug(json.dumps(log_data))
                 return None
         else:
-            log_data = {
-                "event": "auth0_user_not_found_by_username",
-                "original_username": username,
-                "sanitized_username": sanitized_username,
-                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-            }
-            logger.debug(json.dumps(log_data))
+            # Try name as fallback
+            endpoint = f'users?q=name:"{sanitized_nickname}"&search_engine=v3'
+            logger.debug(
+                json.dumps(
+                    {"event": "auth0_user_search_by_name_started", "endpoint": endpoint}
+                )
+            )
+            response = self._make_auth0_request("GET", endpoint)
+            if response and isinstance(response, list) and len(response) > 0:
+                filtered_users = self._filter_users_by_connection(
+                    response, self.connection
+                )
+                if filtered_users:
+                    logger.info(
+                        json.dumps(
+                            {
+                                "event": "auth0_user_found_by_name",
+                                "auth0_user_id": filtered_users[0].get("user_id", ""),
+                            }
+                        )
+                    )
+                    return filtered_users[0]
+            logger.debug(
+                json.dumps(
+                    {
+                        "event": "auth0_user_not_found_by_nickname_or_name",
+                        "nickname": nickname,
+                    }
+                )
+            )
             return None
 
     def find_user_by_auth0_id(self, auth0_user_id: str) -> Optional[Dict]:
@@ -483,7 +508,7 @@ class Auth0Service:
         }
         logger.debug(json.dumps(log_data))
 
-        user = self.find_user_by_username(username)
+        user = self.find_user_by_nickname_or_name(username)
         if user:
             log_data = {
                 "event": "auth0_comprehensive_search_username_success",
@@ -660,24 +685,20 @@ class Auth0Service:
 
         user_data = {
             "connection": self.connection,
-            "username": sanitized_username,  # Use sanitized username for Auth0
-            "name": name,
+            # Use nickname as single display identity; mirror to name
+            "nickname": username,
+            "name": username,
             "password": password,
             "email_verified": False,
             "verify_email": False,
             "app_metadata": {
                 "legacy_user_id": user_id,
-                "original_username": username,  # Store original username in metadata
+                "original_username": username,
             },
         }
 
         # Add profile fields if provided
-        if firstname:
-            user_data["given_name"] = firstname
-        if surname:
-            user_data["family_name"] = surname
-        if username:
-            user_data["nickname"] = username  # Keep original username as nickname
+        # Do not push real names; avoid given_name/family_name
 
         if email:
             user_data["email"] = email
@@ -809,13 +830,11 @@ class Auth0Service:
         if not self.enabled:
             return False
 
+        # Only update display identity; avoid given_name/family_name
         user_data = {}
-        if firstname is not None:
-            user_data["given_name"] = firstname
-        if surname is not None:
-            user_data["family_name"] = surname
         if nickname is not None:
             user_data["nickname"] = nickname
+            user_data["name"] = nickname
 
         if not user_data:
             # No fields to update

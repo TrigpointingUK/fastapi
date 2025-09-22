@@ -7,11 +7,13 @@ from decimal import Decimal
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.trig import Trig
+from app.models.trigstats import TrigStats
 from fastapi.testclient import TestClient
 
 
-def test_get_trig_success(client: TestClient, db: Session):
+def test_get_trig_success_minimal(client: TestClient, db: Session):
     """Test getting a trig by ID - success case."""
     # Create a test trig
     test_trig = Trig(
@@ -49,7 +51,7 @@ def test_get_trig_success(client: TestClient, db: Session):
     db.refresh(test_trig)
 
     # Test the endpoint
-    response = client.get("/api/v1/trig/1")
+    response = client.get(f"{settings.API_V1_STR}/trigs/1")
     assert response.status_code == 200
 
     data = response.json()
@@ -57,17 +59,73 @@ def test_get_trig_success(client: TestClient, db: Session):
     assert data["waypoint"] == "TP0001"
     assert data["name"] == "Test Trigpoint"
     assert data["wgs_lat"] == "51.50000"
-    assert data["county"] == "London"
+    assert "county" not in data  # county is in details only now
+    # minimal fields present
+    assert set(
+        [
+            "id",
+            "waypoint",
+            "name",
+            "status_name",
+            "physical_type",
+            "condition",
+            "wgs_lat",
+            "wgs_long",
+            "osgb_gridref",
+        ]
+    ).issubset(data.keys())
+
+
+def test_get_trig_with_details_include(client: TestClient, db: Session):
+    test_trig = Trig(
+        id=11,
+        waypoint="TP1011",
+        name="Include Trig",
+        status_id=10,
+        user_added=0,
+        current_use="Passive station",
+        historic_use="Primary",
+        physical_type="Pillar",
+        wgs_lat=Decimal("51.50000"),
+        wgs_long=Decimal("-0.12500"),
+        wgs_height=100,
+        osgb_eastings=530000,
+        osgb_northings=180000,
+        osgb_gridref="TQ 30000 80000",
+        osgb_height=95,
+        fb_number="S1235",
+        stn_number="TEST124",
+        permission_ind="Y",
+        condition="G",
+        postcode6="SW1A 1",
+        county="London",
+        town="Westminster",
+        needs_attention=0,
+        attention_comment="",
+        crt_date=date(2023, 1, 1),
+        crt_time=time(12, 0, 0),
+        crt_user_id=1,
+        crt_ip_addr="127.0.0.1",
+    )
+    db.add(test_trig)
+    db.commit()
+
+    response = client.get(f"{settings.API_V1_STR}/trigs/11?include=details")
+    assert response.status_code == 200
+    data = response.json()
+    assert "details" in data and isinstance(data["details"], dict)
+    assert data["details"]["postcode"] == "SW1A 1"
+    assert data["details"]["county"] == "London"
 
 
 def test_get_trig_not_found(client: TestClient, db: Session):
     """Test getting a trig by ID - not found case."""
-    response = client.get("/api/v1/trig/99999")
+    response = client.get(f"{settings.API_V1_STR}/trigs/99999")
     assert response.status_code == 404
     assert response.json()["detail"] == "Trigpoint not found"
 
 
-def test_get_trig_by_waypoint_success(client: TestClient, db: Session):
+def test_get_trig_by_waypoint_success_minimal(client: TestClient, db: Session):
     """Test getting a trig by waypoint - success case."""
     # Create a test trig
     test_trig = Trig(
@@ -104,17 +162,18 @@ def test_get_trig_by_waypoint_success(client: TestClient, db: Session):
     db.commit()
 
     # Test the endpoint
-    response = client.get("/api/v1/trig/waypoint/TP0002")
+    response = client.get(f"{settings.API_V1_STR}/trigs/waypoint/TP0002")
     assert response.status_code == 200
 
     data = response.json()
     assert data["waypoint"] == "TP0002"
     assert data["name"] == "Another Trigpoint"
+    assert "county" not in data
 
 
 def test_get_trig_by_waypoint_not_found(client: TestClient, db: Session):
     """Test getting a trig by waypoint - not found case."""
-    response = client.get("/api/v1/trig/waypoint/NONEXISTENT")
+    response = client.get(f"{settings.API_V1_STR}/trigs/waypoint/NONEXISTENT")
     assert response.status_code == 404
     assert response.json()["detail"] == "Trigpoint not found"
 
@@ -188,7 +247,7 @@ def test_search_trigs_by_name(client: TestClient, db: Session):
     db.commit()
 
     # Test search
-    response = client.get("/api/v1/trig/search/name?q=Ben")
+    response = client.get(f"{settings.API_V1_STR}/trigs/search/name?q=Ben")
     assert response.status_code == 200
 
     data = response.json()
@@ -233,9 +292,114 @@ def test_get_trig_count(client: TestClient, db: Session):
     db.add(test_trig)
     db.commit()
 
-    response = client.get("/api/v1/trig/stats/count")
+    response = client.get(f"{settings.API_V1_STR}/trigs/stats/count")
     assert response.status_code == 200
 
     data = response.json()
     assert "total_trigpoints" in data
     assert data["total_trigpoints"] >= 1
+
+
+def test_get_trig_details_endpoint(client: TestClient, db: Session):
+    trig = Trig(
+        id=6,
+        waypoint="TP0006",
+        name="Details Trig",
+        status_id=10,
+        user_added=0,
+        current_use="Passive station",
+        historic_use="Primary",
+        physical_type="Pillar",
+        wgs_lat=Decimal("51.50000"),
+        wgs_long=Decimal("-0.12500"),
+        wgs_height=100,
+        osgb_eastings=530000,
+        osgb_northings=180000,
+        osgb_gridref="TQ 30000 80000",
+        osgb_height=95,
+        fb_number="S7777",
+        stn_number="DET123",
+        permission_ind="Y",
+        condition="G",
+        postcode6="SW1A 1",
+        county="London",
+        town="Westminster",
+        needs_attention=0,
+        attention_comment="",
+        crt_date=date(2023, 1, 1),
+        crt_time=time(12, 0, 0),
+        crt_user_id=1,
+        crt_ip_addr="127.0.0.1",
+    )
+    db.add(trig)
+    db.commit()
+
+    response = client.get(f"{settings.API_V1_STR}/trigs/6/details")
+    assert response.status_code == 200
+    details = response.json()
+    assert details["postcode"] == "SW1A 1"
+    assert details["county"] == "London"
+    assert details["stn_number"] == "DET123"
+
+
+def test_get_trig_stats_endpoint_and_include(client: TestClient, db: Session):
+    trig = Trig(
+        id=7,
+        waypoint="TP0007",
+        name="Stats Trig",
+        status_id=10,
+        user_added=0,
+        current_use="Passive station",
+        historic_use="Primary",
+        physical_type="Pillar",
+        wgs_lat=Decimal("51.50000"),
+        wgs_long=Decimal("-0.12500"),
+        wgs_height=100,
+        osgb_eastings=530000,
+        osgb_northings=180000,
+        osgb_gridref="TQ 30000 80000",
+        osgb_height=95,
+        fb_number="S7778",
+        stn_number="STATS1",
+        permission_ind="Y",
+        condition="G",
+        postcode6="SW1A 1",
+        county="London",
+        town="Westminster",
+        needs_attention=0,
+        attention_comment="",
+        crt_date=date(2023, 1, 1),
+        crt_time=time(12, 0, 0),
+        crt_user_id=1,
+        crt_ip_addr="127.0.0.1",
+    )
+    stats = TrigStats(
+        id=7,
+        logged_first=date(2020, 1, 1),
+        logged_last=date(2025, 1, 1),
+        logged_count=5,
+        found_last=date(2025, 1, 1),
+        found_count=4,
+        photo_count=3,
+        score_mean=Decimal("6.50"),
+        score_baysian=Decimal("6.40"),
+        area_osgb_height=0,
+    )
+    db.add(trig)
+    db.add(stats)
+    db.commit()
+
+    # direct stats endpoint
+    resp_stats = client.get(f"{settings.API_V1_STR}/trigs/7/stats")
+    assert resp_stats.status_code == 200
+    s = resp_stats.json()
+    # Stats envelope may omit redundant id; verify key fields
+    assert s["logged_count"] == 5
+    assert s["score_mean"] == "6.50"
+
+    # include stats with base
+    resp_inc = client.get(f"{settings.API_V1_STR}/trigs/7?include=stats,details")
+    assert resp_inc.status_code == 200
+    data = resp_inc.json()
+    assert "stats" in data and data["stats"]["logged_count"] == 5
+    assert "details" in data and data["details"]["county"] == "London"

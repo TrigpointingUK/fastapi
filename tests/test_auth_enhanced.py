@@ -173,7 +173,7 @@ def test_enhanced_login_jwt_token_valid(client: TestClient, db: Session):
 
     # Use token to access protected endpoint
     headers = {"Authorization": f"Bearer {token}"}
-    me_response = client.get(f"{settings.API_V1_STR}/user/me", headers=headers)
+    me_response = client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
 
     assert me_response.status_code == 200
     me_data = me_response.json()
@@ -215,7 +215,7 @@ def test_user_me_endpoint(client: TestClient, db: Session):
 
     # Test /user/me endpoint
     headers = {"Authorization": f"Bearer {token}"}
-    response = client.get(f"{settings.API_V1_STR}/user/me", headers=headers)
+    response = client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
 
     assert response.status_code == 200
     data = response.json()
@@ -228,7 +228,7 @@ def test_user_me_endpoint(client: TestClient, db: Session):
 
 def test_user_me_unauthorized(client: TestClient):
     """Test /user/me endpoint without authentication."""
-    response = client.get(f"{settings.API_V1_STR}/user/me")
+    response = client.get(f"{settings.API_V1_STR}/users/me")
 
     assert response.status_code == 401
     assert "Not authenticated" in response.json()["detail"]

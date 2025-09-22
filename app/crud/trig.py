@@ -4,6 +4,7 @@ CRUD operations for trig table.
 
 from typing import Optional
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.trig import Trig
@@ -90,3 +91,30 @@ def get_trigs_count(db: Session) -> int:
         Total count of trigpoints
     """
     return db.query(Trig).count()
+
+
+def list_trigs_filtered(
+    db: Session,
+    *,
+    name: Optional[str] = None,
+    county: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 100,
+) -> list[Trig]:
+    query = db.query(Trig)
+    if name:
+        query = query.filter(Trig.name.ilike(f"%{name}%"))
+    if county:
+        query = query.filter(Trig.county == county)
+    return query.offset(skip).limit(limit).all()
+
+
+def count_trigs_filtered(
+    db: Session, *, name: Optional[str] = None, county: Optional[str] = None
+) -> int:
+    query = db.query(func.count(Trig.id))
+    if name:
+        query = query.filter(Trig.name.ilike(f"%{name}%"))
+    if county:
+        query = query.filter(Trig.county == county)
+    return int(query.scalar() or 0)

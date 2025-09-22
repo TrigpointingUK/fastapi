@@ -60,7 +60,7 @@ class TestMainModule:
     def test_app_creation(self):
         """Test FastAPI app creation."""
         assert app is not None
-        assert app.title == "Legacy API Migration"
+        assert app.title == "TrigpointingUK API"
 
     def test_app_has_health_endpoint(self):
         """Test that app has health endpoint registered."""
@@ -71,9 +71,13 @@ class TestMainModule:
     def test_app_has_api_routes(self):
         """Test that app has API routes registered."""
         # Get all routes
+        from app.core.config import settings
+
         routes = [route.path for route in app.routes]
         # Should have API v1 routes
-        api_routes = [route for route in routes if route.startswith("/api/v1")]
+        api_routes = [
+            route for route in routes if route.startswith(settings.API_V1_STR)
+        ]
         assert len(api_routes) > 0
 
     def test_main_execution_defaults(self):
@@ -106,7 +110,9 @@ class TestMainModule:
 
     def test_app_openapi_url(self):
         """Test that app has correct OpenAPI URL."""
-        assert app.openapi_url == "/api/v1/openapi.json"
+        from app.core.config import settings
+
+        assert app.openapi_url == f"{settings.API_V1_STR}/openapi.json"
 
     def test_app_cors_middleware(self):
         """Test that CORS middleware is configured."""
@@ -118,9 +124,13 @@ class TestMainModule:
     def test_app_router_inclusion(self):
         """Test that API router is included."""
         # Get all routes
+        from app.core.config import settings
+
         routes = [route.path for route in app.routes]
         # Should have API v1 routes
-        api_routes = [route for route in routes if route.startswith("/api/v1")]
+        api_routes = [
+            route for route in routes if route.startswith(settings.API_V1_STR)
+        ]
         assert len(api_routes) > 0
 
     @patch("app.main.settings")

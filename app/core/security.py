@@ -24,7 +24,9 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def create_access_token(
     subject: Union[str, Any], expires_delta: Optional[timedelta] = None
 ) -> str:
-    """Create a JWT access token."""
+    """Deprecated: local JWT issuance is disabled when Auth0 is enabled."""
+    if settings.AUTH0_ENABLED:
+        raise RuntimeError("Local JWT issuance is disabled when Auth0 is enabled")
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta
     else:
@@ -351,7 +353,18 @@ def validate_any_token(token: str) -> Optional[Dict[str, Any]]:
     Returns:
         Dictionary containing token payload and token type, or None if invalid
     """
-    # First try legacy JWT validation
+    # If Auth0 is enabled, only accept Auth0 tokens
+    if settings.AUTH0_ENABLED:
+        auth0_payload = auth0_validator.validate_auth0_token(token)
+        if auth0_payload:
+            return {
+                **auth0_payload,
+                "token_type": "auth0",
+                "auth0_user_id": auth0_payload.get("sub"),
+            }
+        return None
+
+    # Otherwise (development), accept legacy first then Auth0
     legacy_payload = validate_legacy_jwt_token(token)
     if legacy_payload:
         return {
@@ -359,8 +372,6 @@ def validate_any_token(token: str) -> Optional[Dict[str, Any]]:
             "token_type": "legacy",
             "user_id": int(legacy_payload.get("sub", 0)),
         }
-
-    # Then try Auth0 validation
     auth0_payload = auth0_validator.validate_auth0_token(token)
     if auth0_payload:
         return {
@@ -370,3 +381,17 @@ def validate_any_token(token: str) -> Optional[Dict[str, Any]]:
         }
 
     return None
+
+
+def extract_scopes(token_payload: Dict[str, Any]) -> set[str]:
+    """Extract scopes from Auth0 token payload supporting 'scope' string or 'permissions' list."""
+    scopes: set[str] = set()
+    if not token_payload:
+        return scopes
+    if "scope" in token_payload and isinstance(token_payload["scope"], str):
+        scopes.update(s for s in token_payload["scope"].split() if s)
+    if "permissions" in token_payload and isinstance(
+        token_payload["permissions"], list
+    ):
+        scopes.update(str(s) for s in token_payload["permissions"])
+    return scopes

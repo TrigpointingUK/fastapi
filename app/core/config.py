@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "Legacy API Migration"
+    API_V1_STR: str = "/v1"
+    PROJECT_NAME: str = "TrigpointingUK API"
     ENVIRONMENT: str = "development"  # staging, production, development
     DEBUG: bool = False
 
@@ -49,6 +49,12 @@ class Settings(BaseSettings):
     AUTH0_SECRET_NAME: Optional[str] = None
     AUTH0_CONNECTION: Optional[str] = None
     AUTH0_ENABLED: bool = False
+    # SPA client for Swagger OAuth2 (PKCE)
+    AUTH0_SPA_CLIENT_ID: Optional[str] = None
+    # M2M client for Management API
+    AUTH0_M2M_CLIENT_ID: Optional[str] = None
+    AUTH0_M2M_CLIENT_SECRET: Optional[str] = None
+    # Backwards compatibility (deprecated): if new vars missing, fall back to these
     AUTH0_CLIENT_ID: Optional[str] = None
     AUTH0_CLIENT_SECRET: Optional[str] = None
 
@@ -57,9 +63,7 @@ class Settings(BaseSettings):
     # - MANAGEMENT_API_AUDIENCE: For accessing Auth0 Management API (user sync, etc.)
     # - API_AUDIENCE: For validating tokens from your API clients
     AUTH0_MANAGEMENT_API_AUDIENCE: Optional[str] = None
-    AUTH0_API_AUDIENCE: Optional[str] = (
-        None  # e.g., "https://api.trigpointing.me/api/v1/"
-    )
+    AUTH0_API_AUDIENCE: Optional[str] = None  # e.g., "https://api.trigpointing.me/v1/"
 
     # Logging Configuration
     LOG_LEVEL: str = "INFO"
