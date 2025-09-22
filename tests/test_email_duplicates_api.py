@@ -12,6 +12,9 @@ from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
+# Ensure legacy tokens in tests
+settings.AUTH0_ENABLED = False
+
 
 def get_auth_headers(user: User) -> dict:
     """Create authorization headers for a user."""
@@ -30,7 +33,7 @@ class TestEmailDuplicatesAPI:
         """Test getting email duplicates with empty database."""
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
         )
         assert response.status_code == 200
         result = response.json()
@@ -51,7 +54,7 @@ class TestEmailDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
         )
         assert response.status_code == 200
         result = response.json()
@@ -75,7 +78,7 @@ class TestEmailDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
         )
         assert response.status_code == 200
 
@@ -130,7 +133,7 @@ class TestEmailDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
         )
         assert response.status_code == 200
 
@@ -151,7 +154,7 @@ class TestEmailDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
         )
         assert response.status_code == 200
 
@@ -178,7 +181,7 @@ class TestEmailDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
         )
         assert response.status_code == 200
 
@@ -212,7 +215,7 @@ class TestEmailDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
         )
         assert response.status_code == 500
         assert "Error analyzing email duplicates" in response.json()["detail"]
@@ -232,7 +235,7 @@ class TestEmailDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
         )
         assert response.status_code == 200
 
@@ -262,7 +265,7 @@ class TestEmailDuplicatesAPI:
         # Test first page
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates?limit=1&offset=0",
+            f"{settings.API_V1_STR}/legacy/email-duplicates?limit=1&offset=0",
             headers=headers,
         )
         assert response.status_code == 200
@@ -282,14 +285,14 @@ class TestEmailDuplicatesAPI:
 
         # Test invalid limit
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates?limit=0", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates?limit=0", headers=headers
         )
         assert response.status_code == 400
         assert "Limit must be greater than 0" in response.json()["detail"]
 
         # Test negative offset
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates?offset=-1",
+            f"{settings.API_V1_STR}/legacy/email-duplicates?offset=-1",
             headers=headers,
         )
         assert response.status_code == 400
@@ -297,7 +300,7 @@ class TestEmailDuplicatesAPI:
 
         # Test limit too high
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates?limit=1001",
+            f"{settings.API_V1_STR}/legacy/email-duplicates?limit=1001",
             headers=headers,
         )
         assert response.status_code == 400
@@ -322,7 +325,7 @@ class TestEmailDuplicatesAPI:
         # Test pagination with limit=2
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates?limit=2&offset=0",
+            f"{settings.API_V1_STR}/legacy/email-duplicates?limit=2&offset=0",
             headers=headers,
         )
         assert response.status_code == 200
@@ -335,7 +338,7 @@ class TestEmailDuplicatesAPI:
 
     def test_get_email_duplicates_requires_authentication(self, db: Session):
         """Test that email duplicates endpoint requires authentication."""
-        response = client.get(f"{settings.API_V1_STR}/analysis/email-duplicates")
+        response = client.get(f"{settings.API_V1_STR}/legacy/email-duplicates")
         assert response.status_code == 401
         assert "Not authenticated" in response.json()["detail"]
 
@@ -343,7 +346,7 @@ class TestEmailDuplicatesAPI:
         """Test that email duplicates endpoint requires admin privileges."""
         headers = get_auth_headers(test_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/email-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
         )
         assert response.status_code == 403
         assert "Admin privileges required" in response.json()["detail"]

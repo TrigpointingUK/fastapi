@@ -103,10 +103,38 @@ def filter_user_fields(user: User, current_user: Optional[User] = None) -> UserR
         about=str(user.about),
     )
 
-    # Determine if current user can see private fields
-    # Private fields are no longer added to the base response here
+    # Fill optional visibility-controlled fields for compatibility where expected
+    is_self = current_user is not None and current_user.id == user.id
+    is_public = str(user.public_ind) == "Y"
+    is_admin = (
+        bool(getattr(current_user, "admin_ind", "N") == "Y") if current_user else False
+    )
 
-    # No additional private fields are added to base response here.
+    if is_self or is_public or is_admin:
+        response.email = str(user.email) if user.email else None
+    else:
+        response.email = None
+
+    if is_self or is_admin:
+        response.email_valid = (
+            str(user.email_valid)
+            if getattr(user, "email_valid", None) is not None
+            else None
+        )
+        response.admin_ind = (
+            str(user.admin_ind)
+            if getattr(user, "admin_ind", None) is not None
+            else None
+        )
+        response.public_ind = (
+            str(user.public_ind)
+            if getattr(user, "public_ind", None) is not None
+            else None
+        )
+    else:
+        response.email_valid = None
+        response.admin_ind = None
+        response.public_ind = None
 
     return response
 

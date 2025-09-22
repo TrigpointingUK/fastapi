@@ -18,6 +18,11 @@ class UserResponse(BaseModel):
     surname: str
     homepage: Optional[str] = Field(..., description="User homepage URL")
     about: str
+    # Conditionally included private/public fields
+    email: Optional[str] = None
+    email_valid: Optional[str] = None
+    admin_ind: Optional[str] = None
+    public_ind: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -12,6 +12,9 @@ from fastapi.testclient import TestClient
 
 client = TestClient(app)
 
+# Ensure legacy tokens in tests
+settings.AUTH0_ENABLED = False
+
 
 def get_auth_headers(user: User) -> dict:
     """Create authorization headers for a user."""
@@ -30,7 +33,7 @@ class TestUsernameDuplicatesAPI:
         """Test getting username duplicates with empty database."""
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/username-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
         )
         assert response.status_code == 200
         assert response.json() == {}
@@ -49,7 +52,7 @@ class TestUsernameDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/username-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
         )
         assert response.status_code == 200
         assert response.json() == {}
@@ -73,7 +76,7 @@ class TestUsernameDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/username-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
         )
         assert response.status_code == 200
 
@@ -120,7 +123,7 @@ class TestUsernameDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/username-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
         )
         assert response.status_code == 200
 
@@ -151,7 +154,7 @@ class TestUsernameDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/username-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
         )
         assert response.status_code == 200
 
@@ -186,7 +189,7 @@ class TestUsernameDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/username-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
         )
         assert response.status_code == 200
 
@@ -209,7 +212,7 @@ class TestUsernameDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/username-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
         )
         assert response.status_code == 200
 
@@ -236,7 +239,7 @@ class TestUsernameDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/username-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
         )
         assert response.status_code == 200
 
@@ -273,14 +276,14 @@ class TestUsernameDuplicatesAPI:
 
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/username-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
         )
         assert response.status_code == 500
         assert "Error analyzing username duplicates" in response.json()["detail"]
 
     def test_get_username_duplicates_requires_authentication(self, db: Session):
         """Test that username duplicates endpoint requires authentication."""
-        response = client.get(f"{settings.API_V1_STR}/analysis/username-duplicates")
+        response = client.get(f"{settings.API_V1_STR}/legacy/username-duplicates")
         assert response.status_code == 401
         assert "Not authenticated" in response.json()["detail"]
 
@@ -288,7 +291,7 @@ class TestUsernameDuplicatesAPI:
         """Test that username duplicates endpoint requires admin privileges."""
         headers = get_auth_headers(test_user)
         response = client.get(
-            f"{settings.API_V1_STR}/analysis/username-duplicates", headers=headers
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
         )
         assert response.status_code == 403
         assert "Admin privileges required" in response.json()["detail"]

@@ -247,13 +247,14 @@ def test_search_trigs_by_name(client: TestClient, db: Session):
     db.commit()
 
     # Test search
-    response = client.get(f"{settings.API_V1_STR}/trigs/search/name?q=Ben")
+    response = client.get(f"{settings.API_V1_STR}/trigs?name=Ben&limit=10&skip=0")
     assert response.status_code == 200
 
     data = response.json()
-    assert len(data) == 2
-    assert any(trig["name"] == "Ben Nevis" for trig in data)
-    assert any(trig["name"] == "Ben More" for trig in data)
+    assert "items" in data
+    names = [t["name"] for t in data["items"]]
+    assert "Ben Nevis" in names
+    assert "Ben More" in names
 
 
 def test_get_trig_count(client: TestClient, db: Session):
@@ -292,12 +293,11 @@ def test_get_trig_count(client: TestClient, db: Session):
     db.add(test_trig)
     db.commit()
 
-    response = client.get(f"{settings.API_V1_STR}/trigs/stats/count")
+    # Removed stats count endpoint; emulate count via listing
+    response = client.get(f"{settings.API_V1_STR}/trigs?limit=1&skip=0")
     assert response.status_code == 200
-
-    data = response.json()
-    assert "total_trigpoints" in data
-    assert data["total_trigpoints"] >= 1
+    body = response.json()
+    assert "pagination" in body and body["pagination"]["total"] >= 1
 
 
 def test_get_trig_details_endpoint(client: TestClient, db: Session):
@@ -334,12 +334,12 @@ def test_get_trig_details_endpoint(client: TestClient, db: Session):
     db.add(trig)
     db.commit()
 
-    response = client.get(f"{settings.API_V1_STR}/trigs/6/details")
+    response = client.get(f"{settings.API_V1_STR}/trigs/6?include=details")
     assert response.status_code == 200
-    details = response.json()
-    assert details["postcode"] == "SW1A 1"
-    assert details["county"] == "London"
-    assert details["stn_number"] == "DET123"
+    data = response.json()
+    assert data["details"]["postcode"] == "SW1A 1"
+    assert data["details"]["county"] == "London"
+    assert data["details"]["stn_number"] == "DET123"
 
 
 def test_get_trig_stats_endpoint_and_include(client: TestClient, db: Session):
@@ -388,14 +388,6 @@ def test_get_trig_stats_endpoint_and_include(client: TestClient, db: Session):
     db.add(trig)
     db.add(stats)
     db.commit()
-
-    # direct stats endpoint
-    resp_stats = client.get(f"{settings.API_V1_STR}/trigs/7/stats")
-    assert resp_stats.status_code == 200
-    s = resp_stats.json()
-    # Stats envelope may omit redundant id; verify key fields
-    assert s["logged_count"] == 5
-    assert s["score_mean"] == "6.50"
 
     # include stats with base
     resp_inc = client.get(f"{settings.API_V1_STR}/trigs/7?include=stats,details")

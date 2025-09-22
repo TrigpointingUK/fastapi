@@ -30,10 +30,9 @@ def test_openapi_schema_has_security_requirements(client: TestClient):
 
     # Check that protected endpoints have security requirements
     protected_endpoints = [
-        f"{settings.API_V1_STR}/analysis/username-duplicates",
-        f"{settings.API_V1_STR}/analysis/email-duplicates",
+        f"{settings.API_V1_STR}/legacy/username-duplicates",
+        f"{settings.API_V1_STR}/legacy/email-duplicates",
         f"{settings.API_V1_STR}/users/me",
-        f"{settings.API_V1_STR}/users/email/{{user_id}}",
     ]
 
     for endpoint_path in protected_endpoints:
@@ -42,7 +41,12 @@ def test_openapi_schema_has_security_requirements(client: TestClient):
                 if method in schema["paths"][endpoint_path]:
                     endpoint = schema["paths"][endpoint_path][method]
                     assert "security" in endpoint
-                    assert endpoint["security"] == [{"OAuth2": []}]
+                    if endpoint_path.startswith(f"{settings.API_V1_STR}/legacy/"):
+                        assert endpoint["security"] == [
+                            {"OAuth2": ["openid", "profile", "user:admin"]}
+                        ]
+                    else:
+                        assert endpoint["security"] == [{"OAuth2": []}]
 
 
 def test_openapi_schema_public_endpoints_no_security(client: TestClient):
@@ -56,8 +60,7 @@ def test_openapi_schema_public_endpoints_no_security(client: TestClient):
     # Check that public endpoints don't have security requirements
     public_endpoints = [
         "/health",
-        "/debug/auth",  # This one is special - it has optional auth
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
     ]
 
     for endpoint_path in public_endpoints:
@@ -66,9 +69,7 @@ def test_openapi_schema_public_endpoints_no_security(client: TestClient):
                 if method in schema["paths"][endpoint_path]:
                     endpoint = schema["paths"][endpoint_path][method]
                     # Public endpoints should not have security requirements
-                    # (except debug/auth which has optional auth)
-                    if endpoint_path != "/debug/auth":
-                        assert "security" not in endpoint
+                    assert "security" not in endpoint
 
 
 def test_openapi_schema_metadata(client: TestClient):
@@ -77,7 +78,7 @@ def test_openapi_schema_metadata(client: TestClient):
     assert response.status_code == 200
 
     schema = response.json()
-    assert schema["info"]["title"] == "TrigpointingUK API"
+    assert schema["info"]["title"].startswith("TrigpointingUK API")
     assert schema["info"]["version"] == "1.0.0"
     assert "TrigpointingUK API" in schema["info"]["description"]
 

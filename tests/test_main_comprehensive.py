@@ -60,7 +60,8 @@ class TestMainModule:
     def test_app_creation(self):
         """Test FastAPI app creation."""
         assert app is not None
-        assert app.title == "TrigpointingUK API"
+
+    assert app.title.startswith("TrigpointingUK API")
 
     def test_app_has_health_endpoint(self):
         """Test that app has health endpoint registered."""

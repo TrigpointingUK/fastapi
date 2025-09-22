@@ -16,8 +16,8 @@ def test_username_analysis_router_included(client: TestClient):
 
     # Check that username analysis endpoints are present
     username_analysis_endpoints = [
-        f"{settings.API_V1_STR}/analysis/username-duplicates",
-        f"{settings.API_V1_STR}/analysis/email-duplicates",
+        f"{settings.API_V1_STR}/legacy/username-duplicates",
+        f"{settings.API_V1_STR}/legacy/email-duplicates",
     ]
 
     for endpoint in username_analysis_endpoints:
@@ -34,17 +34,17 @@ def test_username_analysis_endpoints_have_correct_tags(client: TestClient):
 
     # Check username-duplicates endpoint
     username_endpoint = schema["paths"][
-        f"{settings.API_V1_STR}/analysis/username-duplicates"
+        f"{settings.API_V1_STR}/legacy/username-duplicates"
     ]["get"]
     assert "tags" in username_endpoint
-    assert "username-analysis" in username_endpoint["tags"]
+    assert "legacy" in username_endpoint["tags"]
 
     # Check email-duplicates endpoint
-    email_endpoint = schema["paths"][
-        f"{settings.API_V1_STR}/analysis/email-duplicates"
-    ]["get"]
+    email_endpoint = schema["paths"][f"{settings.API_V1_STR}/legacy/email-duplicates"][
+        "get"
+    ]
     assert "tags" in email_endpoint
-    assert "username-analysis" in email_endpoint["tags"]
+    assert "legacy" in email_endpoint["tags"]
 
 
 def test_username_analysis_endpoints_have_security(client: TestClient):
@@ -56,17 +56,21 @@ def test_username_analysis_endpoints_have_security(client: TestClient):
 
     # Check username-duplicates endpoint
     username_endpoint = schema["paths"][
-        f"{settings.API_V1_STR}/analysis/username-duplicates"
+        f"{settings.API_V1_STR}/legacy/username-duplicates"
     ]["get"]
     assert "security" in username_endpoint
-    assert username_endpoint["security"] == [{"BearerAuth": []}]
+    assert username_endpoint["security"] == [
+        {"OAuth2": ["openid", "profile", "user:admin"]}
+    ]
 
     # Check email-duplicates endpoint
-    email_endpoint = schema["paths"][
-        f"{settings.API_V1_STR}/analysis/email-duplicates"
-    ]["get"]
+    email_endpoint = schema["paths"][f"{settings.API_V1_STR}/legacy/email-duplicates"][
+        "get"
+    ]
     assert "security" in email_endpoint
-    assert email_endpoint["security"] == [{"BearerAuth": []}]
+    assert email_endpoint["security"] == [
+        {"OAuth2": ["openid", "profile", "user:admin"]}
+    ]
 
 
 def test_username_analysis_endpoints_have_parameters(client: TestClient):
@@ -77,9 +81,9 @@ def test_username_analysis_endpoints_have_parameters(client: TestClient):
     schema = response.json()
 
     # Check email-duplicates endpoint has limit and offset parameters
-    email_endpoint = schema["paths"][
-        f"{settings.API_V1_STR}/analysis/email-duplicates"
-    ]["get"]
+    email_endpoint = schema["paths"][f"{settings.API_V1_STR}/legacy/email-duplicates"][
+        "get"
+    ]
     assert "parameters" in email_endpoint
 
     param_names = [param["name"] for param in email_endpoint["parameters"]]

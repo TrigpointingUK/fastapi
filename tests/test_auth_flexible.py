@@ -34,7 +34,7 @@ def test_login_with_email_success(client: TestClient, db: Session):
 
     # Test login with email
     response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": "test.email@example.com", "password": test_password},
     )
     assert response.status_code == 200
@@ -66,7 +66,7 @@ def test_login_with_username_success(client: TestClient, db: Session):
 
     # Test login with username
     response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": "testuser_name", "password": test_password},
     )
     assert response.status_code == 200
@@ -98,7 +98,7 @@ def test_login_with_email_wrong_password(client: TestClient, db: Session):
 
     # Test login with wrong password
     response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": "wrong.pass@example.com", "password": "wrongpassword"},
     )
     assert response.status_code == 401
@@ -128,7 +128,7 @@ def test_login_with_username_wrong_password(client: TestClient, db: Session):
 
     # Test login with wrong password
     response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": "testuser_wrong2", "password": "wrongpassword"},
     )
     assert response.status_code == 401
@@ -138,7 +138,7 @@ def test_login_with_username_wrong_password(client: TestClient, db: Session):
 def test_login_nonexistent_email(client: TestClient, db: Session):
     """Test login with non-existent email."""
     response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": "nonexistent@example.com", "password": "anypassword"},
     )
     assert response.status_code == 401
@@ -148,7 +148,7 @@ def test_login_nonexistent_email(client: TestClient, db: Session):
 def test_login_nonexistent_username(client: TestClient, db: Session):
     """Test login with non-existent username."""
     response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": "nonexistentuser", "password": "anypassword"},
     )
     assert response.status_code == 401
@@ -178,7 +178,7 @@ def test_login_edge_case_username_with_at(client: TestClient, db: Session):
 
     # Should still work - fallback logic handles this
     response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": "user@company", "password": test_password},
     )
     assert response.status_code == 200
@@ -209,14 +209,14 @@ def test_login_same_user_both_methods(client: TestClient, db: Session):
 
     # Test login with email
     response1 = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": "flexible@example.com", "password": test_password},
     )
     assert response1.status_code == 200
 
     # Test login with username
     response2 = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": "flexibleuser", "password": test_password},
     )
     assert response2.status_code == 200
