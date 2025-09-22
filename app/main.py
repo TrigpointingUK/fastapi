@@ -62,20 +62,25 @@ def custom_openapi():
         if k.lower().startswith("bearer") or k.lower() == "httpbearer":
             del openapi_schema["components"]["securitySchemes"][k]
     # OAuth2 Authorization Code (PKCE) for Auth0 login via Swagger UI
-    if settings.AUTH0_DOMAIN:
-        openapi_schema["components"]["securitySchemes"]["OAuth2"] = {
-            "type": "oauth2",
-            "flows": {
-                "authorizationCode": {
-                    "authorizationUrl": f"https://{settings.AUTH0_DOMAIN}/authorize",
-                    "tokenUrl": f"https://{settings.AUTH0_DOMAIN}/oauth/token",
-                    "scopes": {
-                        "trig:admin": "Administrative access to trig resources",
-                        "user:admin": "Administrative access to users",
-                    },
-                }
-            },
-        }
+    # Always include OAuth2 scheme for docs/tests even if domain is not configured
+    auth_domain = (
+        f"https://{settings.AUTH0_DOMAIN}"
+        if getattr(settings, "AUTH0_DOMAIN", None)
+        else "https://example.com"
+    )
+    openapi_schema["components"]["securitySchemes"]["OAuth2"] = {
+        "type": "oauth2",
+        "flows": {
+            "authorizationCode": {
+                "authorizationUrl": f"{auth_domain}/authorize",
+                "tokenUrl": f"{auth_domain}/oauth/token",
+                "scopes": {
+                    "trig:admin": "Administrative access to trig resources",
+                    "user:admin": "Administrative access to users",
+                },
+            }
+        },
+    }
 
     # Define public endpoints that should not have security requirements
     public_endpoints = {
@@ -102,23 +107,17 @@ def custom_openapi():
                         del endpoint["security"]
                     continue
 
-                # Add security requirement to all other endpoints: OAuth2 only
-                if settings.AUTH0_DOMAIN:
-                    # Specific legacy analysis endpoints must require user:admin scope
-                    legacy_admin_paths = {
-                        f"{settings.API_V1_STR}/legacy/username-duplicates",
-                        f"{settings.API_V1_STR}/legacy/email-duplicates",
-                    }
-                    if path in legacy_admin_paths:
-                        endpoint["security"] = [
-                            {"OAuth2": ["openid", "profile", "user:admin"]}
-                        ]
-                    else:
-                        endpoint["security"] = [{"OAuth2": []}]
+                # Add security requirement to all endpoints (docs/tests) using OAuth2
+                legacy_admin_paths = {
+                    f"{settings.API_V1_STR}/legacy/username-duplicates",
+                    f"{settings.API_V1_STR}/legacy/email-duplicates",
+                }
+                if path in legacy_admin_paths:
+                    endpoint["security"] = [
+                        {"OAuth2": ["openid", "profile", "user:admin"]}
+                    ]
                 else:
-                    # If OAuth is not configured, omit security requirements
-                    if "security" in endpoint:
-                        del endpoint["security"]
+                    endpoint["security"] = [{"OAuth2": []}]
 
     app.openapi_schema = openapi_schema
     return app.openapi_schema
