@@ -28,8 +28,11 @@ def test_debug_auth0_invalid_token(client: TestClient, monkeypatch):
 def test_debug_auth0_valid_token_with_db_user(client: TestClient, monkeypatch):
     # Simulate valid auth0 token and existing DB user
     token_payload = {"token_type": "auth0", "sub": "auth0|xyz", "email": "e@test"}
+    # Patch where the endpoint imports it
     monkeypatch.setattr(
-        "app.core.security.validate_any_token", lambda t: token_payload, raising=False
+        "app.api.v1.endpoints.debug.validate_any_token",
+        lambda t: token_payload,
+        raising=False,
     )
 
     class U:
