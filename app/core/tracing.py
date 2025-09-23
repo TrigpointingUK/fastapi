@@ -61,12 +61,17 @@ def setup_opentelemetry_tracing() -> bool:
     """
     Set up OpenTelemetry tracing with X-Ray exporter.
 
+    NOTE: This is currently disabled to avoid conflicts with AWS X-Ray SDK.
+    Use either AWS X-Ray SDK OR OpenTelemetry, not both.
+
     Returns:
         bool: True if tracing was set up successfully, False otherwise
     """
-    if not settings.XRAY_ENABLED:
-        logger.info("OpenTelemetry tracing is disabled")
-        return False
+    # Disabled to avoid conflicts with AWS X-Ray SDK
+    logger.info(
+        "OpenTelemetry tracing is disabled to avoid conflicts with AWS X-Ray SDK"
+    )
+    return False
 
     try:
         from opentelemetry import trace
