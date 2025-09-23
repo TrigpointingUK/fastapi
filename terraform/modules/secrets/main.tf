@@ -21,14 +21,14 @@ resource "aws_secretsmanager_secret" "app_secrets" {
 resource "aws_secretsmanager_secret_version" "app_secrets" {
   secret_id = aws_secretsmanager_secret.app_secrets.id
   secret_string = jsonencode({
-    auth0_client_id = "your-auth0-client-id"
-    auth0_client_secret = "your-auth0-client-secret"
-    auth0_domain = "your-auth0-domain"
-    auth0_spa_client_id = "your-auth0-spa-client-id"
-    auth0_m2m_client_id = "your-auth0-m2m-client-id"
-    auth0_connection = "your-auth0-connection"
-    auth0_api_audience = "your-auth0-api-audience"
-    auth0_m2m_client_secret = "your-auth0-m2m-client-secret"
+    auth0_client_id               = "your-auth0-client-id"
+    auth0_client_secret           = "your-auth0-client-secret"
+    auth0_domain                  = "your-auth0-domain"
+    auth0_spa_client_id           = "your-auth0-spa-client-id"
+    auth0_m2m_client_id           = "your-auth0-m2m-client-id"
+    auth0_connection              = "your-auth0-connection"
+    auth0_api_audience            = "your-auth0-api-audience"
+    auth0_m2m_client_secret       = "your-auth0-m2m-client-secret"
     auth0_management_api_audience = "your-auth0-management-api-audience"
   })
 

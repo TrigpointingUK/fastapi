@@ -24,7 +24,7 @@ resource "aws_cloudwatch_metric_alarm" "api_trig_1" {
 }
 
 resource "aws_cloudwatch_metric_alarm" "web_trig_1" {
-  count                = var.environment == "production" ? 1 : 0
+  count               = var.environment == "production" ? 1 : 0
   alarm_name          = "fastapi-${var.environment}-web-trig-1"
   alarm_description   = "Web trig/1 canary failed 3x consecutively"
   comparison_operator = "GreaterThanOrEqualToThreshold"
