@@ -251,7 +251,7 @@ def health_check():
     """Health check endpoint."""
     # Import version information
     try:
-        from app import __build_time__, __version__
+        from app.__version__ import __build_time__, __version__
 
         version_info = {"version": __version__, "build_time": __build_time__}
     except ImportError:
