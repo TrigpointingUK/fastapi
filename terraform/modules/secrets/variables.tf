@@ -25,3 +25,6 @@ variable "auth0_domain" {
   type        = string
   default     = null
 }
+
+# Note: SPA and M2M client IDs are stored in this module's secret
+# The M2M client secret should be stored as a separate key in the same secret

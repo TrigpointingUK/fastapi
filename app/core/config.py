@@ -3,9 +3,8 @@ Core configuration settings for the FastAPI application.
 """
 
 import logging
-from typing import Any, Callable, List, Optional, Union
+from typing import List, Optional, Union
 
-import boto3
 from pydantic import AnyHttpUrl, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -86,103 +85,6 @@ class Settings(BaseSettings):
         raise ValueError(v)
 
     model_config = SettingsConfigDict(case_sensitive=True, env_file=".env")
-
-    def __init__(self, **kwargs):
-        """Initialize settings and load Parameter Store configuration if in AWS environment."""
-        super().__init__(**kwargs)
-        # Load Parameter Store values if in AWS environment
-        if self.ENVIRONMENT in ["staging", "production"]:
-            self._load_parameter_store_config()
-
-    def _load_parameter_store_config(self) -> None:
-        """
-        Load configuration from AWS Parameter Store.
-
-        This method reads parameters from the path pattern:
-        /{project_name}/{environment}/{category}/{parameter}
-
-        And maps them to the corresponding Settings attributes.
-        """
-        try:
-            ssm = boto3.client("ssm")
-            parameter_prefix = f"/trigpointing/{self.ENVIRONMENT.lower()}/"
-
-            logger.info(
-                f"Loading Parameter Store configuration from {parameter_prefix}"
-            )
-
-            # Get all parameters for this environment
-            response = ssm.get_parameters_by_path(
-                Path=parameter_prefix, Recursive=True, WithDecryption=True
-            )
-
-            parameters_loaded = 0
-
-            # Parse parameters into config
-            for param in response.get("Parameters", []):
-                param_name = param["Name"]
-                param_value = param["Value"]
-
-                # Extract the parameter key (remove prefix)
-                key_path = param_name.replace(parameter_prefix, "")
-
-                try:
-                    self._apply_parameter_value(key_path, param_value)
-                    parameters_loaded += 1
-                    logger.debug(f"Loaded parameter: {key_path} = {param_value}")
-                except Exception as e:
-                    logger.warning(f"Failed to apply parameter {key_path}: {e}")
-
-            logger.info(
-                f"Successfully loaded {parameters_loaded} parameters from Parameter Store"
-            )
-
-        except Exception as e:
-            logger.warning(f"Failed to load Parameter Store configuration: {e}")
-            # Don't fail startup if Parameter Store is unavailable
-            # Fall back to environment variables and defaults
-
-    def _apply_parameter_value(self, key_path: str, value: str) -> None:
-        """
-        Apply a parameter value to the appropriate Settings attribute.
-
-        Args:
-            key_path: The parameter path (e.g., "xray/enabled", "app/log_level")
-            value: The parameter value as a string
-        """
-        # Map Parameter Store paths to Settings attributes
-        parameter_mappings: dict[str, tuple[str, Callable[[str], Any]]] = {
-            # X-Ray configuration
-            "xray/enabled": ("XRAY_ENABLED", lambda v: v.lower() == "true"),
-            "xray/service_name": ("XRAY_SERVICE_NAME", str),
-            "xray/sampling_rate": ("XRAY_SAMPLING_RATE", float),
-            "xray/daemon_address": ("XRAY_DAEMON_ADDRESS", str),
-            # Application configuration
-            "app/log_level": ("LOG_LEVEL", str),
-            "app/cors_origins": (
-                "BACKEND_CORS_ORIGINS",
-                lambda v: [origin.strip() for origin in v.split(",") if origin.strip()],
-            ),
-            # Database configuration
-            "database/pool_size": ("DATABASE_POOL_SIZE", int),
-            "database/pool_recycle": ("DATABASE_POOL_RECYCLE", int),
-        }
-
-        if key_path in parameter_mappings:
-            attr_name, converter = parameter_mappings[key_path]
-
-            try:
-                converted_value = converter(value)
-                setattr(self, attr_name, converted_value)
-                logger.debug(
-                    f"Set {attr_name} = {converted_value} (from Parameter Store)"
-                )
-            except (ValueError, TypeError) as e:
-                logger.warning(
-                    f"Failed to convert parameter {key_path} value '{value}': {e}"
-                )
-        else:
-            logger.debug(f"Unknown parameter path: {key_path}")
 
 
 settings = Settings()

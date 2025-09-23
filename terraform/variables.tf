@@ -90,42 +90,56 @@ variable "domain_name" {
 }
 
 # Auth0 Configuration
-variable "auth0_domain" {
-  description = "Auth0 domain (e.g., your-tenant.auth0.com)"
-  type        = string
+variable "auth0_enabled" {
+  description = "Auth0 enabled in API"
+  type        = bool
+  default     = true
 }
 
-variable "auth0_connection" {
-  description = "Auth0 connection name for user database"
+variable "log_level" {
+  description = "Application log level (DEBUG, INFO, WARNING, ERROR)"
   type        = string
+  default     = "INFO"
 }
 
-variable "auth0_api_audience" {
-  description = "Auth0 API audience for token validation"
-  type        = string
+variable "cors_origins" {
+  description = "CORS allowed origins (comma-separated)"
+  type        = list(string)
+  default     = null
 }
 
-# Parameter Store Configuration
-variable "parameter_store_config" {
-  description = "Parameter Store configuration for the application"
-  type = object({
-    enabled = optional(bool, false)
-    parameters = optional(object({
-      xray = optional(object({
-        enabled        = optional(bool, false)
-        service_name   = optional(string, "change-me")
-        sampling_rate  = optional(number, 0.1)
-        daemon_address = optional(string, null)
-      }), {})
-      app = optional(object({
-        log_level    = optional(string, "INFO")
-        cors_origins = optional(string, null)
-      }), {})
-      database = optional(object({
-        pool_size    = optional(number, 5)
-        pool_recycle = optional(number, 300)
-      }), {})
-    }), {})
-  })
-  default = {}
+variable "db_pool_size" {
+  description = "Database connection pool size"
+  type        = number
+  default     = 5
+}
+
+variable "db_pool_recycle" {
+  description = "Database connection pool recycle time (seconds)"
+  type        = number
+  default     = 300
+}
+
+variable "xray_enabled" {
+  description = "Enable X-Ray tracing"
+  type        = bool
+  default     = true
+}
+
+variable "xray_service_name" {
+  description = "X-Ray service name"
+  type        = string
+  default     = "trigpointing-api-staging"
+}
+
+variable "xray_sampling_rate" {
+  description = "X-Ray sampling rate (0.0 to 1.0)"
+  type        = number
+  default     = 0.1
+}
+
+variable "xray_daemon_address" {
+  description = "X-Ray daemon address (optional)"
+  type        = string
+  default     = null
 }

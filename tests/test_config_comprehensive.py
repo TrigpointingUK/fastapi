@@ -2,7 +2,7 @@
 Comprehensive tests for config module to improve coverage.
 """
 
-from unittest.mock import Mock, patch
+# from unittest.mock import Mock, patch  # Unused imports removed
 
 import pytest
 from pydantic import ValidationError
@@ -294,151 +294,28 @@ class TestConfigComprehensive:
             Settings.assemble_cors_origins(123)
 
 
-class TestParameterStoreIntegration:
-    """Test Parameter Store integration functionality."""
+class TestEnvironmentVariableConfig:
+    """Tests for environment variables replacing Parameter Store."""
 
-    @patch("app.core.config.boto3")
-    def test_parameter_store_not_loaded_in_development(self, mock_boto3):
-        """Test that Parameter Store is not loaded in development environment."""
-        with patch.dict("os.environ", {"ENVIRONMENT": "development"}):
-            Settings()  # noqa: F841
-            # boto3 should not be called in development
-            mock_boto3.client.assert_not_called()
+    def test_env_overrides_for_flat_config(self, monkeypatch):
+        monkeypatch.setenv("LOG_LEVEL", "WARNING")
+        # When using environment variables, complex types are parsed as JSON
+        monkeypatch.setenv("BACKEND_CORS_ORIGINS", '["https://a.com","https://b.com"]')
+        monkeypatch.setenv("DATABASE_POOL_SIZE", "20")
+        monkeypatch.setenv("DATABASE_POOL_RECYCLE", "600")
+        monkeypatch.setenv("XRAY_ENABLED", "true")
+        monkeypatch.setenv("XRAY_SERVICE_NAME", "svc")
+        monkeypatch.setenv("XRAY_SAMPLING_RATE", "0.25")
+        monkeypatch.setenv("XRAY_DAEMON_ADDRESS", "127.0.0.1:2000")
 
-    @patch("app.core.config.boto3")
-    def test_parameter_store_loaded_in_staging(self, mock_boto3):
-        """Test that Parameter Store is loaded in staging environment."""
-        # Mock SSM client
-        mock_ssm = Mock()
-        mock_boto3.client.return_value = mock_ssm
-        mock_ssm.get_parameters_by_path.return_value = {
-            "Parameters": [
-                {"Name": "/trigpointing/staging/xray/enabled", "Value": "true"},
-                {
-                    "Name": "/trigpointing/staging/xray/service_name",
-                    "Value": "test-service",
-                },
-                {"Name": "/trigpointing/staging/xray/sampling_rate", "Value": "0.5"},
-            ]
-        }
-
-        with patch.dict("os.environ", {"ENVIRONMENT": "staging"}):
-            settings = Settings()
-
-            # Verify boto3 was called
-            mock_boto3.client.assert_called_once_with("ssm")
-            mock_ssm.get_parameters_by_path.assert_called_once_with(
-                Path="/trigpointing/staging/", Recursive=True, WithDecryption=True
-            )
-
-            # Verify parameters were applied
-            assert settings.XRAY_ENABLED is True
-            assert settings.XRAY_SERVICE_NAME == "test-service"
-            assert settings.XRAY_SAMPLING_RATE == 0.5
-
-    @patch("app.core.config.boto3")
-    def test_parameter_store_loaded_in_production(self, mock_boto3):
-        """Test that Parameter Store is loaded in production environment."""
-        # Mock SSM client
-        mock_ssm = Mock()
-        mock_boto3.client.return_value = mock_ssm
-        mock_ssm.get_parameters_by_path.return_value = {
-            "Parameters": [
-                {"Name": "/trigpointing/production/app/log_level", "Value": "WARNING"},
-                {"Name": "/trigpointing/production/database/pool_size", "Value": "20"},
-            ]
-        }
-
-        with patch.dict("os.environ", {"ENVIRONMENT": "production"}):
-            settings = Settings()
-
-            # Verify parameters were applied
-            assert settings.LOG_LEVEL == "WARNING"
-            assert settings.DATABASE_POOL_SIZE == 20
-
-    @patch("app.core.config.boto3")
-    @patch("app.core.config.logger")
-    def test_parameter_store_handles_aws_errors(self, mock_logger, mock_boto3):
-        """Test that Parameter Store errors are handled gracefully."""
-        # Mock SSM client to raise an exception
-        mock_ssm = Mock()
-        mock_boto3.client.return_value = mock_ssm
-        mock_ssm.get_parameters_by_path.side_effect = Exception("AWS Error")
-
-        with patch.dict("os.environ", {"ENVIRONMENT": "staging"}):
-            settings = Settings()
-
-            # Should not crash, should log warning
-            mock_logger.warning.assert_called()
-            # Should fall back to defaults
-            assert settings.XRAY_ENABLED is False  # Default value
-
-    @patch("app.core.config.boto3")
-    def test_parameter_store_handles_invalid_values(self, mock_boto3):
-        """Test that invalid parameter values are handled gracefully."""
-        # Mock SSM client with invalid values
-        mock_ssm = Mock()
-        mock_boto3.client.return_value = mock_ssm
-        mock_ssm.get_parameters_by_path.return_value = {
-            "Parameters": [
-                {
-                    "Name": "/trigpointing/staging/xray/sampling_rate",
-                    "Value": "not-a-number",  # Invalid float
-                },
-                {
-                    "Name": "/trigpointing/staging/database/pool_size",
-                    "Value": "not-an-int",  # Invalid int
-                },
-            ]
-        }
-
-        with patch.dict("os.environ", {"ENVIRONMENT": "staging"}):
-            settings = Settings()
-
-            # Should fall back to defaults for invalid values
-            assert settings.XRAY_SAMPLING_RATE == 0.1  # Default value
-            assert settings.DATABASE_POOL_SIZE == 5  # Default value
-
-    def test_apply_parameter_value_xray_enabled(self):
-        """Test applying X-Ray enabled parameter."""
-        settings = Settings()
-
-        # Test true value
-        settings._apply_parameter_value("xray/enabled", "true")
-        assert settings.XRAY_ENABLED is True
-
-        # Test false value
-        settings._apply_parameter_value("xray/enabled", "false")
-        assert settings.XRAY_ENABLED is False
-
-        # Test case insensitive
-        settings._apply_parameter_value("xray/enabled", "TRUE")
-        assert settings.XRAY_ENABLED is True
-
-    def test_apply_parameter_value_cors_origins(self):
-        """Test applying CORS origins parameter."""
-        settings = Settings()
-
-        # Test comma-separated origins
-        settings._apply_parameter_value(
-            "app/cors_origins", "http://localhost:3000,https://example.com"
-        )
-        expected = ["http://localhost:3000", "https://example.com"]
-        assert settings.BACKEND_CORS_ORIGINS == expected
-
-        # Test with spaces
-        settings._apply_parameter_value(
-            "app/cors_origins", "http://localhost:3000, https://example.com "
-        )
-        assert settings.BACKEND_CORS_ORIGINS == expected
-
-    def test_apply_parameter_value_unknown_parameter(self):
-        """Test applying unknown parameter is ignored."""
-        settings = Settings()
-        original_xray_enabled = settings.XRAY_ENABLED
-
-        # Unknown parameter should be ignored
-        settings._apply_parameter_value("unknown/parameter", "some-value")
-
-        # Should not affect existing settings
-        assert settings.XRAY_ENABLED == original_xray_enabled
+        s = Settings()
+        assert s.LOG_LEVEL == "WARNING"
+        assert len(s.BACKEND_CORS_ORIGINS) == 2
+        assert str(s.BACKEND_CORS_ORIGINS[0]) == "https://a.com/"
+        assert str(s.BACKEND_CORS_ORIGINS[1]) == "https://b.com/"
+        assert s.DATABASE_POOL_SIZE == 20
+        assert s.DATABASE_POOL_RECYCLE == 600
+        assert s.XRAY_ENABLED is True
+        assert s.XRAY_SERVICE_NAME == "svc"
+        assert s.XRAY_SAMPLING_RATE == 0.25
+        assert s.XRAY_DAEMON_ADDRESS == "127.0.0.1:2000"

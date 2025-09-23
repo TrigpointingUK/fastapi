@@ -7,7 +7,7 @@ import logging
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.core.tracing import setup_opentelemetry_tracing, setup_xray_tracing
+from app.core.tracing import setup_xray_tracing
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
@@ -17,9 +17,9 @@ logger = logging.getLogger(__name__)
 # Configure logging first
 setup_logging()
 
-# Set up tracing
+# Set up tracing - use only AWS X-Ray SDK to avoid conflicts
 xray_enabled = setup_xray_tracing()
-otel_enabled = setup_opentelemetry_tracing()
+otel_enabled = False  # Disabled to avoid conflicts with X-Ray SDK
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -170,26 +170,37 @@ if xray_enabled:
                     return await call_next(request)
 
                 try:
-                    # Add HTTP metadata the correct way for X-Ray
+                    # Add HTTP metadata the correct way for X-Ray (with error handling)
                     if segment:
-                        segment.put_http_meta("method", request.method)
-                        segment.put_http_meta("url", str(request.url))
-                        if request.headers.get("user-agent"):
-                            segment.put_http_meta(
-                                "user_agent", request.headers.get("user-agent")
+                        try:
+                            segment.put_http_meta("method", request.method)
+                            segment.put_http_meta("url", str(request.url))
+                            if request.headers.get("user-agent"):
+                                segment.put_http_meta(
+                                    "user_agent", request.headers.get("user-agent")
+                                )
+                            if request.client:
+                                segment.put_http_meta("client_ip", request.client.host)
+                        except Exception as meta_err:
+                            logger.debug(
+                                f"Failed to add X-Ray request metadata (segment may have ended): {meta_err}"
                             )
-                        if request.client:
-                            segment.put_http_meta("client_ip", request.client.host)
 
                     # Process the request
                     response: Response = await call_next(request)
 
-                    # Add response metadata
+                    # Add response metadata (with error handling for race conditions)
                     if segment:
-                        segment.put_http_meta("status", response.status_code)
-                        if response.headers.get("content-length"):
-                            segment.put_http_meta(
-                                "content_length", response.headers.get("content-length")
+                        try:
+                            segment.put_http_meta("status", response.status_code)
+                            if response.headers.get("content-length"):
+                                segment.put_http_meta(
+                                    "content_length",
+                                    response.headers.get("content-length"),
+                                )
+                        except Exception as meta_err:
+                            logger.debug(
+                                f"Failed to add X-Ray metadata (segment may have ended): {meta_err}"
                             )
 
                     return response
@@ -241,6 +252,7 @@ def health_check():
     tracing_info = {
         "xray_enabled": xray_enabled,
         "otel_enabled": otel_enabled,
+        "tracing_conflict_resolved": True,  # Indicate that the conflict has been resolved
     }
 
     # Add X-Ray configuration details if enabled
