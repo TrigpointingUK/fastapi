@@ -50,11 +50,11 @@ def test_login_persists_auth0_username(
         email="login@example.com",
         password="pw123456",
     )
-    # Ensure feature flag is enabled and legacy user has no auth0 linkage before
+    # Ensure feature flag is enabled to exercise Auth0 mapping path
     monkeypatch.setattr(settings, "AUTH0_ENABLED", True, raising=False)
     assert user.auth0_user_id is None
 
-    # Enable Auth0 and mock sync to return user id + username
+    # Mock sync to return user id + username
     mock_auth0_service.sync_user_to_auth0.return_value = {
         "user_id": "auth0|abc123",
         "username": "login_user",
@@ -62,7 +62,7 @@ def test_login_persists_auth0_username(
 
     # Act
     response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": "login@example.com", "password": "pw123456"},
     )
 
@@ -118,7 +118,7 @@ def test_deps_links_and_updates_username(
 
     # Act
     headers = {"Authorization": "Bearer dummy"}
-    response = client.get(f"{settings.API_V1_STR}/user/me", headers=headers)
+    response = client.get(f"{settings.API_V1_STR}/users/me", headers=headers)
 
     # Assert
     assert response.status_code == 200

@@ -9,8 +9,8 @@ min_capacity  = 1
 max_capacity  = 10
 
 # Resource allocation
-cpu    = 1024
-memory = 2048
+cpu    = 256
+memory = 512
 
 # CloudFlare SSL Configuration (REQUIRED for production)
 domain_name           = "api.trigpointing.uk"

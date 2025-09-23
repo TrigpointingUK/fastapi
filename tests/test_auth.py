@@ -11,7 +11,7 @@ from fastapi.testclient import TestClient
 def test_login_success(client: TestClient, test_user):
     """Test successful login with enhanced response."""
     response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": test_user.email, "password": "testpassword123"},
     )
     assert response.status_code == 200
@@ -33,13 +33,13 @@ def test_login_success(client: TestClient, test_user):
     assert "surname" in user_data
     assert "about" in user_data
     # Email should be present since user sees their own data
-    assert "email" in user_data
+    assert user_data.get("email") == test_user.email
 
 
 def test_login_invalid_email(client: TestClient, test_user):
     """Test login with invalid email."""
     response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": "nonexistent@example.com", "password": "testpassword123"},
     )
     assert response.status_code == 401
@@ -49,7 +49,7 @@ def test_login_invalid_email(client: TestClient, test_user):
 def test_login_invalid_password(client: TestClient, test_user):
     """Test login with invalid password."""
     response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
         data={"username": test_user.email, "password": "wrongpassword"},
     )
     assert response.status_code == 401
@@ -58,5 +58,5 @@ def test_login_invalid_password(client: TestClient, test_user):
 
 def test_login_missing_credentials(client: TestClient):
     """Test login with missing credentials."""
-    response = client.post(f"{settings.API_V1_STR}/auth/login", data={})
+    response = client.post(f"{settings.API_V1_STR}/legacy/login", data={})
     assert response.status_code == 422  # Validation error

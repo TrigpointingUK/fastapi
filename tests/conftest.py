@@ -10,6 +10,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.core.config import settings
+from app.core.security import create_access_token
 
 # from app.core.security import get_password_hash  # No longer needed - using Unix crypt
 from app.db.database import Base, get_db
@@ -216,18 +217,14 @@ def test_tlog_entries(db):
 @pytest.fixture
 def user_token(client, test_user):
     """Get JWT token for test user."""
-    response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
-        data={"username": test_user.email, "password": "testpassword123"},
-    )
-    return response.json()["access_token"]
+    # Use legacy token generation in tests to call protected endpoints
+    settings.AUTH0_ENABLED = False
+    return create_access_token(subject=test_user.id)
 
 
 @pytest.fixture
 def admin_token(client, test_admin_user):
     """Get JWT token for admin user."""
-    response = client.post(
-        f"{settings.API_V1_STR}/auth/login",
-        data={"username": test_admin_user.email, "password": "adminpassword123"},
-    )
-    return response.json()["access_token"]
+    # Use legacy token generation in tests
+    settings.AUTH0_ENABLED = False
+    return create_access_token(subject=test_admin_user.id)

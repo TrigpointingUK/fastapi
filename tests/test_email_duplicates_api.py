@@ -4,12 +4,16 @@ Tests for email duplicates API endpoints.
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.security import create_access_token
 from app.main import app
 from app.models.user import User
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
+
+# Ensure legacy tokens in tests
+settings.AUTH0_ENABLED = False
 
 
 def get_auth_headers(user: User) -> dict:
@@ -28,7 +32,9 @@ class TestEmailDuplicatesAPI:
     def test_get_email_duplicates_empty_database(self, db: Session, test_admin_user):
         """Test getting email duplicates with empty database."""
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
+        )
         assert response.status_code == 200
         result = response.json()
         assert "pagination" in result
@@ -47,7 +53,9 @@ class TestEmailDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
+        )
         assert response.status_code == 200
         result = response.json()
         assert "pagination" in result
@@ -69,7 +77,9 @@ class TestEmailDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
+        )
         assert response.status_code == 200
 
         result = response.json()
@@ -122,7 +132,9 @@ class TestEmailDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
+        )
         assert response.status_code == 200
 
         result = response.json()
@@ -141,7 +153,9 @@ class TestEmailDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
+        )
         assert response.status_code == 200
 
         result = response.json()
@@ -166,7 +180,9 @@ class TestEmailDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
+        )
         assert response.status_code == 200
 
         result = response.json()
@@ -198,7 +214,9 @@ class TestEmailDuplicatesAPI:
         )
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
+        )
         assert response.status_code == 500
         assert "Error analyzing email duplicates" in response.json()["detail"]
 
@@ -216,7 +234,9 @@ class TestEmailDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
+        )
         assert response.status_code == 200
 
         result = response.json()
@@ -245,7 +265,8 @@ class TestEmailDuplicatesAPI:
         # Test first page
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            "/api/v1/analysis/email-duplicates?limit=1&offset=0", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates?limit=1&offset=0",
+            headers=headers,
         )
         assert response.status_code == 200
         result = response.json()
@@ -264,21 +285,23 @@ class TestEmailDuplicatesAPI:
 
         # Test invalid limit
         response = client.get(
-            "/api/v1/analysis/email-duplicates?limit=0", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates?limit=0", headers=headers
         )
         assert response.status_code == 400
         assert "Limit must be greater than 0" in response.json()["detail"]
 
         # Test negative offset
         response = client.get(
-            "/api/v1/analysis/email-duplicates?offset=-1", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates?offset=-1",
+            headers=headers,
         )
         assert response.status_code == 400
         assert "Offset must be 0 or greater" in response.json()["detail"]
 
         # Test limit too high
         response = client.get(
-            "/api/v1/analysis/email-duplicates?limit=1001", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates?limit=1001",
+            headers=headers,
         )
         assert response.status_code == 400
         assert "Limit cannot exceed 1000" in response.json()["detail"]
@@ -302,7 +325,8 @@ class TestEmailDuplicatesAPI:
         # Test pagination with limit=2
         headers = get_auth_headers(test_admin_user)
         response = client.get(
-            "/api/v1/analysis/email-duplicates?limit=2&offset=0", headers=headers
+            f"{settings.API_V1_STR}/legacy/email-duplicates?limit=2&offset=0",
+            headers=headers,
         )
         assert response.status_code == 200
         result = response.json()
@@ -314,13 +338,15 @@ class TestEmailDuplicatesAPI:
 
     def test_get_email_duplicates_requires_authentication(self, db: Session):
         """Test that email duplicates endpoint requires authentication."""
-        response = client.get("/api/v1/analysis/email-duplicates")
+        response = client.get(f"{settings.API_V1_STR}/legacy/email-duplicates")
         assert response.status_code == 401
         assert "Not authenticated" in response.json()["detail"]
 
     def test_get_email_duplicates_requires_admin(self, db: Session, test_user):
         """Test that email duplicates endpoint requires admin privileges."""
         headers = get_auth_headers(test_user)
-        response = client.get("/api/v1/analysis/email-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/email-duplicates", headers=headers
+        )
         assert response.status_code == 403
         assert "Admin privileges required" in response.json()["detail"]

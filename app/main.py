@@ -8,9 +8,9 @@ from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.tracing import setup_opentelemetry_tracing, setup_xray_tracing
-from fastapi import Depends, FastAPI
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi.security import HTTPBearer
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +25,17 @@ app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     debug=settings.DEBUG,
+    swagger_ui_oauth2_redirect_url="/docs/oauth2-redirect",
+    swagger_ui_init_oauth={
+        "clientId": (settings.AUTH0_SPA_CLIENT_ID or settings.AUTH0_CLIENT_ID or ""),
+        "appName": settings.PROJECT_NAME,
+        # PKCE is recommended for SPA/Swagger flows
+        "usePkceWithAuthorizationCodeGrant": True,
+        # Pass audience so Auth0 issues an API token, not just OIDC profile
+        "additionalQueryStringParams": {
+            "audience": settings.AUTH0_API_AUDIENCE or "",
+        },
+    },
 )
 
 # Configure security scheme for Swagger UI
@@ -40,29 +51,45 @@ def custom_openapi():
     openapi_schema = get_openapi(
         title=app.title,
         version="1.0.0",
-        description="Legacy API Migration with JWT Authentication",
+        description="TrigpointingUK API",
         routes=app.routes,
     )
 
-    # Add security scheme
-    openapi_schema["components"]["securitySchemes"] = {
-        "BearerAuth": {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT",
-        }
+    # Add only OAuth2 security scheme (remove any Bearer schemes)
+    openapi_schema.setdefault("components", {}).setdefault("securitySchemes", {})
+    # Clean up any auto-added Bearer schemes from dependencies
+    for k in list(openapi_schema["components"]["securitySchemes"].keys()):
+        if k.lower().startswith("bearer") or k.lower() == "httpbearer":
+            del openapi_schema["components"]["securitySchemes"][k]
+    # OAuth2 Authorization Code (PKCE) for Auth0 login via Swagger UI
+    # Always include OAuth2 scheme for docs/tests even if domain is not configured
+    auth_domain = (
+        f"https://{settings.AUTH0_DOMAIN}"
+        if getattr(settings, "AUTH0_DOMAIN", None)
+        else "https://example.com"
+    )
+    openapi_schema["components"]["securitySchemes"]["OAuth2"] = {
+        "type": "oauth2",
+        "flows": {
+            "authorizationCode": {
+                "authorizationUrl": f"{auth_domain}/authorize",
+                "tokenUrl": f"{auth_domain}/oauth/token",
+                "scopes": {
+                    "trig:admin": "Administrative access to trig resources",
+                    "user:admin": "Administrative access to users",
+                },
+            }
+        },
     }
 
     # Define public endpoints that should not have security requirements
     public_endpoints = {
         "/health",
-        "/api/v1/auth/login",
+        f"{settings.API_V1_STR}/legacy/login",
     }
 
     # Define endpoints with optional auth (should not have required security)
-    optional_auth_endpoints = {
-        "/debug/auth",
-    }
+    optional_auth_endpoints: set[str] = set()
 
     # Add security requirement to protected endpoints only
     for path in openapi_schema["paths"]:
@@ -80,12 +107,17 @@ def custom_openapi():
                         del endpoint["security"]
                     continue
 
-                # Add security requirement to all other endpoints
-                if "security" not in endpoint:
-                    endpoint["security"] = [{"BearerAuth": []}]
+                # Add security requirement to all endpoints (docs/tests) using OAuth2
+                legacy_admin_paths = {
+                    f"{settings.API_V1_STR}/legacy/username-duplicates",
+                    f"{settings.API_V1_STR}/legacy/email-duplicates",
+                }
+                if path in legacy_admin_paths:
+                    endpoint["security"] = [
+                        {"OAuth2": ["openid", "profile", "user:admin"]}
+                    ]
                 else:
-                    # Replace any existing security with BearerAuth
-                    endpoint["security"] = [{"BearerAuth": []}]
+                    endpoint["security"] = [{"OAuth2": []}]
 
     app.openapi_schema = openapi_schema
     return app.openapi_schema
@@ -253,102 +285,7 @@ def health_check():
     }
 
 
-@app.get("/debug/xray")
-def debug_xray():
-    """Debug X-Ray tracing functionality."""
-    if not xray_enabled:
-        return {"error": "X-Ray is not enabled"}
-
-    debug_info = {
-        "xray_enabled": xray_enabled,
-        "service_name": settings.XRAY_SERVICE_NAME,
-        "sampling_rate": settings.XRAY_SAMPLING_RATE,
-        "daemon_address": settings.XRAY_DAEMON_ADDRESS,
-    }
-
-    try:
-        from aws_xray_sdk.core import xray_recorder
-
-        # Get recorder info
-        debug_info["recorder_type"] = type(xray_recorder).__name__
-        debug_info["recorder_service"] = getattr(xray_recorder, "service", "not_set")
-        debug_info["recorder_daemon_address"] = getattr(
-            xray_recorder, "daemon_address", "not_set"
-        )
-
-        # Try to create a simple trace manually
-        logger.info("Attempting to create X-Ray segment manually")
-        segment = xray_recorder.begin_segment("debug_xray_test")
-
-        if segment:
-            logger.info(f"Segment created: {segment.id}")
-            segment.put_annotation("test", "debug")
-            segment.put_metadata(
-                "debug_info",
-                {
-                    "service_name": settings.XRAY_SERVICE_NAME,
-                    "sampling_rate": settings.XRAY_SAMPLING_RATE,
-                    "daemon_address": settings.XRAY_DAEMON_ADDRESS,
-                },
-            )
-
-            result = {
-                "status": "success",
-                "message": "X-Ray trace created successfully",
-                "trace_id": segment.trace_id,
-                "segment_id": segment.id,
-                "debug_info": debug_info,
-            }
-
-            xray_recorder.end_segment()
-            logger.info(f"Segment ended: {segment.id}")
-            return result
-        else:
-            logger.error("No segment was created by begin_segment()")
-            return {"error": "No segment created", "debug_info": debug_info}
-
-    except Exception as e:
-        logger.error(f"X-Ray debug error: {str(e)}", exc_info=True)
-        return {
-            "error": f"X-Ray error: {str(e)}",
-            "type": type(e).__name__,
-            "debug_info": debug_info,
-        }
-
-
-@app.get("/debug/auth")
-def debug_auth(
-    credentials: HTTPAuthorizationCredentials = Depends(HTTPBearer(auto_error=False)),
-):
-    """Debug endpoint to test authentication."""
-    if credentials is None:
-        return {"authenticated": False, "error": "No credentials provided"}
-
-    try:
-        import jwt
-
-        from app.core.config import settings
-
-        payload = jwt.decode(
-            credentials.credentials,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM],
-        )
-        return {
-            "authenticated": True,
-            "token_payload": payload,
-            "user_id": payload.get("sub"),
-        }
-    except Exception as e:
-        return {
-            "authenticated": False,
-            "error": str(e),
-            "token": (
-                credentials.credentials[:50] + "..."
-                if len(credentials.credentials) > 50
-                else credentials.credentials
-            ),
-        }
+# moved to /v1/debug/xray under debug router
 
 
 if __name__ == "__main__":

@@ -4,13 +4,14 @@ Tests for user endpoints.
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.models.user import User
 from fastapi.testclient import TestClient
 
 
 def test_get_user_not_found(client: TestClient, db: Session):
     """Test getting a non-existent user returns 404."""
-    response = client.get("/api/v1/user/99999")
+    response = client.get(f"{settings.API_V1_STR}/users/99999")
     assert response.status_code == 404
     assert response.json()["detail"] == "User not found"
 
@@ -33,22 +34,17 @@ def test_get_user_public_unauthenticated(client: TestClient, db: Session):
     db.add(user)
     db.commit()
 
-    response = client.get("/api/v1/user/1")
+    response = client.get(f"{settings.API_V1_STR}/users/1")
     assert response.status_code == 200
     data = response.json()
 
-    # Should include basic fields and email (public profile)
+    # Should include basic fields and public email in base response
     assert data["id"] == 1
     assert data["name"] == "testuser"
     assert data["firstname"] == "Test"
     assert data["surname"] == "User"
     assert data["about"] == "Test user bio"
-    assert data["email"] == "test@example.com"  # Public profile
-
-    # Should NOT include private fields
-    assert data["email_valid"] is None
-    assert data["admin_ind"] is None
-    assert data["public_ind"] is None
+    assert data["email"] == "test@example.com"
 
 
 def test_get_user_private_unauthenticated(client: TestClient, db: Session):
@@ -69,7 +65,7 @@ def test_get_user_private_unauthenticated(client: TestClient, db: Session):
     db.add(user)
     db.commit()
 
-    response = client.get("/api/v1/user/2")
+    response = client.get(f"{settings.API_V1_STR}/users/2")
     assert response.status_code == 200
     data = response.json()
 
@@ -80,49 +76,15 @@ def test_get_user_private_unauthenticated(client: TestClient, db: Session):
     assert data["surname"] == "User"
     assert data["about"] == "Private user bio"
 
-    # Should NOT include email or private fields
-    assert data["email"] is None  # Private profile
-    assert data["email_valid"] is None
-    assert data["admin_ind"] is None
-    assert data["public_ind"] is None
+    # Should NOT include private email in base response
+    assert data["email"] is None
 
 
-def test_get_user_by_name(client: TestClient, db: Session):
-    """Test getting a user by username."""
-    user = User(
-        id=3,
-        name="findme",
-        firstname="Find",
-        surname="Me",
-        email="findme@example.com",
-        cryptpw="$1$test$hash",
-        about="Find me bio",
-        admin_ind="N",
-        email_valid="Y",
-        public_ind="Y",
-    )
-    db.add(user)
-    db.commit()
-
-    response = client.get("/api/v1/user/name/findme")
-    assert response.status_code == 200
-    data = response.json()
-
-    assert data["id"] == 3
-    assert data["name"] == "findme"
-    assert data["email"] == "findme@example.com"
+# removed name lookup endpoint tests
 
 
-def test_get_user_by_name_not_found(client: TestClient, db: Session):
-    """Test getting a non-existent user by name returns 404."""
-    response = client.get("/api/v1/user/name/nonexistent")
-    assert response.status_code == 404
-    assert response.json()["detail"] == "User not found"
-
-
-def test_search_users_by_name(client: TestClient, db: Session):
-    """Test searching users by name pattern."""
-    # Create test users
+def test_list_users_envelope_and_filter(client: TestClient, db: Session):
+    """Test users list envelope, pagination, and name filter."""
     users = [
         User(
             id=10,
@@ -161,50 +123,27 @@ def test_search_users_by_name(client: TestClient, db: Session):
             public_ind="Y",
         ),
     ]
-    for user in users:
-        db.add(user)
+    for u in users:
+        db.add(u)
     db.commit()
 
-    # Search for users containing "al"
-    response = client.get("/api/v1/user/search/name?q=al")
-    assert response.status_code == 200
-    data = response.json()
+    # No filter (all)
+    resp = client.get(f"{settings.API_V1_STR}/users")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "items" in body and "pagination" in body and "links" in body
+    assert len(body["items"]) >= 3
 
-    # Should find alice (contains "al") and charlie (contains "arlie")
-    # Actually, let's search for something that matches both
-    response = client.get("/api/v1/user/search/name?q=li")
-    assert response.status_code == 200
-    data = response.json()
+    # Filter by name contains 'li'
+    resp = client.get(f"{settings.API_V1_STR}/users?name=li")
+    assert resp.status_code == 200
+    body = resp.json()
+    names = [u["name"] for u in body["items"]]
+    assert "alice" in names and "charlie" in names
 
-    # Should find alice (contains "li") and charlie (contains "li")
-    assert len(data) == 2
-    names = [user["name"] for user in data]
-    assert "alice" in names
-    assert "charlie" in names
-
-
-def test_get_users_count(client: TestClient, db: Session):
-    """Test getting total user count."""
-    # Add a few test users
-    for i in range(5):
-        user = User(
-            id=100 + i,
-            name=f"user{i}",
-            firstname=f"User{i}",
-            surname="Test",
-            email=f"user{i}@test.com",
-            cryptpw="$1$test$hash",
-            about="",
-            admin_ind="N",
-            email_valid="Y",
-            public_ind="Y",
-        )
-        db.add(user)
-    db.commit()
-
-    response = client.get("/api/v1/user/stats/count")
-    assert response.status_code == 200
-    data = response.json()
-
-    assert "total_users" in data
-    assert data["total_users"] >= 5  # At least the 5 we added
+    # Envelope structure with pagination
+    resp = client.get(f"{settings.API_V1_STR}/users?limit=1&skip=0")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["pagination"]["limit"] == 1
+    assert body["pagination"]["offset"] == 0

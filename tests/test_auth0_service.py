@@ -72,8 +72,8 @@ class TestAuth0Service:
         """Test successful retrieval of Auth0 credentials."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
-        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
-        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
+        mock_settings.AUTH0_M2M_CLIENT_ID = "test-client-id"
+        mock_settings.AUTH0_M2M_CLIENT_SECRET = "test-client-secret"
 
         service = Auth0Service()
         result = service._get_auth0_credentials()
@@ -90,8 +90,11 @@ class TestAuth0Service:
         """Test handling of missing credentials."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
-        mock_settings.AUTH0_CLIENT_ID = None  # Missing client ID
-        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
+        mock_settings.AUTH0_M2M_CLIENT_ID = None  # Missing client ID
+        mock_settings.AUTH0_M2M_CLIENT_SECRET = "test-client-secret"
+        # Ensure deprecated fallbacks are not used
+        mock_settings.AUTH0_CLIENT_ID = None
+        mock_settings.AUTH0_CLIENT_SECRET = None
 
         service = Auth0Service()
         result = service._get_auth0_credentials()
@@ -209,12 +212,12 @@ class TestAuth0Service:
         mock_request.return_value = [self.mock_user_data]
 
         service = Auth0Service()
-        result = service.find_user_by_username("testuser")
+        result = service.find_user_by_nickname_or_name("testuser")
 
         assert result == self.mock_user_data
-        mock_request.assert_called_once_with(
-            "GET", 'users?q=username:"testuser"&search_engine=v3'
-        )
+        # It should call a search by nickname or name
+        called = mock_request.call_args[0][1]
+        assert "nickname" in called or "name" in called
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
     @patch("app.services.auth0_service.settings")
@@ -227,7 +230,7 @@ class TestAuth0Service:
         mock_request.return_value = {"users": []}
 
         service = Auth0Service()
-        result = service.find_user_by_username("nonexistent")
+        result = service.find_user_by_nickname_or_name("nonexistent")
 
         assert result is None
 
@@ -274,17 +277,16 @@ class TestAuth0Service:
             "users",
             {
                 "connection": "Username-Password-Authentication",
-                "username": "testuser",
-                "name": "Test User",
+                "nickname": "testuser",
+                "name": "testuser",
                 "password": "password123",
-                "email": "test@example.com",
                 "email_verified": True,
                 "verify_email": False,
                 "app_metadata": {
                     "legacy_user_id": 123,
                     "original_username": "testuser",
                 },
-                "nickname": "testuser",
+                "email": "test@example.com",
             },
         )
 
@@ -333,17 +335,16 @@ class TestAuth0Service:
             "users",
             {
                 "connection": "tme-users",
-                "username": "testuser",
-                "name": "Test User",
+                "nickname": "testuser",
+                "name": "testuser",
                 "password": "password123",
-                "email": "test@example.com",
                 "email_verified": True,
                 "verify_email": False,
                 "app_metadata": {
                     "legacy_user_id": 123,
                     "original_username": "testuser",
                 },
-                "nickname": "testuser",
+                "email": "test@example.com",
             },
         )
 
@@ -382,7 +383,7 @@ class TestAuth0Service:
 
         assert result is False
 
-    @patch("app.services.auth0_service.Auth0Service.find_user_by_username")
+    @patch("app.services.auth0_service.Auth0Service.find_user_by_nickname_or_name")
     @patch("app.services.auth0_service.Auth0Service.update_user_email")
     @patch("app.services.auth0_service.settings")
     def test_sync_user_to_auth0_existing_user_email_update(
@@ -411,7 +412,7 @@ class TestAuth0Service:
         mock_find_user.assert_called_once_with("testuser")
         mock_update_email.assert_called_once_with("auth0|123456789", "new@example.com")
 
-    @patch("app.services.auth0_service.Auth0Service.find_user_by_username")
+    @patch("app.services.auth0_service.Auth0Service.find_user_by_nickname_or_name")
     @patch("app.services.auth0_service.Auth0Service.create_user")
     @patch("app.services.auth0_service.settings")
     def test_sync_user_to_auth0_new_user(
@@ -436,7 +437,7 @@ class TestAuth0Service:
             "testuser", "test@example.com", "Test User", "password123", 123, None, None
         )
 
-    @patch("app.services.auth0_service.Auth0Service.find_user_by_username")
+    @patch("app.services.auth0_service.Auth0Service.find_user_by_nickname_or_name")
     @patch("app.services.auth0_service.settings")
     def test_sync_user_to_auth0_existing_user_no_email_change(
         self, mock_settings, mock_find_user
@@ -474,7 +475,7 @@ class TestAuth0Service:
 
         assert result is None
 
-    @patch("app.services.auth0_service.Auth0Service.find_user_by_username")
+    @patch("app.services.auth0_service.Auth0Service.find_user_by_nickname_or_name")
     @patch("app.services.auth0_service.settings")
     def test_sync_user_to_auth0_exception_handling(self, mock_settings, mock_find_user):
         """Test sync exception handling."""

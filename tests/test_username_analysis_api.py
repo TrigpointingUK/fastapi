@@ -4,12 +4,16 @@ Tests for username analysis API endpoints.
 
 from sqlalchemy.orm import Session
 
+from app.core.config import settings
 from app.core.security import create_access_token
 from app.main import app
 from app.models.user import User
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
+
+# Ensure legacy tokens in tests
+settings.AUTH0_ENABLED = False
 
 
 def get_auth_headers(user: User) -> dict:
@@ -28,7 +32,9 @@ class TestUsernameDuplicatesAPI:
     def test_get_username_duplicates_empty_database(self, db: Session, test_admin_user):
         """Test getting username duplicates with empty database."""
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
+        )
         assert response.status_code == 200
         assert response.json() == {}
 
@@ -45,7 +51,9 @@ class TestUsernameDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
+        )
         assert response.status_code == 200
         assert response.json() == {}
 
@@ -67,7 +75,9 @@ class TestUsernameDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
+        )
         assert response.status_code == 200
 
         result = response.json()
@@ -112,7 +122,9 @@ class TestUsernameDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
+        )
         assert response.status_code == 200
 
         result = response.json()
@@ -141,7 +153,9 @@ class TestUsernameDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
+        )
         assert response.status_code == 200
 
         result = response.json()
@@ -174,7 +188,9 @@ class TestUsernameDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
+        )
         assert response.status_code == 200
 
         result = response.json()
@@ -195,7 +211,9 @@ class TestUsernameDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
+        )
         assert response.status_code == 200
 
         result = response.json()
@@ -220,7 +238,9 @@ class TestUsernameDuplicatesAPI:
         db.commit()
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
+        )
         assert response.status_code == 200
 
         result = response.json()
@@ -255,19 +275,23 @@ class TestUsernameDuplicatesAPI:
         )
 
         headers = get_auth_headers(test_admin_user)
-        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
+        )
         assert response.status_code == 500
         assert "Error analyzing username duplicates" in response.json()["detail"]
 
     def test_get_username_duplicates_requires_authentication(self, db: Session):
         """Test that username duplicates endpoint requires authentication."""
-        response = client.get("/api/v1/analysis/username-duplicates")
+        response = client.get(f"{settings.API_V1_STR}/legacy/username-duplicates")
         assert response.status_code == 401
         assert "Not authenticated" in response.json()["detail"]
 
     def test_get_username_duplicates_requires_admin(self, db: Session, test_user):
         """Test that username duplicates endpoint requires admin privileges."""
         headers = get_auth_headers(test_user)
-        response = client.get("/api/v1/analysis/username-duplicates", headers=headers)
+        response = client.get(
+            f"{settings.API_V1_STR}/legacy/username-duplicates", headers=headers
+        )
         assert response.status_code == 403
         assert "Admin privileges required" in response.json()["detail"]

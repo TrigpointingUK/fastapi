@@ -8,7 +8,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.core.security import validate_any_token
+from app.core.security import extract_scopes, validate_any_token
 from app.crud.user import (
     get_user_by_auth0_id,
     get_user_by_email,
@@ -31,7 +31,7 @@ def get_current_user(
     db: Session = Depends(get_db),
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> User:
-    """Get current authenticated user from either legacy JWT or Auth0 token."""
+    """Get current authenticated user (Auth0 bearer only when enabled)."""
     from app.core.logging import get_logger
 
     logger = get_logger(__name__)
@@ -49,7 +49,7 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Validate token (supports both legacy JWT and Auth0)
+    # Validate token (Auth0-only when enabled)
     token_payload = validate_any_token(credentials.credentials)
     if not token_payload:
         logger.warning("Token validation failed in get_current_user")
@@ -64,18 +64,18 @@ def get_current_user(
         },
     )
 
-    # For legacy tokens, user_id is the database user ID
+    # Allow legacy tokens in dev/test mode
     if token_payload.get("token_type") == "legacy":
         user_id = token_payload.get("user_id")
         if user_id is None:
             raise credentials_exception
-        user = get_user_by_id(db, user_id=user_id)
+        user = get_user_by_id(db, user_id=user_id)  # type: ignore[name-defined]
         if user is None:
             raise credentials_exception
         return user
 
     # For Auth0 tokens, find user by Auth0 user ID
-    elif token_payload.get("token_type") == "auth0":
+    if token_payload.get("token_type") == "auth0":
         auth0_user_id = token_payload.get("auth0_user_id")
         if not auth0_user_id:
             raise credentials_exception
@@ -171,12 +171,7 @@ def get_current_user_optional(
         if not token_payload:
             return None
 
-        if token_payload.get("token_type") == "legacy":
-            user_id = token_payload.get("user_id")
-            if user_id is None:
-                return None
-            return get_user_by_id(db, user_id=user_id)
-        elif token_payload.get("token_type") == "auth0":
+        if token_payload.get("token_type") == "auth0":
             auth0_user_id = token_payload.get("auth0_user_id")
             if not auth0_user_id:
                 return None
@@ -217,13 +212,63 @@ def get_current_user_optional(
     return None
 
 
-def get_current_admin_user(
-    current_user: User = Depends(get_current_user),
-) -> User:
-    """Get current authenticated user and verify they have admin privileges."""
-    if not is_admin(current_user):
+def require_scopes(*required_scopes: str):
+    def _dep(
+        db: Session = Depends(get_db),
+        credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+    ) -> User:
+        if credentials is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Not authenticated",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        token_payload = validate_any_token(credentials.credentials)
+        if not token_payload:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        user: Optional[User] = None
+        if token_payload.get("token_type") == "auth0":
+            scopes = extract_scopes(token_payload)
+            missing = [s for s in required_scopes if s not in scopes]
+            if missing:
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail=f"Missing required scope(s): {', '.join(missing)}",
+                )
+            auth0_user_id = token_payload.get("auth0_user_id")
+            user = (
+                get_user_by_auth0_id(db, auth0_user_id=auth0_user_id)
+                if auth0_user_id
+                else None
+            )
+        elif token_payload.get("token_type") == "legacy":
+            # For tests/dev, emulate admin via admin_ind
+            user_id = token_payload.get("user_id")
+            user = get_user_by_id(db, user_id=user_id) if user_id is not None else None  # type: ignore[name-defined]
+            if not user or not is_admin(user):
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Admin privileges required",
+                )
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+            )
+        return user
+
+    return _dep
+
+
+def get_current_admin_user(user: User) -> User:
+    """Legacy helper retained for tests: enforces admin_ind='Y'."""
+    if not is_admin(user):  # type: ignore[name-defined]
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Admin privileges required",
         )
-    return current_user
+    return user

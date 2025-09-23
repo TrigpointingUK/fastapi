@@ -72,8 +72,10 @@ class TestAuth0ServiceComprehensive:
         """Test _get_auth0_credentials with missing client secret."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
-        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
-        mock_settings.AUTH0_CLIENT_SECRET = None  # Missing client secret
+        mock_settings.AUTH0_M2M_CLIENT_ID = "test-client-id"
+        mock_settings.AUTH0_M2M_CLIENT_SECRET = None  # Missing client secret
+        mock_settings.AUTH0_CLIENT_ID = None
+        mock_settings.AUTH0_CLIENT_SECRET = None
 
         service = Auth0Service()
         result = service._get_auth0_credentials()
@@ -84,8 +86,10 @@ class TestAuth0ServiceComprehensive:
         """Test _get_auth0_credentials with empty client ID."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
-        mock_settings.AUTH0_CLIENT_ID = ""  # Empty client ID
-        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
+        mock_settings.AUTH0_M2M_CLIENT_ID = ""  # Empty client ID
+        mock_settings.AUTH0_M2M_CLIENT_SECRET = "test-client-secret"
+        mock_settings.AUTH0_CLIENT_ID = None
+        mock_settings.AUTH0_CLIENT_SECRET = None
 
         service = Auth0Service()
         result = service._get_auth0_credentials()
@@ -96,8 +100,10 @@ class TestAuth0ServiceComprehensive:
         """Test _get_auth0_credentials with empty client secret."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
-        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
-        mock_settings.AUTH0_CLIENT_SECRET = ""  # Empty client secret
+        mock_settings.AUTH0_M2M_CLIENT_ID = "test-client-id"
+        mock_settings.AUTH0_M2M_CLIENT_SECRET = ""  # Empty client secret
+        mock_settings.AUTH0_CLIENT_ID = None
+        mock_settings.AUTH0_CLIENT_SECRET = None
 
         service = Auth0Service()
         result = service._get_auth0_credentials()
@@ -108,8 +114,8 @@ class TestAuth0ServiceComprehensive:
         """Test successful _get_auth0_credentials retrieval."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
-        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
-        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
+        mock_settings.AUTH0_M2M_CLIENT_ID = "test-client-id"
+        mock_settings.AUTH0_M2M_CLIENT_SECRET = "test-client-secret"
 
         service = Auth0Service()
         result = service._get_auth0_credentials()
@@ -126,8 +132,8 @@ class TestAuth0ServiceComprehensive:
         """Test _get_auth0_credentials with None domain."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = None
-        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
-        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
+        mock_settings.AUTH0_M2M_CLIENT_ID = "test-client-id"
+        mock_settings.AUTH0_M2M_CLIENT_SECRET = "test-client-secret"
 
         service = Auth0Service()
         # Service should be disabled when domain is None
@@ -151,6 +157,8 @@ class TestAuth0ServiceComprehensive:
         """Test _get_auth0_credentials when both credentials are None."""
         mock_settings.AUTH0_ENABLED = True
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_M2M_CLIENT_ID = None
+        mock_settings.AUTH0_M2M_CLIENT_SECRET = None
         mock_settings.AUTH0_CLIENT_ID = None
         mock_settings.AUTH0_CLIENT_SECRET = None
 
@@ -425,7 +433,7 @@ class TestAuth0ServiceComprehensive:
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            result = service.find_user_by_username("testuser")
+            result = service.find_user_by_nickname_or_name("testuser")
             assert result is None
 
     def test_find_user_by_email_disabled(self):
@@ -572,7 +580,7 @@ class TestAuth0ServiceComprehensive:
             mock_request.assert_called_once_with(
                 "PATCH",
                 "users/auth0|123",
-                {"given_name": "John", "family_name": "Doe", "nickname": "johndoe"},
+                {"nickname": "johndoe", "name": "johndoe"},
             )
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")

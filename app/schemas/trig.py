@@ -2,79 +2,58 @@
 Pydantic schemas for trig endpoints.
 """
 
-from datetime import date, datetime, time
+from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
 from pydantic import BaseModel, Field
 
 
-class TrigResponse(BaseModel):
-    """Response model for trig data - includes all fields for now."""
+class TrigMinimal(BaseModel):
+    """Minimal trig response for /trig/{id}."""
 
-    # Primary identifier
     id: int = Field(..., description="Trigpoint ID")
     waypoint: str = Field(..., description="Waypoint code (e.g., TP0001)")
     name: str = Field(..., description="Trigpoint name")
 
-    # Classification
-    status_id: int = Field(..., description="Status ID")
-    user_added: int = Field(..., description="Whether user-added (0/1)")
-    current_use: str = Field(..., description="Current use classification")
-    historic_use: str = Field(..., description="Historic use classification")
+    # Public basic classification/identity
+    status_name: Optional[str] = Field(
+        None, description="Human-readable status derived from status_id"
+    )
     physical_type: str = Field(..., description="Physical type (e.g., Pillar)")
     condition: str = Field(..., description="Condition code")
 
-    # Geographic coordinates
+    # Coordinates and grid ref
     wgs_lat: Decimal = Field(..., description="WGS84 latitude")
     wgs_long: Decimal = Field(..., description="WGS84 longitude")
-    wgs_height: int = Field(..., description="WGS84 height (meters)")
-    osgb_eastings: int = Field(..., description="OSGB eastings")
-    osgb_northings: int = Field(..., description="OSGB northings")
     osgb_gridref: str = Field(..., description="OSGB grid reference")
-    osgb_height: int = Field(..., description="OSGB height (meters)")
-
-    # Location details
-    postcode6: str = Field(..., description="Postcode area")
-    county: str = Field(..., description="County")
-    town: str = Field(..., description="Town/area")
-
-    # Station identifiers
-    fb_number: str = Field(..., description="Flush bracket number")
-    stn_number: str = Field(..., description="Station number")
-    stn_number_active: Optional[str] = Field(None, description="Active station number")
-    stn_number_passive: Optional[str] = Field(
-        None, description="Passive station number"
-    )
-    stn_number_osgb36: Optional[str] = Field(None, description="OSGB36 station number")
-
-    # External systems
-    os_net_web_id: Optional[int] = Field(None, description="OS Net Web ID")
-
-    # Administrative
-    permission_ind: str = Field(..., description="Permission indicator")
-    needs_attention: int = Field(..., description="Needs attention flag (0/1)")
-    attention_comment: str = Field(..., description="Attention comments")
-
-    # Audit information
-    crt_date: date = Field(..., description="Creation date")
-    crt_time: time = Field(..., description="Creation time")
-    crt_user_id: int = Field(..., description="Creating user ID")
-    crt_ip_addr: str = Field(..., description="Creating IP address")
-    admin_user_id: Optional[int] = Field(None, description="Admin user ID")
-    admin_timestamp: Optional[datetime] = Field(
-        None, description="Admin update timestamp"
-    )
-    admin_ip_addr: Optional[str] = Field(None, description="Admin IP address")
-    upd_timestamp: Optional[datetime] = Field(None, description="Last update timestamp")
 
     class Config:
-        from_attributes = True  # Pydantic v2 syntax
+        from_attributes = True
         json_encoders = {
-            Decimal: str,  # Convert Decimal to string for JSON serialization
-            date: lambda v: v.isoformat(),
-            time: lambda v: v.isoformat(),
-            datetime: lambda v: v.isoformat(),
+            Decimal: str,
+        }
+
+
+class TrigDetails(BaseModel):
+    """Details sub-object for /trig/{id}/details or include=details."""
+
+    current_use: str
+    historic_use: str
+    wgs_height: int
+    postcode: str = Field(..., validation_alias="postcode6")
+    county: str
+    town: str
+    fb_number: str
+    stn_number: str
+    stn_number_active: Optional[str] = None
+    stn_number_passive: Optional[str] = None
+    stn_number_osgb36: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            Decimal: str,
         }
 
 
@@ -102,3 +81,31 @@ class TrigCountResponse(BaseModel):
 
     trig_id: int
     count: int
+
+
+class TrigStats(BaseModel):
+    """Statistics for a trigpoint."""
+
+    logged_first: date
+    logged_last: date
+    logged_count: int
+    found_last: date
+    found_count: int
+    photo_count: int
+    score_mean: Decimal
+    score_baysian: Decimal
+
+    class Config:
+        from_attributes = True
+        json_encoders = {
+            Decimal: str,
+            date: lambda v: v.isoformat(),
+            datetime: lambda v: v.isoformat() if v else None,
+        }
+
+
+class TrigWithIncludes(TrigMinimal):
+    """Envelope for minimal trig with optional includes."""
+
+    details: Optional[TrigDetails] = None
+    stats: Optional[TrigStats] = None

@@ -9,8 +9,8 @@ min_capacity  = 1
 max_capacity  = 3
 
 # Resource allocation
-cpu    = 1024
-memory = 2048
+cpu    = 256
+memory = 512
 
 # CloudFlare SSL Configuration (enabled for staging)
 domain_name           = "api.trigpointing.me"
