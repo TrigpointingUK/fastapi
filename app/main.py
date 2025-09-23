@@ -249,6 +249,14 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 @app.get("/health")
 def health_check():
     """Health check endpoint."""
+    # Import version information
+    try:
+        from app.__version__ import __build_time__, __version__
+
+        version_info = {"version": __version__, "build_time": __build_time__}
+    except ImportError:
+        version_info = {"version": "unknown", "build_time": "unknown"}
+
     tracing_info = {
         "xray_enabled": xray_enabled,
         "otel_enabled": otel_enabled,
@@ -293,6 +301,8 @@ def health_check():
     return {
         "status": "healthy",
         "environment": settings.ENVIRONMENT,
+        "version": version_info["version"],
+        "build_time": version_info["build_time"],
         "tracing": tracing_info,
     }
 
