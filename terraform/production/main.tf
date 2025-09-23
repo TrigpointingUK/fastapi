@@ -48,7 +48,6 @@ module "secrets" {
   environment                  = var.environment
   ecs_task_role_name           = data.terraform_remote_state.common.outputs.ecs_task_role_name
   ecs_task_execution_role_name = data.terraform_remote_state.common.outputs.ecs_task_execution_role_name
-  auth0_domain                 = var.auth0_domain
 }
 
 # ECS Service module
@@ -81,10 +80,14 @@ module "ecs_service" {
   secrets_arn                  = module.secrets.secrets_arn
   credentials_secret_arn       = "arn:aws:secretsmanager:eu-west-1:534526983272:secret:fastapi-legacy-credentials-p9KGQI"
   cloudwatch_log_group_name    = aws_cloudwatch_log_group.app.name
-  auth0_domain                 = var.auth0_domain
-  auth0_connection             = var.auth0_connection
-  auth0_api_audience           = var.auth0_api_audience
-  parameter_store_config       = var.parameter_store_config
+  log_level                    = var.log_level
+  cors_origins                 = var.cors_origins
+  db_pool_size                 = var.db_pool_size
+  db_pool_recycle              = var.db_pool_recycle
+  xray_enabled                 = var.xray_enabled
+  xray_service_name            = var.xray_service_name
+  xray_sampling_rate           = var.xray_sampling_rate
+  xray_daemon_address          = var.xray_daemon_address
 }
 
 module "monitoring" {
@@ -93,7 +96,7 @@ module "monitoring" {
   project_name            = var.project_name
   environment             = var.environment
   aws_region              = var.aws_region
-  xray_sampling_rate      = var.parameter_store_config.parameters.xray.sampling_rate
+  xray_sampling_rate      = var.xray_sampling_rate
   enable_xray_daemon_role = false # Not needed for Fargate
   enable_xray_daemon_logs = false # Not needed for Fargate
   log_retention_days      = 14

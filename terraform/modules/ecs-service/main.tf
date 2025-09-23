@@ -38,36 +38,49 @@ resource "aws_ecs_task_definition" "app" {
         {
           name  = "UVICORN_HOST"
           value = "0.0.0.0"
+        },
+        {
+          name  = "AUTH0_ENABLED"
+          value = tostring(var.auth0_enabled)
+        },
+        {
+          name  = "LOG_LEVEL"
+          value = var.log_level
+        },
+        {
+          name  = "DATABASE_POOL_SIZE"
+          value = tostring(var.db_pool_size)
+        },
+        {
+          name  = "DATABASE_POOL_RECYCLE"
+          value = tostring(var.db_pool_recycle)
+        },
+        {
+          name  = "XRAY_ENABLED"
+          value = tostring(var.xray_enabled)
+        },
+        {
+          name  = "XRAY_SERVICE_NAME"
+          value = var.xray_service_name
+        },
+        {
+          name  = "XRAY_SAMPLING_RATE"
+          value = tostring(var.xray_sampling_rate)
         }
         ],
-        # Add Auth0 configuration if enabled
-        var.auth0_domain != null ? [
+        # Optional base environment variables
+        var.cors_origins != null ? [
           {
-            name  = "AUTH0_DOMAIN"
-            value = var.auth0_domain
-          },
-          {
-            name  = "AUTH0_CONNECTION"
-            value = var.auth0_connection
-          },
-          {
-            name  = "AUTH0_ENABLED"
-            value = "true"
-          },
-          {
-            name  = "AUTH0_MANAGEMENT_API_AUDIENCE"
-            value = "https://${var.auth0_domain}/api/v2/"
-          },
-          {
-            name  = "AUTH0_API_AUDIENCE"
-            value = var.auth0_api_audience
+            name  = "BACKEND_CORS_ORIGINS"
+            value = jsonencode(var.cors_origins)
           }
-          ] : [
+        ] : [],
+        var.xray_daemon_address != null ? [
           {
-            name  = "AUTH0_ENABLED"
-            value = "false"
+            name  = "XRAY_DAEMON_ADDRESS"
+            value = var.xray_daemon_address
           }
-        ],
+        ] : [],
       )
 
       # Secrets from AWS Secrets Manager
@@ -100,23 +113,36 @@ resource "aws_ecs_task_definition" "app" {
         }
         ],
         # Auth0 secrets (if Auth0 is enabled)
-        var.auth0_domain != null ? [
+        var.auth0_enabled ? concat([
           {
-            name      = "AUTH0_CLIENT_ID"
-            valueFrom = "${var.secrets_arn}:auth0_client_id::"
+            name  = "AUTH0_API_AUDIENCE"
+            valueFrom = "${var.secrets_arn}:auth0_api_audience::"
           },
           {
-            name      = "AUTH0_CLIENT_SECRET"
-            valueFrom = "${var.secrets_arn}:auth0_client_secret::"
-          }
-        ] : [],
-        # Parameter Store Configuration (if enabled)
-        var.parameter_store_config.enabled ? [
-          for key, param in local.parameter_map : {
-            name      = upper(replace(key, "/", "_"))
-            valueFrom = aws_ssm_parameter.parameters[key].arn
-          }
-        ] : []
+            name  = "AUTH0_CONNECTION"
+            valueFrom = "${var.secrets_arn}:auth0_connection::"
+          },
+          {
+            name  = "AUTH0_DOMAIN"
+            valueFrom = "${var.secrets_arn}:auth0_domain::"
+          },
+          {
+            name  = "AUTH0_MANAGEMENT_API_AUDIENCE"
+            valueFrom = "${var.secrets_arn}:auth0_management_api_audience::"
+          },
+          {
+            name  = "AUTH0_M2M_CLIENT_ID"
+            valueFrom = "${var.secrets_arn}:auth0_m2m_client_id::"
+          },
+          {
+            name  = "AUTH0_M2M_CLIENT_SECRET"
+            valueFrom = "${var.secrets_arn}:auth0_m2m_client_secret::"
+          },
+          {
+            name  = "AUTH0_SPA_CLIENT_ID"
+            valueFrom = "${var.secrets_arn}:auth0_spa_client_id::"
+          },
+        ]): []
       )
       logConfiguration = {
         logDriver = "awslogs"
@@ -137,7 +163,7 @@ resource "aws_ecs_task_definition" "app" {
     }
     ],
     # Add X-Ray daemon container if X-Ray is enabled
-    var.parameter_store_config.enabled && var.parameter_store_config.parameters.xray.enabled ? [
+    var.xray_enabled ? [
       {
         name   = "${var.project_name}-xray-daemon"
         image  = "amazon/aws-xray-daemon:latest"
