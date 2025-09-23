@@ -19,7 +19,7 @@ enable_cloudflare_ssl = true
 # Auth0 Configuration
 auth0_domain       = "trigpointing.eu.auth0.com"
 auth0_connection   = "tuk-users"
-auth0_api_audience = "https://api.trigpointing.uk/api/v1/"
+auth0_api_audience = "https://api.trigpointing.uk/v1/"
 
 # Parameter Store Configuration
 parameter_store_config = {
