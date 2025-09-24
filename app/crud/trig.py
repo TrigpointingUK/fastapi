@@ -4,7 +4,7 @@ CRUD operations for trig table.
 
 from typing import Optional
 
-from sqlalchemy import func
+from sqlalchemy import Float, cast, func, literal
 from sqlalchemy.orm import Session
 
 from app.models.trig import Trig
@@ -100,21 +100,68 @@ def list_trigs_filtered(
     county: Optional[str] = None,
     skip: int = 0,
     limit: int = 100,
+    center_lat: Optional[float] = None,
+    center_lon: Optional[float] = None,
+    max_km: Optional[float] = None,
+    order: Optional[str] = None,
 ) -> list[Trig]:
     query = db.query(Trig)
     if name:
         query = query.filter(Trig.name.ilike(f"%{name}%"))
     if county:
         query = query.filter(Trig.county == county)
+
+    if center_lat is not None and center_lon is not None:
+        deg_km = 111.32
+        lat = literal(center_lat)
+        lon = literal(center_lon)
+        cos_lat = func.cos(func.radians(lat))
+        # cast DECIMAL to float for math ops
+        dlat_km = (cast(Trig.wgs_lat, Float) - lat) * deg_km
+        dlon_km = (cast(Trig.wgs_long, Float) - lon) * deg_km * cos_lat
+        dist2 = (dlat_km * dlat_km + dlon_km * dlon_km).label("dist2")
+
+        if max_km is not None:
+            query = query.filter(dist2 <= (max_km * max_km))
+
+        # order by distance if requested or default when lat/lon supplied
+        if order in (None, "", "distance"):
+            query = query.order_by(dist2)
+    else:
+        # deterministic default
+        if order in (None, "", "id"):
+            query = query.order_by(Trig.id.asc())
+        elif order == "name":
+            query = query.order_by(Trig.name.asc())
+
     return query.offset(skip).limit(limit).all()
 
 
 def count_trigs_filtered(
-    db: Session, *, name: Optional[str] = None, county: Optional[str] = None
+    db: Session,
+    *,
+    name: Optional[str] = None,
+    county: Optional[str] = None,
+    center_lat: Optional[float] = None,
+    center_lon: Optional[float] = None,
+    max_km: Optional[float] = None,
 ) -> int:
     query = db.query(func.count(Trig.id))
     if name:
         query = query.filter(Trig.name.ilike(f"%{name}%"))
     if county:
         query = query.filter(Trig.county == county)
+
+    # Apply the same geo-distance filtering as in list_trigs_filtered
+    if center_lat is not None and center_lon is not None:
+        deg_km = 111.32
+        lat = literal(center_lat)
+        lon = literal(center_lon)
+        cos_lat = func.cos(func.radians(lat))
+        dlat_km = (cast(Trig.wgs_lat, Float) - lat) * deg_km
+        dlon_km = (cast(Trig.wgs_long, Float) - lon) * deg_km * cos_lat
+        dist2 = dlat_km * dlat_km + dlon_km * dlon_km
+        if max_km is not None:
+            query = query.filter(dist2 <= (max_km * max_km))
+
     return int(query.scalar() or 0)
