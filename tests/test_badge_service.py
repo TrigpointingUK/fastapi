@@ -19,8 +19,8 @@ class TestBadgeService:
     def test_init(self):
         """Test BadgeService initialization."""
         service = BadgeService()
-        assert service.badge_width == 200
-        assert service.badge_height == 50
+        assert service.base_width == 200
+        assert service.base_height == 50
         assert service.logo_path.name == "tuk_logo.png"
 
     @patch("app.services.badge_service.get_user_by_id")
@@ -125,3 +125,50 @@ class TestBadgeService:
         assert isinstance(result, io.BytesIO)
         assert result.tell() == 0  # Should be at the beginning after seek(0)
         assert len(result.getvalue()) > 0  # Should have actual PNG data
+
+    @patch("app.services.badge_service.get_user_by_id")
+    def test_generate_badge_with_scale(self, mock_get_user):
+        """Test badge generation with different scale factors."""
+        service = BadgeService()
+        if not service.logo_path.exists():
+            pytest.skip("Logo file not found, skipping scale test")
+
+        # Mock user
+        mock_user = Mock(spec=User)
+        mock_user.id = 1
+        mock_user.name = "testuser"
+        mock_get_user.return_value = mock_user
+
+        # Mock database queries
+        mock_db = Mock(spec=Session)
+        mock_trig_query = Mock()
+        mock_trig_query.filter.return_value = mock_trig_query
+        mock_trig_query.distinct.return_value = mock_trig_query
+        mock_trig_query.count.return_value = 5
+
+        mock_photo_query = Mock()
+        mock_photo_query.join.return_value = mock_photo_query
+        mock_photo_query.filter.return_value = mock_photo_query
+        mock_photo_query.count.return_value = 10
+
+        mock_db.query.side_effect = [mock_trig_query, mock_photo_query]
+
+        # Test different scale factors
+        for scale in [0.5, 1.0, 2.0]:
+            mock_db.query.side_effect = [
+                mock_trig_query,
+                mock_photo_query,
+            ]  # Reset for each test
+            result = service.generate_badge(mock_db, 1, scale=scale)
+
+            assert isinstance(result, io.BytesIO)
+            assert len(result.getvalue()) > 0
+
+            # Verify the image has the expected dimensions
+            from PIL import Image
+
+            result.seek(0)
+            image = Image.open(result)
+            expected_width = int(200 * scale)
+            expected_height = int(50 * scale)
+            assert image.size == (expected_width, expected_height)
