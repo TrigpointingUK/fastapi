@@ -27,6 +27,7 @@ from app.schemas.user import (
     UserStats,
     UserWithIncludes,
 )
+from app.services.badge_service import BadgeService
 
 router = APIRouter()
 security = HTTPBearer(auto_error=False)
@@ -87,6 +88,52 @@ def get_current_user_profile(
             )
 
     return result
+
+
+@router.get(
+    "/badge",
+    responses={
+        200: {
+            "content": {"image/png": {}},
+            "description": "User statistics badge as PNG image",
+        }
+    },
+    openapi_extra=openapi_lifecycle(
+        "beta",
+        note="Generates a 200x50px PNG badge showing user statistics including nickname, trigpoints logged, and photos uploaded.",
+    ),
+)
+def get_user_badge(
+    user_id: int = Query(..., description="ID of the user to generate badge for"),
+    db: Session = Depends(get_db),
+) -> StreamingResponse:
+    """
+    Generate a PNG badge for a user showing their statistics.
+
+    Returns a 200x50px PNG image with:
+    - TrigpointingUK logo on the left (20%)
+    - User's nickname on the first line (right 80%)
+    - "logged: X / photos: Y" on the second line
+    - "Trigpointing.UK" on the third line
+    """
+    try:
+        badge_service = BadgeService()
+        badge_bytes = badge_service.generate_badge(db, user_id)
+
+        return StreamingResponse(
+            badge_bytes,
+            media_type="image/png",
+            headers={
+                "Content-Disposition": f"inline; filename=user_{user_id}_badge.png",
+                "Cache-Control": "public, max-age=300",  # Cache for 5 minutes
+            },
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=f"Server configuration error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating badge: {e}")
 
 
 @router.get("/{user_id}", response_model=UserWithIncludes)

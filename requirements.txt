@@ -36,6 +36,9 @@ opentelemetry-instrumentation-boto==0.58b0
 opentelemetry-exporter-otlp==1.37.0
 aws-xray-sdk==2.12.1
 
+# Image processing
+Pillow==11.1.0
+
 # Development dependencies
 black==25.1.0
 isort==6.0.1
