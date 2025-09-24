@@ -21,7 +21,7 @@ sys.path.insert(0, "/home/ianh/dev/fastapi")
 import jwt  # noqa: E402
 
 from app.core.config import settings  # noqa: E402
-from app.core.security import auth0_validator, validate_any_token  # noqa: E402
+from app.core.security import auth0_validator  # noqa: E402
 
 
 def debug_auth0_token(token: str):
@@ -37,7 +37,7 @@ def debug_auth0_token(token: str):
     # Configuration info
     print("CONFIGURATION:")
     try:
-        print(f"  Auth0 enabled: {settings.AUTH0_ENABLED}")
+        print("  Auth0 enabled: True (always enabled)")
         print(f"  Auth0 domain: {settings.AUTH0_DOMAIN}")
         print(f"  Auth0 connection: {settings.AUTH0_CONNECTION}")
     except Exception as e:
@@ -88,7 +88,7 @@ def debug_auth0_token(token: str):
     # Token validation
     print("TOKEN VALIDATION:")
     try:
-        payload = validate_any_token(token)
+        payload = auth0_validator.validate_auth0_token(token)
         if payload:
             print("  Validation: SUCCESS")
             print(f"  Token type: {payload.get('token_type', 'N/A')}")

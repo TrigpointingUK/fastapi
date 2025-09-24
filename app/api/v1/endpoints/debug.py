@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.core.config import settings
-from app.core.security import extract_scopes, validate_any_token
+from app.core.security import auth0_validator, extract_scopes
 from app.crud.user import get_user_by_auth0_id, get_user_by_email, get_user_by_name
 from app.schemas.user import Auth0UserInfo
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -29,7 +29,7 @@ def get_auth0_debug(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token_payload = validate_any_token(credentials.credentials)
+    token_payload = auth0_validator.validate_auth0_token(credentials.credentials)
     if not token_payload:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -54,7 +54,7 @@ def get_auth0_debug(
             database_email = str(user.email) if user.email else None
         else:
             email = token_payload.get("email")
-            username = token_payload.get("username") or token_payload.get("nickname")
+            display_name = token_payload.get("nickname") or token_payload.get("name")
             if email:
                 user = get_user_by_email(db, email)
                 if user:
@@ -62,8 +62,8 @@ def get_auth0_debug(
                     database_user_id = int(user.id)
                     database_username = str(user.name)
                     database_email = str(user.email) if user.email else None
-            if not database_user_found and username:
-                user = get_user_by_name(db, username)
+            if not database_user_found and display_name:
+                user = get_user_by_name(db, display_name)
                 if user:
                     database_user_found = True
                     database_user_id = int(user.id)
@@ -73,7 +73,7 @@ def get_auth0_debug(
     return Auth0UserInfo(
         auth0_user_id=auth0_user_id,
         email=token_payload.get("email"),
-        username=token_payload.get("username"),
+        # Removed username field; rely on nickname/name
         nickname=token_payload.get("nickname"),
         name=token_payload.get("name"),
         given_name=token_payload.get("given_name"),

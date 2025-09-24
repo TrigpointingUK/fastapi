@@ -16,7 +16,6 @@ memory = 512
 domain_name           = "api.trigpointing.uk"
 enable_cloudflare_ssl = true
 
-auth0_enabled       = true
 log_level           = "INFO"
 cors_origins        = ["https://trigpointing.uk", "https://api.trigpointing.uk"]
 db_pool_size        = 10

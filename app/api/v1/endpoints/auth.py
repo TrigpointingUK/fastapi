@@ -7,12 +7,11 @@ from datetime import datetime, timezone  # noqa: F401
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.core.config import settings
 from app.crud.user import (
     authenticate_user_flexible,
     update_user_auth0_mapping,
 )
-from app.schemas.user import LoginResponse
+from app.schemas.user import UserResponse
 from app.services.auth0_service import auth0_service
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -20,7 +19,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 router = APIRouter()
 
 
-@router.post("/login", response_model=LoginResponse)
+@router.post("/login", response_model=UserResponse)
 def login_for_access_token(
     db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ):
@@ -48,11 +47,10 @@ def login_for_access_token(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username/email or password",
-            headers={"WWW-Authenticate": "Bearer"},
         )
 
     # Sync user to Auth0 and store mapping
-    if settings.AUTH0_ENABLED and not user.auth0_user_id:
+    if not user.auth0_user_id:
         try:
             auth0_user = auth0_service.sync_user_to_auth0(
                 username=str(user.name),
@@ -63,16 +61,11 @@ def login_for_access_token(
             )
 
             if auth0_user:
-                # Store Auth0 user ID mapping and username in the database
+                # Store Auth0 user ID mapping in the database
                 update_user_auth0_mapping(
                     db=db,
                     user_id=int(user.id),
                     auth0_user_id=str(auth0_user.get("user_id")),
-                    auth0_username=(
-                        str(auth0_user.get("username"))
-                        if auth0_user.get("username") is not None
-                        else None
-                    ),
                 )
         except Exception as e:
             # Log error but don't fail the login
@@ -81,24 +74,7 @@ def login_for_access_token(
             logger = get_logger(__name__)
             logger.error(f"Failed to sync user to Auth0: {e}")
 
-    # Do not generate a local JWT token. This endpoint now returns only user details
-    # to support legacy clients during migration. Preserve response shape but leave
-    # token fields empty/zero.
-    access_token = ""  # nosec B105 - not a password; placeholder empty token for legacy response shape
-
-    # Import here to avoid circular imports
-    from app.api.v1.endpoints.user import filter_user_fields
-
-    # Build user response with appropriate field filtering
-    # For login response, user sees their own data (full access)
-    user_data = filter_user_fields(user, current_user=user)
-
-    return LoginResponse(
-        access_token=access_token,
-        token_type="bearer",  # nosec B106 - OAuth2 standard token type, not a password
-        user=user_data,
-        expires_in=0,
-    )
+    return user
 
 
 # removed auth0-login and auth0-debug endpoints

@@ -80,7 +80,6 @@ module "ecs_service" {
   secrets_arn                  = module.secrets.secrets_arn
   credentials_secret_arn       = "arn:aws:secretsmanager:eu-west-1:534526983272:secret:fastapi-staging-credentials-udrQoU"
   cloudwatch_log_group_name    = aws_cloudwatch_log_group.app.name
-  auth0_enabled                = var.auth0_enabled
   log_level                    = var.log_level
   cors_origins                 = var.cors_origins
   db_pool_size                 = var.db_pool_size

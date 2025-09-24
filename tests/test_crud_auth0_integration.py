@@ -20,7 +20,6 @@ class TestAuth0IntegrationInCRUD:
             name="testuser",
             email="test@example.com",
             cryptpw="$1$salt$hash",
-            admin_ind="N",
             public_ind="Y",
         )
 
@@ -166,7 +165,6 @@ class TestAuth0IntegrationInCRUD:
             name="testuser",
             email=None,
             cryptpw="$1$salt$hash",
-            admin_ind="N",
             public_ind="Y",
         )
         mock_get_user.return_value = user_no_email

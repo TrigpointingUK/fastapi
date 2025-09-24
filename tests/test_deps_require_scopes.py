@@ -2,10 +2,11 @@
 Tests to cover require_scopes helper dependency.
 """
 
-from datetime import timedelta
+# from datetime import timedelta  # Legacy JWT removed
 
 from app.api.deps import require_scopes
-from app.core.security import create_access_token
+
+# from app.core.security import create_access_token  # Legacy JWT removed
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.testclient import TestClient
 
@@ -30,23 +31,23 @@ def test_require_scopes_missing_auth():
     assert "Not authenticated" in r.json().get("detail", "")
 
 
-def test_require_scopes_legacy_admin_ok(monkeypatch):
-    """Legacy tokens emulate admin via admin_ind; ensure 200 with legacy token."""
-    app = _build_app()
-    client = TestClient(app)
-    # Legacy token does not carry admin flag; the dependency checks admin
-    # by fetching the user from DB. Here we only ensure a valid legacy token
-    # shape to reach the admin branch (app logic will enforce admin separately
-    # in integration tests).
-    token = create_access_token(subject=999, expires_delta=timedelta(minutes=5))
+# def test_require_scopes_legacy_admin_ok(monkeypatch):
+#     """Legacy tokens emulate admin via admin_ind; ensure 200 with legacy token."""
+#     app = _build_app()
+#     client = TestClient(app)
+#     # Legacy token does not carry admin flag; the dependency checks admin
+#     # by fetching the user from DB. Here we only ensure a valid legacy token
+#     # shape to reach the admin branch (app logic will enforce admin separately
+#     # in integration tests).
+#     token = create_access_token(subject=999, expires_delta=timedelta(minutes=5))
 
-    # Patch user lookup and admin check in dependency to simulate admin user
-    class U:
-        id = 999
-        admin_ind = "Y"
+#     # Patch user lookup and admin check in dependency to simulate admin user
+#     class U:
+#         id = 999
+#         admin_ind = "Y"
 
-    monkeypatch.setattr("app.api.deps.get_user_by_id", lambda db, user_id: U())
-    monkeypatch.setattr("app.api.deps.is_admin", lambda user: True)
+#     monkeypatch.setattr("app.api.deps.get_user_by_id", lambda db, user_id: U())
+#     monkeypatch.setattr("app.api.deps.is_admin", lambda user: True)
 
-    r = client.get("/admin", headers={"Authorization": f"Bearer {token}"})
-    assert r.status_code == 200
+#     r = client.get("/admin", headers={"Authorization": f"Bearer {token}"})
+#     assert r.status_code == 200

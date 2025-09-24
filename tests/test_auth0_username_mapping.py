@@ -1,5 +1,5 @@
 """
-Tests for persisting auth0_username alongside auth0_user_id and sanity check behaviour.
+Tests for Auth0 user ID mapping behaviour. Auth0 usernames are no longer supported.
 """
 
 import crypt
@@ -24,7 +24,6 @@ def _make_user(
         surname="User",
         email=email,
         cryptpw=cryptpw,
-        admin_ind="N",
         email_valid="Y",
         public_ind="Y",
     )
@@ -35,7 +34,7 @@ def _make_user(
 
 @patch("app.api.v1.endpoints.auth.update_user_auth0_mapping")
 @patch("app.api.v1.endpoints.auth.auth0_service")
-def test_login_persists_auth0_username(
+def test_login_persists_auth0_user_id(
     mock_auth0_service,
     mock_update_mapping,
     client: TestClient,
@@ -50,14 +49,11 @@ def test_login_persists_auth0_username(
         email="login@example.com",
         password="pw123456",
     )
-    # Ensure feature flag is enabled to exercise Auth0 mapping path
-    monkeypatch.setattr(settings, "AUTH0_ENABLED", True, raising=False)
     assert user.auth0_user_id is None
 
-    # Mock sync to return user id + username
+    # Mock sync to return user id only
     mock_auth0_service.sync_user_to_auth0.return_value = {
         "user_id": "auth0|abc123",
-        "username": "login_user",
     }
 
     # Act
@@ -72,7 +68,6 @@ def test_login_persists_auth0_username(
         db=ANY,
         user_id=4201,
         auth0_user_id="auth0|abc123",
-        auth0_username="login_user",
     )
 
 
@@ -81,7 +76,7 @@ def test_login_persists_auth0_username(
 @patch("app.api.deps.get_user_by_name")
 @patch("app.api.deps.get_user_by_email")
 @patch("app.api.deps.get_user_by_auth0_id")
-@patch("app.api.deps.validate_any_token")
+@patch("app.core.security.auth0_validator.validate_auth0_token")
 def test_deps_links_and_updates_username(
     mock_validate_token,
     mock_get_by_auth0,
@@ -99,7 +94,7 @@ def test_deps_links_and_updates_username(
     }
     mock_get_by_auth0.return_value = None  # Force fallback path
 
-    # Create legacy user; Auth0 returns matching email & username
+    # Create legacy user; Auth0 returns matching email
     user = _make_user(
         db,
         user_id=4202,
@@ -110,8 +105,8 @@ def test_deps_links_and_updates_username(
     mock_auth0_service.find_user_by_auth0_id.return_value = {
         "user_id": "auth0|xyz789",
         "email": "deps@example.com",
-        "username": "deps_user",
         "nickname": "deps_user",
+        "name": "deps_user",
     }
     mock_get_by_email.return_value = user
     mock_get_by_name.return_value = None
@@ -126,7 +121,6 @@ def test_deps_links_and_updates_username(
         ANY,
         4202,
         "auth0|xyz789",
-        "deps_user",
     )
 
 
@@ -140,7 +134,6 @@ def test_get_user_auth0_id_helper(db: Session):
         db=db,
         user_id=4204,
         auth0_user_id="auth0|map",
-        auth0_username="map_user",
     )
     assert ok is True
     # Act/Assert: round-trip via getter
@@ -149,8 +142,8 @@ def test_get_user_auth0_id_helper(db: Session):
     assert get_user_auth0_id(db, 4204) == "auth0|map"
 
 
-def test_update_user_auth0_mapping_sanity_check_mismatch(caplog, db: Session):
-    # Arrange: user name sanitizes to something else than provided auth0 username
+def test_update_user_auth0_mapping_simple_update(db: Session):
+    # Arrange
     _make_user(
         db,
         user_id=4203,
@@ -160,24 +153,16 @@ def test_update_user_auth0_mapping_sanity_check_mismatch(caplog, db: Session):
     )
 
     # Act
-    with caplog.at_level("ERROR"):
-        ok = update_user_auth0_mapping(
-            db=db,
-            user_id=4203,
-            auth0_user_id="auth0|mismatch",
-            auth0_username="different_sanitized",
-        )
+    ok = update_user_auth0_mapping(
+        db=db,
+        user_id=4203,
+        auth0_user_id="auth0|mismatch",
+    )
 
-    # Assert: update succeeded but error logged for mismatch
+    # Assert
     assert ok is True
-    # Fetch back to confirm DB state
     refreshed = db.query(User).filter(User.id == 4203).first()
     assert refreshed.auth0_user_id == "auth0|mismatch"
-    assert refreshed.auth0_username == "different_sanitized"
-    assert any(
-        "Auth0 username mismatch after sanitization" in rec.message
-        for rec in caplog.records
-    )
 
 
 def test_update_user_auth0_mapping_user_not_found(monkeypatch):
@@ -201,7 +186,6 @@ def test_update_user_auth0_mapping_user_not_found(monkeypatch):
         db=FakeDB(),
         user_id=999999,
         auth0_user_id="auth0|none",
-        auth0_username="who",
     )
 
     # Assert
@@ -209,19 +193,13 @@ def test_update_user_auth0_mapping_user_not_found(monkeypatch):
     assert update_user_auth0_id(FakeDB(), 999999, "auth0|none") is False
 
 
-def test_update_user_auth0_mapping_sanity_check_exception(monkeypatch, caplog):
+def test_update_user_auth0_mapping_exception_does_not_crash(monkeypatch, caplog):
     # Arrange: user exists, but sanitizer raises exception
     import app.crud.user as crud_user
 
-    user = type(
-        "U", (), {"name": "user name", "auth0_user_id": None, "auth0_username": None}
-    )()
+    user = type("U", (), {"name": "user name", "auth0_user_id": None})()
     monkeypatch.setattr(crud_user, "get_user_by_id", lambda db, user_id: user)
-    monkeypatch.setattr(
-        crud_user,
-        "sanitize_username_for_auth0",
-        lambda n: (_ for _ in ()).throw(ValueError("boom")),
-    )
+    # No sanitizer used anymore; force error at commit layer
 
     class FakeDB:
         def commit(self):
@@ -235,57 +213,51 @@ def test_update_user_auth0_mapping_sanity_check_exception(monkeypatch, caplog):
             db=FakeDB(),
             user_id=1,
             auth0_user_id="auth0|x",
-            auth0_username="different",
         )
     assert ok is True
     assert user.auth0_user_id == "auth0|x"
-    assert user.auth0_username == "different"
-    assert any(
-        "Auth0 username sanity check failed" in rec.message for rec in caplog.records
-    )
+    # Username fields are no longer tracked
 
 
-def test_update_user_auth0_mapping_commit_fallback_success(monkeypatch, caplog):
-    # Arrange: first commit raises, fallback commit succeeds
-    import app.crud.user as crud_user
+# def test_update_user_auth0_mapping_commit_fallback_success(monkeypatch, caplog):
+#     # Arrange: first commit raises, fallback commit succeeds
+#     # This test is no longer relevant since fallback logic was removed
+#     import app.crud.user as crud_user
 
-    user = type(
-        "U", (), {"name": "user", "auth0_user_id": None, "auth0_username": None}
-    )()
-    monkeypatch.setattr(crud_user, "get_user_by_id", lambda db, user_id: user)
+#     user = type(
+#         "U", (), {"name": "user", "auth0_user_id": None}
+#     )()
+#     monkeypatch.setattr(crud_user, "get_user_by_id", lambda db, user_id: user)
 
-    class FakeDB:
-        def __init__(self):
-            self.calls = 0
+#     class FakeDB:
+#         def __init__(self):
+#             self.calls = 0
 
-        def commit(self):
-            self.calls += 1
-            if self.calls == 1:
-                raise RuntimeError("db error on first commit")
+#         def commit(self):
+#             self.calls += 1
+#             if self.calls == 1:
+#                 raise RuntimeError("db error on first commit")
 
-        def rollback(self):
-            pass
+#         def rollback(self):
+#             pass
 
-    with caplog.at_level("WARNING"):
-        ok = update_user_auth0_mapping(
-            db=FakeDB(),
-            user_id=1,
-            auth0_user_id="auth0|y",
-            auth0_username="user",
-        )
-    assert ok is True
-    assert user.auth0_user_id == "auth0|y"
-    assert user.auth0_username is None or user.auth0_username == "user"
-    assert any("retrying with ID only" in rec.message for rec in caplog.records)
+#     with caplog.at_level("WARNING"):
+#         ok = update_user_auth0_mapping(
+#             db=FakeDB(),
+#             user_id=1,
+#             auth0_user_id="auth0|y",
+#         )
+#     assert ok is True
+#     assert user.auth0_user_id == "auth0|y"
+#     # auth0_username field removed from User model
+#     # Fallback retry logic removed
 
 
 def test_update_user_auth0_mapping_commit_fallback_failure(monkeypatch, caplog):
     # Arrange: both initial and fallback commit raise
     import app.crud.user as crud_user
 
-    user = type(
-        "U", (), {"name": "user", "auth0_user_id": None, "auth0_username": None}
-    )()
+    user = type("U", (), {"name": "user", "auth0_user_id": None})()
     monkeypatch.setattr(crud_user, "get_user_by_id", lambda db, user_id: user)
 
     class FakeDB:
@@ -300,7 +272,6 @@ def test_update_user_auth0_mapping_commit_fallback_failure(monkeypatch, caplog):
             db=FakeDB(),
             user_id=1,
             auth0_user_id="auth0|z",
-            auth0_username="user",
         )
     assert ok is False
     assert any("Auth0 mapping update failed" in rec.message for rec in caplog.records)
@@ -316,13 +287,12 @@ def test_update_user_auth0_mapping_success_path(db: Session):
         db=db,
         user_id=4206,
         auth0_user_id="auth0|ok",
-        auth0_username="ok_user",
     )
     # Assert
     assert ok is True
     refreshed = db.query(User).filter(User.id == 4206).first()
     assert refreshed.auth0_user_id == "auth0|ok"
-    assert refreshed.auth0_username == "ok_user"
+    # Username fields are no longer tracked
 
 
 @patch("app.api.deps.update_user_auth0_mapping")
@@ -330,8 +300,8 @@ def test_update_user_auth0_mapping_success_path(db: Session):
 @patch("app.api.deps.get_user_by_name")
 @patch("app.api.deps.get_user_by_email")
 @patch("app.api.deps.get_user_by_auth0_id")
-@patch("app.api.deps.validate_any_token")
-def test_get_current_user_optional_links_and_updates_username(
+@patch("app.core.security.auth0_validator.validate_auth0_token")
+def test_get_current_user_optional_links_and_updates_id(
     mock_validate_token,
     mock_get_by_auth0,
     mock_get_by_email,
@@ -356,8 +326,8 @@ def test_get_current_user_optional_links_and_updates_username(
     mock_auth0_service.find_user_by_auth0_id.return_value = {
         "user_id": "auth0|opt",
         "email": "opt@example.com",
-        "username": "opt_user",
         "nickname": "opt_user",
+        "name": "opt_user",
     }
     mock_get_by_email.return_value = None
     mock_get_by_name.return_value = created
@@ -369,4 +339,4 @@ def test_get_current_user_optional_links_and_updates_username(
 
     # Assert
     assert result is created
-    mock_update_mapping.assert_called_once_with(ANY, 4205, "auth0|opt", "opt_user")
+    mock_update_mapping.assert_called_once_with(ANY, 4205, "auth0|opt")

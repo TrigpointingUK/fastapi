@@ -6,11 +6,6 @@ Create a `.env` (or `.env.local`) with the following variables:
 # Database (local sqlite works for dev)
 DATABASE_URL=sqlite:///./test.db
 
-# JWT (used only when AUTH0_ENABLED=false in tests/dev)
-JWT_SECRET_KEY=dev-insecure-key-do-not-use-in-prod
-JWT_ALGORITHM=HS256
-JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
-
 # App
 API_V1_STR=/v1
 PROJECT_NAME=TrigpointingUK API (Local)
@@ -20,7 +15,6 @@ DEBUG=true
 BACKEND_CORS_ORIGINS=["http://localhost:3000","http://localhost:8080","http://localhost:8000"]
 
 # Auth0
-AUTH0_ENABLED=true
 AUTH0_DOMAIN=your-tenant.region.auth0.com
 AUTH0_API_AUDIENCE=https://api-tme
 

@@ -28,24 +28,17 @@ class Auth0Service:
         """Initialize the Auth0 service."""
         self.domain = settings.AUTH0_DOMAIN
         self.connection = settings.AUTH0_CONNECTION
-        self.enabled = settings.AUTH0_ENABLED
         self.management_api_audience = settings.AUTH0_MANAGEMENT_API_AUDIENCE
         self._access_token = None
         self._token_expires_at = None
 
-        if not self.enabled:
-            logger.error("Auth0 integration is disabled")
-            return
-
         if not self.domain:
-            logger.error("Auth0 domain not configured")
-            self.enabled = False
-            return
+            logger.error("AUTH0_DOMAIN is required but not configured")
+            raise ValueError("AUTH0_DOMAIN is required but not configured")
 
         if not self.connection:
-            logger.error("Auth0 connection not configured")
-            self.enabled = False
-            return
+            logger.error("AUTH0_CONNECTION is required but not configured")
+            raise ValueError("AUTH0_CONNECTION is required but not configured")
 
         if not self.management_api_audience:
             # Construct Management API audience from domain
@@ -61,8 +54,6 @@ class Auth0Service:
         Returns:
             Dictionary containing Auth0 credentials or None if failed
         """
-        if not self.enabled:
-            return None
 
         try:
             # Get credentials for Management API (M2M)
@@ -114,8 +105,6 @@ class Auth0Service:
         Returns:
             Access token string or None if failed
         """
-        if not self.enabled:
-            return None
 
         # Check if we have a valid cached token
         if (
@@ -210,8 +199,6 @@ class Auth0Service:
         Returns:
             Response data as dictionary or None if failed
         """
-        if not self.enabled:
-            return None
 
         access_token = self._get_access_token()
         if not access_token:
@@ -309,8 +296,6 @@ class Auth0Service:
         Returns:
             User data dictionary or None if not found
         """
-        if not self.enabled:
-            return None
 
         # Use exact match on nickname first, then name
         sanitized_nickname = sanitize_username_for_auth0(nickname)
@@ -394,8 +379,6 @@ class Auth0Service:
         Returns:
             User data dictionary or None if not found
         """
-        if not self.enabled:
-            return None
 
         log_data = {
             "event": "auth0_find_user_by_id_called",
@@ -412,7 +395,7 @@ class Auth0Service:
             log_data = {
                 "event": "auth0_user_found_by_id",
                 "auth0_user_id": auth0_user_id,
-                "username": response.get("username", ""),
+                "nickname": response.get("nickname", ""),
                 "email": response.get("email", ""),
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
@@ -437,8 +420,6 @@ class Auth0Service:
         Returns:
             User data dictionary or None if not found
         """
-        if not self.enabled:
-            return None
 
         log_data = {
             "event": "auth0_find_user_by_email_called",
@@ -494,8 +475,6 @@ class Auth0Service:
         Returns:
             User data dictionary or None if not found
         """
-        if not self.enabled:
-            return None
 
         # Try username search first
         log_data = {
@@ -544,16 +523,16 @@ class Auth0Service:
                 logger.debug(json.dumps(log_data))
                 return user
 
-        # Try searching by username without quotes (fallback)
+        # Try searching by display name (nickname) without quotes (fallback)
         if not user:
             log_data = {
                 "event": "auth0_comprehensive_search_fallback_attempt",
-                "username": username,
+                "display_name": username,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.debug(json.dumps(log_data))
             try:
-                endpoint = f"users?q=username:{username}&search_engine=v3"
+                endpoint = f"users?q=nickname:{username}&search_engine=v3"
                 response = self._make_auth0_request("GET", endpoint)
                 if response and isinstance(response, list) and len(response) > 0:
                     # Filter users by connection since Auth0 API doesn't support connection filtering in search
@@ -563,8 +542,8 @@ class Auth0Service:
 
                     if filtered_users:
                         log_data = {
-                            "event": "auth0_user_found_by_username_fallback",
-                            "username": username,
+                            "event": "auth0_user_found_by_nickname_fallback",
+                            "display_name": username,
                             "auth0_user_id": filtered_users[0].get("user_id", ""),
                             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                         }
@@ -572,15 +551,15 @@ class Auth0Service:
                         return filtered_users[0]
                     else:
                         log_data = {
-                            "event": "auth0_user_not_found_by_username_fallback_connection_filtered",
-                            "username": username,
+                            "event": "auth0_user_not_found_by_nickname_fallback_connection_filtered",
+                            "display_name": username,
                             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                         }
                         logger.debug(json.dumps(log_data))
             except Exception as e:
                 log_data = {
                     "event": "auth0_user_search_fallback_failed",
-                    "username": username,
+                    "display_name": username,
                     "error": str(e),
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
@@ -621,7 +600,7 @@ class Auth0Service:
             "users_sample": [
                 {
                     "user_id": user.get("user_id", ""),
-                    "username": user.get("username", ""),
+                    "nickname": user.get("nickname", ""),
                     "email": user.get("email", ""),
                     "identities": user.get("identities", []),
                 }
@@ -677,8 +656,6 @@ class Auth0Service:
         Returns:
             Created user data dictionary or None if failed
         """
-        if not self.enabled:
-            return None
 
         # Sanitize username for Auth0 compatibility while preserving original as nickname
         sanitized_username = sanitize_username_for_auth0(username)
@@ -782,8 +759,6 @@ class Auth0Service:
         Returns:
             True if successful, False otherwise
         """
-        if not self.enabled:
-            return False
 
         user_data = {"email": email, "email_verified": True}
 
@@ -827,8 +802,6 @@ class Auth0Service:
         Returns:
             True if successful, False otherwise
         """
-        if not self.enabled:
-            return False
 
         # Only update display identity; avoid given_name/family_name
         user_data = {}
@@ -893,19 +866,9 @@ class Auth0Service:
             "username": username,
             "email": email or "",
             "user_id": user_id,
-            "enabled": self.enabled,
             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
         }
         logger.info(json.dumps(log_data))
-
-        if not self.enabled:
-            log_data = {
-                "event": "auth0_sync_skipped",
-                "reason": "service_disabled",
-                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-            }
-            logger.info(json.dumps(log_data))
-            return None
 
         log_data = {
             "event": "auth0_user_sync_started",
