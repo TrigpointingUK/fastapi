@@ -139,8 +139,8 @@ class BadgeService:
         # Position each line with equal gaps
         username_y = gap_between_lines - 2  # Move up 2 pixels as before
         stats_y = (
-            username_y + username_height + gap_between_lines + 3
-        )  # Add 3px for better visual balance
+            username_y + username_height + gap_between_lines + 1
+        )  # Reduced from 3px to 1px - moved back up slightly
         footer_y = stats_y + stats_height + gap_between_lines
 
         # Draw text lines with equal spacing

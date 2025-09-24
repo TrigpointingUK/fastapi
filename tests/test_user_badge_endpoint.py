@@ -32,7 +32,7 @@ class TestUserBadgeEndpoint:
         mock_service.generate_badge.return_value = mock_badge_bytes
         mock_badge_service_class.return_value = mock_service
 
-        response = self.client.get("/v1/users/badge?user_id=1")
+        response = self.client.get("/v1/users/1/badge")
 
         assert response.status_code == 200
         assert response.headers["content-type"] == "image/png"
@@ -59,7 +59,7 @@ class TestUserBadgeEndpoint:
         )
         mock_badge_service_class.return_value = mock_service
 
-        response = self.client.get("/v1/users/badge?user_id=999")
+        response = self.client.get("/v1/users/999/badge")
 
         assert response.status_code == 404
         assert "User with ID 999 not found" in response.json()["detail"]
@@ -79,7 +79,7 @@ class TestUserBadgeEndpoint:
         )
         mock_badge_service_class.return_value = mock_service
 
-        response = self.client.get("/v1/users/badge?user_id=1")
+        response = self.client.get("/v1/users/1/badge")
 
         assert response.status_code == 500
         assert "Server configuration error" in response.json()["detail"]
@@ -98,22 +98,25 @@ class TestUserBadgeEndpoint:
         mock_service.generate_badge.side_effect = Exception("Something went wrong")
         mock_badge_service_class.return_value = mock_service
 
-        response = self.client.get("/v1/users/badge?user_id=1")
+        response = self.client.get("/v1/users/1/badge")
 
         assert response.status_code == 500
         assert "Error generating badge" in response.json()["detail"]
         assert "Something went wrong" in response.json()["detail"]
 
     def test_get_user_badge_missing_user_id(self):
-        """Test badge generation without user_id parameter."""
+        """Test badge generation without user_id in path."""
         response = self.client.get("/v1/users/badge")
 
-        assert response.status_code == 422
-        assert "field required" in response.json()["detail"][0]["msg"].lower()
+        assert response.status_code == 422  # FastAPI tries to parse "badge" as user_id
+        assert (
+            "input should be a valid integer"
+            in response.json()["detail"][0]["msg"].lower()
+        )
 
     def test_get_user_badge_invalid_user_id(self):
-        """Test badge generation with invalid user_id parameter."""
-        response = self.client.get("/v1/users/badge?user_id=invalid")
+        """Test badge generation with invalid user_id in path."""
+        response = self.client.get("/v1/users/invalid/badge")
 
         assert response.status_code == 422
         assert (

@@ -89,7 +89,7 @@ def get_current_user_profile(
 
 
 @router.get(
-    "/badge",
+    "/{user_id}/badge",
     responses={
         200: {
             "content": {"image/png": {}},
@@ -102,7 +102,7 @@ def get_current_user_profile(
     ),
 )
 def get_user_badge(
-    user_id: int = Query(..., description="ID of the user to generate badge for"),
+    user_id: int,
     db: Session = Depends(get_db),
 ) -> StreamingResponse:
     """
