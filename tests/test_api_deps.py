@@ -25,7 +25,9 @@ def test_require_scopes_auth0_missing_scope(monkeypatch):
 
     payload = {"token_type": "auth0", "permissions": ["trig:admin"], "sub": "auth0|u"}
     # Patch where the dependency resolves the symbol
-    monkeypatch.setattr("app.api.deps.validate_any_token", lambda t: payload)
+    monkeypatch.setattr(
+        "app.core.security.auth0_validator.validate_auth0_token", lambda t: payload
+    )
     # No db user found
     monkeypatch.setattr(
         "app.api.deps.get_user_by_auth0_id", lambda db, auth0_user_id: None

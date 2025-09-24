@@ -8,7 +8,7 @@ for FastAPI applications and is sponsored by Auth0 for long-term compatibility.
 import base64
 import json
 from datetime import datetime, timedelta, timezone
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Optional
 
 import jwt
 import requests
@@ -19,25 +19,6 @@ from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def create_access_token(
-    subject: Union[str, Any], expires_delta: Optional[timedelta] = None
-) -> str:
-    """Deprecated: local JWT issuance is disabled when Auth0 is enabled."""
-    if settings.AUTH0_ENABLED:
-        raise RuntimeError("Local JWT issuance is disabled when Auth0 is enabled")
-    if expires_delta:
-        expire = datetime.now(timezone.utc) + expires_delta
-    else:
-        expire = datetime.now(timezone.utc) + timedelta(
-            minutes=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES
-        )
-    to_encode = {"exp": expire, "sub": str(subject)}
-    encoded_jwt = jwt.encode(
-        to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM
-    )
-    return encoded_jwt
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -145,16 +126,15 @@ class Auth0TokenValidator:
         Returns:
             Dictionary containing user information or None if invalid
         """
-        if not self.domain or not settings.AUTH0_ENABLED:
+        if not self.domain:
             log_data = {
                 "event": "auth0_token_validation_failed",
-                "reason": "auth0_disabled_or_no_domain",
+                "reason": "no_auth0_domain_configured",
                 "domain": self.domain,
-                "enabled": settings.AUTH0_ENABLED,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.debug(json.dumps(log_data))
-            return None
+            logger.error(json.dumps(log_data))
+            raise ValueError("AUTH0_DOMAIN is required but not configured")
 
         try:
             # Get audience for validation
@@ -253,7 +233,12 @@ class Auth0TokenValidator:
             }
             logger.info(json.dumps(log_data))
 
-            return payload
+            # Add required fields for authentication logic
+            return {
+                **payload,
+                "token_type": "auth0",
+                "auth0_user_id": payload.get("sub"),
+            }
 
         except jwt.ExpiredSignatureError:
             log_data = {
@@ -289,98 +274,98 @@ class Auth0TokenValidator:
 auth0_validator = Auth0TokenValidator()
 
 
-def validate_legacy_jwt_token(token: str) -> Optional[Dict[str, Any]]:
-    """
-    Validate a legacy JWT token created by our own system.
+# def validate_legacy_jwt_token(token: str) -> Optional[Dict[str, Any]]:
+#     """
+#     Validate a legacy JWT token created by our own system.
 
-    Args:
-        token: Legacy JWT token
+#     Args:
+#         token: Legacy JWT token
 
-    Returns:
-        Dictionary containing token payload or None if invalid
-    """
-    try:
-        payload = jwt.decode(
-            token,
-            settings.JWT_SECRET_KEY,
-            algorithms=[settings.JWT_ALGORITHM],
-        )
+#     Returns:
+#         Dictionary containing token payload or None if invalid
+#     """
+#     try:
+#         payload = jwt.decode(
+#             token,
+#             settings.JWT_SECRET_KEY,
+#             algorithms=[settings.JWT_ALGORITHM],
+#         )
 
-        log_data = {
-            "event": "legacy_jwt_token_validated",
-            "sub": payload.get("sub", ""),
-            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-        }
-        logger.debug(json.dumps(log_data))
+#         log_data = {
+#             "event": "legacy_jwt_token_validated",
+#             "sub": payload.get("sub", ""),
+#             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+#         }
+#         logger.debug(json.dumps(log_data))
 
-        return payload
+#         return payload
 
-    except jwt.ExpiredSignatureError:
-        log_data = {
-            "event": "legacy_jwt_token_validation_failed",
-            "reason": "expired_signature",
-            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-        }
-        logger.debug(json.dumps(log_data))
-        return None
-    except jwt.InvalidTokenError as e:
-        log_data = {
-            "event": "legacy_jwt_token_validation_failed",
-            "reason": "invalid_token",
-            "error": str(e),
-            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-        }
-        logger.debug(json.dumps(log_data))
-        return None
-    except Exception as e:
-        log_data = {
-            "event": "legacy_jwt_token_validation_failed",
-            "reason": "unexpected_error",
-            "error": str(e),
-            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-        }
-        logger.error(json.dumps(log_data))
-        return None
+#     except jwt.ExpiredSignatureError:
+#         log_data = {
+#             "event": "legacy_jwt_token_validation_failed",
+#             "reason": "expired_signature",
+#             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+#         }
+#         logger.debug(json.dumps(log_data))
+#         return None
+#     except jwt.InvalidTokenError as e:
+#         log_data = {
+#             "event": "legacy_jwt_token_validation_failed",
+#             "reason": "invalid_token",
+#             "error": str(e),
+#             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+#         }
+#         logger.debug(json.dumps(log_data))
+#         return None
+#     except Exception as e:
+#         log_data = {
+#             "event": "legacy_jwt_token_validation_failed",
+#             "reason": "unexpected_error",
+#             "error": str(e),
+#             "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+#         }
+#         logger.error(json.dumps(log_data))
+#         return None
 
 
-def validate_any_token(token: str) -> Optional[Dict[str, Any]]:
-    """
-    Validate either a legacy JWT token or Auth0 access token.
+# def validate_any_token(token: str) -> Optional[Dict[str, Any]]:
+#     """
+#     Validate either a legacy JWT token or Auth0 access token.
 
-    Args:
-        token: JWT token (legacy or Auth0)
+#     Args:
+#         token: JWT token (legacy or Auth0)
 
-    Returns:
-        Dictionary containing token payload and token type, or None if invalid
-    """
-    # If Auth0 is enabled, only accept Auth0 tokens
-    if settings.AUTH0_ENABLED:
-        auth0_payload = auth0_validator.validate_auth0_token(token)
-        if auth0_payload:
-            return {
-                **auth0_payload,
-                "token_type": "auth0",
-                "auth0_user_id": auth0_payload.get("sub"),
-            }
-        return None
+#     Returns:
+#         Dictionary containing token payload and token type, or None if invalid
+#     """
+#     # If Auth0 is enabled, only accept Auth0 tokens
+#     if settings.AUTH0_ENABLED:
+#         auth0_payload = auth0_validator.validate_auth0_token(token)
+#         if auth0_payload:
+#             return {
+#                 **auth0_payload,
+#                 "token_type": "auth0",
+#                 "auth0_user_id": auth0_payload.get("sub"),
+#             }
+#         return None
 
-    # Otherwise (development), accept legacy first then Auth0
-    legacy_payload = validate_legacy_jwt_token(token)
-    if legacy_payload:
-        return {
-            **legacy_payload,
-            "token_type": "legacy",
-            "user_id": int(legacy_payload.get("sub", 0)),
-        }
-    auth0_payload = auth0_validator.validate_auth0_token(token)
-    if auth0_payload:
-        return {
-            **auth0_payload,
-            "token_type": "auth0",
-            "auth0_user_id": auth0_payload.get("sub"),
-        }
+#     # Otherwise (development), accept legacy first then Auth0
+#     legacy_payload = validate_legacy_jwt_token(token)
+#     if legacy_payload:
+#         return {
+#             **legacy_payload,
+#             "token_type": "legacy",
+#             "user_id": int(legacy_payload.get("sub", 0)),
+#         }
+#     auth0_payload = auth0_validator.validate_auth0_token(token)
+#     if auth0_payload:
+#         return {
+#             **auth0_payload,
+#             "token_type": "auth0",
+#             "auth0_user_id": auth0_payload.get("sub"),
+#         }
 
-    return None
+#     return None
 
 
 def extract_scopes(token_payload: Dict[str, Any]) -> set[str]:

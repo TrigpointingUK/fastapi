@@ -12,6 +12,8 @@ from app.api.deps import (
     get_db,
 )
 from app.api.lifecycle import openapi_lifecycle
+
+# from app.core.security import auth0_validator
 from app.crud import user as user_crud
 from app.models.user import User
 from app.schemas.user import (
@@ -49,8 +51,8 @@ def get_current_user_profile(
       - stats: adds aggregate log stats for the user
       - prefs: adds the user's preferences (always allowed on /me)
     """
-    base = filter_user_fields(current_user, current_user=current_user)
-    result = UserWithIncludes(**base.model_dump())
+
+    result = UserWithIncludes(**UserResponse.model_validate(current_user).model_dump())
 
     if include:
         tokens = {t.strip() for t in include.split(",") if t.strip()}
@@ -84,61 +86,6 @@ def get_current_user_profile(
     return result
 
 
-def filter_user_fields(user: User, current_user: Optional[User] = None) -> UserResponse:
-    """
-    Filter user fields based on permissions.
-
-    Rules:
-    - cryptpw: Never exposed
-    - email: Only if public_ind='Y' OR current_user is admin OR current_user is the same user
-    - email_valid, admin_ind, public_ind: Only if current_user is admin OR current_user is the same user
-    """
-    # Start with base fields (always visible)
-    response = UserResponse(
-        id=int(user.id),
-        name=str(user.name),
-        firstname=str(user.firstname),
-        surname=str(user.surname),
-        homepage=str(user.homepage) if getattr(user, "homepage", None) else None,
-        about=str(user.about),
-    )
-
-    # Fill optional visibility-controlled fields for compatibility where expected
-    is_self = current_user is not None and current_user.id == user.id
-    is_public = str(user.public_ind) == "Y"
-    is_admin = (
-        bool(getattr(current_user, "admin_ind", "N") == "Y") if current_user else False
-    )
-
-    if is_self or is_public or is_admin:
-        response.email = str(user.email) if user.email else None
-    else:
-        response.email = None
-
-    if is_self or is_admin:
-        response.email_valid = (
-            str(user.email_valid)
-            if getattr(user, "email_valid", None) is not None
-            else None
-        )
-        response.admin_ind = (
-            str(user.admin_ind)
-            if getattr(user, "admin_ind", None) is not None
-            else None
-        )
-        response.public_ind = (
-            str(user.public_ind)
-            if getattr(user, "public_ind", None) is not None
-            else None
-        )
-    else:
-        response.email_valid = None
-        response.admin_ind = None
-        response.public_ind = None
-
-    return response
-
-
 @router.get("/{user_id}", response_model=UserWithIncludes)
 def get_user(
     user_id: int,
@@ -151,17 +98,15 @@ def get_user(
 ):
     """
     Get a user by ID.
-
-    Returns user data
     """
     user = user_crud.get_user_by_id(db, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Build base
-    base = filter_user_fields(user, current_user)
-    result = UserWithIncludes(**base.model_dump())
+    # Build base response using Pydantic model validation
+    result = UserWithIncludes(**UserResponse.model_validate(user).model_dump())
 
+    # Handle includes...
     tokens = {t.strip() for t in include.split(",")} if include else set()
 
     if "stats" in tokens:
@@ -184,10 +129,12 @@ def get_user(
             allowed = True
         else:
             try:
-                from app.core.security import extract_scopes, validate_any_token
+                from app.core.security import auth0_validator, extract_scopes
 
                 if credentials is not None:
-                    payload = validate_any_token(credentials.credentials)
+                    payload = auth0_validator.validate_auth0_token(
+                        credentials.credentials
+                    )
                     scopes = extract_scopes(payload or {}) if payload else set()
                     if "user:admin" in scopes:
                         allowed = True
@@ -205,15 +152,6 @@ def get_user(
         )
 
     return result
-
-
-# removed /users/name/{username} endpoint
-
-
-# removed deprecated /users/search/name endpoint
-
-
-# removed /users/stats/count endpoint
 
 
 @router.get("")

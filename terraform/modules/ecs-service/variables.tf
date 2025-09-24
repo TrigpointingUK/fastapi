@@ -137,11 +137,6 @@ variable "cloudwatch_log_group_name" {
   type        = string
 }
 
-variable "auth0_enabled" {
-  description = "Auth0 enabled in API"
-  type        = bool
-  default     = null
-}
 
 variable "log_level" {
   description = "Application log level (DEBUG, INFO, WARNING, ERROR)"

@@ -27,7 +27,6 @@ def test_get_user_public_unauthenticated(client: TestClient, db: Session):
         email="test@example.com",
         cryptpw="$1$test$hash",
         about="Test user bio",
-        admin_ind="N",
         email_valid="Y",
         public_ind="Y",  # Public profile
     )
@@ -44,7 +43,7 @@ def test_get_user_public_unauthenticated(client: TestClient, db: Session):
     assert data["firstname"] == "Test"
     assert data["surname"] == "User"
     assert data["about"] == "Test user bio"
-    assert data["email"] == "test@example.com"
+    # Email field deprecated - no longer returned
 
 
 def test_get_user_private_unauthenticated(client: TestClient, db: Session):
@@ -58,7 +57,6 @@ def test_get_user_private_unauthenticated(client: TestClient, db: Session):
         email="private@example.com",
         cryptpw="$1$test$hash",
         about="Private user bio",
-        admin_ind="N",
         email_valid="Y",
         public_ind="N",  # Private profile
     )
@@ -76,8 +74,7 @@ def test_get_user_private_unauthenticated(client: TestClient, db: Session):
     assert data["surname"] == "User"
     assert data["about"] == "Private user bio"
 
-    # Should NOT include private email in base response
-    assert data["email"] is None
+    # Email field deprecated - no longer returned
 
 
 # removed name lookup endpoint tests
@@ -94,7 +91,6 @@ def test_list_users_envelope_and_filter(client: TestClient, db: Session):
             email="alice@test.com",
             cryptpw="$1$test$hash",
             about="",
-            admin_ind="N",
             email_valid="Y",
             public_ind="Y",
         ),
@@ -106,7 +102,6 @@ def test_list_users_envelope_and_filter(client: TestClient, db: Session):
             email="bob@test.com",
             cryptpw="$1$test$hash",
             about="",
-            admin_ind="N",
             email_valid="Y",
             public_ind="Y",
         ),
@@ -118,7 +113,6 @@ def test_list_users_envelope_and_filter(client: TestClient, db: Session):
             email="charlie@test.com",
             cryptpw="$1$test$hash",
             about="",
-            admin_ind="N",
             email_valid="Y",
             public_ind="Y",
         ),

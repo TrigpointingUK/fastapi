@@ -40,10 +40,6 @@ resource "aws_ecs_task_definition" "app" {
           value = "0.0.0.0"
         },
         {
-          name  = "AUTH0_ENABLED"
-          value = tostring(var.auth0_enabled)
-        },
-        {
           name  = "LOG_LEVEL"
           value = var.log_level
         },
@@ -85,11 +81,6 @@ resource "aws_ecs_task_definition" "app" {
 
       # Secrets from AWS Secrets Manager
       secrets = concat([
-        # JWT Secret
-        {
-          name      = "JWT_SECRET_KEY"
-          valueFrom = "${var.secrets_arn}:jwt_secret_key::"
-        },
         # Database Credentials
         {
           name      = "DB_HOST"
@@ -112,37 +103,35 @@ resource "aws_ecs_task_definition" "app" {
           valueFrom = "${var.credentials_secret_arn}:dbname::"
         }
         ],
-        # Auth0 secrets (if Auth0 is enabled)
-        var.auth0_enabled ? concat([
-          {
-            name      = "AUTH0_API_AUDIENCE"
-            valueFrom = "${var.secrets_arn}:auth0_api_audience::"
-          },
-          {
-            name      = "AUTH0_CONNECTION"
-            valueFrom = "${var.secrets_arn}:auth0_connection::"
-          },
-          {
-            name      = "AUTH0_DOMAIN"
-            valueFrom = "${var.secrets_arn}:auth0_domain::"
-          },
-          {
-            name      = "AUTH0_MANAGEMENT_API_AUDIENCE"
-            valueFrom = "${var.secrets_arn}:auth0_management_api_audience::"
-          },
-          {
-            name      = "AUTH0_M2M_CLIENT_ID"
-            valueFrom = "${var.secrets_arn}:auth0_m2m_client_id::"
-          },
-          {
-            name      = "AUTH0_M2M_CLIENT_SECRET"
-            valueFrom = "${var.secrets_arn}:auth0_m2m_client_secret::"
-          },
-          {
-            name      = "AUTH0_SPA_CLIENT_ID"
-            valueFrom = "${var.secrets_arn}:auth0_spa_client_id::"
-          },
-        ]) : []
+        # Auth0 secrets (required)
+        {
+          name      = "AUTH0_API_AUDIENCE"
+          valueFrom = "${var.secrets_arn}:auth0_api_audience::"
+        },
+        {
+          name      = "AUTH0_CONNECTION"
+          valueFrom = "${var.secrets_arn}:auth0_connection::"
+        },
+        {
+          name      = "AUTH0_DOMAIN"
+          valueFrom = "${var.secrets_arn}:auth0_domain::"
+        },
+        {
+          name      = "AUTH0_MANAGEMENT_API_AUDIENCE"
+          valueFrom = "${var.secrets_arn}:auth0_management_api_audience::"
+        },
+        {
+          name      = "AUTH0_M2M_CLIENT_ID"
+          valueFrom = "${var.secrets_arn}:auth0_m2m_client_id::"
+        },
+        {
+          name      = "AUTH0_M2M_CLIENT_SECRET"
+          valueFrom = "${var.secrets_arn}:auth0_m2m_client_secret::"
+        },
+        {
+          name      = "AUTH0_SPA_CLIENT_ID"
+          valueFrom = "${var.secrets_arn}:auth0_spa_client_id::"
+        }
       )
       logConfiguration = {
         logDriver = "awslogs"
