@@ -17,7 +17,6 @@ from app.schemas.trig import (
 )
 from app.schemas.trig import TrigStats as TrigStatsSchema
 from app.schemas.trig import (
-    TrigSummary,
     TrigWithIncludes,
 )
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -141,8 +140,12 @@ def list_trigs(
         base + "?" + "&".join(params + [f"skip={prev_offset}"]) if skip > 0 else None
     )
 
-    # Serialize items using TrigSummary
-    items_serialized = [TrigSummary.model_validate(i).model_dump() for i in items]
+    # Serialize items minimally
+    items_serialized = [TrigMinimal.model_validate(i).model_dump() for i in items]
+    # Attach status_name to each item
+    for item, orig in zip(items_serialized, items):
+        item["status_name"] = status_crud.get_status_name_by_id(db, int(orig.status_id))
+
     return {
         "items": items_serialized,
         "pagination": {

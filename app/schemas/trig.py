@@ -57,30 +57,23 @@ class TrigDetails(BaseModel):
         }
 
 
-class TrigSummary(BaseModel):
-    """Simplified trig summary for list endpoints (future use)."""
+# class TrigSummary(BaseModel):
+#     """Simplified trig summary for list endpoints (future use)."""
 
-    id: int
-    waypoint: str
-    name: str
-    wgs_lat: Decimal
-    wgs_long: Decimal
-    county: str
-    physical_type: str
-    condition: str
+#     id: int
+#     waypoint: str
+#     name: str
+#     wgs_lat: Decimal
+#     wgs_long: Decimal
+#     county: str
+#     physical_type: str
+#     condition: str
 
-    class Config:
-        from_attributes = True
-        json_encoders = {
-            Decimal: str,
-        }
-
-
-class TrigCountResponse(BaseModel):
-    """Response model for trigpoint count queries."""
-
-    trig_id: int
-    count: int
+#     class Config:
+#         from_attributes = True
+#         json_encoders = {
+#             Decimal: str,
+#         }
 
 
 class TrigStats(BaseModel):
@@ -109,3 +102,10 @@ class TrigWithIncludes(TrigMinimal):
 
     details: Optional[TrigDetails] = None
     stats: Optional[TrigStats] = None
+
+
+class TrigCountResponse(BaseModel):
+    """Response model for trigpoint count queries."""
+
+    trig_id: int
+    count: int
