@@ -3,7 +3,6 @@ from .trig import (
     TrigDetails,
     TrigMinimal,
     TrigStats,
-    TrigSummary,
     TrigWithIncludes,
 )
 from .user import UserResponse
@@ -15,5 +14,4 @@ __all__ = [
     "TrigDetails",
     "TrigStats",
     "TrigWithIncludes",
-    "TrigSummary",
 ]

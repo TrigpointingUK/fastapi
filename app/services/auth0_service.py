@@ -10,7 +10,7 @@ This service handles:
 
 import json
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import requests
 
@@ -998,5 +998,144 @@ class Auth0Service:
             return None
 
 
-# Global instance
-auth0_service = Auth0Service()
+class DisabledAuth0Service:
+    """No-op Auth0 service used when configuration is missing.
+
+    Provides the same interface as Auth0Service but performs no operations.
+    """
+
+    def find_user_by_nickname_or_name(self, nickname: str) -> Optional[Dict]:
+        logger.debug(
+            json.dumps(
+                {
+                    "event": "auth0_disabled_find_user_by_nickname_or_name",
+                    "nickname": nickname,
+                }
+            )
+        )
+        return None
+
+    def find_user_by_auth0_id(self, auth0_user_id: str) -> Optional[Dict]:
+        logger.debug(
+            json.dumps(
+                {
+                    "event": "auth0_disabled_find_user_by_auth0_id",
+                    "auth0_user_id": auth0_user_id,
+                }
+            )
+        )
+        return None
+
+    def find_user_by_email(self, email: str) -> Optional[Dict]:
+        logger.debug(
+            json.dumps(
+                {
+                    "event": "auth0_disabled_find_user_by_email",
+                    "email": email,
+                }
+            )
+        )
+        return None
+
+    def find_user_comprehensive(
+        self, username: str, email: Optional[str] = None
+    ) -> Optional[Dict]:
+        logger.debug(
+            json.dumps(
+                {
+                    "event": "auth0_disabled_find_user_comprehensive",
+                    "display_name": username,
+                    "email": email or "",
+                }
+            )
+        )
+        return None
+
+    def create_user(
+        self,
+        username: str,
+        email: Optional[str],
+        name: str,
+        password: str,
+        user_id: int,
+        firstname: Optional[str] = None,
+        surname: Optional[str] = None,
+    ) -> Optional[Dict]:
+        logger.warning(
+            json.dumps(
+                {
+                    "event": "auth0_disabled_create_user",
+                    "display_name": username,
+                    "email": email or "",
+                }
+            )
+        )
+        return None
+
+    def update_user_email(self, user_id: str, email: str) -> bool:
+        logger.warning(
+            json.dumps(
+                {
+                    "event": "auth0_disabled_update_user_email",
+                    "user_id": user_id,
+                    "email": email,
+                }
+            )
+        )
+        return False
+
+    def update_user_profile(
+        self,
+        user_id: str,
+        firstname: Optional[str] = None,
+        surname: Optional[str] = None,
+        nickname: Optional[str] = None,
+    ) -> bool:
+        logger.warning(
+            json.dumps(
+                {
+                    "event": "auth0_disabled_update_user_profile",
+                    "user_id": user_id,
+                }
+            )
+        )
+        return False
+
+    def sync_user_to_auth0(
+        self,
+        username: str,
+        email: Optional[str],
+        name: str,
+        password: str,
+        user_id: int,
+        firstname: Optional[str] = None,
+        surname: Optional[str] = None,
+    ) -> Optional[Dict]:
+        logger.info(
+            json.dumps(
+                {
+                    "event": "auth0_disabled_sync_user_to_auth0",
+                    "display_name": username,
+                    "email": email or "",
+                    "user_id": user_id,
+                }
+            )
+        )
+        return None
+
+
+# Global instance with safe fallback when not configured
+auth0_service: Any
+try:
+    auth0_service = Auth0Service()
+except Exception as e:  # pragma: no cover - depends on environment
+    logger.warning(
+        json.dumps(
+            {
+                "event": "auth0_service_initialization_failed",
+                "error": str(e),
+                "note": "Using DisabledAuth0Service",
+            }
+        )
+    )
+    auth0_service = DisabledAuth0Service()
