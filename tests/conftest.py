@@ -9,14 +9,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from app.core.config import settings
-from app.core.security import create_access_token
-
 # from app.core.security import get_password_hash  # No longer needed - using Unix crypt
 from app.db.database import Base, get_db
 from app.main import app
 from app.models.user import TLog, User
 from fastapi.testclient import TestClient
+
+# from app.core.security import create_access_token  # Legacy JWT removed
+
 
 # Filter out deprecation warnings that are not actionable
 warnings.filterwarnings("ignore", category=DeprecationWarning, module="pydantic.*")
@@ -84,7 +84,6 @@ def test_user(db):
         email="test@example.com",
         cryptpw=cryptpw,
         about="Test user for unit tests",
-        admin_ind="N",
         email_valid="Y",
         public_ind="Y",
     )
@@ -92,33 +91,6 @@ def test_user(db):
     db.commit()
     db.refresh(user)
     return user
-
-
-@pytest.fixture
-def test_admin_user(db):
-    """Create a test admin user."""
-    import crypt
-
-    # Create Unix crypt hash for testing
-    admin_password = "adminpassword123"
-    cryptpw = crypt.crypt(admin_password, "$1$testsalt$")
-
-    admin = User(
-        id=1001,  # Avoid conflicts with real data
-        name="testadmin",
-        firstname="Test",
-        surname="Admin",
-        email="admin@example.com",
-        cryptpw=cryptpw,
-        about="Test admin user for unit tests",
-        admin_ind="Y",
-        email_valid="Y",
-        public_ind="Y",
-    )
-    db.add(admin)
-    db.commit()
-    db.refresh(admin)
-    return admin
 
 
 @pytest.fixture
@@ -212,19 +184,3 @@ def test_tlog_entries(db):
         db.add(entry)
     db.commit()
     return entries
-
-
-@pytest.fixture
-def user_token(client, test_user):
-    """Get JWT token for test user."""
-    # Use legacy token generation in tests to call protected endpoints
-    settings.AUTH0_ENABLED = False
-    return create_access_token(subject=test_user.id)
-
-
-@pytest.fixture
-def admin_token(client, test_admin_user):
-    """Get JWT token for admin user."""
-    # Use legacy token generation in tests
-    settings.AUTH0_ENABLED = False
-    return create_access_token(subject=test_admin_user.id)

@@ -77,9 +77,6 @@ jobs:
     - name: Run tests
       env:
         DATABASE_URL: mysql+pymysql://test_user:test_password@localhost:3306/test_db
-        JWT_SECRET_KEY: test-secret-key
-        JWT_ALGORITHM: HS256
-        JWT_ACCESS_TOKEN_EXPIRE_MINUTES: 30
       run: |
         pytest --cov=app --cov-report=xml --cov-report=html
 

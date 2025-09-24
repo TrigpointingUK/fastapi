@@ -59,14 +59,6 @@ def test_authenticate_user_wrong_email(db: Session):
     assert user is None
 
 
-# Removed test_create_user - focusing on read-only endpoints for now
-
-
-def test_is_admin_true(db: Session, test_admin_user):
-    """Test is_admin with admin user."""
-    assert is_admin(test_admin_user) is True
-
-
 def test_is_admin_false(db: Session, test_user):
     """Test is_admin with regular user."""
     assert is_admin(test_user) is False

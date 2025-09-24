@@ -5,7 +5,8 @@ Tests for main application debug endpoints.
 from unittest.mock import patch
 
 from app.core.config import settings
-from app.core.security import create_access_token
+
+# from app.core.security import create_access_token  # Legacy JWT removed
 from fastapi.testclient import TestClient
 
 
@@ -20,28 +21,28 @@ def test_debug_auth_invalid_token_removed(client: TestClient):
     assert response.status_code == 404
 
 
-def test_debug_auth_valid_token_removed(client: TestClient, test_admin_user):
-    from datetime import timedelta
+# def test_debug_auth_valid_token_removed(client: TestClient, test_admin_user):
+#     from datetime import timedelta
 
-    access_token = create_access_token(
-        subject=test_admin_user.id, expires_delta=timedelta(minutes=30)
-    )
-    response = client.get(
-        "/debug/auth", headers={"Authorization": f"Bearer {access_token}"}
-    )
-    assert response.status_code == 404
+#     access_token = create_access_token(
+#         subject=test_admin_user.id, expires_delta=timedelta(minutes=30)
+#     )
+#     response = client.get(
+#         "/debug/auth", headers={"Authorization": f"Bearer {access_token}"}
+#     )
+#     assert response.status_code == 404
 
 
-def test_debug_auth_expired_token_removed(client: TestClient, test_admin_user):
-    from datetime import timedelta
+# def test_debug_auth_expired_token_removed(client: TestClient, test_admin_user):
+#     from datetime import timedelta
 
-    access_token = create_access_token(
-        subject=test_admin_user.id, expires_delta=timedelta(seconds=-3600)
-    )
-    response = client.get(
-        "/debug/auth", headers={"Authorization": f"Bearer {access_token}"}
-    )
-    assert response.status_code == 404
+#     access_token = create_access_token(
+#         subject=test_admin_user.id, expires_delta=timedelta(seconds=-3600)
+#     )
+#     response = client.get(
+#         "/debug/auth", headers={"Authorization": f"Bearer {access_token}"}
+#     )
+#     assert response.status_code == 404
 
 
 def test_debug_auth_malformed_token_removed(client: TestClient):

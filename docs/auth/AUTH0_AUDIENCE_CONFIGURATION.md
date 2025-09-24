@@ -26,7 +26,6 @@ Add these to your environment configuration:
 AUTH0_DOMAIN=your-domain.auth0.com
 AUTH0_SECRET_NAME=your-auth0-secret-name
 AUTH0_CONNECTION=Username-Password-Authentication
-AUTH0_ENABLED=true
 
 # Auth0 Audience Configuration
 AUTH0_MANAGEMENT_API_AUDIENCE=https://your-domain.auth0.com/api/v2/

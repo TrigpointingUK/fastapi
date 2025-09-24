@@ -11,7 +11,6 @@ from sqlalchemy.orm import Session
 from app.core.logging import get_logger
 from app.models.user import TLog, User
 from app.services.auth0_service import auth0_service
-from app.utils.username_sanitizer import sanitize_username_for_auth0
 
 logger = get_logger(__name__)
 
@@ -175,7 +174,7 @@ def authenticate_user_flexible(
                 "user_id": user.id,
                 "username": user.name,
                 "email": user.email,
-                "auth0_enabled": auth0_service.enabled,
+                "auth0_enabled": True,  # Auth0 is now always enabled
             },
         )
         auth0_service.sync_user_to_auth0(
@@ -212,7 +211,8 @@ def is_admin(user: User) -> bool:
     Returns:
         True if user is admin, False otherwise
     """
-    return str(user.admin_ind) == "Y"
+    # admin_ind field removed - admin functionality now handled via Auth0 roles/scopes
+    return False
 
 
 def is_public_profile(user: User) -> bool:
@@ -480,76 +480,34 @@ def update_user_auth0_id(db: Session, user_id: int, auth0_user_id: str) -> bool:
     return True
 
 
-def update_user_auth0_mapping(
-    db: Session, user_id: int, auth0_user_id: str, auth0_username: Optional[str]
-) -> bool:
+def update_user_auth0_mapping(db: Session, user_id: int, auth0_user_id: str) -> bool:
     """
-    Update user's Auth0 mapping: both user ID and username.
-
-    Also performs a sanity check comparing the Auth0 username with the
-    sanitized version of the legacy username. If they differ, log an error
-    but continue processing.
+    Update user's Auth0 mapping with user ID.
 
     Args:
         db: Database session
         user_id: Legacy database user ID
         auth0_user_id: Auth0 user ID (e.g. "auth0|abc123")
-        auth0_username: Username value returned by Auth0 (sanitized by Auth0)
 
     Returns:
-        True if update succeeded (at least the ID), False otherwise.
+        True if update succeeded, False otherwise.
     """
     user = get_user_by_id(db, user_id=user_id)
     if not user:
         return False
 
-    # Sanity check: compare Auth0 username with sanitized legacy username
-    try:
-        if auth0_username:
-            sanitized_legacy = sanitize_username_for_auth0(str(user.name))
-            if str(auth0_username) != sanitized_legacy:
-                logger.error(
-                    "Auth0 username mismatch after sanitization",
-                    extra={
-                        "user_id": user_id,
-                        "legacy_username": str(user.name),
-                        "sanitized_legacy_username": sanitized_legacy,
-                        "auth0_username": str(auth0_username),
-                        "auth0_user_id": str(auth0_user_id),
-                    },
-                )
-    except Exception as e:  # Defensive: do not block update on check failure
-        logger.error(  # pragma: no cover
-            "Auth0 username sanity check failed",
-            extra={"user_id": user_id, "error": str(e)},
-        )
-
-    # Try to set both fields
+    # Try to set the Auth0 user ID
     try:
         user.auth0_user_id = auth0_user_id  # type: ignore
-        if auth0_username is not None:
-            user.auth0_username = str(auth0_username)  # type: ignore
         db.commit()
         return True
     except Exception as e:
         db.rollback()
-        logger.warning(  # pragma: no cover
-            "Auth0 mapping update failed when setting username; retrying with ID only",
+        logger.error(  # pragma: no cover
+            "Auth0 mapping update failed",
             extra={"user_id": user_id, "error": str(e)},
         )
-
-        # Fallback: update only the ID to avoid losing the linkage
-        try:
-            user.auth0_user_id = auth0_user_id  # type: ignore  # pragma: no cover
-            db.commit()  # pragma: no cover
-            return True  # pragma: no cover
-        except Exception as e2:
-            db.rollback()
-            logger.error(  # pragma: no cover
-                "Auth0 mapping update failed",
-                extra={"user_id": user_id, "error": str(e2)},
-            )
-            return False  # pragma: no cover
+        return False  # pragma: no cover
 
 
 def get_user_auth0_id(db: Session, user_id: int) -> Optional[str]:

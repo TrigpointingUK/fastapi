@@ -18,11 +18,6 @@ class UserResponse(BaseModel):
     surname: str
     homepage: Optional[str] = Field(..., description="User homepage URL")
     about: str
-    # Conditionally included private/public fields
-    email: Optional[str] = None
-    email_valid: Optional[str] = None
-    admin_ind: Optional[str] = None
-    public_ind: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -46,44 +41,12 @@ class UserWithIncludes(UserResponse):
     prefs: Optional[UserPrefs] = None
 
 
-# Removed UserSummary; lists now use UserResponse
-
-
-class Token(BaseModel):
-    """JWT Token response."""
-
-    access_token: str
-    token_type: str
-
-
-class LoginResponse(BaseModel):
-    """Enhanced login response with token and essential user data."""
-
-    # JWT token for API authentication
-    access_token: str
-    token_type: str
-
-    # Essential user data (reduces need for immediate /user/me call)
-    user: UserResponse
-
-    # Optional: token metadata
-    expires_in: int  # seconds until token expires
-
-
-class UserEmail(BaseModel):
-    """User email response for JWT-protected endpoints."""
-
-    user_id: int  # Keep as user_id for API compatibility
-    email: str
-
-
 class Auth0UserInfo(BaseModel):
     """Auth0 user information from token without database lookup."""
 
     # Auth0 user details
     auth0_user_id: str = Field(..., description="Auth0 user ID")
     email: Optional[str] = Field(None, description="Email address from Auth0")
-    username: Optional[str] = Field(None, description="Username from Auth0")
     nickname: Optional[str] = Field(None, description="Nickname from Auth0")
     name: Optional[str] = Field(None, description="Display name from Auth0")
     given_name: Optional[str] = Field(None, description="Given name from Auth0")

@@ -15,7 +15,9 @@ def test_debug_auth0_requires_auth(client: TestClient):
 def test_debug_auth0_invalid_token(client: TestClient, monkeypatch):
     # Ensure validator returns None to simulate invalid token
     monkeypatch.setattr(
-        "app.core.security.validate_any_token", lambda t: None, raising=False
+        "app.core.security.auth0_validator.validate_auth0_token",
+        lambda t: None,
+        raising=False,
     )
     r = client.get(
         f"{settings.API_V1_STR}/debug/auth0",
@@ -30,7 +32,7 @@ def test_debug_auth0_valid_token_with_db_user(client: TestClient, monkeypatch):
     token_payload = {"token_type": "auth0", "sub": "auth0|xyz", "email": "e@test"}
     # Patch where the endpoint imports it
     monkeypatch.setattr(
-        "app.api.v1.endpoints.debug.validate_any_token",
+        "app.core.security.auth0_validator.validate_auth0_token",
         lambda t: token_payload,
         raising=False,
     )

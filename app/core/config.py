@@ -35,11 +35,6 @@ class Settings(BaseSettings):
         """Construct DATABASE_URL from individual database components."""
         return f"mysql+pymysql://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
-    # JWT
-    JWT_SECRET_KEY: str = "default-secret-change-in-production"
-    JWT_ALGORITHM: str = "HS256"
-    JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
-
     # CORS
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
@@ -47,7 +42,6 @@ class Settings(BaseSettings):
     AUTH0_DOMAIN: Optional[str] = None
     AUTH0_SECRET_NAME: Optional[str] = None
     AUTH0_CONNECTION: Optional[str] = None
-    AUTH0_ENABLED: bool = False
     # SPA client for Swagger OAuth2 (PKCE)
     AUTH0_SPA_CLIENT_ID: Optional[str] = None
     # M2M client for Management API

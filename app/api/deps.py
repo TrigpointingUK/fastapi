@@ -8,7 +8,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.core.security import extract_scopes, validate_any_token
+from app.core.security import auth0_validator, extract_scopes
 from app.crud.user import (
     get_user_by_auth0_id,
     get_user_by_email,
@@ -50,7 +50,7 @@ def get_current_user(
         )
 
     # Validate token (Auth0-only when enabled)
-    token_payload = validate_any_token(credentials.credentials)
+    token_payload = auth0_validator.validate_auth0_token(credentials.credentials)
     if not token_payload:
         logger.warning("Token validation failed in get_current_user")
         raise credentials_exception
@@ -91,24 +91,23 @@ def get_current_user(
                 extra={
                     "auth0_user_id": auth0_user_id,
                     "token_email": token_payload.get("email"),
-                    "token_username": token_payload.get("username"),
                     "token_nickname": token_payload.get("nickname"),
+                    "token_name": token_payload.get("name"),
                 },
             )
 
             # Get Auth0 user details
             auth0_user = auth0_service.find_user_by_auth0_id(auth0_user_id)
             if auth0_user:
-                # Try to find user by email or username from Auth0 data
+                # Try to find user by email or display name from Auth0 data
                 email = auth0_user.get("email")
-                username = auth0_user.get("username") or auth0_user.get("nickname")
+                display_name = auth0_user.get("nickname") or auth0_user.get("name")
 
                 logger.info(
                     "Auth0 user details retrieved, searching database",
                     extra={
                         "auth0_email": email,
-                        "auth0_username": username,
-                        "auth0_nickname": auth0_user.get("nickname"),
+                        "auth0_display_name": display_name,
                     },
                 )
 
@@ -120,12 +119,12 @@ def get_current_user(
                             f"Found user by email: {email} -> user_id {user.id}"
                         )
 
-                # If not found by email, try by username
-                if not user and username:
-                    user = get_user_by_name(db, username)
+                # If not found by email, try by display name (nickname/name)
+                if not user and display_name:
+                    user = get_user_by_name(db, display_name)
                     if user:
                         logger.info(
-                            f"Found user by username: {username} -> user_id {user.id}"
+                            f"Found user by name: {display_name} -> user_id {user.id}"
                         )
 
                 # If user found, update their Auth0 mapping (ID + username)
@@ -134,7 +133,6 @@ def get_current_user(
                         db,
                         int(user.id),
                         auth0_user_id,
-                        auth0_user.get("username") or auth0_user.get("nickname"),
                     )
                     logger.info(f"Updated user {user.id} with Auth0 ID {auth0_user_id}")
                     return user
@@ -143,7 +141,7 @@ def get_current_user(
                         f"No matching user found in database for Auth0 user {auth0_user_id}",
                         extra={
                             "auth0_email": email,
-                            "auth0_username": username,
+                            "auth0_display_name": display_name,
                         },
                     )
             else:
@@ -167,7 +165,7 @@ def get_current_user_optional(
         return None
 
     try:
-        token_payload = validate_any_token(credentials.credentials)
+        token_payload = auth0_validator.validate_auth0_token(credentials.credentials)
         if not token_payload:
             return None
 
@@ -183,17 +181,17 @@ def get_current_user_optional(
                 # Get Auth0 user details
                 auth0_user = auth0_service.find_user_by_auth0_id(auth0_user_id)
                 if auth0_user:
-                    # Try to find user by email or username from Auth0 data
+                    # Try to find user by email or display name from Auth0 data
                     email = auth0_user.get("email")
-                    username = auth0_user.get("username") or auth0_user.get("nickname")
+                    display_name = auth0_user.get("nickname") or auth0_user.get("name")
 
                     # Try to find existing user by email first
                     if email:
                         user = get_user_by_email(db, email)
 
-                    # If not found by email, try by username
-                    if not user and username:
-                        user = get_user_by_name(db, username)
+                    # If not found by email, try by display name (nickname/name)
+                    if not user and display_name:
+                        user = get_user_by_name(db, display_name)
 
                     # If user found, update their Auth0 mapping (ID + username)
                     if user:
@@ -201,7 +199,6 @@ def get_current_user_optional(
                             db,
                             int(user.id),
                             auth0_user_id,
-                            auth0_user.get("username") or auth0_user.get("nickname"),
                         )
                         return user
             return user
@@ -223,7 +220,7 @@ def require_scopes(*required_scopes: str):
                 detail="Not authenticated",
                 headers={"WWW-Authenticate": "Bearer"},
             )
-        token_payload = validate_any_token(credentials.credentials)
+        token_payload = auth0_validator.validate_auth0_token(credentials.credentials)
         if not token_payload:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -262,13 +259,3 @@ def require_scopes(*required_scopes: str):
         return user
 
     return _dep
-
-
-def get_current_admin_user(user: User) -> User:
-    """Legacy helper retained for tests: enforces admin_ind='Y'."""
-    if not is_admin(user):  # type: ignore[name-defined]
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Admin privileges required",
-        )
-    return user

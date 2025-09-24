@@ -4,6 +4,8 @@ Comprehensive tests for Auth0Service to improve code coverage.
 
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.services.auth0_service import Auth0Service
 
 
@@ -25,52 +27,57 @@ class TestAuth0ServiceComprehensive:
     @patch("app.services.auth0_service.settings")
     def test_init_disabled(self, mock_settings):
         """Test Auth0Service initialization when disabled."""
-        mock_settings.AUTH0_ENABLED = False
+        # Auth0 is now always enabled and will raise exception if not configured
         mock_settings.AUTH0_DOMAIN = None
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
-        service = Auth0Service()
-        assert not service.enabled
-        assert service.domain is None
+        with pytest.raises(
+            ValueError, match="AUTH0_DOMAIN is required but not configured"
+        ):
+            Auth0Service()
 
     @patch("app.services.auth0_service.settings")
     def test_init_missing_config(self, mock_settings):
         """Test Auth0Service initialization with missing configuration."""
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled and will raise exception if not configured
         mock_settings.AUTH0_DOMAIN = None
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
-        service = Auth0Service()
-        assert not service.enabled
+        with pytest.raises(
+            ValueError, match="AUTH0_DOMAIN is required but not configured"
+        ):
+            Auth0Service()
 
     @patch("app.services.auth0_service.settings")
     def test_init_missing_management_api_audience(self, mock_settings):
         """Test Auth0Service initialization with missing management API audience."""
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_CONNECTION = "test-connection"
         mock_settings.AUTH0_MANAGEMENT_API_AUDIENCE = None
 
         service = Auth0Service()
-        assert service.enabled
+        # Auth0 is now always enabled - no enabled attribute
         assert service.management_api_audience == "https://test.auth0.com/api/v2/"
 
     @patch("app.services.auth0_service.settings")
     def test_init_missing_connection(self, mock_settings):
         """Test Auth0Service initialization with missing connection."""
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled and will raise exception if not configured
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_CONNECTION = None
         mock_settings.AUTH0_MANAGEMENT_API_AUDIENCE = "https://test.auth0.com/api/v2/"
 
-        service = Auth0Service()
-        assert not service.enabled
+        with pytest.raises(
+            ValueError, match="AUTH0_CONNECTION is required but not configured"
+        ):
+            Auth0Service()
 
     @patch("app.services.auth0_service.settings")
     def test_get_auth0_credentials_missing_client_secret(self, mock_settings):
         """Test _get_auth0_credentials with missing client secret."""
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_M2M_CLIENT_ID = "test-client-id"
         mock_settings.AUTH0_M2M_CLIENT_SECRET = None  # Missing client secret
@@ -84,7 +91,7 @@ class TestAuth0ServiceComprehensive:
     @patch("app.services.auth0_service.settings")
     def test_get_auth0_credentials_empty_client_id(self, mock_settings):
         """Test _get_auth0_credentials with empty client ID."""
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_M2M_CLIENT_ID = ""  # Empty client ID
         mock_settings.AUTH0_M2M_CLIENT_SECRET = "test-client-secret"
@@ -98,7 +105,7 @@ class TestAuth0ServiceComprehensive:
     @patch("app.services.auth0_service.settings")
     def test_get_auth0_credentials_empty_client_secret(self, mock_settings):
         """Test _get_auth0_credentials with empty client secret."""
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_M2M_CLIENT_ID = "test-client-id"
         mock_settings.AUTH0_M2M_CLIENT_SECRET = ""  # Empty client secret
@@ -112,7 +119,7 @@ class TestAuth0ServiceComprehensive:
     @patch("app.services.auth0_service.settings")
     def test_get_auth0_credentials_successful_retrieval(self, mock_settings):
         """Test successful _get_auth0_credentials retrieval."""
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_M2M_CLIENT_ID = "test-client-id"
         mock_settings.AUTH0_M2M_CLIENT_SECRET = "test-client-secret"
@@ -130,32 +137,32 @@ class TestAuth0ServiceComprehensive:
     @patch("app.services.auth0_service.settings")
     def test_get_auth0_credentials_with_none_domain(self, mock_settings):
         """Test _get_auth0_credentials with None domain."""
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled and will raise exception if not configured
         mock_settings.AUTH0_DOMAIN = None
         mock_settings.AUTH0_M2M_CLIENT_ID = "test-client-id"
         mock_settings.AUTH0_M2M_CLIENT_SECRET = "test-client-secret"
 
-        service = Auth0Service()
-        # Service should be disabled when domain is None
-        result = service._get_auth0_credentials()
-        assert result is None
+        with pytest.raises(
+            ValueError, match="AUTH0_DOMAIN is required but not configured"
+        ):
+            Auth0Service()
 
-    @patch("app.services.auth0_service.settings")
-    def test_get_auth0_credentials_disabled_service(self, mock_settings):
-        """Test _get_auth0_credentials when service is disabled."""
-        mock_settings.AUTH0_ENABLED = False
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
-        mock_settings.AUTH0_CLIENT_ID = "test-client-id"
-        mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
+    # @patch("app.services.auth0_service.settings")
+    # def test_get_auth0_credentials_disabled_service(self, mock_settings):
+    #     """Test _get_auth0_credentials when service is disabled."""
+    #     # Auth0 is now always enabled - this test is no longer relevant
+    #     mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+    #     mock_settings.AUTH0_CLIENT_ID = "test-client-id"
+    #     mock_settings.AUTH0_CLIENT_SECRET = "test-client-secret"
 
-        service = Auth0Service()
-        result = service._get_auth0_credentials()
-        assert result is None
+    #     service = Auth0Service()
+    #     result = service._get_auth0_credentials()
+    #     assert result is None
 
     @patch("app.services.auth0_service.settings")
     def test_get_auth0_credentials_both_credentials_none(self, mock_settings):
         """Test _get_auth0_credentials when both credentials are None."""
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_M2M_CLIENT_ID = None
         mock_settings.AUTH0_M2M_CLIENT_SECRET = None
@@ -170,14 +177,14 @@ class TestAuth0ServiceComprehensive:
     def test_get_access_token_request_exception_with_response(self, mock_post):
         """Test _get_access_token with RequestException that has response details."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
             service.domain = "test.auth0.com"
 
             # Mock credentials retrieval
@@ -206,14 +213,14 @@ class TestAuth0ServiceComprehensive:
     def test_get_access_token_request_exception_without_response(self, mock_post):
         """Test _get_access_token with RequestException without response details."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
             service.domain = "test.auth0.com"
 
             # Mock credentials retrieval
@@ -236,14 +243,14 @@ class TestAuth0ServiceComprehensive:
     def test_get_access_token_general_exception(self, mock_post):
         """Test _get_access_token with general exception."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
             service.domain = "test.auth0.com"
 
             # Mock credentials retrieval
@@ -264,14 +271,14 @@ class TestAuth0ServiceComprehensive:
     def test_make_auth0_request_success_201(self, mock_request):
         """Test _make_auth0_request with 201 success response."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
             service.domain = "test.auth0.com"
 
             # Mock access token
@@ -291,14 +298,14 @@ class TestAuth0ServiceComprehensive:
     def test_make_auth0_request_failure_with_json_error(self, mock_request):
         """Test _make_auth0_request with failure response containing JSON error."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
             service.domain = "test.auth0.com"
 
             # Mock access token
@@ -319,14 +326,14 @@ class TestAuth0ServiceComprehensive:
     def test_make_auth0_request_failure_with_text_error(self, mock_request):
         """Test _make_auth0_request with failure response containing text error."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
             service.domain = "test.auth0.com"
 
             # Mock access token
@@ -348,14 +355,14 @@ class TestAuth0ServiceComprehensive:
     def test_make_auth0_request_exception_with_response(self, mock_request):
         """Test _make_auth0_request with RequestException that has response details."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
             service.domain = "test.auth0.com"
 
             # Mock access token
@@ -380,14 +387,14 @@ class TestAuth0ServiceComprehensive:
     def test_make_auth0_request_exception_without_response(self, mock_request):
         """Test _make_auth0_request with RequestException without response details."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
             service.domain = "test.auth0.com"
 
             # Mock access token
@@ -406,14 +413,14 @@ class TestAuth0ServiceComprehensive:
     def test_make_auth0_request_general_exception(self, mock_request):
         """Test _make_auth0_request with general exception."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
             service.domain = "test.auth0.com"
 
             # Mock access token
@@ -426,72 +433,72 @@ class TestAuth0ServiceComprehensive:
                 result = service._make_auth0_request("POST", "users", {"name": "test"})
                 assert result is None
 
-    def test_find_user_by_username_disabled(self):
-        """Test find_user_by_username when service is disabled."""
-        mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = False
+        #     def test_find_user_by_username_disabled(self):
+        #         """Test find_user_by_username when service is disabled."""
+        #         mock_settings = MagicMock()
+        #         # Auth0 is now always enabled
+        #
+        #         with patch("app.services.auth0_service.settings", mock_settings):
+        #             service = Auth0Service()
+        #             result = service.find_user_by_nickname_or_name("testuser")
+        #             assert result is None
+        #
+        #     def test_find_user_by_email_disabled(self):
+        #         """Test find_user_by_email when service is disabled."""
+        #         mock_settings = MagicMock()
+        #         # Auth0 is now always enabled
+        #
+        #         with patch("app.services.auth0_service.settings", mock_settings):
+        #             service = Auth0Service()
+        #             result = service.find_user_by_email("test@example.com")
+        #             assert result is None
+        #
+        #     # def test_find_user_comprehensive_disabled(self):
+        #     """Test find_user_comprehensive when service is disabled."""
+        #     mock_settings = MagicMock()
+        #     # Auth0 is now always enabled - this test is no longer relevant
 
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            result = service.find_user_by_nickname_or_name("testuser")
-            assert result is None
+        #     with patch("app.services.auth0_service.settings", mock_settings):
+        #         service = Auth0Service()
+        #         result = service.find_user_comprehensive("testuser", "test@example.com")
+        #         assert result is None
 
-    def test_find_user_by_email_disabled(self):
-        """Test find_user_by_email when service is disabled."""
-        mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = False
+        #     def test_create_user_disabled(self):
+        #         """Test create_user when service is disabled."""
+        #         mock_settings = MagicMock()
+        #         # Auth0 is now always enabled
+        #
+        #         with patch("app.services.auth0_service.settings", mock_settings):
+        #             service = Auth0Service()
+        #             result = service.create_user(
+        #                 "testuser", "test@example.com", "Test User", "password", 1
+        #             )
+        #             assert result is None
 
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            result = service.find_user_by_email("test@example.com")
-            assert result is None
-
-    def test_find_user_comprehensive_disabled(self):
-        """Test find_user_comprehensive when service is disabled."""
-        mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = False
-
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            result = service.find_user_comprehensive("testuser", "test@example.com")
-            assert result is None
-
-    def test_create_user_disabled(self):
-        """Test create_user when service is disabled."""
-        mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = False
-
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            result = service.create_user(
-                "testuser", "test@example.com", "Test User", "password", 1
-            )
-            assert result is None
-
-    def test_update_user_email_disabled(self):
-        """Test update_user_email when service is disabled."""
-        mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = False
-
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            result = service.update_user_email("auth0|123", "new@example.com")
-            assert result is False
-
-    def test_update_user_profile_disabled(self):
-        """Test update_user_profile when service is disabled."""
-        mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = False
-
-        with patch("app.services.auth0_service.settings", mock_settings):
-            service = Auth0Service()
-            result = service.update_user_profile("auth0|123", "John", "Doe", "johndoe")
-            assert result is False
-
-    def test_sync_user_to_auth0_disabled(self):
+        #     def test_update_user_email_disabled(self):
+        #         """Test update_user_email when service is disabled."""
+        #         mock_settings = MagicMock()
+        #         # Auth0 is now always enabled
+        #
+        #         with patch("app.services.auth0_service.settings", mock_settings):
+        #             service = Auth0Service()
+        #             result = service.update_user_email("auth0|123", "new@example.com")
+        #             assert result is False
+        #
+        #     def test_update_user_profile_disabled(self):
+        #         """Test update_user_profile when service is disabled."""
+        #         mock_settings = MagicMock()
+        #         # Auth0 is now always enabled
+        #
+        #         with patch("app.services.auth0_service.settings", mock_settings):
+        #             service = Auth0Service()
+        #             result = service.update_user_profile("auth0|123", "John", "Doe", "johndoe")
+        #             assert result is False
+        #
+        #     def test_sync_user_to_auth0_disabled(self):
         """Test sync_user_to_auth0 when service is disabled."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = False
+        # Auth0 is now always enabled
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
@@ -503,14 +510,14 @@ class TestAuth0ServiceComprehensive:
     def test_update_user_profile_no_fields(self):
         """Test update_user_profile with no fields to update."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
 
             # Test with no fields to update
             result = service.update_user_profile("auth0|123")
@@ -520,14 +527,14 @@ class TestAuth0ServiceComprehensive:
     def test_update_user_email_success(self, mock_request):
         """Test update_user_email success."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
 
             mock_request.return_value = {
                 "user_id": "auth0|123",
@@ -546,14 +553,14 @@ class TestAuth0ServiceComprehensive:
     def test_update_user_email_failure(self, mock_request):
         """Test update_user_email failure."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
 
             mock_request.return_value = None
 
@@ -564,14 +571,14 @@ class TestAuth0ServiceComprehensive:
     def test_update_user_profile_success(self, mock_request):
         """Test update_user_profile success."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
 
             mock_request.return_value = {"user_id": "auth0|123"}
 
@@ -587,14 +594,14 @@ class TestAuth0ServiceComprehensive:
     def test_update_user_profile_failure(self, mock_request):
         """Test update_user_profile failure."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
 
             mock_request.return_value = None
 
@@ -604,14 +611,14 @@ class TestAuth0ServiceComprehensive:
     def test_filter_users_by_connection_empty_list(self):
         """Test _filter_users_by_connection with empty list."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
 
             result = service._filter_users_by_connection([], "test-connection")
             assert result == []
@@ -619,14 +626,14 @@ class TestAuth0ServiceComprehensive:
     def test_filter_users_by_connection_no_matches(self):
         """Test _filter_users_by_connection with no matching connections."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
 
             users = [
                 {"user_id": "1", "identities": [{"connection": "other-connection"}]},
@@ -639,14 +646,14 @@ class TestAuth0ServiceComprehensive:
     def test_filter_users_by_connection_with_matches(self):
         """Test _filter_users_by_connection with matching connections."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
 
             users = [
                 {"user_id": "1", "identities": [{"connection": "other-connection"}]},
@@ -662,14 +669,14 @@ class TestAuth0ServiceComprehensive:
     def test_filter_users_by_connection_missing_identities(self):
         """Test _filter_users_by_connection with users missing identities."""
         mock_settings = MagicMock()
-        mock_settings.AUTH0_ENABLED = True
+        # Auth0 is now always enabled
         mock_settings.AUTH0_DOMAIN = "test.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "test-connection"
 
         with patch("app.services.auth0_service.settings", mock_settings):
             service = Auth0Service()
-            service.enabled = True
+            # Auth0 is now always enabled - no enabled attribute
 
             users = [
                 {"user_id": "1"},  # No identities key

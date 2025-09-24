@@ -89,12 +89,7 @@ variable "domain_name" {
   type        = string
 }
 
-# Auth0 Configuration
-variable "auth0_enabled" {
-  description = "Auth0 enabled in API"
-  type        = bool
-  default     = true
-}
+# Auth0 Configuration (always enabled)
 
 variable "log_level" {
   description = "Application log level (DEBUG, INFO, WARNING, ERROR)"

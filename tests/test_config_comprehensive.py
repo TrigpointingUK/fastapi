@@ -31,17 +31,11 @@ class TestConfigComprehensive:
         assert model_fields["DB_USER"].default == "user"
         assert model_fields["DB_PASSWORD"].default == "pass"
         assert model_fields["DB_NAME"].default == "db"
-        assert (
-            model_fields["JWT_SECRET_KEY"].default
-            == "default-secret-change-in-production"
-        )
-        assert model_fields["JWT_ALGORITHM"].default == "HS256"
-        assert model_fields["JWT_ACCESS_TOKEN_EXPIRE_MINUTES"].default == 30
         assert model_fields["BACKEND_CORS_ORIGINS"].default == []
         assert model_fields["AUTH0_DOMAIN"].default is None
         assert model_fields["AUTH0_SECRET_NAME"].default is None
         assert model_fields["AUTH0_CONNECTION"].default is None
-        assert model_fields["AUTH0_ENABLED"].default is False
+        # AUTH0_ENABLED field removed - Auth0 is now always enabled
         assert model_fields["LOG_LEVEL"].default == "INFO"
 
     def test_cors_origins_string_parsing(self):
@@ -106,25 +100,12 @@ class TestConfigComprehensive:
             AUTH0_DOMAIN="test.auth0.com",
             AUTH0_SECRET_NAME="test-secret",
             AUTH0_CONNECTION="custom-connection",
-            AUTH0_ENABLED=True,
         )
 
         assert settings.AUTH0_DOMAIN == "test.auth0.com"
         assert settings.AUTH0_SECRET_NAME == "test-secret"
         assert settings.AUTH0_CONNECTION == "custom-connection"
-        assert settings.AUTH0_ENABLED is True
-
-    def test_jwt_configuration(self):
-        """Test JWT configuration settings."""
-        settings = Settings(
-            JWT_SECRET_KEY="custom-secret",
-            JWT_ALGORITHM="HS512",
-            JWT_ACCESS_TOKEN_EXPIRE_MINUTES=60,
-        )
-
-        assert settings.JWT_SECRET_KEY == "custom-secret"
-        assert settings.JWT_ALGORITHM == "HS512"
-        assert settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES == 60
+        # AUTH0_ENABLED field removed - Auth0 is now always enabled
 
     def test_database_configuration(self):
         """Test database configuration."""
@@ -142,7 +123,6 @@ class TestConfigComprehensive:
         import os
 
         # Set environment variables
-        os.environ["JWT_SECRET_KEY"] = "env-secret-key"
         os.environ["DB_HOST"] = "env-host"
         os.environ["DB_PORT"] = "5432"
         os.environ["DB_USER"] = "env-user"
@@ -154,7 +134,6 @@ class TestConfigComprehensive:
             settings = Settings()
 
             # These should be overridden by environment variables
-            assert settings.JWT_SECRET_KEY == "env-secret-key"
             assert settings.DB_HOST == "env-host"
             assert settings.DB_PORT == 5432
             assert settings.DB_USER == "env-user"
@@ -174,7 +153,6 @@ class TestConfigComprehensive:
         finally:
             # Clean up environment variables
             for var in [
-                "JWT_SECRET_KEY",
                 "DB_HOST",
                 "DB_PORT",
                 "DB_USER",
@@ -199,14 +177,11 @@ class TestConfigComprehensive:
         assert hasattr(settings, "DB_PASSWORD")
         assert hasattr(settings, "DB_NAME")
         assert hasattr(settings, "DATABASE_URL")
-        assert hasattr(settings, "JWT_SECRET_KEY")
-        assert hasattr(settings, "JWT_ALGORITHM")
-        assert hasattr(settings, "JWT_ACCESS_TOKEN_EXPIRE_MINUTES")
         assert hasattr(settings, "BACKEND_CORS_ORIGINS")
         assert hasattr(settings, "AUTH0_DOMAIN")
         assert hasattr(settings, "AUTH0_SECRET_NAME")
         assert hasattr(settings, "AUTH0_CONNECTION")
-        assert hasattr(settings, "AUTH0_ENABLED")
+        # AUTH0_ENABLED field removed - Auth0 is now always enabled
         assert hasattr(settings, "LOG_LEVEL")
 
         # Verify types are correct
@@ -219,11 +194,8 @@ class TestConfigComprehensive:
         assert isinstance(settings.DB_PASSWORD, str)
         assert isinstance(settings.DB_NAME, str)
         assert isinstance(settings.DATABASE_URL, str)
-        assert isinstance(settings.JWT_SECRET_KEY, str)
-        assert isinstance(settings.JWT_ALGORITHM, str)
-        assert isinstance(settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES, int)
         assert isinstance(settings.BACKEND_CORS_ORIGINS, list)
-        assert isinstance(settings.AUTH0_ENABLED, bool)
+        # AUTH0_ENABLED field removed - Auth0 is now always enabled
         assert isinstance(settings.LOG_LEVEL, str)
 
     def test_debug_configuration(self):
