@@ -2,6 +2,7 @@
 Trig endpoints for trigpoint data.
 """
 
+from math import cos, radians, sqrt
 from typing import Optional
 
 from sqlalchemy.orm import Session
@@ -107,10 +108,14 @@ def get_trig_by_waypoint(
 def list_trigs(
     name: Optional[str] = Query(None, description="Filter by trig name (contains)"),
     county: Optional[str] = Query(None, description="Filter by county (exact)"),
-    skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(
-        10, ge=1, le=100, description="Maximum number of records to return"
+    lat: Optional[float] = Query(None, description="Centre latitude (WGS84)"),
+    lon: Optional[float] = Query(None, description="Centre longitude (WGS84)"),
+    max_km: Optional[float] = Query(
+        None, ge=0, description="Max distance from centre (km)"
     ),
+    order: Optional[str] = Query(None, description="id | name | distance"),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
     _lc=lifecycle("beta"),
     db: Session = Depends(get_db),
 ):
@@ -118,9 +123,36 @@ def list_trigs(
     Filtered collection endpoint for trigs returning envelope with items, pagination, links.
     """
     items = trig_crud.list_trigs_filtered(
-        db, name=name, county=county, skip=skip, limit=limit
+        db,
+        name=name,
+        county=county,
+        skip=skip,
+        limit=limit,
+        center_lat=lat,
+        center_lon=lon,
+        max_km=max_km,
+        order=order,
     )
-    total = trig_crud.count_trigs_filtered(db, name=name, county=county)
+    total = trig_crud.count_trigs_filtered(
+        db,
+        name=name,
+        county=county,
+        center_lat=lat,
+        center_lon=lon,
+        max_km=max_km,
+    )
+
+    # serialise
+    items_serialized = [TrigMinimal.model_validate(i).model_dump() for i in items]
+
+    # Compute distance_km for returned page only (cheap), matching SQL formula
+    if lat is not None and lon is not None:
+        deg_km = 111.32
+        cos_lat = cos(radians(lat))
+        for d in items_serialized:
+            dlat_km = (float(d["wgs_lat"]) - lat) * deg_km
+            dlon_km = (float(d["wgs_long"]) - lon) * deg_km * cos_lat
+            d["distance_km"] = round(sqrt(dlat_km * dlat_km + dlon_km * dlon_km), 1)
 
     has_more = (skip + len(items)) < total
     base = "/v1/trigs"
@@ -129,6 +161,14 @@ def list_trigs(
         params.append(f"name={name}")
     if county:
         params.append(f"county={county}")
+    if lat is not None:
+        params.append(f"lat={lat}")
+    if lon is not None:
+        params.append(f"lon={lon}")
+    if max_km is not None:
+        params.append(f"max_km={max_km}")
+    if order:
+        params.append(f"order={order}")
     params.append(f"limit={limit}")
     # self link
     self_link = base + "?" + "&".join(params + [f"skip={skip}"])
@@ -141,12 +181,12 @@ def list_trigs(
     )
 
     # Serialize items minimally
-    items_serialized = [TrigMinimal.model_validate(i).model_dump() for i in items]
+    # items_serialized = [TrigMinimal.model_validate(i).model_dump() for i in items]
     # Attach status_name to each item
     for item, orig in zip(items_serialized, items):
         item["status_name"] = status_crud.get_status_name_by_id(db, int(orig.status_id))
 
-    return {
+    response = {
         "items": items_serialized,
         "pagination": {
             "total": total,
@@ -156,12 +196,12 @@ def list_trigs(
         },
         "links": {"self": self_link, "next": next_link, "prev": prev_link},
     }
-
-
-# removed stats count endpoint
-
-
-# removed separate details endpoint (use include=details)
-
-
-# removed separate stats endpoint (use include=stats)
+    if lat is not None and lon is not None:
+        response["context"] = {
+            "centre": {"lat": lat, "lon": lon, "srid": 4326},
+            "max_km": max_km,
+            "order": order or "distance",
+        }
+    else:
+        response["context"] = {"order": order or "id"}
+    return response
