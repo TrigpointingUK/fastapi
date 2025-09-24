@@ -111,7 +111,7 @@ class BadgeService:
 
             if font_path:
                 font_small = ImageFont.truetype(font_path, 9)
-                font_bold = ImageFont.truetype(font_path, 12)
+                font_bold = ImageFont.truetype(font_path, 13)
         except Exception:
             # Fallback to default fonts explicitly
             font_small = ImageFont.load_default()
@@ -125,23 +125,36 @@ class BadgeService:
         stats_line = f"logged: {distinct_trigs} / photos: {total_photos}"
         footer_line = "Trigpointing.UK"
 
-        # Calculate text positioning
-        line_height = 12
-        total_text_height = 3 * line_height
-        start_y = (self.badge_height - total_text_height) // 2
+        # Calculate text positioning with equal spacing between lines
+        # Estimate text heights for better positioning
+        username_height = 13  # Bold font is larger
+        stats_height = 9  # Small font
+        footer_height = 9  # Small font
 
-        # Draw text lines with bold username
-        draw.text((text_start_x, start_y), username, font=font_bold, fill="black")
+        # Calculate equal spacing between the three lines
+        total_text_height = username_height + stats_height + footer_height
+        available_space = self.badge_height - total_text_height
+        gap_between_lines = available_space // 4  # 4 gaps: top, middle, middle, bottom
+
+        # Position each line with equal gaps
+        username_y = gap_between_lines - 2  # Move up 2 pixels as before
+        stats_y = (
+            username_y + username_height + gap_between_lines + 3
+        )  # Add 3px for better visual balance
+        footer_y = stats_y + stats_height + gap_between_lines
+
+        # Draw text lines with equal spacing
+        draw.text((text_start_x, username_y), username, font=font_bold, fill="black")
 
         draw.text(
-            (text_start_x, start_y + line_height),
+            (text_start_x, stats_y),
             stats_line,
             font=font_small,
             fill="black",
         )
 
         draw.text(
-            (text_start_x, start_y + 2 * line_height),
+            (text_start_x, footer_y),
             footer_line,
             font=font_small,
             fill="black",
