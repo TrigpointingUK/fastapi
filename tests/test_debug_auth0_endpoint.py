@@ -2,9 +2,8 @@
 Coverage tests for /v1/debug/auth0 endpoint branches.
 """
 
-from fastapi.testclient import TestClient
-
 from app.core.config import settings
+from fastapi.testclient import TestClient
 
 
 def test_debug_auth0_requires_auth(client: TestClient):

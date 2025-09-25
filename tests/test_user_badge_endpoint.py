@@ -5,9 +5,8 @@ Tests for the user badge endpoint.
 import io
 from unittest.mock import Mock, patch
 
-from fastapi.testclient import TestClient
-
 from app.main import app
+from fastapi.testclient import TestClient
 
 # import pytest  # Not used directly but may be needed by test framework
 

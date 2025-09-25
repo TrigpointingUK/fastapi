@@ -6,9 +6,6 @@ API dependencies for authentication and database access.
 
 from typing import Optional
 
-# from app.schemas.user import TokenData
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core.security import auth0_validator, extract_scopes
@@ -22,6 +19,10 @@ from app.crud.user import (
 )
 from app.db.database import get_db
 from app.models.user import User
+
+# from app.schemas.user import TokenData
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 security = HTTPBearer(auto_error=False)
 

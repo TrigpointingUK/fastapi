@@ -4,11 +4,11 @@ Username analysis endpoints for administrative operations.
 
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_scopes
 from app.api.lifecycle import openapi_lifecycle
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 router = APIRouter()
 

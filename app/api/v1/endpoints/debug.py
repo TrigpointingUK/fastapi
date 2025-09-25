@@ -1,7 +1,5 @@
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -9,6 +7,8 @@ from app.core.config import settings
 from app.core.security import auth0_validator, extract_scopes
 from app.crud.user import get_user_by_auth0_id, get_user_by_email, get_user_by_name
 from app.schemas.user import Auth0UserInfo
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import HTTPBearer
 
 router = APIRouter()
 security = HTTPBearer(auto_error=False)

@@ -2,10 +2,10 @@
 Tests for tlog endpoints.
 """
 
+from app.core.config import settings
+
 # import pytest  # Currently unused
 from fastapi.testclient import TestClient
-
-from app.core.config import settings
 
 
 def test_get_trig_count_success(client: TestClient, test_tlog_entries):
