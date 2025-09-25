@@ -96,6 +96,47 @@ def test_analyse_orientation_success(mock_boto_client):
 
 
 @patch("boto3.client")
+def test_analyse_orientation_uses_labels_and_sky(mock_boto_client):
+    """When no text or faces, labels and sky bias should influence scores."""
+    mock_client = Mock()
+    mock_boto_client.return_value = mock_client
+
+    # No text detections
+    mock_client.detect_text.return_value = {"TextDetections": []}
+    # No faces
+    mock_client.detect_faces.return_value = {"FaceDetails": []}
+    # Labels include a Tower instance that's wide, suggesting 90/270
+    mock_client.detect_labels.return_value = {
+        "Labels": [
+            {
+                "Name": "Tower",
+                "Confidence": 95.0,
+                "Instances": [
+                    {"BoundingBox": {"Width": 0.5, "Height": 0.2}, "Confidence": 92.0}
+                ],
+            }
+        ]
+    }
+
+    service = RekognitionService()
+    # Create an image with blue on the left to bias towards 90° as well
+    img = Image.new("RGB", (100, 100), color="white")
+    for x in range(0, 50):
+        for y in range(0, 100):
+            img.putpixel((x, y), (50, 80, 200))
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG")
+    image_bytes = buf.getvalue()
+
+    result = service.analyse_orientation(image_bytes)
+
+    assert result is not None
+    conf = result["orientation_confidence"]
+    # Expect non-uniform scores favouring 90/270 due to tower aspect and left sky
+    assert conf["90"] > 25.0 or conf["270"] > 25.0
+
+
+@patch("boto3.client")
 def test_analyse_orientation_no_client(mock_boto_client):
     """Test orientation analysis with no client."""
     mock_boto_client.side_effect = Exception("No AWS")

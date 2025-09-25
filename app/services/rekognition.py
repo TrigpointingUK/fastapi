@@ -5,7 +5,7 @@ AWS Rekognition service for image analysis.
 import io
 import logging
 import math
-from typing import Dict, Optional
+from typing import Dict, List, Optional, Tuple
 
 import boto3
 from botocore.exceptions import BotoCoreError, ClientError
@@ -60,7 +60,12 @@ class RekognitionService:
             logger.info(f"Found {len(text_detections)} text detections")
 
             # Analyse text orientations to infer image orientation
-            orientations = {"0": 0, "90": 0, "180": 0, "270": 0}
+            orientations: Dict[str, float] = {
+                "0": 0.0,
+                "90": 0.0,
+                "180": 0.0,
+                "270": 0.0,
+            }
             text_analysis_data = []
 
             for i, detection in enumerate(text_detections):
@@ -170,6 +175,80 @@ class RekognitionService:
             except Exception as face_error:
                 logger.debug(f"Face detection failed (not critical): {face_error}")
 
+            # Try object/scene labels to infer orientation from inherently vertical objects and sky
+            labels_count = 0
+            label_samples: List[Dict[str, float | str]] = []
+            try:
+                logger.debug("Calling Rekognition detect_labels API")
+                labels_response = self.client.detect_labels(
+                    Image={"Bytes": image_bytes}, MaxLabels=50, MinConfidence=60.0
+                )
+                labels = labels_response.get("Labels", [])
+                labels_count = len(labels)
+
+                vertical_object_names = {
+                    "Tower",
+                    "Building",
+                    "Skyscraper",
+                    "Person",
+                    "Tree",
+                    "Pole",
+                    "Lighthouse",
+                    "Flagpole",
+                    "Column",
+                    "Mast",
+                    "Monument",
+                    "Crane",
+                }
+
+                # Heuristic 1: inherently vertical objects should be taller than wide in a correctly oriented image
+                for label in labels:
+                    name = label.get("Name", "")
+                    if name in vertical_object_names:
+                        for inst in label.get("Instances", []) or []:
+                            bbox = inst.get("BoundingBox", {}) or {}
+                            w = float(bbox.get("Width", 0.0))
+                            h = float(bbox.get("Height", 0.0))
+                            conf = float(
+                                inst.get("Confidence", label.get("Confidence", 0.0))
+                            )
+                            if w <= 0.0 or h <= 0.0:
+                                continue
+                            aspect = w / h
+                            weight = max(0.0, min(1.0, conf / 100.0)) * 1.5
+                            # Very wide vertical object suggests 90/270 rotation
+                            if aspect > 1.5:
+                                orientations["90"] += weight
+                                orientations["270"] += weight
+                            # Very tall vertical object supports 0/180
+                            elif (1.0 / aspect) > 1.5:
+                                orientations["0"] += weight * 0.75
+                                orientations["180"] += weight * 0.75
+                            if len(label_samples) < 5:
+                                label_samples.append(
+                                    {"name": name, "aspect": aspect, "conf": conf}
+                                )
+
+                # Heuristic 2: sky should usually be at the top
+                sky_bias = self._estimate_sky_bias(image_bytes)
+                if sky_bias is not None:
+                    top, bottom, left, right = sky_bias
+                    # Normalise weights to [0, 1]
+                    s_total = max(1e-6, top + bottom + left + right)
+                    top_w = top / s_total
+                    bottom_w = bottom / s_total
+                    left_w = left / s_total
+                    right_w = right / s_total
+
+                    # Apply modest weights so text/face still dominate when present
+                    orientations["0"] += top_w * 0.8
+                    orientations["180"] += bottom_w * 0.8
+                    orientations["90"] += left_w * 0.8
+                    orientations["270"] += right_w * 0.8
+
+            except Exception as labels_error:
+                logger.debug(f"Label detection failed (not critical): {labels_error}")
+
             # Convert scores to confidence percentages
             total = sum(orientations.values())
             logger.info(f"Final raw scores: {orientations}, total: {total}")
@@ -178,7 +257,24 @@ class RekognitionService:
                 logger.warning(
                     "No orientation indicators found, defaulting to equal probabilities"
                 )
-                confidence_scores = {"0": 25.0, "90": 25.0, "180": 25.0, "270": 25.0}
+                # Final fallback: If EXIF orientation exists, bias toward suggested correction
+                exif_bias = self._exif_orientation_bias(image_bytes)
+                if exif_bias is None:
+                    confidence_scores = {
+                        "0": 25.0,
+                        "90": 25.0,
+                        "180": 25.0,
+                        "270": 25.0,
+                    }
+                else:
+                    # exif_bias is one of "0","90","180","270" indicating likely needed correction
+                    confidence_scores = {
+                        "0": 20.0,
+                        "90": 20.0,
+                        "180": 20.0,
+                        "270": 20.0,
+                    }
+                    confidence_scores[exif_bias] += 20.0
             else:
                 confidence_scores = {
                     angle: (score / total) * 100
@@ -213,9 +309,11 @@ class RekognitionService:
                 "debug_info": {
                     "text_detections_count": len(text_detections),
                     "faces_count": faces_count,
+                    "labels_count": labels_count,
                     "raw_scores": orientations,
                     "total_score": total,
                     "sample_text_data": text_analysis_data[:3],  # First 3 for debugging
+                    "sample_label_data": label_samples,
                 },
             }
 
@@ -353,6 +451,64 @@ class RekognitionService:
         except Exception as e:
             logger.error(f"Content moderation failed: {e}")
             return {"error": str(e)}
+
+    def _estimate_sky_bias(
+        self, image_bytes: bytes
+    ) -> Optional[Tuple[float, float, float, float]]:
+        """Estimate distribution of sky-like pixels across top/bottom/left/right.
+
+        Returns tuple (top, bottom, left, right) counts or None on failure.
+        Uses a downscaled RGB heuristic to classify sky-like pixels.
+        """
+        try:
+            with Image.open(io.BytesIO(image_bytes)) as img:
+                img = img.convert("RGB")
+                # Downscale to reduce cost
+                img.thumbnail((64, 64))
+                width, height = img.size
+                if width == 0 or height == 0:
+                    return None
+                pixels = img.load()
+                top = bottom = left = right = 0
+
+                for y in range(height):
+                    for x in range(width):
+                        r, g, b = pixels[x, y]
+                        # Sky heuristic: strong blue channel and not too dark
+                        if b > 130 and b > r + 25 and b > g + 25:
+                            if y < height // 2:
+                                top += 1
+                            else:
+                                bottom += 1
+                            if x < width // 2:
+                                left += 1
+                            else:
+                                right += 1
+                return float(top), float(bottom), float(left), float(right)
+        except Exception as e:
+            logger.debug(f"Sky bias estimation failed: {e}")
+            return None
+
+    def _exif_orientation_bias(self, image_bytes: bytes) -> Optional[str]:
+        """Return a bias angle string ("0","90","180","270") from EXIF orientation if present.
+
+        EXIF Orientation tag (274) mapping to rotation needed to display upright:
+        1 -> 0, 3 -> 180, 6 -> 90, 8 -> 270.
+        """
+        try:
+            with Image.open(io.BytesIO(image_bytes)) as img:
+                exif = getattr(img, "getexif", None)
+                if not exif:
+                    return None
+                exif_data = exif()
+                if not exif_data:
+                    return None
+                orientation = exif_data.get(274)
+                mapping = {1: "0", 3: "180", 6: "90", 8: "270"}
+                return mapping.get(orientation)
+        except Exception as e:
+            logger.debug(f"EXIF orientation read failed: {e}")
+            return None
 
 
 def get_image_dimensions(image_bytes: bytes) -> tuple[Optional[int], Optional[int]]:
