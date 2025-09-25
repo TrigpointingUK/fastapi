@@ -2,9 +2,8 @@
 Tests for app.core.xray_middleware add_xray_headers utility.
 """
 
-from fastapi import Response
-
 from app.core.xray_middleware import add_xray_headers
+from fastapi import Response
 
 
 def test_add_xray_headers_disabled(monkeypatch):

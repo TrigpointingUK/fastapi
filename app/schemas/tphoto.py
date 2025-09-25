@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field
 class TPhotoBase(BaseModel):
     id: int
     tlog_id: int
+    user_id: int
     type: str = Field(..., min_length=1, max_length=1)
     filesize: int
     height: int

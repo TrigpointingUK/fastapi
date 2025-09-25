@@ -4,10 +4,10 @@ Tests for main application debug endpoints.
 
 from unittest.mock import patch
 
+from app.core.config import settings
+
 # from app.core.security import create_access_token  # Legacy JWT removed
 from fastapi.testclient import TestClient
-
-from app.core.config import settings
 
 
 def test_debug_auth_removed(client: TestClient):

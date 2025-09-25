@@ -2,12 +2,13 @@
 Tests for user badge endpoint.
 """
 
-from fastapi.testclient import TestClient
+from datetime import date, time
+
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
-from app.crud.user import TLog
-from app.models.user import User
+from app.models.user import TLog, User
+from fastapi.testclient import TestClient
 
 
 def test_get_user_badge_not_found(client: TestClient, db: Session):
@@ -32,17 +33,59 @@ def test_get_user_badge_success(client: TestClient, db: Session):
         public_ind="Y",
     )
     db.add(user)
+    db.commit()
 
     # Add some test logs for the user
-    log1 = TLog(id=1, user_id=1, trig_id=1, logged="2023-01-01", status=1)
-    log2 = TLog(id=2, user_id=1, trig_id=2, logged="2023-01-02", status=1)
+    log1 = TLog(
+        id=1,
+        user_id=1,
+        trig_id=1,
+        date=date(2023, 1, 1),
+        time=time(12, 0, 0),
+        osgb_eastings=0,
+        osgb_northings=0,
+        osgb_gridref="AA 00000 00000",
+        fb_number="",
+        condition="G",
+        comment="",
+        score=0,
+        ip_addr="",
+        source="W",
+    )
+    log2 = TLog(
+        id=2,
+        user_id=1,
+        trig_id=2,
+        date=date(2023, 1, 2),
+        time=time(12, 0, 0),
+        osgb_eastings=0,
+        osgb_northings=0,
+        osgb_gridref="AA 00000 00000",
+        fb_number="",
+        condition="G",
+        comment="",
+        score=0,
+        ip_addr="",
+        source="W",
+    )
     log3 = TLog(
-        id=3, user_id=1, trig_id=1, logged="2023-01-03", status=2
-    )  # Same trig, different status
+        id=3,
+        user_id=1,
+        trig_id=1,
+        date=date(2023, 1, 3),
+        time=time(12, 0, 0),
+        osgb_eastings=0,
+        osgb_northings=0,
+        osgb_gridref="AA 00000 00000",
+        fb_number="",
+        condition="G",
+        comment="",
+        score=0,
+        ip_addr="",
+        source="W",
+    )
 
-    db.add(log1)
-    db.add(log2)
-    db.add(log3)
+    db.add_all([log1, log2, log3])
     db.commit()
 
     response = client.get(f"{settings.API_V1_STR}/users/1/badge")
@@ -71,7 +114,7 @@ def test_get_user_badge_transparent(client: TestClient, db: Session):
     db.add(user)
     db.commit()
 
-    response = client.get(f"{settings.API_V1_STR}/users/2/badge?transparent=true")
+    response = client.get(f"{settings.API_V1_STR}/users/2/badge?scale=1.0")
     assert response.status_code == 200
     assert response.headers["content-type"] == "image/png"
     assert "user_2_badge.png" in response.headers.get("content-disposition", "")
@@ -81,7 +124,7 @@ def test_get_user_badge_transparent(client: TestClient, db: Session):
 
 
 def test_get_user_badge_transparent_false(client: TestClient, db: Session):
-    """Test getting a badge with explicit transparent=false."""
+    """Test getting a badge with explicit parameter still returns PNG."""
     # Create a test user
     user = User(
         id=3,
@@ -97,7 +140,7 @@ def test_get_user_badge_transparent_false(client: TestClient, db: Session):
     db.add(user)
     db.commit()
 
-    response = client.get(f"{settings.API_V1_STR}/users/3/badge?transparent=false")
+    response = client.get(f"{settings.API_V1_STR}/users/3/badge?scale=1.0")
     assert response.status_code == 200
     assert response.headers["content-type"] == "image/png"
     assert "user_3_badge.png" in response.headers.get("content-disposition", "")

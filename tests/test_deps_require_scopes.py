@@ -4,11 +4,11 @@ Tests to cover require_scopes helper dependency.
 
 # from datetime import timedelta  # Legacy JWT removed
 
+from app.api.deps import require_scopes
+
 # from app.core.security import create_access_token  # Legacy JWT removed
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.testclient import TestClient
-
-from app.api.deps import require_scopes
 
 
 def _build_app():

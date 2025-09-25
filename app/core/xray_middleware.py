@@ -6,10 +6,10 @@ import logging
 import time
 from typing import Callable, Optional
 
-from fastapi import Request, Response
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import settings
+from fastapi import Request, Response
 
 logger = logging.getLogger(__name__)
 

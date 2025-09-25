@@ -1,13 +1,14 @@
 """
-TPhoto endpoints (RUD) and user photo count.
+Photo endpoints (RUD) and user photo count.
 """
 
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db, require_scopes
 from app.api.lifecycle import openapi_lifecycle
 from app.crud import tphoto as tphoto_crud
 from app.models.server import Server
+from app.models.user import TLog, User
 from app.schemas.tphoto import TPhotoResponse, TPhotoUpdate
 from fastapi import APIRouter, Depends, HTTPException
 
@@ -38,9 +39,12 @@ def get_photo(photo_id: int, db: Session = Depends(get_db)):
             return f"{base}{path}"
         return f"{base}/{path}"
 
+    # Lookup user_id from tlog
+    tlog: TLog | None = db.query(TLog).filter(TLog.id == photo.tlog_id).first()
     response = {
         "id": photo.id,
         "tlog_id": photo.tlog_id,
+        "user_id": int(tlog.user_id) if tlog else 0,
         "type": str(photo.type),
         "filesize": int(photo.filesize),
         "height": int(photo.height),
@@ -62,11 +66,32 @@ def get_photo(photo_id: int, db: Session = Depends(get_db)):
     response_model=TPhotoResponse,
     openapi_extra=openapi_lifecycle("beta"),
 )
-def update_photo(photo_id: int, payload: TPhotoUpdate, db: Session = Depends(get_db)):
+def update_photo(
+    photo_id: int,
+    payload: TPhotoUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # Load current photo and authorise BEFORE applying updates
+    existing = tphoto_crud.get_photo_by_id(db, photo_id=photo_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+    # Authorisation: owner or trig:admin
+    tlog: TLog | None = db.query(TLog).filter(TLog.id == existing.tlog_id).first()
+    if not tlog:
+        raise HTTPException(status_code=404, detail="TLog not found for photo")
+
+    # If not owner, require admin scope
+    if int(current_user.id) != int(tlog.user_id):
+        # This will raise 403 if missing
+        require_scopes("trig:admin")(db=db)
+
+    # Proceed with update
     updated = tphoto_crud.update_photo(
         db, photo_id=photo_id, updates=payload.model_dump(exclude_none=True)
     )
-    if not updated:
+    if updated is None:
         raise HTTPException(status_code=404, detail="Photo not found")
 
     server: Server | None = (
@@ -84,6 +109,7 @@ def update_photo(photo_id: int, payload: TPhotoUpdate, db: Session = Depends(get
     response = {
         "id": updated.id,
         "tlog_id": updated.tlog_id,
+        "user_id": int(tlog.user_id),
         "type": str(updated.type),
         "filesize": int(updated.filesize),
         "height": int(updated.height),
@@ -101,7 +127,23 @@ def update_photo(photo_id: int, payload: TPhotoUpdate, db: Session = Depends(get
 
 
 @router.delete("/{photo_id}", status_code=204, openapi_extra=openapi_lifecycle("beta"))
-def delete_photo(photo_id: int, db: Session = Depends(get_db)):
+def delete_photo(
+    photo_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # Load and authorise BEFORE delete
+    existing = tphoto_crud.get_photo_by_id(db, photo_id=photo_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Photo not found")
+
+    tlog = db.query(TLog).filter(TLog.id == existing.tlog_id).first()
+    if not tlog:
+        raise HTTPException(status_code=404, detail="TLog not found for photo")
+
+    if int(current_user.id) != int(tlog.user_id):
+        require_scopes("trig:admin")(db=db)
+
     ok = tphoto_crud.delete_photo(db, photo_id=photo_id, soft=True)
     if not ok:
         raise HTTPException(status_code=404, detail="Photo not found")

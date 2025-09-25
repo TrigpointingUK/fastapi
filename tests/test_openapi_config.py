@@ -2,9 +2,8 @@
 Tests for custom OpenAPI configuration.
 """
 
-from fastapi.testclient import TestClient
-
 from app.core.config import settings
+from fastapi.testclient import TestClient
 
 
 def test_openapi_schema_has_security_schemes(client: TestClient):
