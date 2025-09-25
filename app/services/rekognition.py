@@ -4,6 +4,7 @@ AWS Rekognition service for image analysis.
 
 import io
 import logging
+import math
 from typing import Dict, Optional
 
 import boto3
@@ -28,50 +29,161 @@ class RekognitionService:
         """
         Analyse image orientation using AWS Rekognition.
 
+        Uses multiple approaches:
+        1. Text detection and rotation analysis
+        2. Face detection and orientation
+        3. Object detection patterns
+
         Returns orientation confidence scores for 0°, 90°, 180°, 270° rotations.
         """
         if not self.client:
+            logger.warning("Rekognition client not available for orientation analysis")
             return None
 
+        logger.info(
+            f"Starting orientation analysis for image ({len(image_bytes)} bytes)"
+        )
+
         try:
-            response = self.client.detect_text(
+            # Try text detection first
+            logger.debug("Calling Rekognition detect_text API")
+            text_response = self.client.detect_text(
                 Image={"Bytes": image_bytes},
                 Filters={
                     "WordFilter": {
-                        "MinConfidence": 50.0,
+                        "MinConfidence": 30.0,  # Lower threshold for better detection
                     }
                 },
             )
 
+            text_detections = text_response.get("TextDetections", [])
+            logger.info(f"Found {len(text_detections)} text detections")
+
             # Analyse text orientations to infer image orientation
             orientations = {"0": 0, "90": 0, "180": 0, "270": 0}
-            text_detections = response.get("TextDetections", [])
+            text_analysis_data = []
 
-            for detection in text_detections:
+            for i, detection in enumerate(text_detections):
                 if detection.get("Type") == "WORD":
                     geometry = detection.get("Geometry", {})
                     bbox = geometry.get("BoundingBox", {})
+                    detected_text = detection.get("DetectedText", "")
+                    confidence = detection.get("Confidence", 0)
 
-                    # Simple heuristic: if text is very wide vs tall, likely rotated
+                    # Get polygon points for more accurate rotation analysis
+                    polygon = geometry.get("Polygon", [])
+
                     width = bbox.get("Width", 0)
                     height = bbox.get("Height", 0)
 
-                    if width > 0 and height > 0:
+                    if width > 0 and height > 0 and len(polygon) >= 4:
                         aspect_ratio = width / height
-                        if aspect_ratio > 3:  # Very wide text suggests 90/270° rotation
-                            orientations["90"] += 1
-                            orientations["270"] += 1
-                        elif aspect_ratio < 0.3:  # Very tall text suggests normal/180°
-                            orientations["0"] += 1
-                            orientations["180"] += 1
-                        else:
-                            orientations["0"] += 1
 
-            # Convert counts to confidence percentages
-            total = sum(orientations.values()) or 1
-            confidence_scores = {
-                angle: (count / total) * 100 for angle, count in orientations.items()
-            }
+                        # Calculate rotation from polygon points
+                        angle_deg = 0
+                        if len(polygon) >= 2:
+                            p1, p2 = polygon[0], polygon[1]
+                            dx = p2.get("X", 0) - p1.get("X", 0)
+                            dy = p2.get("Y", 0) - p1.get("Y", 0)
+
+                            # Calculate angle in degrees
+                            angle_rad = math.atan2(dy, dx)
+                            angle_deg = math.degrees(angle_rad)
+
+                            # Normalize to 0-360
+                            if angle_deg < 0:
+                                angle_deg += 360
+
+                        text_info = {
+                            "text": detected_text,
+                            "confidence": confidence,
+                            "aspect_ratio": aspect_ratio,
+                            "angle": angle_deg,
+                            "bbox": bbox,
+                        }
+                        text_analysis_data.append(text_info)
+
+                        # Log detailed info for first few detections
+                        if i < 5:
+                            logger.debug(
+                                f"Text '{detected_text}': angle={angle_deg:.1f}°, "
+                                f"aspect={aspect_ratio:.2f}, conf={confidence:.1f}"
+                            )
+
+                        # Classify orientation based on angle
+                        weight = confidence / 100.0  # Use confidence as weight
+
+                        if -15 <= angle_deg <= 15 or 345 <= angle_deg <= 360:
+                            orientations["0"] += weight
+                        elif 75 <= angle_deg <= 105:
+                            orientations["90"] += weight
+                        elif 165 <= angle_deg <= 195:
+                            orientations["180"] += weight
+                        elif 255 <= angle_deg <= 285:
+                            orientations["270"] += weight
+                        else:
+                            # For angles in between, use aspect ratio heuristic
+                            if aspect_ratio > 2.5:  # Very wide text
+                                orientations["90"] += weight * 0.5
+                                orientations["270"] += weight * 0.5
+                            elif aspect_ratio < 0.4:  # Very tall text
+                                orientations["0"] += weight * 0.5
+                                orientations["180"] += weight * 0.5
+                            else:
+                                orientations["0"] += weight * 0.3
+
+            logger.info(f"Text-based raw orientation scores: {orientations}")
+
+            # Try face detection for additional orientation clues
+            faces_count = 0
+            try:
+                logger.debug("Calling Rekognition detect_faces API")
+                face_response = self.client.detect_faces(
+                    Image={"Bytes": image_bytes}, Attributes=["POSE"]
+                )
+
+                faces = face_response.get("FaceDetails", [])
+                faces_count = len(faces)
+                logger.info(f"Found {faces_count} faces")
+
+                for face in faces:
+                    pose = face.get("Pose", {})
+                    roll = pose.get("Roll", 0)  # Roll angle indicates rotation
+                    confidence = face.get("Confidence", 0)
+
+                    logger.debug(f"Face roll angle: {roll}°, confidence: {confidence}")
+
+                    # Use face roll to adjust orientation scores
+                    weight = confidence / 100.0 * 2  # Faces are strong indicators
+
+                    if -15 <= roll <= 15:
+                        orientations["0"] += weight
+                    elif 75 <= roll <= 105:
+                        orientations[
+                            "270"
+                        ] += weight  # Face roll is opposite to image rotation
+                    elif roll >= 165 or roll <= -165:
+                        orientations["180"] += weight
+                    elif -105 <= roll <= -75:
+                        orientations["90"] += weight
+
+            except Exception as face_error:
+                logger.debug(f"Face detection failed (not critical): {face_error}")
+
+            # Convert scores to confidence percentages
+            total = sum(orientations.values())
+            logger.info(f"Final raw scores: {orientations}, total: {total}")
+
+            if total == 0:
+                logger.warning(
+                    "No orientation indicators found, defaulting to equal probabilities"
+                )
+                confidence_scores = {"0": 25.0, "90": 25.0, "180": 25.0, "270": 25.0}
+            else:
+                confidence_scores = {
+                    angle: (score / total) * 100
+                    for angle, score in orientations.items()
+                }
 
             # Determine most likely incorrect orientation
             max_incorrect = max(
@@ -80,18 +192,38 @@ class RekognitionService:
                 confidence_scores["270"],
             )
 
-            return {
+            likely_incorrect = max_incorrect > confidence_scores["0"]
+
+            if likely_incorrect:
+                suggested_rotation = max(
+                    [
+                        (angle, score)
+                        for angle, score in confidence_scores.items()
+                        if angle != "0"
+                    ],
+                    key=lambda x: x[1],
+                )[0]
+            else:
+                suggested_rotation = "0"
+
+            result = {
                 "orientation_confidence": confidence_scores,
-                "likely_incorrect": max_incorrect > confidence_scores["0"],
-                "suggested_rotation": (
-                    max(
-                        confidence_scores.items(),
-                        key=lambda x: x[1] if x[0] != "0" else 0,
-                    )[0]
-                    if max_incorrect > confidence_scores["0"]
-                    else "0"
-                ),
+                "likely_incorrect": likely_incorrect,
+                "suggested_rotation": suggested_rotation,
+                "debug_info": {
+                    "text_detections_count": len(text_detections),
+                    "faces_count": faces_count,
+                    "raw_scores": orientations,
+                    "total_score": total,
+                    "sample_text_data": text_analysis_data[:3],  # First 3 for debugging
+                },
             }
+
+            logger.info(
+                f"Orientation analysis result: likely_incorrect={likely_incorrect}, "
+                f"suggested={suggested_rotation}°, confidence_0={confidence_scores['0']:.1f}%"
+            )
+            return result
 
         except (ClientError, BotoCoreError) as e:
             logger.error(f"AWS Rekognition orientation analysis failed: {e}")
@@ -107,14 +239,19 @@ class RekognitionService:
         Detects violence, pornography, advertisements, etc.
         """
         if not self.client:
+            logger.warning("Rekognition client not available for content moderation")
             return None
 
+        logger.info(f"Starting content moderation for image ({len(image_bytes)} bytes)")
+
         try:
+            logger.debug("Calling Rekognition detect_moderation_labels API")
             response = self.client.detect_moderation_labels(
                 Image={"Bytes": image_bytes}, MinConfidence=50.0
             )
 
             moderation_labels = response.get("ModerationLabels", [])
+            logger.info(f"Found {len(moderation_labels)} moderation labels")
 
             # Categorise findings
             categories = {
@@ -196,13 +333,19 @@ class RekognitionService:
                     categories["hate_symbols"] = True
                     categories["inappropriate"] = True
 
-            return {
+            result = {
                 "findings": findings,
                 "categories": categories,
                 "max_confidence": max_confidence,
                 "is_inappropriate": categories["inappropriate"],
                 "total_labels": len(moderation_labels),
             }
+
+            logger.info(
+                f"Content moderation result: {len(findings)} findings, "
+                f"inappropriate={categories['inappropriate']}, max_conf={max_confidence:.1f}"
+            )
+            return result
 
         except (ClientError, BotoCoreError) as e:
             logger.error(f"AWS Rekognition content moderation failed: {e}")
