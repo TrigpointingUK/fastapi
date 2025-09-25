@@ -7,15 +7,15 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db
+from app.api.deps import get_db
 from app.api.lifecycle import lifecycle, openapi_lifecycle
 from app.crud import status as status_crud
 from app.crud import tlog as tlog_crud
 from app.crud import tphoto as tphoto_crud
 from app.crud import trig as trig_crud
 from app.crud import trigstats as trigstats_crud
-from app.models.user import User
-from app.schemas.tlog import TLogCreate, TLogResponse
+from app.models.server import Server
+from app.schemas.tlog import TLogResponse
 from app.schemas.tphoto import TPhotoResponse
 from app.schemas.trig import (
     TrigDetails,
@@ -25,6 +25,7 @@ from app.schemas.trig import TrigStats as TrigStatsSchema
 from app.schemas.trig import (
     TrigWithIncludes,
 )
+from app.utils.url import join_url
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 router = APIRouter()
@@ -218,6 +219,9 @@ def list_trigs(
 )
 def list_logs_for_trig(
     trig_id: int,
+    include: Optional[str] = Query(
+        None, description="Comma-separated list of includes: photos"
+    ),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
@@ -225,6 +229,44 @@ def list_logs_for_trig(
     items = tlog_crud.list_logs_filtered(db, trig_id=trig_id, skip=skip, limit=limit)
     total = tlog_crud.count_logs_filtered(db, trig_id=trig_id)
     items_serialized = [TLogResponse.model_validate(i).model_dump() for i in items]
+
+    # Handle includes
+    if include:
+        tokens = {t.strip() for t in include.split(",") if t.strip()}
+        unknown = tokens - {"photos"}
+        if unknown:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown include(s): {', '.join(sorted(unknown))}",
+            )
+        if "photos" in tokens:
+            for out, orig in zip(items_serialized, items):
+                photos = tphoto_crud.list_all_photos_for_log(db, tlog_id=int(orig.id))
+                out["photos"] = []
+                for p in photos:
+                    server: Server | None = (
+                        db.query(Server).filter(Server.id == p.server_id).first()
+                    )
+                    base_url = str(server.url) if server and server.url else ""
+                    out["photos"].append(
+                        TPhotoResponse(
+                            id=int(p.id),
+                            tlog_id=int(p.tlog_id),
+                            user_id=int(orig.user_id),
+                            type=str(p.type),
+                            filesize=int(p.filesize),
+                            height=int(p.height),
+                            width=int(p.width),
+                            icon_filesize=int(p.icon_filesize),
+                            icon_height=int(p.icon_height),
+                            icon_width=int(p.icon_width),
+                            name=str(p.name),
+                            text_desc=str(p.text_desc),
+                            public_ind=str(p.public_ind),
+                            photo_url=join_url(base_url, str(p.filename)),
+                            icon_url=join_url(base_url, str(p.icon_filename)),
+                        ).model_dump()
+                    )
     has_more = (skip + len(items)) < total
     base = f"/v1/trigs/{trig_id}/logs"
     self_link = base + f"?limit={limit}&skip={skip}"
@@ -243,22 +285,7 @@ def list_logs_for_trig(
     }
 
 
-@router.post(
-    "/{trig_id}/logs",
-    response_model=TLogResponse,
-    status_code=201,
-    openapi_extra=openapi_lifecycle("beta", note="Create log for a trig"),
-)
-def create_log_for_trig(
-    trig_id: int,
-    payload: TLogCreate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
-):
-    log = tlog_crud.create_log(
-        db, trig_id=trig_id, user_id=int(current_user.id), values=payload.model_dump()
-    )
-    return TLogResponse.model_validate(log)
+# removed POST /{trig_id}/logs to keep mutations on their resource endpoints
 
 
 @router.get(
@@ -287,6 +314,10 @@ def list_photos_for_trig(
         # Defer URLs; provide minimal fields consistent with collection shape
         # Resolve user via TLog join
         # Caution: join already filtered; just map
+        server: Server | None = (
+            db.query(Server).filter(Server.id == p.server_id).first()
+        )
+        base_url = str(server.url) if server and server.url else ""
         result_items.append(
             TPhotoResponse(
                 id=int(p.id),
@@ -302,8 +333,8 @@ def list_photos_for_trig(
                 name=str(p.name),
                 text_desc=str(p.text_desc),
                 public_ind=str(p.public_ind),
-                photo_url="",
-                icon_url="",
+                photo_url=join_url(base_url, str(p.filename)),
+                icon_url=join_url(base_url, str(p.icon_filename)),
             ).model_dump()
         )
 

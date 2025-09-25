@@ -4,7 +4,6 @@ CRUD operations for tphoto table.
 
 from typing import List, Optional
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.tphoto import TPhoto
@@ -53,15 +52,7 @@ def delete_photo(db: Session, photo_id: int, soft: bool = True) -> bool:
     return True
 
 
-def count_photos_by_user(db: Session, user_id: int) -> int:
-    """Count photos uploaded by a user via join tphoto -> tlog -> user_id."""
-    return (
-        db.query(func.count(TPhoto.id))
-        .join(TLog, TLog.id == TPhoto.tlog_id)
-        .filter(TLog.user_id == user_id, TPhoto.deleted_ind != "Y")
-        .scalar()
-        or 0
-    )
+# removed count_photos_by_user as the endpoint is removed
 
 
 def list_photos_filtered(
@@ -84,6 +75,16 @@ def list_photos_filtered(
     # Default newest first by id
     q = q.order_by(TPhoto.id.desc())
     return q.offset(skip).limit(limit).all()
+
+
+def list_all_photos_for_log(db: Session, *, tlog_id: int) -> List[TPhoto]:
+    """Return all non-deleted photos for a given tlog without pagination."""
+    return (
+        db.query(TPhoto)
+        .filter(TPhoto.tlog_id == tlog_id, TPhoto.deleted_ind != "Y")
+        .order_by(TPhoto.id.desc())
+        .all()
+    )
 
 
 def create_photo(

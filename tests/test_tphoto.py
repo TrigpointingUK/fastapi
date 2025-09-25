@@ -110,13 +110,4 @@ def test_delete_photo_soft(client: TestClient, db: Session):
     assert resp2.status_code == 404
 
 
-def test_user_photo_count(client: TestClient, db: Session):
-    user, tlog = seed_user_and_tlog(db)
-    create_sample_photo(db, tlog_id=tlog.id, photo_id=2005)
-    create_sample_photo(db, tlog_id=tlog.id, photo_id=2006)
-
-    resp = client.get(f"{settings.API_V1_STR}/photos/users/{user.id}/count")
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["user_id"] == user.id
-    assert body["photo_count"] >= 2
+# removed user photo count endpoint tests

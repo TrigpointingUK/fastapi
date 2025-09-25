@@ -12,10 +12,12 @@ from app.api.deps import get_current_user, get_db, require_scopes
 from app.api.lifecycle import openapi_lifecycle
 from app.crud import tlog as tlog_crud
 from app.crud import tphoto as tphoto_crud
+from app.models.server import Server
 from app.models.user import TLog as TLogModel
 from app.models.user import User
-from app.schemas.tlog import TLogCreate, TLogResponse, TLogUpdate
+from app.schemas.tlog import TLogCreate, TLogResponse, TLogUpdate, TLogWithIncludes
 from app.schemas.tphoto import TPhotoResponse
+from app.utils.url import join_url
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 
 router = APIRouter()
@@ -28,6 +30,9 @@ def list_logs(
     order: Optional[str] = Query(None),
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
+    include: Optional[str] = Query(
+        None, description="Comma-separated list of includes: photos"
+    ),
     db: Session = Depends(get_db),
 ):
     items = tlog_crud.list_logs_filtered(
@@ -35,6 +40,46 @@ def list_logs(
     )
     total = tlog_crud.count_logs_filtered(db, trig_id=trig_id, user_id=user_id)
     items_serialized = [TLogResponse.model_validate(i).model_dump() for i in items]
+
+    # Handle includes
+    if include:
+        tokens = {t.strip() for t in include.split(",") if t.strip()}
+        unknown = tokens - {"photos"}
+        if unknown:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown include(s): {', '.join(sorted(unknown))}",
+            )
+        if "photos" in tokens:
+            # Attach photos list for each log item
+            for out, orig in zip(items_serialized, items):
+                photos = tphoto_crud.list_all_photos_for_log(db, tlog_id=int(orig.id))
+                # Build base URLs per photo server
+                out["photos"] = []
+                for p in photos:
+                    server: Server | None = (
+                        db.query(Server).filter(Server.id == p.server_id).first()
+                    )
+                    base_url = str(server.url) if server and server.url else ""
+                    out["photos"].append(
+                        TPhotoResponse(
+                            id=int(p.id),
+                            tlog_id=int(p.tlog_id),
+                            user_id=int(orig.user_id),
+                            type=str(p.type),
+                            filesize=int(p.filesize),
+                            height=int(p.height),
+                            width=int(p.width),
+                            icon_filesize=int(p.icon_filesize),
+                            icon_height=int(p.icon_height),
+                            icon_width=int(p.icon_width),
+                            name=str(p.name),
+                            text_desc=str(p.text_desc),
+                            public_ind=str(p.public_ind),
+                            photo_url=join_url(base_url, str(p.filename)),
+                            icon_url=join_url(base_url, str(p.icon_filename)),
+                        ).model_dump()
+                    )
     has_more = (skip + len(items)) < total
     base = "/v1/logs"
     params = [f"limit={limit}"]
@@ -65,13 +110,55 @@ def list_logs(
 
 
 @router.get(
-    "/{log_id}", response_model=TLogResponse, openapi_extra=openapi_lifecycle("beta")
+    "/{log_id}",
+    response_model=TLogWithIncludes,
+    openapi_extra=openapi_lifecycle("beta"),
 )
-def get_log(log_id: int, db: Session = Depends(get_db)) -> TLogResponse:
+def get_log(
+    log_id: int,
+    include: Optional[str] = Query(
+        None, description="Comma-separated list of includes: photos"
+    ),
+    db: Session = Depends(get_db),
+) -> TLogWithIncludes:
     log = tlog_crud.get_log_by_id(db, log_id)
     if not log:
         raise HTTPException(status_code=404, detail="Log not found")
-    return TLogResponse.model_validate(log)
+    base = TLogResponse.model_validate(log).model_dump()
+
+    photos_out: Optional[list[TPhotoResponse]] = None
+    if include:
+        tokens = {t.strip() for t in include.split(",") if t.strip()}
+        unknown = tokens - {"photos"}
+        if unknown:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown include(s): {', '.join(sorted(unknown))}",
+            )
+        if "photos" in tokens:
+            photos = tphoto_crud.list_all_photos_for_log(db, tlog_id=int(log.id))
+            photos_out = [
+                TPhotoResponse(
+                    id=int(p.id),
+                    tlog_id=int(p.tlog_id),
+                    user_id=int(log.user_id),
+                    type=str(p.type),
+                    filesize=int(p.filesize),
+                    height=int(p.height),
+                    width=int(p.width),
+                    icon_filesize=int(p.icon_filesize),
+                    icon_height=int(p.icon_height),
+                    icon_width=int(p.icon_width),
+                    name=str(p.name),
+                    text_desc=str(p.text_desc),
+                    public_ind=str(p.public_ind),
+                    photo_url="",
+                    icon_url="",
+                )
+                for p in photos
+            ]
+
+    return TLogWithIncludes(**base, photos=photos_out)
 
 
 @router.post(
@@ -161,6 +248,10 @@ def list_photos_for_log(
     for p in items:
         # fetch user_id via TLog
         tlog = db.query(TLogModel).filter(TLogModel.id == p.tlog_id).first()
+        server: Server | None = (
+            db.query(Server).filter(Server.id == p.server_id).first()
+        )
+        base_url = str(server.url) if server and server.url else ""
         photos.append(
             TPhotoResponse(
                 id=int(p.id),
@@ -176,8 +267,8 @@ def list_photos_for_log(
                 name=str(p.name),
                 text_desc=str(p.text_desc),
                 public_ind=str(p.public_ind),
-                photo_url="",  # filled by /photos/{id}; omit here for now
-                icon_url="",
+                photo_url=join_url(base_url, str(p.filename)),
+                icon_url=join_url(base_url, str(p.icon_filename)),
             ).model_dump()
         )
     has_more = (skip + len(items)) < total

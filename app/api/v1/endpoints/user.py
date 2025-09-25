@@ -17,6 +17,7 @@ from app.api.lifecycle import openapi_lifecycle
 from app.crud import tlog as tlog_crud
 from app.crud import tphoto as tphoto_crud
 from app.crud import user as user_crud
+from app.models.server import Server
 from app.models.user import User
 from app.schemas.tlog import TLogResponse
 from app.schemas.tphoto import TPhotoResponse
@@ -27,6 +28,7 @@ from app.schemas.user import (
     UserWithIncludes,
 )
 from app.services.badge_service import BadgeService
+from app.utils.url import join_url
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPBearer
@@ -327,6 +329,10 @@ def list_photos_for_user(
     )
     result_items = []
     for p in items:
+        server: Server | None = (
+            db.query(Server).filter(Server.id == p.server_id).first()
+        )
+        base_url = str(server.url) if server and server.url else ""
         result_items.append(
             TPhotoResponse(
                 id=int(p.id),
@@ -342,8 +348,8 @@ def list_photos_for_user(
                 name=str(p.name),
                 text_desc=str(p.text_desc),
                 public_ind=str(p.public_ind),
-                photo_url="",
-                icon_url="",
+                photo_url=join_url(base_url, str(p.filename)),
+                icon_url=join_url(base_url, str(p.icon_filename)),
             ).model_dump()
         )
     has_more = (skip + len(items)) < total

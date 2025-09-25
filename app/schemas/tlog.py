@@ -7,6 +7,8 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from app.schemas.tphoto import TPhotoResponse
+
 
 class TLogBase(BaseModel):
     id: int
@@ -29,6 +31,11 @@ class TLogBase(BaseModel):
 
 class TLogResponse(TLogBase):
     pass
+
+
+class TLogWithIncludes(TLogBase):
+    # Optional includes for expanded responses
+    photos: Optional[list[TPhotoResponse]] = None
 
 
 class TLogCreate(BaseModel):
