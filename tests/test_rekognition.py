@@ -137,6 +137,45 @@ def test_analyse_orientation_uses_labels_and_sky(mock_boto_client):
 
 
 @patch("boto3.client")
+def test_analyse_orientation_model_boosts_when_weak_signal(
+    mock_boto_client, monkeypatch
+):
+    """Model prediction should boost a weak raw signal when enabled and confident."""
+    mock_client = Mock()
+    mock_boto_client.return_value = mock_client
+
+    # No text or faces or labels -> weak signal
+    mock_client.detect_text.return_value = {"TextDetections": []}
+    mock_client.detect_faces.return_value = {"FaceDetails": []}
+    mock_client.detect_labels.return_value = {"Labels": []}
+
+    # Enable model via settings patch
+    from app.core import config as cfg
+
+    monkeypatch.setattr(cfg.settings, "ORIENTATION_MODEL_ENABLED", True)
+    monkeypatch.setattr(cfg.settings, "ORIENTATION_MODEL_THRESHOLD", 0.5)
+
+    # Stub classifier to return 90° with high confidence
+    from app.services import rekognition as rek
+
+    class StubClassifier:
+        def predict(self, _):
+            return ("90", 0.9)
+
+    monkeypatch.setattr(
+        rek, "OrientationClassifier", lambda *_args, **_kw: StubClassifier()
+    )
+
+    service = RekognitionService()
+    image_bytes = create_test_image_bytes()
+
+    result = service.analyse_orientation(image_bytes)
+    assert result is not None
+    conf = result["orientation_confidence"]
+    assert conf["90"] > conf["0"]
+
+
+@patch("boto3.client")
 def test_analyse_orientation_no_client(mock_boto_client):
     """Test orientation analysis with no client."""
     mock_boto_client.side_effect = Exception("No AWS")

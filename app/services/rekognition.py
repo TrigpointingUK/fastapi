@@ -11,6 +11,9 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 from PIL import Image
 
+from app.core.config import settings
+from app.services.orientation_model import OrientationClassifier
+
 logger = logging.getLogger(__name__)
 
 
@@ -24,6 +27,12 @@ class RekognitionService:
         except Exception as e:
             logger.error(f"Failed to initialise Rekognition client: {e}")
             self.client = None
+        # Orientation classifier (optional, lazy-loaded)
+        self.orientation_model = (
+            OrientationClassifier(model_path=settings.ORIENTATION_MODEL_PATH)
+            if settings.ORIENTATION_MODEL_ENABLED
+            else None
+        )
 
     def analyse_orientation(self, image_bytes: bytes) -> Optional[Dict]:
         """
@@ -248,6 +257,20 @@ class RekognitionService:
 
             except Exception as labels_error:
                 logger.debug(f"Label detection failed (not critical): {labels_error}")
+
+            # If weak signal, optionally consult orientation model
+            total = sum(orientations.values())
+            weak_signal = total < 0.8  # heuristic threshold
+            if weak_signal and self.orientation_model is not None:
+                pred = self.orientation_model.predict(image_bytes)
+                if pred is not None:
+                    angle_str, prob = pred
+                    if prob >= settings.ORIENTATION_MODEL_THRESHOLD:
+                        # Boost model-predicted angle to dominate
+                        orientations[angle_str] += 2.0 * prob
+                        logger.info(
+                            f"Orientation model boost: angle={angle_str}, prob={prob:.2f}"
+                        )
 
             # Convert scores to confidence percentages
             total = sum(orientations.values())

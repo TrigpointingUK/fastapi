@@ -68,6 +68,11 @@ class Settings(BaseSettings):
     XRAY_DAEMON_ADDRESS: Optional[str] = None  # e.g., "127.0.0.1:2000"
     XRAY_TRACE_HEADER: str = "X-Amzn-Trace-Id"
 
+    # Orientation model (ONNX) configuration
+    ORIENTATION_MODEL_ENABLED: bool = False
+    ORIENTATION_MODEL_PATH: Optional[str] = None
+    ORIENTATION_MODEL_THRESHOLD: float = 0.65
+
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
