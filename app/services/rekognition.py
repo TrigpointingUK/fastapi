@@ -257,24 +257,12 @@ class RekognitionService:
                 logger.warning(
                     "No orientation indicators found, defaulting to equal probabilities"
                 )
-                # Final fallback: If EXIF orientation exists, bias toward suggested correction
-                exif_bias = self._exif_orientation_bias(image_bytes)
-                if exif_bias is None:
-                    confidence_scores = {
-                        "0": 25.0,
-                        "90": 25.0,
-                        "180": 25.0,
-                        "270": 25.0,
-                    }
-                else:
-                    # exif_bias is one of "0","90","180","270" indicating likely needed correction
-                    confidence_scores = {
-                        "0": 20.0,
-                        "90": 20.0,
-                        "180": 20.0,
-                        "270": 20.0,
-                    }
-                    confidence_scores[exif_bias] += 20.0
+                confidence_scores = {
+                    "0": 25.0,
+                    "90": 25.0,
+                    "180": 25.0,
+                    "270": 25.0,
+                }
             else:
                 confidence_scores = {
                     angle: (score / total) * 100
@@ -489,26 +477,7 @@ class RekognitionService:
             logger.debug(f"Sky bias estimation failed: {e}")
             return None
 
-    def _exif_orientation_bias(self, image_bytes: bytes) -> Optional[str]:
-        """Return a bias angle string ("0","90","180","270") from EXIF orientation if present.
-
-        EXIF Orientation tag (274) mapping to rotation needed to display upright:
-        1 -> 0, 3 -> 180, 6 -> 90, 8 -> 270.
-        """
-        try:
-            with Image.open(io.BytesIO(image_bytes)) as img:
-                exif = getattr(img, "getexif", None)
-                if not exif:
-                    return None
-                exif_data = exif()
-                if not exif_data:
-                    return None
-                orientation = exif_data.get(274)
-                mapping = {1: "0", 3: "180", 6: "90", 8: "270"}
-                return mapping.get(orientation)
-        except Exception as e:
-            logger.debug(f"EXIF orientation read failed: {e}")
-            return None
+    # Removed EXIF orientation bias helper on request to avoid double-applying rotations.
 
 
 def get_image_dimensions(image_bytes: bytes) -> tuple[Optional[int], Optional[int]]:
