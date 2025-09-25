@@ -41,7 +41,7 @@ security = HTTPBearer(auto_error=False)
     "/me",
     response_model=UserWithIncludes,
     openapi_extra=openapi_lifecycle(
-        "ga",
+        "beta",
         note="Returns the current authenticated user's profile. Supports include=stats,prefs.",
     ),
 )

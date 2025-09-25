@@ -90,6 +90,8 @@ def custom_openapi():
         f"{settings.API_V1_STR}/legacy/login",
         f"{settings.API_V1_STR}/trigs",
         f"{settings.API_V1_STR}/trigs/{{trig_id}}",
+        f"{settings.API_V1_STR}/trigs/{{trig_id}}/logs",
+        f"{settings.API_V1_STR}/trigs/{{trig_id}}/photos",
         f"{settings.API_V1_STR}/trigs/waypoint/{{waypoint}}",
         f"{settings.API_V1_STR}/photos",
         f"{settings.API_V1_STR}/photos/{{photo_id}}",
