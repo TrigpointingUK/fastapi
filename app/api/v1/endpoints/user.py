@@ -14,15 +14,23 @@ from app.api.deps import (
 from app.api.lifecycle import openapi_lifecycle
 
 # from app.core.security import auth0_validator
+from app.crud import tlog as tlog_crud
+from app.crud import tphoto as tphoto_crud
 from app.crud import user as user_crud
+from app.models.server import Server
 from app.models.user import User
+from app.schemas.tlog import TLogResponse
+from app.schemas.tphoto import TPhotoResponse
 from app.schemas.user import (
     UserPrefs,
     UserResponse,
     UserStats,
     UserWithIncludes,
 )
+from app.services.badge_service import BadgeService
+from app.utils.url import join_url
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPBearer
 
 router = APIRouter()
@@ -33,7 +41,7 @@ security = HTTPBearer(auto_error=False)
     "/me",
     response_model=UserWithIncludes,
     openapi_extra=openapi_lifecycle(
-        "ga",
+        "beta",
         note="Returns the current authenticated user's profile. Supports include=stats,prefs.",
     ),
 )
@@ -84,6 +92,62 @@ def get_current_user_profile(
             )
 
     return result
+
+
+@router.get(
+    "/{user_id}/badge",
+    responses={
+        200: {
+            "content": {"image/png": {}},
+            "description": "User statistics badge as PNG image",
+        }
+    },
+    openapi_extra=openapi_lifecycle(
+        "beta",
+        note="Generates a 200x50px PNG badge showing user statistics including nickname, trigpoints logged, and photos uploaded.",
+    ),
+)
+def get_user_badge(
+    user_id: int,
+    scale: float = Query(
+        1.0,
+        ge=0.1,
+        le=5.0,
+        description="Scale factor for badge size (0.1-5.0, default: 1.0)",
+    ),
+    db: Session = Depends(get_db),
+) -> StreamingResponse:
+    """
+    Generate a PNG badge for a user showing their statistics.
+
+    Returns a scalable PNG image (default 200x50px) with:
+
+    - TrigpointingUK logo on the left (20%)
+    - User's nickname on the first line (right 80%)
+    - "logged: X / photos: Y" on the second line
+    - "Trigpointing.UK" on the third line
+
+    Scale parameter allows resizing from 0.1x to 5.0x (e.g., scale=2.0 returns 400x100px)
+    """
+    try:
+        badge_service = BadgeService()
+        badge_bytes = badge_service.generate_badge(db, user_id, scale=scale)
+
+        return StreamingResponse(
+            badge_bytes,
+            media_type="image/png",
+            headers={
+                "Content-Disposition": f"inline; filename=user_{user_id}_badge.png",
+                "Cache-Control": "public, max-age=300",  # Cache for 5 minutes
+            },
+        )
+    except ValueError:
+        # Normalise not-found message for consistency across tests
+        raise HTTPException(status_code=404, detail="User not found")
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=f"Server configuration error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error generating badge: {e}")
 
 
 @router.get("/{user_id}", response_model=UserWithIncludes)
@@ -207,6 +271,95 @@ def list_users(
     items_serialized = [UserResponse.model_validate(u).model_dump() for u in items]
     return {
         "items": items_serialized,
+        "pagination": {
+            "total": total,
+            "limit": limit,
+            "offset": skip,
+            "has_more": has_more,
+        },
+        "links": {"self": self_link, "next": next_link, "prev": prev_link},
+    }
+
+
+@router.get("/{user_id}/logs", openapi_extra=openapi_lifecycle("beta"))
+def list_logs_for_user(
+    user_id: int,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    items = tlog_crud.list_logs_filtered(db, user_id=user_id, skip=skip, limit=limit)
+    total = tlog_crud.count_logs_filtered(db, user_id=user_id)
+    items_serialized = [TLogResponse.model_validate(i).model_dump() for i in items]
+    has_more = (skip + len(items)) < total
+    base = f"/v1/users/{user_id}/logs"
+    self_link = base + f"?limit={limit}&skip={skip}"
+    next_link = base + f"?limit={limit}&skip={skip + limit}" if has_more else None
+    prev_offset = max(skip - limit, 0)
+    prev_link = base + f"?limit={limit}&skip={prev_offset}" if skip > 0 else None
+    return {
+        "items": items_serialized,
+        "pagination": {
+            "total": total,
+            "limit": limit,
+            "offset": skip,
+            "has_more": has_more,
+        },
+        "links": {"self": self_link, "next": next_link, "prev": prev_link},
+    }
+
+
+@router.get("/{user_id}/photos", openapi_extra=openapi_lifecycle("beta"))
+def list_photos_for_user(
+    user_id: int,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    items = tphoto_crud.list_photos_filtered(
+        db, user_id=user_id, skip=skip, limit=limit
+    )
+    total = (
+        db.query(tphoto_crud.TPhoto)
+        .join(user_crud.TLog, user_crud.TLog.id == tphoto_crud.TPhoto.tlog_id)
+        .filter(
+            user_crud.TLog.user_id == user_id, tphoto_crud.TPhoto.deleted_ind != "Y"
+        )
+        .count()
+    )
+    result_items = []
+    for p in items:
+        server: Server | None = (
+            db.query(Server).filter(Server.id == p.server_id).first()
+        )
+        base_url = str(server.url) if server and server.url else ""
+        result_items.append(
+            TPhotoResponse(
+                id=int(p.id),
+                tlog_id=int(p.tlog_id),
+                user_id=user_id,
+                type=str(p.type),
+                filesize=int(p.filesize),
+                height=int(p.height),
+                width=int(p.width),
+                icon_filesize=int(p.icon_filesize),
+                icon_height=int(p.icon_height),
+                icon_width=int(p.icon_width),
+                name=str(p.name),
+                text_desc=str(p.text_desc),
+                public_ind=str(p.public_ind),
+                photo_url=join_url(base_url, str(p.filename)),
+                icon_url=join_url(base_url, str(p.icon_filename)),
+            ).model_dump()
+        )
+    has_more = (skip + len(items)) < total
+    base = f"/v1/users/{user_id}/photos"
+    self_link = base + f"?limit={limit}&skip={skip}"
+    next_link = base + f"?limit={limit}&skip={skip + limit}" if has_more else None
+    prev_offset = max(skip - limit, 0)
+    prev_link = base + f"?limit={limit}&skip={prev_offset}" if skip > 0 else None
+    return {
+        "items": result_items,
         "pagination": {
             "total": total,
             "limit": limit,

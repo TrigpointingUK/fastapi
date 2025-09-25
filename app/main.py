@@ -75,6 +75,8 @@ def custom_openapi():
                 "authorizationUrl": f"{auth_domain}/authorize",
                 "tokenUrl": f"{auth_domain}/oauth/token",
                 "scopes": {
+                    "openid": "OpenID Connect scope",
+                    "profile": "Basic profile information",
                     "trig:admin": "Administrative access to trig resources",
                     "user:admin": "Administrative access to users",
                 },
@@ -86,10 +88,32 @@ def custom_openapi():
     public_endpoints = {
         "/health",
         f"{settings.API_V1_STR}/legacy/login",
+        f"{settings.API_V1_STR}/trigs",
+        f"{settings.API_V1_STR}/trigs/{{trig_id}}",
+        f"{settings.API_V1_STR}/trigs/{{trig_id}}/logs",
+        f"{settings.API_V1_STR}/trigs/{{trig_id}}/photos",
+        f"{settings.API_V1_STR}/trigs/waypoint/{{waypoint}}",
+        f"{settings.API_V1_STR}/photos",
+        f"{settings.API_V1_STR}/photos/{{photo_id}}",
+        f"{settings.API_V1_STR}/photos/{{photo_id}}/evaluate",
+        f"{settings.API_V1_STR}/users/{{user_id}}/badge",
+        f"{settings.API_V1_STR}/users/{{user_id}}/logs",
+        f"{settings.API_V1_STR}/users/{{user_id}}/photos",
+        f"{settings.API_V1_STR}/users",
+        f"{settings.API_V1_STR}/logs",
+        f"{settings.API_V1_STR}/logs/{{log_id}}",
+        f"{settings.API_V1_STR}/logs/{{log_id}}/photos",
     }
 
     # Define endpoints with optional auth (should not have required security)
-    optional_auth_endpoints: set[str] = set()
+    optional_auth_endpoints: set[str] = {
+        f"{settings.API_V1_STR}/users/{{user_id}}",
+    }
+
+    admin_endpoints = {
+        f"{settings.API_V1_STR}/legacy/username-duplicates",
+        f"{settings.API_V1_STR}/legacy/email-duplicates",
+    }
 
     # Add security requirement to protected endpoints only
     for path in openapi_schema["paths"]:
@@ -108,11 +132,7 @@ def custom_openapi():
                     continue
 
                 # Add security requirement to all endpoints (docs/tests) using OAuth2
-                legacy_admin_paths = {
-                    f"{settings.API_V1_STR}/legacy/username-duplicates",
-                    f"{settings.API_V1_STR}/legacy/email-duplicates",
-                }
-                if path in legacy_admin_paths:
+                if path in admin_endpoints:
                     endpoint["security"] = [
                         {"OAuth2": ["openid", "profile", "user:admin"]}
                     ]

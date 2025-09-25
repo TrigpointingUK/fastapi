@@ -28,6 +28,8 @@ class TrigMinimal(BaseModel):
     wgs_long: Decimal = Field(..., description="WGS84 longitude")
     osgb_gridref: str = Field(..., description="OSGB grid reference")
 
+    distance_km: Optional[float] = None  # populated only when lat/lon provided
+
     class Config:
         from_attributes = True
         json_encoders = {
@@ -57,32 +59,6 @@ class TrigDetails(BaseModel):
         }
 
 
-class TrigSummary(BaseModel):
-    """Simplified trig summary for list endpoints (future use)."""
-
-    id: int
-    waypoint: str
-    name: str
-    wgs_lat: Decimal
-    wgs_long: Decimal
-    county: str
-    physical_type: str
-    condition: str
-
-    class Config:
-        from_attributes = True
-        json_encoders = {
-            Decimal: str,
-        }
-
-
-class TrigCountResponse(BaseModel):
-    """Response model for trigpoint count queries."""
-
-    trig_id: int
-    count: int
-
-
 class TrigStats(BaseModel):
     """Statistics for a trigpoint."""
 
@@ -109,3 +85,10 @@ class TrigWithIncludes(TrigMinimal):
 
     details: Optional[TrigDetails] = None
     stats: Optional[TrigStats] = None
+
+
+class TrigCountResponse(BaseModel):
+    """Response model for trigpoint count queries."""
+
+    trig_id: int
+    count: int
