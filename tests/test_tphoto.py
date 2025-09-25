@@ -4,12 +4,13 @@ Tests for tphoto endpoints.
 
 from datetime import datetime
 
+from fastapi.testclient import TestClient
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.server import Server
 from app.models.tphoto import TPhoto
 from app.models.user import TLog, User
-from fastapi.testclient import TestClient
 
 
 def seed_user_and_tlog(db: Session) -> tuple[User, TLog]:
@@ -120,3 +121,56 @@ def test_user_photo_count(client: TestClient, db: Session):
     body = resp.json()
     assert body["user_id"] == user.id
     assert body["photo_count"] >= 2
+
+
+def test_evaluate_photo_not_found(client: TestClient, db: Session):
+    resp = client.post(f"{settings.API_V1_STR}/photos/99999/evaluate")
+    assert resp.status_code == 404
+    assert resp.json()["detail"] == "Photo not found"
+
+
+def seed_server(db: Session) -> Server:
+    """Create a test server entry."""
+    server = Server(
+        id=1, url="https://example.com/photos", path="/images", name="Test Server"
+    )
+    db.add(server)
+    db.commit()
+    return server
+
+
+def test_evaluate_photo_basic_structure(client: TestClient, db: Session):
+    """Test the basic response structure when photo exists but URLs may not work."""
+    seed_server(db)  # Ensure server exists
+    _, tlog = seed_user_and_tlog(db)
+    photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=2007)
+
+    resp = client.post(f"{settings.API_V1_STR}/photos/{photo.id}/evaluate")
+    assert resp.status_code == 200
+
+    body = resp.json()
+
+    # Check required fields are present
+    assert "photo_id" in body
+    assert "photo_accessible" in body
+    assert "icon_accessible" in body
+    assert "photo_dimension_match" in body
+    assert "icon_dimension_match" in body
+    assert "errors" in body
+
+    # Check photo_id matches
+    assert body["photo_id"] == photo.id
+
+    # Since URLs likely won't work in test environment,
+    # we expect accessibility to be False and errors to be present
+    assert isinstance(body["photo_accessible"], bool)
+    assert isinstance(body["icon_accessible"], bool)
+    assert isinstance(body["errors"], list)
+
+    # Optional fields should be present (may be None)
+    assert "photo_width_actual" in body
+    assert "photo_height_actual" in body
+    assert "icon_width_actual" in body
+    assert "icon_height_actual" in body
+    assert "orientation_analysis" in body
+    assert "content_moderation" in body

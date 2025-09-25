@@ -2,9 +2,9 @@
 CRUD operations for users with Unix crypt authentication.
 """
 
-import crypt
 from typing import Any, Dict, List, Optional
 
+from passlib.hash import des_crypt
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
@@ -71,7 +71,7 @@ def verify_password(plain_password: str, cryptpw: str) -> bool:
         True if password matches, False otherwise
     """
     try:
-        return crypt.crypt(plain_password, cryptpw) == cryptpw
+        return des_crypt.verify(plain_password, cryptpw)
     except OSError:
         # crypt() can raise OSError on some systems
         return False

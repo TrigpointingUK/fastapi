@@ -3,7 +3,7 @@ Pydantic schemas for tphoto endpoints.
 """
 
 # from datetime import datetime  # Not currently used
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -39,3 +39,18 @@ class TPhotoUpdate(BaseModel):
     name: Optional[str] = None
     text_desc: Optional[str] = None
     public_ind: Optional[str] = Field(None, min_length=1, max_length=1)
+
+
+class TPhotoEvaluationResponse(BaseModel):
+    photo_id: int
+    photo_accessible: bool
+    icon_accessible: bool
+    photo_dimension_match: bool
+    icon_dimension_match: bool
+    photo_width_actual: Optional[int] = None
+    photo_height_actual: Optional[int] = None
+    icon_width_actual: Optional[int] = None
+    icon_height_actual: Optional[int] = None
+    orientation_analysis: Optional[dict] = None
+    content_moderation: Optional[dict] = None
+    errors: List[str] = []

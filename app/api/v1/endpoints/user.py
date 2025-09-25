@@ -4,6 +4,9 @@ User endpoints with permission-based field filtering.
 
 from typing import Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.api.deps import (
@@ -23,9 +26,6 @@ from app.schemas.user import (
     UserWithIncludes,
 )
 from app.services.badge_service import BadgeService
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.responses import StreamingResponse
-from fastapi.security import HTTPBearer
 
 router = APIRouter()
 security = HTTPBearer(auto_error=False)

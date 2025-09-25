@@ -4,13 +4,14 @@ Main FastAPI application entry point.
 
 import logging
 
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
+
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.tracing import setup_xray_tracing
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer
 
 logger = logging.getLogger(__name__)
 

@@ -5,6 +5,7 @@ Trig endpoints for trigpoint data.
 from math import cos, radians, sqrt
 from typing import Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -20,7 +21,6 @@ from app.schemas.trig import TrigStats as TrigStatsSchema
 from app.schemas.trig import (
     TrigWithIncludes,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query
 
 router = APIRouter()
 
