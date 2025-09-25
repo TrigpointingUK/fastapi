@@ -93,6 +93,7 @@ def custom_openapi():
         f"{settings.API_V1_STR}/trigs/waypoint/{{waypoint}}",
         f"{settings.API_V1_STR}/photos",
         f"{settings.API_V1_STR}/photos/{{photo_id}}",
+        f"{settings.API_V1_STR}/photos/{{photo_id}}/evaluate",
         f"{settings.API_V1_STR}/users/{{user_id}}/badge",
         f"{settings.API_V1_STR}/users/{{user_id}}/logs",
         f"{settings.API_V1_STR}/users/{{user_id}}/photos",

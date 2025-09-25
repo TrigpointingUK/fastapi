@@ -299,10 +299,10 @@ def delete_photo(
     return None
 
 
-@router.post(
+@router.get(
     "/{photo_id}/evaluate",
     response_model=TPhotoEvaluationResponse,
-    openapi_extra=openapi_lifecycle("beta"),
+    openapi_extra=openapi_lifecycle("alpha"),
 )
 def evaluate_photo(photo_id: int, db: Session = Depends(get_db)):
     """
