@@ -4,6 +4,7 @@ Username analysis endpoints for checking duplicate sanitized usernames.
 
 from typing import Any, Dict
 
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_scopes
@@ -17,7 +18,6 @@ from app.crud.user import (
 )
 from app.models.user import User
 from app.utils.username_sanitizer import find_duplicate_sanitized_usernames
-from fastapi import APIRouter, Depends, HTTPException, status
 
 router = APIRouter()
 

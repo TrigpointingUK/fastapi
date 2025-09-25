@@ -2,8 +2,9 @@
 Tests for lifecycle helper headers and OpenAPI extras.
 """
 
-from app.api.lifecycle import lifecycle, openapi_lifecycle
 from fastapi import APIRouter, FastAPI
+
+from app.api.lifecycle import lifecycle, openapi_lifecycle
 
 
 def _build_app():

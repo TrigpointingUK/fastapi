@@ -2,8 +2,13 @@
 User endpoints with permission-based field filtering.
 """
 
+import io
 from typing import Optional
 
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
+from fastapi.security import HTTPBearer
+from PIL import Image, ImageDraw, ImageFont
 from sqlalchemy.orm import Session
 
 from app.api.deps import (
@@ -22,8 +27,6 @@ from app.schemas.user import (
     UserStats,
     UserWithIncludes,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query
-from fastapi.security import HTTPBearer
 
 router = APIRouter()
 security = HTTPBearer(auto_error=False)
@@ -215,3 +218,97 @@ def list_users(
         },
         "links": {"self": self_link, "next": next_link, "prev": prev_link},
     }
+
+
+@router.get("/{user_id}/badge")
+def get_user_badge(
+    user_id: int,
+    transparent: bool = Query(
+        False, description="Generate badge with transparent background"
+    ),
+    db: Session = Depends(get_db),
+):
+    """
+    Generate a PNG badge for a user showing their stats.
+
+    - **user_id**: The ID of the user to generate a badge for
+    - **transparent**: When true, generates badge with transparent background (default: false)
+    """
+    user = user_crud.get_user_by_id(db, user_id=user_id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Get user stats
+    total_logs = (
+        db.query(user_crud.TLog).filter(user_crud.TLog.user_id == user_id).count()
+    )
+    total_trigs = (
+        db.query(user_crud.TLog.trig_id)
+        .filter(user_crud.TLog.user_id == user_id)
+        .distinct()
+        .count()
+    )
+
+    # Create badge image
+    width, height = 300, 100
+
+    # Create image with appropriate background
+    if transparent:
+        img = Image.new("RGBA", (width, height), (0, 0, 0, 0))  # Transparent
+    else:
+        img = Image.new("RGB", (width, height), (255, 255, 255))  # White background
+
+    draw = ImageDraw.Draw(img)
+
+    # Try to use a system font, fall back to default if not available
+    try:
+        title_font = ImageFont.truetype(
+            "/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf", 16
+        )
+        text_font = ImageFont.truetype("/usr/share/fonts/dejavu/DejaVuSans.ttf", 12)
+    except (OSError, IOError):
+        try:
+            title_font = ImageFont.load_default()
+            text_font = ImageFont.load_default()
+        except Exception:
+            title_font = ImageFont.load_default()
+            text_font = ImageFont.load_default()
+
+    # Text colour (black for white background, white for transparent)
+    text_colour = (0, 0, 0) if not transparent else (255, 255, 255)
+
+    # Draw border if not transparent
+    if not transparent:
+        draw.rectangle([2, 2, width - 3, height - 3], outline=(0, 0, 0), width=2)
+
+    # Draw text
+    title_text = f"TrigpointingUK Badge"
+    name_text = f"User: {user.name}"
+    logs_text = f"Total Logs: {total_logs}"
+    trigs_text = f"Trigs Visited: {total_trigs}"
+
+    # Calculate text positions for centering
+    title_bbox = draw.textbbox((0, 0), title_text, font=title_font)
+    title_width = title_bbox[2] - title_bbox[0]
+
+    # Draw title
+    draw.text(
+        ((width - title_width) // 2, 10), title_text, fill=text_colour, font=title_font
+    )
+
+    # Draw user info
+    draw.text((10, 35), name_text, fill=text_colour, font=text_font)
+    draw.text((10, 55), logs_text, fill=text_colour, font=text_font)
+    draw.text((10, 75), trigs_text, fill=text_colour, font=text_font)
+
+    # Save image to bytes
+    img_buffer = io.BytesIO()
+    img_format = "PNG"
+    img.save(img_buffer, format=img_format)
+    img_buffer.seek(0)
+
+    return StreamingResponse(
+        io.BytesIO(img_buffer.getvalue()),
+        media_type="image/png",
+        headers={"Content-Disposition": f"inline; filename=user_{user_id}_badge.png"},
+    )

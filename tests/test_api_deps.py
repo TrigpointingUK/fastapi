@@ -2,9 +2,10 @@
 Target coverage for app/api/deps.py require_scopes branches.
 """
 
-from app.api.deps import require_scopes
 from fastapi import APIRouter, Depends, FastAPI
 from fastapi.testclient import TestClient
+
+from app.api.deps import require_scopes
 
 
 def _build_app():

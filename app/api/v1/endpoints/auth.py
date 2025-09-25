@@ -4,6 +4,8 @@ Authentication endpoints.
 
 from datetime import datetime, timezone  # noqa: F401
 
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -13,8 +15,6 @@ from app.crud.user import (
 )
 from app.schemas.user import UserResponse
 from app.services.auth0_service import auth0_service
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 
 router = APIRouter()
 

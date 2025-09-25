@@ -23,6 +23,9 @@ requests==2.32.5
 boto3==1.40.25
 types-requests==2.32.4.20250809
 
+# Image generation
+Pillow==11.1.0
+
 # AWS X-Ray and OpenTelemetry tracing
 opentelemetry-api==1.37.0
 opentelemetry-sdk==1.37.0
