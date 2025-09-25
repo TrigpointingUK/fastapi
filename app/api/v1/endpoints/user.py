@@ -103,20 +103,29 @@ def get_current_user_profile(
 )
 def get_user_badge(
     user_id: int,
+    scale: float = Query(
+        1.0,
+        ge=0.1,
+        le=5.0,
+        description="Scale factor for badge size (0.1-5.0, default: 1.0)",
+    ),
     db: Session = Depends(get_db),
 ) -> StreamingResponse:
     """
     Generate a PNG badge for a user showing their statistics.
 
-    Returns a 200x50px PNG image with:
+    Returns a scalable PNG image (default 200x50px) with:
+
     - TrigpointingUK logo on the left (20%)
     - User's nickname on the first line (right 80%)
     - "logged: X / photos: Y" on the second line
     - "Trigpointing.UK" on the third line
+
+    Scale parameter allows resizing from 0.1x to 5.0x (e.g., scale=2.0 returns 400x100px)
     """
     try:
         badge_service = BadgeService()
-        badge_bytes = badge_service.generate_badge(db, user_id)
+        badge_bytes = badge_service.generate_badge(db, user_id, scale=scale)
 
         return StreamingResponse(
             badge_bytes,
@@ -126,8 +135,9 @@ def get_user_badge(
                 "Cache-Control": "public, max-age=300",  # Cache for 5 minutes
             },
         )
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError:
+        # Normalise not-found message for consistency across tests
+        raise HTTPException(status_code=404, detail="User not found")
     except FileNotFoundError as e:
         raise HTTPException(status_code=500, detail=f"Server configuration error: {e}")
     except Exception as e:

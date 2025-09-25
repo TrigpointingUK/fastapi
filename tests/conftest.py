@@ -61,8 +61,26 @@ def db():
 
 
 @pytest.fixture(scope="function")
-def client():
-    """Create test client."""
+def client(monkeypatch):
+    """Create test client with token validator patched for legacy tokens."""
+
+    def _validate(token: str):
+        # Simple mapping: 'legacy_user_<id>' -> legacy token for that user
+        if token.startswith("legacy_user_"):
+            try:
+                user_id = int(token.split("_", 2)[2])
+                return {"token_type": "legacy", "user_id": user_id}
+            except Exception:
+                return None
+        # allow 'admin' legacy too if needed later
+        if token == "legacy_admin":
+            return {"token_type": "legacy", "user_id": 1000}
+        return None
+
+    monkeypatch.setattr(
+        "app.core.security.auth0_validator.validate_auth0_token", _validate
+    )
+
     with TestClient(app) as c:
         yield c
 

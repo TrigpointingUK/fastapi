@@ -17,8 +17,8 @@ class BadgeService:
     """Service for generating user statistics badges."""
 
     def __init__(self):
-        self.badge_width = 200
-        self.badge_height = 50
+        self.base_width = 200
+        self.base_height = 50
         self.logo_path = Path(__file__).parent.parent.parent / "res" / "tuk_logo.png"
 
     def get_user_statistics(self, db: Session, user_id: int) -> Tuple[int, int]:
@@ -44,13 +44,16 @@ class BadgeService:
 
         return distinct_trigs, total_photos
 
-    def generate_badge(self, db: Session, user_id: int) -> io.BytesIO:
+    def generate_badge(
+        self, db: Session, user_id: int, scale: float = 1.0
+    ) -> io.BytesIO:
         """
         Generate a PNG badge for a user showing their statistics.
 
         Args:
             db: Database session
             user_id: ID of the user
+            scale: Scale factor for badge size (default: 1.0)
 
         Returns:
             BytesIO object containing the PNG image data
@@ -64,6 +67,10 @@ class BadgeService:
         if not user:
             raise ValueError(f"User with ID {user_id} not found")
 
+        # Calculate scaled dimensions
+        badge_width = int(self.base_width * scale)
+        badge_height = int(self.base_height * scale)
+
         # Get statistics
         distinct_trigs, total_photos = self.get_user_statistics(db, user_id)
 
@@ -72,21 +79,23 @@ class BadgeService:
             raise FileNotFoundError(f"Logo file not found: {self.logo_path}")
 
         logo: Image.Image = Image.open(self.logo_path)
-        # Resize logo to fit within the left 20% of the badge (40px width max)
-        logo_max_width = int(self.badge_width * 0.2)
-        logo_max_height = self.badge_height - 4  # Leave 2px padding top/bottom
+        # Resize logo to fit within the left 20% of the badge (scaled)
+        logo_max_width = int(badge_width * 0.2)
+        logo_max_height = badge_height - int(
+            4 * scale
+        )  # Leave scaled padding top/bottom
 
         # Calculate scaling to maintain aspect ratio
         logo_ratio = min(logo_max_width / logo.width, logo_max_height / logo.height)
         new_logo_size = (int(logo.width * logo_ratio), int(logo.height * logo_ratio))
         logo = logo.resize(new_logo_size, Image.Resampling.LANCZOS)
 
-        # Create badge background
-        badge = Image.new("RGB", (self.badge_width, self.badge_height), "white")
+        # Create badge background with scaled dimensions
+        badge = Image.new("RGB", (badge_width, badge_height), "white")
 
-        # Paste logo on the left side, centred vertically
-        logo_x = 2
-        logo_y = (self.badge_height - logo.height) // 2
+        # Paste logo on the left side, centred vertically (scaled)
+        logo_x = int(2 * scale)
+        logo_y = (badge_height - logo.height) // 2
         badge.paste(logo, (logo_x, logo_y), logo if logo.mode == "RGBA" else None)
 
         # Set up drawing context
@@ -110,37 +119,37 @@ class BadgeService:
                     break
 
             if font_path:
-                font_small = ImageFont.truetype(font_path, 9)
-                font_bold = ImageFont.truetype(font_path, 13)
+                font_small = ImageFont.truetype(font_path, int(9 * scale))
+                font_bold = ImageFont.truetype(font_path, int(13 * scale))
         except Exception:
             # Fallback to default fonts explicitly
             font_small = ImageFont.load_default()
             font_bold = ImageFont.load_default()
 
-        # Calculate text area (right 80% of badge)
-        text_start_x = logo_x + logo.width + 5
+        # Calculate text area (right 80% of badge) with scaling
+        text_start_x = logo_x + logo.width + int(5 * scale)
 
         # Prepare text lines
         username = str(user.name)[:20]  # Truncate if too long
         stats_line = f"logged: {distinct_trigs} / photos: {total_photos}"
         footer_line = "Trigpointing.UK"
 
-        # Calculate text positioning with equal spacing between lines
+        # Calculate text positioning with equal spacing between lines (scaled)
         # Estimate text heights for better positioning
-        username_height = 13  # Bold font is larger
-        stats_height = 9  # Small font
-        footer_height = 9  # Small font
+        username_height = int(13 * scale)  # Bold font is larger
+        stats_height = int(9 * scale)  # Small font
+        footer_height = int(9 * scale)  # Small font
 
         # Calculate equal spacing between the three lines
         total_text_height = username_height + stats_height + footer_height
-        available_space = self.badge_height - total_text_height
+        available_space = badge_height - total_text_height
         gap_between_lines = available_space // 4  # 4 gaps: top, middle, middle, bottom
 
-        # Position each line with equal gaps
-        username_y = gap_between_lines - 2  # Move up 2 pixels as before
+        # Position each line with equal gaps (scaled)
+        username_y = gap_between_lines - int(2 * scale)  # Move up scaled pixels
         stats_y = (
-            username_y + username_height + gap_between_lines + 1
-        )  # Reduced from 3px to 1px - moved back up slightly
+            username_y + username_height + gap_between_lines + int(1 * scale)
+        )  # Scaled offset
         footer_y = stats_y + stats_height + gap_between_lines
 
         # Draw text lines with equal spacing
