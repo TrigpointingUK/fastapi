@@ -2,7 +2,7 @@
 CRUD operations for tphoto table.
 """
 
-from typing import Optional
+from typing import List, Optional
 
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -62,3 +62,38 @@ def count_photos_by_user(db: Session, user_id: int) -> int:
         .scalar()
         or 0
     )
+
+
+def list_photos_filtered(
+    db: Session,
+    *,
+    trig_id: Optional[int] = None,
+    tlog_id: Optional[int] = None,
+    user_id: Optional[int] = None,
+    skip: int = 0,
+    limit: int = 10,
+) -> List[TPhoto]:
+    q = db.query(TPhoto).filter(TPhoto.deleted_ind != "Y")
+    if tlog_id is not None:
+        q = q.filter(TPhoto.tlog_id == tlog_id)
+    if user_id is not None:
+        q = q.join(TLog, TLog.id == TPhoto.tlog_id).filter(TLog.user_id == user_id)
+    if trig_id is not None:
+        q = q.join(TLog, TLog.id == TPhoto.tlog_id).filter(TLog.trig_id == trig_id)
+
+    # Default newest first by id
+    q = q.order_by(TPhoto.id.desc())
+    return q.offset(skip).limit(limit).all()
+
+
+def create_photo(
+    db: Session,
+    *,
+    tlog_id: int,
+    values: dict,
+) -> TPhoto:
+    photo = TPhoto(tlog_id=tlog_id, **values)
+    db.add(photo)
+    db.commit()
+    db.refresh(photo)
+    return photo

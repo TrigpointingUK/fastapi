@@ -39,3 +39,20 @@ class TPhotoUpdate(BaseModel):
     name: Optional[str] = None
     text_desc: Optional[str] = None
     public_ind: Optional[str] = Field(None, min_length=1, max_length=1)
+
+
+class TPhotoCreate(BaseModel):
+    # Creation fields (server and filenames are required for now; upload is out of scope)
+    server_id: int
+    type: str = Field(..., min_length=1, max_length=1)
+    filename: str
+    filesize: int
+    height: int
+    width: int
+    icon_filename: str
+    icon_filesize: int
+    icon_height: int
+    icon_width: int
+    name: str
+    text_desc: str = ""
+    public_ind: str = Field("Y", min_length=1, max_length=1)

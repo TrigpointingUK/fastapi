@@ -7,11 +7,16 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db
+from app.api.deps import get_current_user, get_db
 from app.api.lifecycle import lifecycle, openapi_lifecycle
 from app.crud import status as status_crud
+from app.crud import tlog as tlog_crud
+from app.crud import tphoto as tphoto_crud
 from app.crud import trig as trig_crud
 from app.crud import trigstats as trigstats_crud
+from app.models.user import User
+from app.schemas.tlog import TLogCreate, TLogResponse
+from app.schemas.tphoto import TPhotoResponse
 from app.schemas.trig import (
     TrigDetails,
     TrigMinimal,
@@ -205,3 +210,116 @@ def list_trigs(
     else:
         response["context"] = {"order": order or "id"}
     return response
+
+
+@router.get(
+    "/{trig_id}/logs",
+    openapi_extra=openapi_lifecycle("beta", note="List logs for a trig"),
+)
+def list_logs_for_trig(
+    trig_id: int,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    items = tlog_crud.list_logs_filtered(db, trig_id=trig_id, skip=skip, limit=limit)
+    total = tlog_crud.count_logs_filtered(db, trig_id=trig_id)
+    items_serialized = [TLogResponse.model_validate(i).model_dump() for i in items]
+    has_more = (skip + len(items)) < total
+    base = f"/v1/trigs/{trig_id}/logs"
+    self_link = base + f"?limit={limit}&skip={skip}"
+    next_link = base + f"?limit={limit}&skip={skip + limit}" if has_more else None
+    prev_offset = max(skip - limit, 0)
+    prev_link = base + f"?limit={limit}&skip={prev_offset}" if skip > 0 else None
+    return {
+        "items": items_serialized,
+        "pagination": {
+            "total": total,
+            "limit": limit,
+            "offset": skip,
+            "has_more": has_more,
+        },
+        "links": {"self": self_link, "next": next_link, "prev": prev_link},
+    }
+
+
+@router.post(
+    "/{trig_id}/logs",
+    response_model=TLogResponse,
+    status_code=201,
+    openapi_extra=openapi_lifecycle("beta", note="Create log for a trig"),
+)
+def create_log_for_trig(
+    trig_id: int,
+    payload: TLogCreate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    log = tlog_crud.create_log(
+        db, trig_id=trig_id, user_id=int(current_user.id), values=payload.model_dump()
+    )
+    return TLogResponse.model_validate(log)
+
+
+@router.get(
+    "/{trig_id}/photos",
+    openapi_extra=openapi_lifecycle("beta", note="List photos for a trig"),
+)
+def list_photos_for_trig(
+    trig_id: int,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    items = tphoto_crud.list_photos_filtered(
+        db, trig_id=trig_id, skip=skip, limit=limit
+    )
+    total = (
+        db.query(tphoto_crud.TPhoto)
+        .join(tlog_crud.TLog, tlog_crud.TLog.id == tphoto_crud.TPhoto.tlog_id)
+        .filter(
+            tlog_crud.TLog.trig_id == trig_id, tphoto_crud.TPhoto.deleted_ind != "Y"
+        )
+        .count()
+    )
+    result_items = []
+    for p in items:
+        # Defer URLs; provide minimal fields consistent with collection shape
+        # Resolve user via TLog join
+        # Caution: join already filtered; just map
+        result_items.append(
+            TPhotoResponse(
+                id=int(p.id),
+                tlog_id=int(p.tlog_id),
+                user_id=0,  # omitted to avoid per-item query; can be enriched later
+                type=str(p.type),
+                filesize=int(p.filesize),
+                height=int(p.height),
+                width=int(p.width),
+                icon_filesize=int(p.icon_filesize),
+                icon_height=int(p.icon_height),
+                icon_width=int(p.icon_width),
+                name=str(p.name),
+                text_desc=str(p.text_desc),
+                public_ind=str(p.public_ind),
+                photo_url="",
+                icon_url="",
+            ).model_dump()
+        )
+
+    has_more = (skip + len(items)) < total
+    base = f"/v1/trigs/{trig_id}/photos"
+    self_link = base + f"?limit={limit}&skip={skip}"
+    next_link = base + f"?limit={limit}&skip={skip + limit}" if has_more else None
+    prev_offset = max(skip - limit, 0)
+    prev_link = base + f"?limit={limit}&skip={prev_offset}" if skip > 0 else None
+    return {
+        "items": result_items,
+        "pagination": {
+            "total": total,
+            "limit": limit,
+            "offset": skip,
+            "has_more": has_more,
+        },
+        "links": {"self": self_link, "next": next_link, "prev": prev_link},
+    }

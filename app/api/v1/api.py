@@ -17,7 +17,7 @@ api_router = APIRouter()
 
 api_router.include_router(auth.router, prefix="/legacy", tags=["legacy"])
 api_router.include_router(user.router, prefix="/users", tags=["user"])
-api_router.include_router(tlog.router, prefix="/tlogs", tags=["tlog"])
+api_router.include_router(tlog.router, prefix="/logs", tags=["log"])
 # removed legacy users subrouter
 api_router.include_router(trig.router, prefix="/trigs", tags=["trig"])
 api_router.include_router(photo.router, prefix="/photos", tags=["photo"])
