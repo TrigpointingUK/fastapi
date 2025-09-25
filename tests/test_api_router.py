@@ -2,8 +2,9 @@
 Tests for API router configuration.
 """
 
-from app.core.config import settings
 from fastapi.testclient import TestClient
+
+from app.core.config import settings
 
 
 def test_username_analysis_router_included(client: TestClient):

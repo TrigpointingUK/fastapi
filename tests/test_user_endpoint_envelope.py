@@ -2,8 +2,9 @@
 Small coverage bump for user endpoint include parsing branches.
 """
 
-from app.core.config import settings
 from fastapi.testclient import TestClient
+
+from app.core.config import settings
 
 
 def test_get_user_bad_include(client: TestClient, monkeypatch):
