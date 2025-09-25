@@ -1,3 +1,4 @@
+from .tphoto import TPhotoResponse, TPhotoUpdate
 from .trig import (
     TrigCountResponse,
     TrigDetails,
@@ -14,4 +15,6 @@ __all__ = [
     "TrigDetails",
     "TrigStats",
     "TrigWithIncludes",
+    "TPhotoResponse",
+    "TPhotoUpdate",
 ]
