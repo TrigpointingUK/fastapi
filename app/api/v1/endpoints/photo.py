@@ -1,11 +1,10 @@
 """
-Photo endpoints (RUD) and user photo count.
+Photo endpoints (CRuD) and user photo count, plus filtered collections.
 """
 
 import logging
 
 import requests
-from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_db, require_scopes
@@ -13,12 +12,156 @@ from app.api.lifecycle import openapi_lifecycle
 from app.crud import tphoto as tphoto_crud
 from app.models.server import Server
 from app.models.user import TLog, User
-from app.schemas.tphoto import TPhotoEvaluationResponse, TPhotoResponse, TPhotoUpdate
+from app.schemas.tphoto import (
+    TPhotoCreate,
+    TPhotoEvaluationResponse,
+    TPhotoResponse,
+    TPhotoUpdate,
+)
 from app.services.rekognition import RekognitionService, get_image_dimensions
+from app.utils.url import join_url
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+@router.get("", openapi_extra=openapi_lifecycle("beta"))
+def list_photos(
+    trig_id: int | None = Query(None),
+    tlog_id: int | None = Query(None),
+    user_id: int | None = Query(None),
+    skip: int = Query(0, ge=0),
+    limit: int = Query(10, ge=1, le=100),
+    db: Session = Depends(get_db),
+):
+    items = tphoto_crud.list_photos_filtered(
+        db, trig_id=trig_id, tlog_id=tlog_id, user_id=user_id, skip=skip, limit=limit
+    )
+    # total estimate with same filters
+    total = len(items) if len(items) < limit else (db.query(tphoto_crud.TPhoto).count())
+
+    # Serialise with URLs populated
+    result_items = []
+    for p in items:
+        # Resolve user via TLog
+        tlog = db.query(TLog).filter(TLog.id == p.tlog_id).first()
+        server: Server | None = (
+            db.query(Server).filter(Server.id == p.server_id).first()
+        )
+        base_url = str(server.url) if server and server.url else ""
+        result_items.append(
+            {
+                "id": int(p.id),
+                "tlog_id": int(p.tlog_id),
+                "user_id": int(tlog.user_id) if tlog else 0,
+                "type": str(p.type),
+                "filesize": int(p.filesize),
+                "height": int(p.height),
+                "width": int(p.width),
+                "icon_filesize": int(p.icon_filesize),
+                "icon_height": int(p.icon_height),
+                "icon_width": int(p.icon_width),
+                "name": str(p.name),
+                "text_desc": str(p.text_desc),
+                "public_ind": str(p.public_ind),
+                "photo_url": join_url(base_url, str(p.filename)),
+                "icon_url": join_url(base_url, str(p.icon_filename)),
+            }
+        )
+
+    has_more = (skip + len(items)) < total
+    base = "/v1/photos"
+    params = [f"limit={limit}"]
+    if trig_id is not None:
+        params.append(f"trig_id={trig_id}")
+    if tlog_id is not None:
+        params.append(f"tlog_id={tlog_id}")
+    if user_id is not None:
+        params.append(f"user_id={user_id}")
+    self_link = base + "?" + "&".join(params + [f"skip={skip}"])
+    next_link = (
+        base + "?" + "&".join(params + [f"skip={skip + limit}"]) if has_more else None
+    )
+    prev_offset = max(skip - limit, 0)
+    prev_link = (
+        base + "?" + "&".join(params + [f"skip={prev_offset}"]) if skip > 0 else None
+    )
+    return {
+        "items": result_items,
+        "pagination": {
+            "total": total,
+            "limit": limit,
+            "offset": skip,
+            "has_more": has_more,
+        },
+        "links": {"self": self_link, "next": next_link, "prev": prev_link},
+    }
+
+
+@router.post(
+    "",
+    response_model=TPhotoResponse,
+    status_code=201,
+    openapi_extra=openapi_lifecycle("beta"),
+)
+def create_photo(
+    request: Request,
+    tlog_id: int = Query(..., description="Parent log ID"),
+    payload: TPhotoCreate = Body(...),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    # Authorise based on log ownership or admin
+    tlog: TLog | None = db.query(TLog).filter(TLog.id == tlog_id).first()
+    if not tlog:
+        raise HTTPException(status_code=404, detail="Log not found")
+    if int(current_user.id) != int(tlog.user_id):
+        require_scopes("trig:admin")(db=db)
+
+    client_ip = request.client.host if request.client else "127.0.0.1"
+
+    created = tphoto_crud.create_photo(
+        db,
+        tlog_id=tlog_id,
+        values={
+            **payload.model_dump(),
+            "ip_addr": client_ip,
+            "deleted_ind": "N",
+            "source": "W",
+        },
+    )
+
+    server: Server | None = (
+        db.query(Server).filter(Server.id == created.server_id).first()
+    )
+    base_url = str(server.url) if server and server.url else ""
+
+    def join_url(base: str, path: str) -> str:
+        if not base:
+            return path
+        if base.endswith("/"):
+            return f"{base}{path}"
+        return f"{base}/{path}"
+
+    return {
+        "id": created.id,
+        "tlog_id": created.tlog_id,
+        "user_id": int(tlog.user_id),
+        "type": str(created.type),
+        "filesize": int(created.filesize),
+        "height": int(created.height),
+        "width": int(created.width),
+        "icon_filesize": int(created.icon_filesize),
+        "icon_height": int(created.icon_height),
+        "icon_width": int(created.icon_width),
+        "name": str(created.name),
+        "text_desc": str(created.text_desc),
+        "public_ind": str(created.public_ind),
+        "photo_url": join_url(base_url, str(created.filename)),
+        "icon_url": join_url(base_url, str(created.icon_filename)),
+    }
 
 
 @router.get(
@@ -154,12 +297,6 @@ def delete_photo(
     if not ok:
         raise HTTPException(status_code=404, detail="Photo not found")
     return None
-
-
-@router.get("/users/{user_id}/count", openapi_extra=openapi_lifecycle("beta"))
-def get_user_photo_count(user_id: int, db: Session = Depends(get_db)):
-    count = tphoto_crud.count_photos_by_user(db, user_id=user_id)
-    return {"user_id": user_id, "photo_count": int(count)}
 
 
 @router.post(

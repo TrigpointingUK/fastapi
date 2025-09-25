@@ -4,14 +4,13 @@ Main FastAPI application entry point.
 
 import logging
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.security import HTTPBearer
-
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.tracing import setup_xray_tracing
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.security import HTTPBearer
 
 logger = logging.getLogger(__name__)
 
@@ -92,10 +91,15 @@ def custom_openapi():
         f"{settings.API_V1_STR}/trigs",
         f"{settings.API_V1_STR}/trigs/{{trig_id}}",
         f"{settings.API_V1_STR}/trigs/waypoint/{{waypoint}}",
+        f"{settings.API_V1_STR}/photos",
         f"{settings.API_V1_STR}/photos/{{photo_id}}",
-        f"{settings.API_V1_STR}/photos/users/{{user_id}}/count",
         f"{settings.API_V1_STR}/users/{{user_id}}/badge",
+        f"{settings.API_V1_STR}/users/{{user_id}}/logs",
+        f"{settings.API_V1_STR}/users/{{user_id}}/photos",
         f"{settings.API_V1_STR}/users",
+        f"{settings.API_V1_STR}/logs",
+        f"{settings.API_V1_STR}/logs/{{log_id}}",
+        f"{settings.API_V1_STR}/logs/{{log_id}}/photos",
     }
 
     # Define endpoints with optional auth (should not have required security)

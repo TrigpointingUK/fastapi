@@ -14,3 +14,10 @@ def test_router_inclusion(client):
     paths = schema["paths"].keys()
     assert f"{settings.API_V1_STR}/trigs/{{trig_id}}" in paths
     assert f"{settings.API_V1_STR}/photos/{{photo_id}}" in paths
+    # new routes
+    assert f"{settings.API_V1_STR}/logs" in paths
+    assert f"{settings.API_V1_STR}/logs/{{log_id}}" in paths
+    assert f"{settings.API_V1_STR}/trigs/{{trig_id}}/logs" in paths
+    assert f"{settings.API_V1_STR}/trigs/{{trig_id}}/photos" in paths
+    assert f"{settings.API_V1_STR}/users/{{user_id}}/logs" in paths
+    assert f"{settings.API_V1_STR}/users/{{user_id}}/photos" in paths
