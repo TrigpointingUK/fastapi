@@ -80,7 +80,7 @@ class RekognitionService:
                         aspect_ratio = width / height
 
                         # Calculate rotation from polygon points
-                        angle_deg = 0
+                        angle_deg: float = 0.0
                         if len(polygon) >= 2:
                             p1, p2 = polygon[0], polygon[1]
                             dx = p2.get("X", 0) - p1.get("X", 0)
