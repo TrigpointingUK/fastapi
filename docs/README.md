@@ -1,3 +1,28 @@
+### Orientation model (optional)
+
+We use AWS Rekognition for content moderation and an optional ONNX model for image orientation (0/90/180/270) when scene cues are weak.
+
+Generate the model locally (self-supervised rotations):
+
+1. Put any photos under `res/orientation_data/` (subfolders are fine; images are auto-discovered).
+2. Run:
+
+```
+make orientation-model
+```
+
+This exports `res/models/orientation_classifier.onnx`.
+
+Enable in the API by setting env vars:
+
+```
+ORIENTATION_MODEL_ENABLED=true
+ORIENTATION_MODEL_PATH=/models/orientation_classifier.onnx
+ORIENTATION_MODEL_THRESHOLD=0.65
+```
+
+Bake the ONNX into the container (copy to `/models/`) or mount from EFS/S3.
+
 # FastAPI Project Documentation
 
 This directory contains all documentation for the FastAPI project, organized by category.
