@@ -2,8 +2,13 @@
 User endpoints with permission-based field filtering.
 """
 
+import io
+import json
+import os
 from typing import Optional
 
+import numpy as np
+from PIL import Image, ImageDraw
 from sqlalchemy.orm import Session
 
 from app.api.deps import (
@@ -18,6 +23,7 @@ from app.crud import tlog as tlog_crud
 from app.crud import tphoto as tphoto_crud
 from app.crud import user as user_crud
 from app.models.server import Server
+from app.models.trig import Trig
 from app.models.user import User
 from app.schemas.tlog import TLogResponse
 from app.schemas.tphoto import TPhotoResponse
@@ -28,6 +34,7 @@ from app.schemas.user import (
     UserWithIncludes,
 )
 from app.services.badge_service import BadgeService
+from app.utils.geocalibrate import CalibrationResult
 from app.utils.url import join_url
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
@@ -367,3 +374,143 @@ def list_photos_for_user(
         },
         "links": {"self": self_link, "next": next_link, "prev": prev_link},
     }
+
+
+@router.get(
+    "/{user_id}/map",
+    responses={
+        200: {
+            "content": {"image/png": {}},
+            "description": "Rendered user trigpoint map overlay as PNG",
+        }
+    },
+    openapi_extra=openapi_lifecycle(
+        "beta",
+        note=(
+            "Generates a PNG map with dots for found/notfound/notlogged trigpoints. "
+            "Colours may be provided as hex strings. Rendering order: notlogged (bottom), notfound (middle), found (top)."
+        ),
+    ),
+)
+def get_user_map(
+    user_id: int,
+    found_colour: str = Query("#ff0000", description="Hex colour for found trigs"),
+    notfound_colour: Optional[str] = Query(
+        "#0000ff", description="Hex colour for not-found trigs"
+    ),
+    notlogged_colour: Optional[str] = Query(
+        None, description="Hex colour for not-logged trigs (if provided)"
+    ),
+    db: Session = Depends(get_db),
+):
+    """
+    Render a user map overlay using `res/ukmap.jpg` and `res/uk_map_calibration.json`.
+
+    Expensive full-trig-table query is performed only when `notlogged_colour` is provided.
+    """
+    try:
+        # Normalise empty strings to None
+        notfound_hex = (notfound_colour or "").strip() or None
+        notlogged_hex = (notlogged_colour or "").strip() or None
+        found_hex = (found_colour or "#ff0000").strip() or "#ff0000"
+
+        # Load base map image (fallback if missing)
+        map_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "..",
+            "..",
+            "res",
+            "ukmap.jpg",
+        )
+        map_path = os.path.normpath(map_path)
+        if os.path.isfile(map_path):
+            base = Image.open(map_path).convert("RGB")
+        else:
+            # Fallback canvas (if resource missing)
+            base = Image.new("RGB", (800, 900), color=(255, 255, 255))
+
+        # Load calibration
+        calib_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+            "..",
+            "..",
+            "res",
+            "uk_map_calibration.json",
+        )
+        calib_path = os.path.normpath(calib_path)
+        with open(calib_path, "r") as f:
+            d = json.load(f)
+        calib = CalibrationResult(
+            affine=np.array(d["affine"], dtype=float),
+            inverse=np.array(d["inverse"], dtype=float),
+            pixel_bbox=tuple(d.get("pixel_bbox", (0, 0, base.size[0], base.size[1]))),
+            bounds_geo=tuple(d.get("bounds_geo", (-11.0, 49.0, 2.5, 61.5))),
+        )
+
+        draw = ImageDraw.Draw(base)
+
+        def draw_dot(px: float, py: float, hex_colour: str, r: int = 2) -> None:
+            if not hex_colour:
+                return
+            x = int(round(px))
+            y = int(round(py))
+            if x < 0 or y < 0 or x >= base.size[0] or y >= base.size[1]:
+                return
+            bbox = [x - r, y - r, x + r, y + r]
+            draw.ellipse(bbox, fill=hex_colour, outline=None)
+
+        GOOD = {"G", "S", "D", "T"}
+
+        # Query user's tlogs with trig coords
+        tlog_rows = (
+            db.query(
+                user_crud.TLog.trig_id,
+                user_crud.TLog.condition,
+                Trig.wgs_lat,
+                Trig.wgs_long,
+            )
+            .join(Trig, Trig.id == user_crud.TLog.trig_id)
+            .filter(user_crud.TLog.user_id == user_id)
+            .all()
+        )
+
+        # Prepare sets and lists
+        logged_ids = set()
+        found_pts = []
+        notfound_pts = []
+        for trig_id, condition, lat, lon in tlog_rows:
+            logged_ids.add(int(trig_id))
+            lat_f = float(lat)
+            lon_f = float(lon)
+            x, y = calib.lonlat_to_xy(lon_f, lat_f)
+            if str(condition) in GOOD:
+                found_pts.append((x, y))
+            else:
+                notfound_pts.append((x, y))
+
+        # Only if notlogged requested, query all trigpoints
+        if notlogged_hex:
+            all_trigs = db.query(Trig.id, Trig.wgs_lat, Trig.wgs_long).all()
+            for tid, lat, lon in all_trigs:
+                if int(tid) in logged_ids:
+                    continue
+                x, y = calib.lonlat_to_xy(float(lon), float(lat))
+                draw_dot(x, y, notlogged_hex)
+
+        # Draw notfound beneath found
+        if notfound_hex:
+            for x, y in notfound_pts:
+                draw_dot(x, y, notfound_hex)
+        # Draw found on top
+        for x, y in found_pts:
+            draw_dot(x, y, found_hex)
+
+        # Encode image
+        buf = io.BytesIO()
+        base.save(buf, format="PNG")
+        buf.seek(0)
+        return StreamingResponse(buf, media_type="image/png")
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=500, detail=f"Server configuration error: {e}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error rendering user map: {e}")

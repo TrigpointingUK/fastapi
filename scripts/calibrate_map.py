@@ -16,9 +16,17 @@ from __future__ import annotations
 import argparse
 import csv
 import json
+import sys
+from pathlib import Path
 from typing import List, Tuple
 
-from app.utils.geocalibrate import (
+# Ensure repository root is on sys.path when running this file directly
+REPO_ROOT = str(Path(__file__).resolve().parents[1])
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+# Import after sys.path manipulation
+from app.utils.geocalibrate import (  # noqa: E402
     calibrate_affine_from_coastline,
     download_natural_earth_110m_uk_coastline,
 )
