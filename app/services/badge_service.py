@@ -19,7 +19,17 @@ class BadgeService:
     def __init__(self):
         self.base_width = 200
         self.base_height = 50
-        self.logo_path = Path(__file__).parent.parent.parent / "res" / "tuk_logo.png"
+        # Look for logo under /app/res in container, fallback to repo relative path
+        candidate_paths = [
+            Path("/app/res/tuk_logo.png"),
+            Path(__file__).parent.parent.parent / "res" / "tuk_logo.png",
+        ]
+        for p in candidate_paths:
+            if p.exists():
+                self.logo_path = p
+                break
+        else:  # pragma: no cover - runtime safeguard
+            self.logo_path = candidate_paths[-1]
 
     def get_user_statistics(self, db: Session, user_id: int) -> Tuple[int, int]:
         """
