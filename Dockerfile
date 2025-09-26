@@ -25,6 +25,7 @@ RUN pip install -r requirements.txt
 
 # Copy application code
 COPY app/ ./app/
+COPY res/ ./res/
 
 # Create non-root user
 RUN groupadd -r appuser && useradd -r -g appuser appuser
