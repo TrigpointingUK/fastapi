@@ -412,7 +412,7 @@ def get_user_map(
     ),
     # Re-add configurable dot size (diameter, default 10px)
     dot_diameter: int = Query(
-        20, ge=1, le=50, description="Diameter of plotted dots in pixels (default 20)"
+        50, ge=1, le=100, description="Diameter of plotted dots in pixels (default 50)"
     ),
     # Optional alpha for dots to allow visual stacking
     dot_alpha: Optional[int] = Query(
@@ -424,6 +424,9 @@ def get_user_map(
     ),
     coastline_colour: Optional[str] = Query(
         "#666666", description="Stroke colour for coastline edges"
+    ),
+    height: int = Query(
+        110, ge=10, le=4000, description="Output image height in pixels (default 110)"
     ),
     db: Session = Depends(get_db),
 ):
@@ -634,6 +637,20 @@ def get_user_map(
             accumulate_and_paste(notfound_pts, notfound_hex)
         if found_hex:
             accumulate_and_paste(found_pts, found_hex)
+
+        # Optional final scaling to requested height (preserve aspect, anti-aliased)
+        if isinstance(height, int) and height > 0 and base.height != height:
+            scale = float(height) / float(base.height)
+            new_w = max(1, int(round(base.width * scale)))
+            # Pillow>=10 recommends Image.Resampling.LANCZOS; keep compatibility
+            try:
+                resample = Image.Resampling.LANCZOS  # type: ignore[attr-defined]
+            except Exception:
+                try:
+                    resample = Image.Resampling.NEAREST  # type: ignore[attr-defined]
+                except Exception:
+                    resample = 0  # type: ignore[assignment]
+            base = base.resize((new_w, height), resample=resample)
 
         # Encode image (preserve alpha)
         buf = io.BytesIO()
