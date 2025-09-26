@@ -69,7 +69,8 @@ def make_affine(
     sx = px_per_deg
     sy = -px_per_deg  # y increases downwards
     tx = -sx * lon_w
-    ty = sy * lat_n
+    # Set translation so that y=0 at lat_n (top edge)
+    ty = -sy * lat_n
     A = np.array([[sx, 0.0, tx], [0.0, sy, ty]], dtype=float)
     Minv = np.linalg.inv(np.vstack([A, [0, 0, 1]]))[:2]
     return A, Minv, width, height
