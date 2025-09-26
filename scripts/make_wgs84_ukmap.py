@@ -23,10 +23,11 @@ import requests
 from PIL import Image, ImageDraw
 
 
-def download_coastlines() -> dict:
+def download_coastlines(resolution: str = "10m") -> dict:
+    assert resolution in {"10m", "50m", "110m"}
     url = (
         "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/"
-        "geojson/ne_110m_coastline.geojson"
+        f"geojson/ne_{resolution}_coastline.geojson"
     )
     r = requests.get(url, timeout=60)
     r.raise_for_status()
@@ -127,9 +128,15 @@ def main() -> None:
     p.add_argument("--lat-north", type=float, default=61.9)
     p.add_argument("--out-image", default="res/ukmap_wgs84.png")
     p.add_argument("--out-calib", default="res/uk_map_calibration_wgs84.json")
+    p.add_argument(
+        "--resolution",
+        default="10m",
+        choices=["10m", "50m", "110m"],
+        help="Natural Earth coastline resolution",
+    )
     args = p.parse_args()
 
-    gj = download_coastlines()
+    gj = download_coastlines(args.resolution)
     lines = filter_uk_lines(
         gj, args.lon_west, args.lat_south, args.lon_east, args.lat_north
     )

@@ -252,24 +252,22 @@ def calibrate_affine_from_coastline(
 # -------------------------- Data helpers ---------------------------
 
 
-def download_natural_earth_110m_uk_coastline(
-    max_points: int = 4000,
+def download_natural_earth_coastline(
+    resolution: str = "10m", max_points: int | None = None
 ) -> List[Tuple[float, float]]:
-    """Download a lightweight Natural Earth coastline and extract UK/IE outline.
+    """Download Natural Earth coastline and return UK/IE shoreline points.
 
-    This function fetches a low-resolution coastline vector (110m) and
-    returns a list of (lon, lat) points along the shoreline of the British
-    Isles. The dataset is cached in-memory only; callers can persist as needed.
-
-    Note: Network access is required; handle failures in callers.
+    - resolution: one of {"10m", "50m", "110m"}
+    - max_points: optional cap; if None, keep all points
     """
 
-    # A small coastline lines dataset (~1.4MB). Mirror chosen for raw access.
+    if resolution not in {"10m", "50m", "110m"}:
+        raise ValueError("resolution must be one of {'10m','50m','110m'}")
     url = (
         "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/"
-        "geojson/ne_110m_coastline.geojson"
+        f"geojson/ne_{resolution}_coastline.geojson"
     )
-    resp = requests.get(url, timeout=30)
+    resp = requests.get(url, timeout=60)
     resp.raise_for_status()
     data = resp.json()
 
@@ -279,24 +277,30 @@ def download_natural_earth_110m_uk_coastline(
         if geom.get("type") != "LineString":
             continue
         line: List[List[float]] = geom.get("coordinates", [])
-        # Filter by longitude/latitude window around the British Isles
         for lon, lat in line:
-            if -14.0 <= lon <= 4.5 and 49.0 <= lat <= 61.8:
+            if -14.5 <= lon <= 5.5 and 48.5 <= lat <= 62.5:
                 coords.append((float(lon), float(lat)))
 
     if not coords:
         raise RuntimeError("No coastline points found in the UK bounding window.")
 
     pts = np.asarray(coords, dtype=np.float32)
-    # Uniformly downsample if necessary
-    if pts.shape[0] > max_points:
+    if max_points is not None and pts.shape[0] > max_points:
         idx = np.linspace(0, pts.shape[0] - 1, num=max_points, dtype=int)
         pts = pts[idx]
     return [(float(x), float(y)) for x, y in pts]
 
 
+def download_natural_earth_110m_uk_coastline(
+    max_points: int = 4000,
+) -> List[Tuple[float, float]]:
+    """Backwards-compatible wrapper returning 110m data."""
+    return download_natural_earth_coastline("110m", max_points=max_points)
+
+
 __all__ = [
     "CalibrationResult",
     "calibrate_affine_from_coastline",
+    "download_natural_earth_coastline",
     "download_natural_earth_110m_uk_coastline",
 ]
