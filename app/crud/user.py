@@ -2,7 +2,7 @@
 CRUD operations for users with Unix crypt authentication.
 """
 
-import crypt
+import crypt as unix_crypt
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import func
@@ -71,9 +71,12 @@ def verify_password(plain_password: str, cryptpw: str) -> bool:
         True if password matches, False otherwise
     """
     try:
-        return crypt.crypt(plain_password, cryptpw) == cryptpw
-    except OSError:
-        # crypt() can raise OSError on some systems
+        if not cryptpw:
+            return False
+        # Use legacy Unix crypt verification: crypt(input, stored) == stored
+        computed = unix_crypt.crypt(plain_password, cryptpw)
+        return computed == cryptpw
+    except Exception:
         return False
 
 

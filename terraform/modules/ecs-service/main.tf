@@ -104,34 +104,36 @@ resource "aws_ecs_task_definition" "app" {
         }
         ],
         # Auth0 secrets (required)
-        {
-          name      = "AUTH0_API_AUDIENCE"
-          valueFrom = "${var.secrets_arn}:auth0_api_audience::"
-        },
-        {
-          name      = "AUTH0_CONNECTION"
-          valueFrom = "${var.secrets_arn}:auth0_connection::"
-        },
-        {
-          name      = "AUTH0_DOMAIN"
-          valueFrom = "${var.secrets_arn}:auth0_domain::"
-        },
-        {
-          name      = "AUTH0_MANAGEMENT_API_AUDIENCE"
-          valueFrom = "${var.secrets_arn}:auth0_management_api_audience::"
-        },
-        {
-          name      = "AUTH0_M2M_CLIENT_ID"
-          valueFrom = "${var.secrets_arn}:auth0_m2m_client_id::"
-        },
-        {
-          name      = "AUTH0_M2M_CLIENT_SECRET"
-          valueFrom = "${var.secrets_arn}:auth0_m2m_client_secret::"
-        },
-        {
-          name      = "AUTH0_SPA_CLIENT_ID"
-          valueFrom = "${var.secrets_arn}:auth0_spa_client_id::"
-        }
+        [
+          {
+            name      = "AUTH0_API_AUDIENCE"
+            valueFrom = "${var.secrets_arn}:auth0_api_audience::"
+          },
+          {
+            name      = "AUTH0_CONNECTION"
+            valueFrom = "${var.secrets_arn}:auth0_connection::"
+          },
+          {
+            name      = "AUTH0_DOMAIN"
+            valueFrom = "${var.secrets_arn}:auth0_domain::"
+          },
+          {
+            name      = "AUTH0_MANAGEMENT_API_AUDIENCE"
+            valueFrom = "${var.secrets_arn}:auth0_management_api_audience::"
+          },
+          {
+            name      = "AUTH0_M2M_CLIENT_ID"
+            valueFrom = "${var.secrets_arn}:auth0_m2m_client_id::"
+          },
+          {
+            name      = "AUTH0_M2M_CLIENT_SECRET"
+            valueFrom = "${var.secrets_arn}:auth0_m2m_client_secret::"
+          },
+          {
+            name      = "AUTH0_SPA_CLIENT_ID"
+            valueFrom = "${var.secrets_arn}:auth0_spa_client_id::"
+          }
+        ]
       )
       logConfiguration = {
         logDriver = "awslogs"

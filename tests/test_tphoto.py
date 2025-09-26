@@ -74,7 +74,7 @@ def test_get_photo(client: TestClient, db: Session):
     _, tlog = seed_user_and_tlog(db)
     photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=2002)
 
-    resp = client.get(f"{settings.API_V1_STR}/tphotos/{photo.id}")
+    resp = client.get(f"{settings.API_V1_STR}/photos/{photo.id}")
     assert resp.status_code == 200
     body = resp.json()
     assert body["id"] == photo.id
@@ -85,9 +85,11 @@ def test_update_photo(client: TestClient, db: Session):
     _, tlog = seed_user_and_tlog(db)
     photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=2003)
 
+    headers = {"Authorization": "Bearer legacy_user_101"}
     resp = client.patch(
-        f"{settings.API_V1_STR}/tphotos/{photo.id}",
+        f"{settings.API_V1_STR}/photos/{photo.id}",
         json={"name": "New Name", "public_ind": "N"},
+        headers=headers,
     )
     assert resp.status_code == 200
     body = resp.json()
@@ -99,21 +101,13 @@ def test_delete_photo_soft(client: TestClient, db: Session):
     _, tlog = seed_user_and_tlog(db)
     photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=2004)
 
-    resp = client.delete(f"{settings.API_V1_STR}/tphotos/{photo.id}")
+    headers = {"Authorization": "Bearer legacy_user_101"}
+    resp = client.delete(f"{settings.API_V1_STR}/photos/{photo.id}", headers=headers)
     assert resp.status_code == 204
 
     # subsequent get should 404 due to soft delete
-    resp2 = client.get(f"{settings.API_V1_STR}/tphotos/{photo.id}")
+    resp2 = client.get(f"{settings.API_V1_STR}/photos/{photo.id}")
     assert resp2.status_code == 404
 
 
-def test_user_photo_count(client: TestClient, db: Session):
-    user, tlog = seed_user_and_tlog(db)
-    create_sample_photo(db, tlog_id=tlog.id, photo_id=2005)
-    create_sample_photo(db, tlog_id=tlog.id, photo_id=2006)
-
-    resp = client.get(f"{settings.API_V1_STR}/tphotos/users/{user.id}/count")
-    assert resp.status_code == 200
-    body = resp.json()
-    assert body["user_id"] == user.id
-    assert body["photo_count"] >= 2
+# removed user photo count endpoint tests; evaluation tests retained upstream

@@ -1,3 +1,8 @@
+orientation-model:
+	@echo "Creating orientation model with self-supervised rotations..."
+	python -m pip install -q -r requirements-train.txt
+	python scripts/train_export_orientation.py --data ./res/orientation_data --output ./res/models/orientation_classifier.onnx --epochs 3 --batch-size 64 --lr 1e-3
+	@echo "Model exported to res/models/orientation_classifier.onnx"
 .PHONY: help install install-dev test test-cov lint format type-check security build run clean docker-build docker-run docker-down mysql-client diff-cov \
 	run-staging db-tunnel-staging-start db-tunnel-staging-stop mysql-staging \
 	bastion-ssm-shell db-tunnel-staging-ssm-start bastion-allow-my-ip bastion-revoke-my-ip

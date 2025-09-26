@@ -2,9 +2,9 @@
 Tests for Auth0 user ID mapping behaviour. Auth0 usernames are no longer supported.
 """
 
-import crypt
 from unittest.mock import ANY, patch
 
+from passlib.hash import des_crypt
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
@@ -16,7 +16,7 @@ from fastapi.testclient import TestClient
 def _make_user(
     db: Session, *, user_id: int, name: str, email: str, password: str
 ) -> User:
-    cryptpw = crypt.crypt(password, "$1$testsalt$")
+    cryptpw = des_crypt.hash(password)
     user = User(
         id=user_id,
         name=name,

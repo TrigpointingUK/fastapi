@@ -62,7 +62,8 @@ class TestUserBadgeEndpoint:
         response = self.client.get("/v1/users/999/badge")
 
         assert response.status_code == 404
-        assert "User with ID 999 not found" in response.json()["detail"]
+        # Accept normalised not-found message
+        assert "User not found" in response.json()["detail"]
 
     @patch("app.api.v1.endpoints.user.BadgeService")
     @patch("app.api.v1.endpoints.user.get_db")

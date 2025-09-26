@@ -77,6 +77,15 @@ resource "aws_iam_role_policy" "ecs_task_role_policy" {
           "logs:PutLogEvents"
         ]
         Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "rekognition:DetectText",
+          "rekognition:DetectFaces",
+          "rekognition:DetectModerationLabels"
+        ]
+        Resource = "*"
       }
     ]
   })
