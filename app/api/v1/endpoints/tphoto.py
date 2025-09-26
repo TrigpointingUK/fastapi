@@ -108,7 +108,4 @@ def delete_photo(photo_id: int, db: Session = Depends(get_db)):
     return None
 
 
-@router.get("/users/{user_id}/count", openapi_extra=openapi_lifecycle("beta"))
-def get_user_photo_count(user_id: int, db: Session = Depends(get_db)):
-    count = tphoto_crud.count_photos_by_user(db, user_id=user_id)
-    return {"user_id": user_id, "photo_count": int(count)}
+# removed user photo count endpoint; use filtered listings instead
