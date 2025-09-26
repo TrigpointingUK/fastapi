@@ -175,18 +175,10 @@ def make_affine(
 
 
 def render(
-    lines: List[List[Tuple[float, float]]],
-    country_polys: List[List[List[Tuple[float, float]]]],
-    A: np.ndarray,
-    w: int,
-    h: int,
+    lines: List[List[Tuple[float, float]]], A: np.ndarray, w: int, h: int
 ) -> Image.Image:
-    # Transparent background RGBA
-    base = Image.new("RGBA", (w, h), color=(0, 0, 0, 0))
-
-    # Build land mask from country polygons (GBR + IRL)
-    mask = Image.new("L", (w, h), color=0)
-    mdraw = ImageDraw.Draw(mask)
+    im = Image.new("RGB", (w, h), color=(255, 255, 255))
+    draw = ImageDraw.Draw(im)
 
     def project(p: Tuple[float, float]) -> Tuple[int, int]:
         lon, lat = p
@@ -194,31 +186,12 @@ def render(
         y = A[1, 0] * lon + A[1, 1] * lat + A[1, 2]
         return int(round(x)), int(round(y))
 
-    for rings in country_polys:
-        if not rings:
+    for seg in lines:
+        if len(seg) < 2:
             continue
-        # Outer ring filled
-        outer = [project(p) for p in rings[0]]
-        mdraw.polygon(outer, fill=255)
-        # Holes (inner rings) carved out
-        for hole in rings[1:]:
-            hole_pts = [project(p) for p in hole]
-            mdraw.polygon(hole_pts, fill=0)
-
-    # Composite 10% grey land onto transparent sea
-    land = Image.new("RGBA", (w, h), color=(26, 26, 26, 255))
-    base.paste(land, (0, 0), mask)
-
-    # Optional coastline strokes for crisp edges
-    if lines:
-        draw = ImageDraw.Draw(base)
-        for seg in lines:
-            if len(seg) < 2:
-                continue
-            pts = [project(p) for p in seg]
-            draw.line(pts, fill=(40, 40, 40, 255), width=1)
-
-    return base
+        pts = [project(p) for p in seg]
+        draw.line(pts, fill=(0, 0, 0), width=2)
+    return im
 
 
 def main() -> None:
@@ -270,7 +243,7 @@ def main() -> None:
         args.lat_north,
         lat_scale=args.lat_scale,
     )
-    im = render(lines, uk_polys, A, w, h)
+    im = render(lines, A, w, h)
 
     # Save image
     Path(args.out_image).parent.mkdir(parents=True, exist_ok=True)

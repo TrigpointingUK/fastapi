@@ -5,10 +5,10 @@ User endpoints with permission-based field filtering.
 import io
 import json
 import os
-from typing import Optional
+from typing import Optional, Union
 
 import numpy as np
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 from sqlalchemy.orm import Session
 
 from app.api.deps import (
@@ -394,12 +394,36 @@ def list_photos_for_user(
 )
 def get_user_map(
     user_id: int,
-    found_colour: str = Query("#ff0000", description="Hex colour for found trigs"),
+    found_colour: Optional[str] = Query(
+        None,
+        description="Hex #RRGGBB or 'none' for found trigs (blank → default)",
+    ),
     notfound_colour: Optional[str] = Query(
-        "#0000ff", description="Hex colour for not-found trigs"
+        None,
+        description="Hex #RRGGBB or 'none' for not-found trigs (blank → default)",
     ),
     notlogged_colour: Optional[str] = Query(
-        None, description="Hex colour for not-logged trigs (if provided)"
+        None,
+        description="Hex #RRGGBB or 'none' for not-logged trigs (blank → default)",
+    ),
+    map_variant: Optional[str] = Query(
+        "stretched53",
+        description="Map variant: stretched53 (default) or wgs84",
+    ),
+    # Re-add configurable dot size (diameter, default 10px)
+    dot_diameter: int = Query(
+        20, ge=1, le=50, description="Diameter of plotted dots in pixels (default 20)"
+    ),
+    # Optional alpha for dots to allow visual stacking
+    dot_alpha: Optional[int] = Query(
+        40, ge=1, le=255, description="Per-dot alpha increment (default 40)"
+    ),
+    # Optional land recolour; sea remains transparent
+    land_colour: Optional[str] = Query(
+        "#dddddd", description="Hex fill for land; 'none' to keep original"
+    ),
+    coastline_colour: Optional[str] = Query(
+        "#666666", description="Stroke colour for coastline edges"
     ),
     db: Session = Depends(get_db),
 ):
@@ -409,25 +433,44 @@ def get_user_map(
     Expensive full-trig-table query is performed only when `notlogged_colour` is provided.
     """
     try:
-        # Normalise empty strings to None
-        notfound_hex = (notfound_colour or "").strip() or None
-        notlogged_hex = (notlogged_colour or "").strip() or None
-        found_hex = (found_colour or "#ff0000").strip() or "#ff0000"
+        # Resolve colours: blank → default; 'none' → disable
+        def _norm(cval: Optional[str], default_hex: Optional[str]) -> Optional[str]:
+            s = (cval or "").strip()
+            if not s:
+                return default_hex
+            if s.lower() == "none":
+                return None
+            return s
+
+        found_hex = _norm(found_colour, "#ff0000")
+        notfound_hex = _norm(notfound_colour, "#0000ff")
+        notlogged_hex = _norm(notlogged_colour, None)
 
         # Load base map image (fallback if missing)
+        image_filename = (
+            "ukmap_wgs84_stretched53.png"
+            if map_variant == "stretched53"
+            else "ukmap_wgs84.png"
+        )
+        calib_filename = (
+            "uk_map_calibration_wgs84_stretched53.json"
+            if map_variant == "stretched53"
+            else "uk_map_calibration_wgs84.json"
+        )
         map_path = os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
             "..",
             "..",
             "res",
-            "ukmap.jpg",
+            image_filename,
         )
         map_path = os.path.normpath(map_path)
         if os.path.isfile(map_path):
-            base = Image.open(map_path).convert("RGB")
+            # Preserve alpha from the asset (transparent sea)
+            base = Image.open(map_path).convert("RGBA")
         else:
-            # Fallback canvas (if resource missing)
-            base = Image.new("RGB", (800, 900), color=(255, 255, 255))
+            # Fallback transparent canvas
+            base = Image.new("RGBA", (800, 900), color=(0, 0, 0, 0))
 
         # Load calibration
         calib_path = os.path.join(
@@ -435,7 +478,7 @@ def get_user_map(
             "..",
             "..",
             "res",
-            "uk_map_calibration.json",
+            calib_filename,
         )
         calib_path = os.path.normpath(calib_path)
         with open(calib_path, "r") as f:
@@ -447,17 +490,103 @@ def get_user_map(
             bounds_geo=tuple(d.get("bounds_geo", (-11.0, 49.0, 2.5, 61.5))),
         )
 
+        # If a land colour is provided, recolour the land using the alpha mask,
+        # then re-apply a coastline stroke extracted from the alpha edges.
+        if land_colour and land_colour.strip():
+            hc = land_colour.strip()
+            if hc.startswith("#"):
+                hc = hc[1:]
+            if len(hc) == 6:
+                r = int(hc[0:2], 16)
+                g = int(hc[2:4], 16)
+                b = int(hc[4:6], 16)
+                alpha_ch = base.getchannel("A")
+                recol = Image.new("RGBA", base.size, (r, g, b, 255))
+                recol.putalpha(alpha_ch)
+                base = recol
+
+                # Coastline stroke from alpha edge
+                edge_mask = alpha_ch.filter(ImageFilter.FIND_EDGES)
+                # Thicken slightly for visibility
+                try:
+                    edge_mask = edge_mask.filter(ImageFilter.MaxFilter(3))
+                except Exception:
+                    # If MaxFilter is unavailable in this Pillow build, continue with the thin edge
+                    edge_mask = edge_mask
+                sc = (40, 40, 40, 255)
+                if coastline_colour:
+                    s = coastline_colour.strip()
+                    if s.startswith("#"):
+                        s = s[1:]
+                    if len(s) == 6:
+                        sc = (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16), 255)
+                stroke_layer = Image.new("RGBA", base.size, sc)
+                base.paste(stroke_layer, (0, 0), edge_mask)
+
         draw = ImageDraw.Draw(base)
 
-        def draw_dot(px: float, py: float, hex_colour: str, r: int = 2) -> None:
+        def draw_dot(px: float, py: float, hex_colour: str) -> None:
             if not hex_colour:
                 return
+            r = max(1, int(round(dot_diameter / 2)))
             x = int(round(px))
             y = int(round(py))
             if x < 0 or y < 0 or x >= base.size[0] or y >= base.size[1]:
                 return
             bbox = [x - r, y - r, x + r, y + r]
-            draw.ellipse(bbox, fill=hex_colour, outline=None)
+            # Support optional alpha override for stacking
+            fill: Union[str, tuple[int, int, int, int]] = hex_colour
+            if dot_alpha is not None:
+                s = hex_colour.strip()
+                if s.startswith("#"):
+                    s = s[1:]
+                if len(s) == 6:
+                    rr = int(s[0:2], 16)
+                    gg = int(s[2:4], 16)
+                    bb = int(s[4:6], 16)
+                    fill = (rr, gg, bb, int(dot_alpha))
+            draw.ellipse(bbox, fill=fill, outline=None)
+
+        def _hex_to_rgb(hex_str: str) -> tuple[int, int, int]:
+            s = hex_str.strip()
+            if s.startswith("#"):
+                s = s[1:]
+            if len(s) >= 6:
+                return (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16))
+            return (255, 0, 0)
+
+        def accumulate_and_paste(
+            points: list[tuple[float, float]], colour_hex: str
+        ) -> None:
+            if not points:
+                return
+            r = max(1, int(round(dot_diameter / 2)))
+            inc = int(dot_alpha) if dot_alpha is not None else 64
+            w, h = base.size
+            accum = Image.new("L", (w, h), 0)
+            for px, py in points:
+                x = int(round(px))
+                y = int(round(py))
+                if x < 0 or y < 0 or x >= w or y >= h:
+                    continue
+                left = max(0, x - r)
+                right = min(w, x + r)
+                top = max(0, y - r)
+                bottom = min(h, y + r)
+                if right <= left or bottom <= top:
+                    continue
+                dot_w = right - left
+                dot_h = bottom - top
+                dot = Image.new("L", (dot_w, dot_h), 0)
+                ddraw = ImageDraw.Draw(dot)
+                ddraw.ellipse([0, 0, dot_w - 1, dot_h - 1], fill=inc)
+                region = accum.crop((left, top, right, bottom))
+                added = ImageChops.add(region, dot)
+                accum.paste(added, (left, top))
+
+            rgb = _hex_to_rgb(colour_hex)
+            overlay = Image.new("RGBA", (w, h), (rgb[0], rgb[1], rgb[2], 255))
+            base.paste(overlay, (0, 0), accum)
 
         GOOD = {"G", "S", "D", "T"}
 
@@ -476,8 +605,9 @@ def get_user_map(
 
         # Prepare sets and lists
         logged_ids = set()
-        found_pts = []
-        notfound_pts = []
+        found_pts: list[tuple[float, float]] = []
+        notfound_pts: list[tuple[float, float]] = []
+        notlogged_pts: list[tuple[float, float]] = []
         for trig_id, condition, lat, lon in tlog_rows:
             logged_ids.add(int(trig_id))
             lat_f = float(lat)
@@ -495,17 +625,17 @@ def get_user_map(
                 if int(tid) in logged_ids:
                     continue
                 x, y = calib.lonlat_to_xy(float(lon), float(lat))
-                draw_dot(x, y, notlogged_hex)
+                notlogged_pts.append((x, y))
 
         # Draw notfound beneath found
+        if notlogged_hex:
+            accumulate_and_paste(notlogged_pts, notlogged_hex)
         if notfound_hex:
-            for x, y in notfound_pts:
-                draw_dot(x, y, notfound_hex)
-        # Draw found on top
-        for x, y in found_pts:
-            draw_dot(x, y, found_hex)
+            accumulate_and_paste(notfound_pts, notfound_hex)
+        if found_hex:
+            accumulate_and_paste(found_pts, found_hex)
 
-        # Encode image
+        # Encode image (preserve alpha)
         buf = io.BytesIO()
         base.save(buf, format="PNG")
         buf.seek(0)
