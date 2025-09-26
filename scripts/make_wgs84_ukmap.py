@@ -16,7 +16,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import List, Sequence, Tuple
+from typing import Iterable, List, Sequence, Tuple
 
 import numpy as np
 import requests
@@ -34,8 +34,77 @@ def download_coastlines(resolution: str = "10m") -> dict:
     return r.json()
 
 
+def download_countries(resolution: str = "10m") -> dict:
+    assert resolution in {"10m", "50m", "110m"}
+    url = (
+        "https://raw.githubusercontent.com/nvkelso/natural-earth-vector/master/"
+        f"geojson/ne_{resolution}_admin_0_countries.geojson"
+    )
+    r = requests.get(url, timeout=60)
+    r.raise_for_status()
+    return r.json()
+
+
+def _point_in_ring(point: Tuple[float, float], ring: Sequence[Sequence[float]]) -> bool:
+    x, y = point
+    inside = False
+    n = len(ring)
+    for i in range(n):
+        x1, y1 = ring[i]
+        x2, y2 = ring[(i + 1) % n]
+        # Ray cast in x-direction
+        if (y1 > y) != (y2 > y):
+            xinters = (x2 - x1) * (y - y1) / (y2 - y1 + 1e-15) + x1
+            if x < xinters:
+                inside = not inside
+    return inside
+
+
+def _extract_country_polygons(
+    countries_gj: dict, iso3_set: Iterable[str]
+) -> List[List[List[Tuple[float, float]]]]:
+    polys: List[List[List[Tuple[float, float]]]] = []
+    for feat in countries_gj.get("features", []):
+        props = feat.get("properties", {})
+        iso3 = (props.get("ADM0_A3") or props.get("ISO_A3") or "").upper()
+        if iso3 not in {s.upper() for s in iso3_set}:
+            continue
+        geom = feat.get("geometry", {})
+        gtype = geom.get("type")
+        coords = geom.get("coordinates", [])
+        if gtype == "Polygon":
+            rings = []
+            for ring in coords:
+                rings.append([(float(x), float(y)) for x, y in ring])
+            polys.append(rings)
+        elif gtype == "MultiPolygon":
+            for poly in coords:
+                rings = []
+                for ring in poly:
+                    rings.append([(float(x), float(y)) for x, y in ring])
+                polys.append(rings)
+    return polys
+
+
+def _point_in_polygons(
+    pt: Tuple[float, float], polys: List[List[List[Tuple[float, float]]]]
+) -> bool:
+    # Only test against outer rings (first ring); holes ignored for speed
+    for rings in polys:
+        if not rings:
+            continue
+        if _point_in_ring(pt, rings[0]):
+            return True
+    return False
+
+
 def filter_uk_lines(
-    geojson: dict, lon_w: float, lat_s: float, lon_e: float, lat_n: float
+    geojson: dict,
+    lon_w: float,
+    lat_s: float,
+    lon_e: float,
+    lat_n: float,
+    country_polys: List[List[List[Tuple[float, float]]]] | None = None,
 ) -> List[List[Tuple[float, float]]]:
     lines: List[List[Tuple[float, float]]] = []
     for feat in geojson.get("features", []):
@@ -55,7 +124,15 @@ def filter_uk_lines(
             lines.append(seg)
     if not lines:
         raise RuntimeError("No coastline segments found in bounds.")
-    return lines
+    if country_polys is None:
+        return lines
+    # Keep segments where at least half the vertices lie within GBR or IRL
+    kept: List[List[Tuple[float, float]]] = []
+    for seg in lines:
+        inside = sum(1 for p in seg if _point_in_polygons(p, country_polys))
+        if inside >= max(1, int(0.5 * len(seg))):
+            kept.append(seg)
+    return kept
 
 
 def densify_polyline(
@@ -83,11 +160,12 @@ def make_affine(
     lat_s: float,
     lon_e: float,
     lat_n: float,
+    lat_scale: float = 1.0,
 ) -> Tuple[np.ndarray, np.ndarray, int, int]:
     px_per_deg = width / (lon_e - lon_w)
-    height = int(round(px_per_deg * (lat_n - lat_s)))
+    height = int(round(px_per_deg * (lat_n - lat_s) * lat_scale))
     sx = px_per_deg
-    sy = -px_per_deg  # y increases downwards
+    sy = -px_per_deg * lat_scale  # y increases downwards
     tx = -sx * lon_w
     # Set translation so that y=0 at lat_n (top edge)
     ty = -sy * lat_n
@@ -124,8 +202,8 @@ def main() -> None:
     p.add_argument("--densify", type=int, default=10, help="Polyline densify factor")
     p.add_argument("--lon-west", type=float, default=-14.0)
     p.add_argument("--lon-east", type=float, default=4.5)
-    p.add_argument("--lat-south", type=float, default=49.0)
-    p.add_argument("--lat-north", type=float, default=61.9)
+    p.add_argument("--lat-south", type=float, default=49.9)
+    p.add_argument("--lat-north", type=float, default=60.9)
     p.add_argument("--out-image", default="res/ukmap_wgs84.png")
     p.add_argument("--out-calib", default="res/uk_map_calibration_wgs84.json")
     p.add_argument(
@@ -134,16 +212,36 @@ def main() -> None:
         choices=["10m", "50m", "110m"],
         help="Natural Earth coastline resolution",
     )
+    p.add_argument(
+        "--lat-scale",
+        type=float,
+        default=1.0,
+        help="Multiply vertical scale (e.g., cos(53°)=0.6018 to compress; 1/0.6018 to stretch)",
+    )
     args = p.parse_args()
 
     gj = download_coastlines(args.resolution)
+    countries = download_countries(args.resolution)
+    uk_polys = _extract_country_polygons(
+        countries, iso3_set=["GBR", "IRL"]
+    )  # remove France
     lines = filter_uk_lines(
-        gj, args.lon_west, args.lat_south, args.lon_east, args.lat_north
+        gj,
+        args.lon_west,
+        args.lat_south,
+        args.lon_east,
+        args.lat_north,
+        country_polys=uk_polys,
     )
     if args.densify and args.densify > 1:
         lines = [densify_polyline(seg, args.densify) for seg in lines]
     A, Ainv, w, h = make_affine(
-        args.width, args.lon_west, args.lat_south, args.lon_east, args.lat_north
+        args.width,
+        args.lon_west,
+        args.lat_south,
+        args.lon_east,
+        args.lat_north,
+        lat_scale=args.lat_scale,
     )
     im = render(lines, A, w, h)
 
