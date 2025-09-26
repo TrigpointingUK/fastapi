@@ -175,10 +175,18 @@ def make_affine(
 
 
 def render(
-    lines: List[List[Tuple[float, float]]], A: np.ndarray, w: int, h: int
+    lines: List[List[Tuple[float, float]]],
+    country_polys: List[List[List[Tuple[float, float]]]],
+    A: np.ndarray,
+    w: int,
+    h: int,
 ) -> Image.Image:
-    im = Image.new("RGB", (w, h), color=(255, 255, 255))
-    draw = ImageDraw.Draw(im)
+    # Transparent background RGBA
+    base = Image.new("RGBA", (w, h), color=(0, 0, 0, 0))
+
+    # Build land mask from country polygons (GBR + IRL)
+    mask = Image.new("L", (w, h), color=0)
+    mdraw = ImageDraw.Draw(mask)
 
     def project(p: Tuple[float, float]) -> Tuple[int, int]:
         lon, lat = p
@@ -186,12 +194,31 @@ def render(
         y = A[1, 0] * lon + A[1, 1] * lat + A[1, 2]
         return int(round(x)), int(round(y))
 
-    for seg in lines:
-        if len(seg) < 2:
+    for rings in country_polys:
+        if not rings:
             continue
-        pts = [project(p) for p in seg]
-        draw.line(pts, fill=(0, 0, 0), width=2)
-    return im
+        # Outer ring filled
+        outer = [project(p) for p in rings[0]]
+        mdraw.polygon(outer, fill=255)
+        # Holes (inner rings) carved out
+        for hole in rings[1:]:
+            hole_pts = [project(p) for p in hole]
+            mdraw.polygon(hole_pts, fill=0)
+
+    # Composite 10% grey land onto transparent sea
+    land = Image.new("RGBA", (w, h), color=(26, 26, 26, 255))
+    base.paste(land, (0, 0), mask)
+
+    # Optional coastline strokes for crisp edges
+    if lines:
+        draw = ImageDraw.Draw(base)
+        for seg in lines:
+            if len(seg) < 2:
+                continue
+            pts = [project(p) for p in seg]
+            draw.line(pts, fill=(40, 40, 40, 255), width=1)
+
+    return base
 
 
 def main() -> None:
@@ -202,7 +229,7 @@ def main() -> None:
     p.add_argument("--densify", type=int, default=10, help="Polyline densify factor")
     p.add_argument("--lon-west", type=float, default=-14.0)
     p.add_argument("--lon-east", type=float, default=4.5)
-    p.add_argument("--lat-south", type=float, default=49.9)
+    p.add_argument("--lat-south", type=float, default=49.8)
     p.add_argument("--lat-north", type=float, default=60.9)
     p.add_argument("--out-image", default="res/ukmap_wgs84.png")
     p.add_argument("--out-calib", default="res/uk_map_calibration_wgs84.json")
@@ -243,7 +270,7 @@ def main() -> None:
         args.lat_north,
         lat_scale=args.lat_scale,
     )
-    im = render(lines, A, w, h)
+    im = render(lines, uk_polys, A, w, h)
 
     # Save image
     Path(args.out_image).parent.mkdir(parents=True, exist_ok=True)
