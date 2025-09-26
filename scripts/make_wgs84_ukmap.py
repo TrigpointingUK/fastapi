@@ -57,6 +57,25 @@ def filter_uk_lines(
     return lines
 
 
+def densify_polyline(
+    points: List[Tuple[float, float]], factor: int
+) -> List[Tuple[float, float]]:
+    """Insert evenly spaced points between each pair; factor=1 returns original.
+
+    Factor n yields approximately n× points by adding (n-1) evenly spaced points
+    between every consecutive pair.
+    """
+    if factor <= 1 or len(points) < 2:
+        return points
+    out: List[Tuple[float, float]] = [points[0]]
+    for (x0, y0), (x1, y1) in zip(points[:-1], points[1:]):
+        for k in range(1, factor):
+            t = k / float(factor)
+            out.append((x0 + (x1 - x0) * t, y0 + (y1 - y0) * t))
+        out.append((x1, y1))
+    return out
+
+
 def make_affine(
     width: int,
     lon_w: float,
@@ -101,6 +120,7 @@ def main() -> None:
         description="Render WGS84 UK coastline PNG + calibration"
     )
     p.add_argument("--width", type=int, default=1000)
+    p.add_argument("--densify", type=int, default=10, help="Polyline densify factor")
     p.add_argument("--lon-west", type=float, default=-14.0)
     p.add_argument("--lon-east", type=float, default=4.5)
     p.add_argument("--lat-south", type=float, default=49.0)
@@ -113,6 +133,8 @@ def main() -> None:
     lines = filter_uk_lines(
         gj, args.lon_west, args.lat_south, args.lon_east, args.lat_north
     )
+    if args.densify and args.densify > 1:
+        lines = [densify_polyline(seg, args.densify) for seg in lines]
     A, Ainv, w, h = make_affine(
         args.width, args.lon_west, args.lat_south, args.lon_east, args.lat_north
     )
