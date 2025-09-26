@@ -52,9 +52,6 @@ def delete_photo(db: Session, photo_id: int, soft: bool = True) -> bool:
     return True
 
 
-# removed count_photos_by_user as the endpoint is removed
-
-
 def list_photos_filtered(
     db: Session,
     *,

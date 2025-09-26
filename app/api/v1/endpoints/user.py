@@ -121,7 +121,6 @@ def get_user_badge(
     Generate a PNG badge for a user showing their statistics.
 
     Returns a scalable PNG image (default 200x50px) with:
-
     - TrigpointingUK logo on the left (20%)
     - User's nickname on the first line (right 80%)
     - "logged: X / photos: Y" on the second line
