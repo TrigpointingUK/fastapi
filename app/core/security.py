@@ -13,7 +13,7 @@ from typing import Any, Dict, Optional
 import jwt
 import requests
 from passlib.context import CryptContext
-from passlib.exc import PasswordSizeError
+from passlib.exc import PasswordSizeError, PasswordTruncateError
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -66,7 +66,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 
     try:
         return pwd_context.verify(candidate, stored_hash)
-    except ValueError as exc:
+    except (ValueError, PasswordSizeError, PasswordTruncateError) as exc:
         logger.error("Password verification failed: %s", exc)
         return False
 
@@ -76,7 +76,7 @@ def get_password_hash(password: str) -> str:
     normalised = _normalise_password(password)
     try:
         return pwd_context.hash(normalised)
-    except (PasswordSizeError, ValueError):
+    except (PasswordSizeError, PasswordTruncateError, ValueError):
         logger.warning(
             "Hashing rejected password longer than %s bytes; applying compatibility hash",
             MAX_BCRYPT_BYTES,
