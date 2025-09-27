@@ -19,19 +19,19 @@ class TestSecurityFunctions:
             "token_type": "auth0",
         }
         scopes = extract_scopes(token_payload)
-        assert scopes == ["trig:read", "trig:write", "user:admin"]
+        assert scopes == {"trig:read", "trig:write", "user:admin"}
 
     def test_extract_scopes_empty_scope(self):
         """Test extracting scopes from token with empty scope."""
         token_payload = {"scope": "", "token_type": "auth0"}
         scopes = extract_scopes(token_payload)
-        assert scopes == []
+        assert scopes == set()
 
     def test_extract_scopes_no_scope_key(self):
         """Test extracting scopes from token without scope key."""
         token_payload = {"token_type": "auth0"}
         scopes = extract_scopes(token_payload)
-        assert scopes == []
+        assert scopes == set()
 
     def test_extract_scopes_whitespace_scope(self):
         """Test extracting scopes with whitespace."""
@@ -40,7 +40,7 @@ class TestSecurityFunctions:
             "token_type": "auth0",
         }
         scopes = extract_scopes(token_payload)
-        assert scopes == ["trig:read", "trig:write", "user:admin"]
+        assert scopes == {"trig:read", "trig:write", "user:admin"}
 
     def test_verify_password_valid(self):
         """Test password verification with valid password."""
