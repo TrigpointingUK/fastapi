@@ -2,9 +2,8 @@
 Tests for S3 service.
 """
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
-import boto3
 import pytest
 from botocore.exceptions import ClientError
 
@@ -374,13 +373,11 @@ class TestS3Service:
 
     def test_get_bucket_name_from_config(self):
         """Test bucket name retrieval from config."""
-        service = S3Service()
-
         # Mock the config
         with patch("app.services.s3_service.settings") as mock_settings:
             mock_settings.S3_BUCKET_NAME = "test-bucket"
-            service2 = S3Service()
-            assert service2.bucket_name == "test-bucket"
+            service = S3Service()
+            assert service.bucket_name == "test-bucket"
 
     def test_key_generation_edge_cases(self):
         """Test key generation with edge case photo IDs."""

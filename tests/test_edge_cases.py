@@ -3,16 +3,14 @@ Tests for edge cases and boundary conditions.
 """
 
 import io
-from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time
 from unittest.mock import Mock, patch
 
-import pytest
 from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.tphoto import TPhoto
-from app.models.trig import Trig
 from app.models.user import TLog, User
 from fastapi.testclient import TestClient
 
@@ -161,7 +159,6 @@ class TestEdgeCases:
         db.commit()
 
         import threading
-        import time
 
         results = []
         errors = []
@@ -260,10 +257,10 @@ class TestEdgeCases:
         db.commit()
 
         # Test that operations are properly isolated
-        from app.crud.tlog import get_logs_by_user
+        from app.crud.tlog import list_logs_filtered
 
-        logs_user1 = get_logs_by_user(db, user_id=3001)
-        logs_user2 = get_logs_by_user(db, user_id=3002)
+        logs_user1 = list_logs_filtered(db, user_id=3001)
+        logs_user2 = list_logs_filtered(db, user_id=3002)
 
         assert len(logs_user1) == 1
         assert len(logs_user2) == 1

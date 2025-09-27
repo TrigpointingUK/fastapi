@@ -3,10 +3,8 @@ Tests for image processor service.
 """
 
 import io
-from unittest.mock import Mock, patch
 
-import pytest
-from PIL import Image, UnidentifiedImageError
+from PIL import Image
 
 from app.services.image_processor import ImageProcessor
 

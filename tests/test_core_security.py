@@ -2,17 +2,11 @@
 Comprehensive tests for core security functions.
 """
 
-from unittest.mock import Mock, patch
-
-import pytest
-
 from app.core.security import (
     extract_scopes,
     get_password_hash,
     verify_password,
 )
-from fastapi import HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials
 
 
 class TestSecurityFunctions:

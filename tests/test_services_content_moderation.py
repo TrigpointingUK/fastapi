@@ -4,8 +4,6 @@ Tests for content moderation service.
 
 from unittest.mock import Mock, patch
 
-import pytest
-
 from app.services.content_moderation import ContentModerationService
 
 

@@ -3,17 +3,15 @@ Tests for error handling and edge cases.
 """
 
 import io
-from datetime import date, datetime, time
-from unittest.mock import MagicMock, Mock, patch
+from datetime import date
+from unittest.mock import Mock, patch
 
-import pytest
 from PIL import Image
 from sqlalchemy.orm import Session
 
 from app.core.config import settings
 from app.models.tphoto import TPhoto
 from app.models.user import TLog, User
-from fastapi import HTTPException, status
 from fastapi.testclient import TestClient
 
 
@@ -130,7 +128,6 @@ class TestErrorHandling:
     def test_concurrent_requests(self, client: TestClient):
         """Test handling of concurrent requests."""
         import threading
-        import time
 
         results = []
         errors = []
