@@ -13,6 +13,7 @@ from typing import Any, Dict, Optional
 import jwt
 import requests
 from passlib.context import CryptContext
+from passlib.exc import PasswordSizeError
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -20,6 +21,8 @@ from app.core.logging import get_logger
 logger = get_logger(__name__)
 
 MAX_BCRYPT_BYTES = 72
+COMPAT_PREFIX = "compat$"
+COMPAT_SUFFIX = "::compat"
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
@@ -41,19 +44,45 @@ def _normalise_password(password: str | None) -> str:
     logger.warning(
         "Truncating password to %s bytes for bcrypt compatibility", MAX_BCRYPT_BYTES
     )
-    return truncated.decode("utf-8", errors="ignore")
+    normalised = truncated.decode("utf-8", errors="ignore")
+    if len(normalised.encode("utf-8")) > MAX_BCRYPT_BYTES:
+        normalised = normalised[:MAX_BCRYPT_BYTES]
+    return normalised
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed password."""
+    if not hashed_password:
+        return False
+
     normalised = _normalise_password(plain_password)
-    return pwd_context.verify(normalised, hashed_password)
+
+    if hashed_password.startswith(COMPAT_PREFIX):
+        stored_hash = hashed_password[len(COMPAT_PREFIX) :]
+        candidate = normalised + COMPAT_SUFFIX
+    else:
+        stored_hash = hashed_password
+        candidate = normalised
+
+    try:
+        return pwd_context.verify(candidate, stored_hash)
+    except ValueError as exc:
+        logger.error("Password verification failed: %s", exc)
+        return False
 
 
 def get_password_hash(password: str) -> str:
     """Hash a password."""
     normalised = _normalise_password(password)
-    return pwd_context.hash(normalised)
+    try:
+        return pwd_context.hash(normalised)
+    except (PasswordSizeError, ValueError):
+        logger.warning(
+            "Hashing rejected password longer than %s bytes; applying compatibility hash",
+            MAX_BCRYPT_BYTES,
+        )
+        combined = normalised + COMPAT_SUFFIX
+        return f"{COMPAT_PREFIX}{pwd_context.hash(combined)}"
 
 
 class Auth0TokenValidator:
