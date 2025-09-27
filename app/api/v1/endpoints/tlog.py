@@ -8,7 +8,7 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_current_user, get_db, require_scopes
+from app.api.deps import get_current_user, get_db
 from app.api.lifecycle import openapi_lifecycle
 from app.crud import tlog as tlog_crud
 from app.crud import tphoto as tphoto_crud
@@ -53,7 +53,7 @@ def list_logs(
         if "photos" in tokens:
             # Attach photos list for each log item
             for out, orig in zip(items_serialized, items):
-                photos = tphoto_crud.list_all_photos_for_log(db, tlog_id=int(orig.id))
+                photos = tphoto_crud.list_all_photos_for_log(db, log_id=int(orig.id))
                 # Build base URLs per photo server
                 out["photos"] = []
                 for p in photos:
@@ -64,7 +64,7 @@ def list_logs(
                     out["photos"].append(
                         TPhotoResponse(
                             id=int(p.id),
-                            tlog_id=int(p.tlog_id),
+                            log_id=int(p.tlog_id),
                             user_id=int(orig.user_id),
                             type=str(p.type),
                             filesize=int(p.filesize),
@@ -136,11 +136,11 @@ def get_log(
                 detail=f"Unknown include(s): {', '.join(sorted(unknown))}",
             )
         if "photos" in tokens:
-            photos = tphoto_crud.list_all_photos_for_log(db, tlog_id=int(log.id))
+            photos = tphoto_crud.list_all_photos_for_log(db, log_id=int(log.id))
             photos_out = [
                 TPhotoResponse(
                     id=int(p.id),
-                    tlog_id=int(p.tlog_id),
+                    log_id=int(p.tlog_id),
                     user_id=int(log.user_id),
                     type=str(p.type),
                     filesize=int(p.filesize),
@@ -165,7 +165,10 @@ def get_log(
     "",
     response_model=TLogResponse,
     status_code=201,
-    openapi_extra=openapi_lifecycle("beta"),
+    openapi_extra={
+        **openapi_lifecycle("beta"),
+        "security": [{"OAuth2": []}],
+    },
 )
 def create_log(
     trig_id: int = Query(..., description="Parent trig ID"),
@@ -180,7 +183,12 @@ def create_log(
 
 
 @router.patch(
-    "/{log_id}", response_model=TLogResponse, openapi_extra=openapi_lifecycle("beta")
+    "/{log_id}",
+    response_model=TLogResponse,
+    openapi_extra={
+        **openapi_lifecycle("beta"),
+        "security": [{"OAuth2": []}],
+    },
 )
 def update_log_endpoint(
     log_id: int,
@@ -193,7 +201,23 @@ def update_log_endpoint(
         raise HTTPException(status_code=404, detail="Log not found")
     if int(existing.user_id) != int(current_user.id):
         # Require admin scope if not owner
-        require_scopes("trig:admin")(db=db)
+        # Check admin privileges using token payload from current_user
+        token_payload = getattr(current_user, "_token_payload", None)
+        if not token_payload:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        from app.core.security import extract_scopes
+        from app.crud.user import is_admin
+
+        if token_payload.get("token_type") == "auth0":
+            scopes = extract_scopes(token_payload)
+            if "trig:admin" not in scopes:
+                raise HTTPException(
+                    status_code=403, detail="Missing required scope: trig:admin"
+                )
+        elif token_payload.get("token_type") == "legacy":
+            if not is_admin(current_user):
+                raise HTTPException(status_code=403, detail="Admin privileges required")
 
     updated = tlog_crud.update_log(
         db, log_id=log_id, updates=payload.model_dump(exclude_none=True)
@@ -203,7 +227,14 @@ def update_log_endpoint(
     return TLogResponse.model_validate(updated)
 
 
-@router.delete("/{log_id}", status_code=204, openapi_extra=openapi_lifecycle("beta"))
+@router.delete(
+    "/{log_id}",
+    status_code=204,
+    openapi_extra={
+        **openapi_lifecycle("beta"),
+        "security": [{"OAuth2": []}],
+    },
+)
 def delete_log_endpoint(
     log_id: int,
     db: Session = Depends(get_db),
@@ -213,7 +244,23 @@ def delete_log_endpoint(
     if not existing:
         raise HTTPException(status_code=404, detail="Log not found")
     if int(existing.user_id) != int(current_user.id):
-        require_scopes("trig:admin")(db=db)
+        # Check admin privileges using token payload from current_user
+        token_payload = getattr(current_user, "_token_payload", None)
+        if not token_payload:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        from app.core.security import extract_scopes
+        from app.crud.user import is_admin
+
+        if token_payload.get("token_type") == "auth0":
+            scopes = extract_scopes(token_payload)
+            if "trig:admin" not in scopes:
+                raise HTTPException(
+                    status_code=403, detail="Missing required scope: trig:admin"
+                )
+        elif token_payload.get("token_type") == "legacy":
+            if not is_admin(current_user):
+                raise HTTPException(status_code=403, detail="Admin privileges required")
 
     # Soft-delete photos then hard-delete log
     tlog_crud.soft_delete_photos_for_log(db, log_id=log_id)
@@ -233,7 +280,7 @@ def list_photos_for_log(
     limit: int = Query(10, ge=1, le=100),
     db: Session = Depends(get_db),
 ):
-    items = tphoto_crud.list_photos_filtered(db, tlog_id=log_id, skip=skip, limit=limit)
+    items = tphoto_crud.list_photos_filtered(db, log_id=log_id, skip=skip, limit=limit)
     # Note: total is estimated as count of non-deleted photos for log
     total = (
         db.query(tphoto_crud.TPhoto)
@@ -255,7 +302,7 @@ def list_photos_for_log(
         photos.append(
             TPhotoResponse(
                 id=int(p.id),
-                tlog_id=int(p.tlog_id),
+                log_id=int(p.tlog_id),
                 user_id=int(tlog.user_id) if tlog else 0,
                 type=str(p.type),
                 filesize=int(p.filesize),

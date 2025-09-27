@@ -85,6 +85,7 @@ def custom_openapi():
     }
 
     # Define public endpoints that should not have security requirements
+    # Note: GET requests to these paths are public, but POST/PUT/DELETE require auth
     public_endpoints = {
         "/health",
         f"{settings.API_V1_STR}/legacy/login",
@@ -123,8 +124,8 @@ def custom_openapi():
             if method in ["get", "post", "put", "delete", "patch"]:
                 endpoint = openapi_schema["paths"][path][method]
 
-                # Skip public endpoints
-                if path in public_endpoints:
+                # Skip public endpoints (GET requests only)
+                if path in public_endpoints and method == "get":
                     continue
 
                 # For optional auth endpoints, remove any existing security requirements
@@ -133,12 +134,16 @@ def custom_openapi():
                         del endpoint["security"]
                     continue
 
-                # Add security requirement to all endpoints (docs/tests) using OAuth2
+                # Add security requirement to write endpoints and admin endpoints
                 if path in admin_endpoints:
                     endpoint["security"] = [
                         {"OAuth2": ["openid", "profile", "user:admin"]}
                     ]
+                elif method in ["post", "put", "patch", "delete"]:
+                    # Require authentication for write operations
+                    endpoint["security"] = [{"OAuth2": []}]
                 else:
+                    # GET requests to protected paths require authentication
                     endpoint["security"] = [{"OAuth2": []}]
 
     app.openapi_schema = openapi_schema

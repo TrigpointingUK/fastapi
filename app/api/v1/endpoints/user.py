@@ -342,7 +342,7 @@ def list_photos_for_user(
         result_items.append(
             TPhotoResponse(
                 id=int(p.id),
-                tlog_id=int(p.tlog_id),
+                log_id=int(p.tlog_id),
                 user_id=user_id,
                 type=str(p.type),
                 filesize=int(p.filesize),

@@ -399,7 +399,7 @@ def list_logs_for_trig(
             )
         if "photos" in tokens:
             for out, orig in zip(items_serialized, items):
-                photos = tphoto_crud.list_all_photos_for_log(db, tlog_id=int(orig.id))
+                photos = tphoto_crud.list_all_photos_for_log(db, log_id=int(orig.id))
                 out["photos"] = []
                 for p in photos:
                     server: Server | None = (
@@ -409,7 +409,7 @@ def list_logs_for_trig(
                     out["photos"].append(
                         TPhotoResponse(
                             id=int(p.id),
-                            tlog_id=int(p.tlog_id),
+                            log_id=int(p.tlog_id),
                             user_id=int(orig.user_id),
                             type=str(p.type),
                             filesize=int(p.filesize),
@@ -479,7 +479,7 @@ def list_photos_for_trig(
         result_items.append(
             TPhotoResponse(
                 id=int(p.id),
-                tlog_id=int(p.tlog_id),
+                log_id=int(p.tlog_id),
                 user_id=0,  # omitted to avoid per-item query; can be enriched later
                 type=str(p.type),
                 filesize=int(p.filesize),

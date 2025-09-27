@@ -73,6 +73,13 @@ class Settings(BaseSettings):
     ORIENTATION_MODEL_PATH: Optional[str] = None
     ORIENTATION_MODEL_THRESHOLD: float = 0.65
 
+    # Photo upload configuration
+    PHOTOS_SERVER_ID: int = 1  # Default to S3 server (server.id = 1)
+    PHOTOS_S3_BUCKET: str = "trigpointinguk-photos"
+    MAX_IMAGE_SIZE: int = 20 * 1024 * 1024  # 20MB
+    MAX_IMAGE_DIMENSION: int = 4000
+    THUMBNAIL_SIZE: int = 120
+
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
