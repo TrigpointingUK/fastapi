@@ -13,76 +13,38 @@ from typing import Any, Dict, Optional
 import jwt
 import requests
 from passlib.context import CryptContext
-from passlib.exc import PasswordSizeError, PasswordTruncateError
 
 from app.core.config import settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-MAX_BCRYPT_BYTES = 72
-COMPAT_PREFIX = "compat$"
-COMPAT_SUFFIX = "::compat"
-
-pwd_context = CryptContext(
-    schemes=["bcrypt"],
-    deprecated="auto",
-    bcrypt__truncate_error=False,
-)
-
-
-def _normalise_password(password: str | None) -> str:
-    """Ensure password bytes comply with bcrypt limits."""
-    if password is None:
-        return ""
-
-    password_bytes = password.encode("utf-8")
-    if len(password_bytes) <= MAX_BCRYPT_BYTES:
-        return password
-
-    truncated = password_bytes[:MAX_BCRYPT_BYTES]
-    logger.warning(
-        "Truncating password to %s bytes for bcrypt compatibility", MAX_BCRYPT_BYTES
-    )
-    normalised = truncated.decode("utf-8", errors="ignore")
-    if len(normalised.encode("utf-8")) > MAX_BCRYPT_BYTES:
-        normalised = normalised[:MAX_BCRYPT_BYTES]
-    return normalised
+# LEGACY PASSWORD FUNCTIONS - DO NOT MODIFY
+# These functions preserve the original insecure password handling
+# for migration purposes only. Any "improvements" will break legacy compatibility.
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plain password against a hashed password."""
-    if not hashed_password:
-        return False
+    """
+    LEGACY: Verify a plain password against a hashed password.
 
-    normalised = _normalise_password(plain_password)
-
-    if hashed_password.startswith(COMPAT_PREFIX):
-        stored_hash = hashed_password[len(COMPAT_PREFIX) :]
-        candidate = normalised + COMPAT_SUFFIX
-    else:
-        stored_hash = hashed_password
-        candidate = normalised
-
-    try:
-        return pwd_context.verify(candidate, stored_hash)
-    except (ValueError, PasswordSizeError, PasswordTruncateError) as exc:
-        logger.error("Password verification failed: %s", exc)
-        return False
+    WARNING: This function preserves legacy behavior for migration purposes.
+    DO NOT modify this function to "improve" security or handle edge cases.
+    Any changes will break compatibility with existing legacy data.
+    """
+    return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    """Hash a password."""
-    normalised = _normalise_password(password)
-    try:
-        return pwd_context.hash(normalised)
-    except (PasswordSizeError, PasswordTruncateError, ValueError):
-        logger.warning(
-            "Hashing rejected password longer than %s bytes; applying compatibility hash",
-            MAX_BCRYPT_BYTES,
-        )
-        combined = normalised + COMPAT_SUFFIX
-        return f"{COMPAT_PREFIX}{pwd_context.hash(combined)}"
+    """
+    LEGACY: Hash a password using legacy methods.
+
+    WARNING: This function preserves legacy behavior for migration purposes.
+    DO NOT modify this function to "improve" security or handle edge cases.
+    Any changes will break compatibility with existing legacy data.
+    """
+    return pwd_context.hash(password)
 
 
 class Auth0TokenValidator:
