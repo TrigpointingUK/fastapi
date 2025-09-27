@@ -18,17 +18,42 @@ from app.core.config import settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+MAX_BCRYPT_BYTES = 72
+
+pwd_context = CryptContext(
+    schemes=["bcrypt"],
+    deprecated="auto",
+    bcrypt__truncate_error=False,
+)
+
+
+def _normalise_password(password: str | None) -> str:
+    """Ensure password bytes comply with bcrypt limits."""
+    if password is None:
+        return ""
+
+    password_bytes = password.encode("utf-8")
+    if len(password_bytes) <= MAX_BCRYPT_BYTES:
+        return password
+
+    truncated = password_bytes[:MAX_BCRYPT_BYTES]
+    logger.warning(
+        "Truncating password to %s bytes for bcrypt compatibility", MAX_BCRYPT_BYTES
+    )
+    return truncated.decode("utf-8", errors="ignore")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against a hashed password."""
-    return pwd_context.verify(plain_password, hashed_password)
+    normalised = _normalise_password(plain_password)
+    return pwd_context.verify(normalised, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
     """Hash a password."""
-    return pwd_context.hash(password)
+    normalised = _normalise_password(password)
+    return pwd_context.hash(normalised)
 
 
 class Auth0TokenValidator:
