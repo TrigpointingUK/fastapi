@@ -78,7 +78,7 @@ def test_get_photo(client: TestClient, db: Session):
     assert resp.status_code == 200
     body = resp.json()
     assert body["id"] == photo.id
-    assert body["name"] == "Test Photo"
+    assert body["caption"] == "Test Photo"
 
 
 def test_update_photo(client: TestClient, db: Session):
@@ -88,13 +88,14 @@ def test_update_photo(client: TestClient, db: Session):
     headers = {"Authorization": "Bearer legacy_user_101"}
     resp = client.patch(
         f"{settings.API_V1_STR}/photos/{photo.id}",
-        json={"name": "New Name", "public_ind": "N"},
+        json={"caption": "New Name", "license": "N", "type": "F"},
         headers=headers,
     )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["name"] == "New Name"
-    assert body["public_ind"] == "N"
+    assert body["caption"] == "New Name"
+    assert body["license"] == "N"
+    assert body["type"] == "F"
 
 
 def test_delete_photo_soft(client: TestClient, db: Session):

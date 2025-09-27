@@ -56,14 +56,14 @@ def list_photos_filtered(
     db: Session,
     *,
     trig_id: Optional[int] = None,
-    tlog_id: Optional[int] = None,
+    log_id: Optional[int] = None,
     user_id: Optional[int] = None,
     skip: int = 0,
     limit: int = 10,
 ) -> List[TPhoto]:
     q = db.query(TPhoto).filter(TPhoto.deleted_ind != "Y")
-    if tlog_id is not None:
-        q = q.filter(TPhoto.tlog_id == tlog_id)
+    if log_id is not None:
+        q = q.filter(TPhoto.tlog_id == log_id)
     if user_id is not None:
         q = q.join(TLog, TLog.id == TPhoto.tlog_id).filter(TLog.user_id == user_id)
     if trig_id is not None:
@@ -74,11 +74,11 @@ def list_photos_filtered(
     return q.offset(skip).limit(limit).all()
 
 
-def list_all_photos_for_log(db: Session, *, tlog_id: int) -> List[TPhoto]:
+def list_all_photos_for_log(db: Session, *, log_id: int) -> List[TPhoto]:
     """Return all non-deleted photos for a given tlog without pagination."""
     return (
         db.query(TPhoto)
-        .filter(TPhoto.tlog_id == tlog_id, TPhoto.deleted_ind != "Y")
+        .filter(TPhoto.tlog_id == log_id, TPhoto.deleted_ind != "Y")
         .order_by(TPhoto.id.desc())
         .all()
     )
@@ -87,10 +87,10 @@ def list_all_photos_for_log(db: Session, *, tlog_id: int) -> List[TPhoto]:
 def create_photo(
     db: Session,
     *,
-    tlog_id: int,
+    log_id: int,
     values: dict,
 ) -> TPhoto:
-    photo = TPhoto(tlog_id=tlog_id, **values)
+    photo = TPhoto(tlog_id=log_id, **values)
     db.add(photo)
     db.commit()
     db.refresh(photo)

@@ -40,7 +40,7 @@ def get_photo(photo_id: int, db: Session = Depends(get_db)):
 
     response = {
         "id": photo.id,
-        "tlog_id": photo.tlog_id,
+        "log_id": photo.tlog_id,
         "type": str(photo.type),
         "filesize": int(photo.filesize),
         "height": int(photo.height),
@@ -48,9 +48,9 @@ def get_photo(photo_id: int, db: Session = Depends(get_db)):
         "icon_filesize": int(photo.icon_filesize),
         "icon_height": int(photo.icon_height),
         "icon_width": int(photo.icon_width),
-        "name": str(photo.name),
+        "caption": str(photo.name),
         "text_desc": str(photo.text_desc),
-        "public_ind": str(photo.public_ind),
+        "license": str(photo.public_ind),
         "photo_url": join_url(base_url, str(photo.filename)),
         "icon_url": join_url(base_url, str(photo.icon_filename)),
     }
@@ -60,7 +60,10 @@ def get_photo(photo_id: int, db: Session = Depends(get_db)):
 @router.patch(
     "/{photo_id}",
     response_model=TPhotoResponse,
-    openapi_extra=openapi_lifecycle("beta"),
+    openapi_extra={
+        **openapi_lifecycle("beta"),
+        "security": [{"OAuth2": []}],
+    },
 )
 def update_photo(photo_id: int, payload: TPhotoUpdate, db: Session = Depends(get_db)):
     updated = tphoto_crud.update_photo(
@@ -83,7 +86,7 @@ def update_photo(photo_id: int, payload: TPhotoUpdate, db: Session = Depends(get
 
     response = {
         "id": updated.id,
-        "tlog_id": updated.tlog_id,
+        "log_id": updated.tlog_id,
         "type": str(updated.type),
         "filesize": int(updated.filesize),
         "height": int(updated.height),
@@ -91,16 +94,23 @@ def update_photo(photo_id: int, payload: TPhotoUpdate, db: Session = Depends(get
         "icon_filesize": int(updated.icon_filesize),
         "icon_height": int(updated.icon_height),
         "icon_width": int(updated.icon_width),
-        "name": str(updated.name),
+        "caption": str(updated.name),
         "text_desc": str(updated.text_desc),
-        "public_ind": str(updated.public_ind),
+        "license": str(updated.public_ind),
         "photo_url": join_url(base_url, str(updated.filename)),
         "icon_url": join_url(base_url, str(updated.icon_filename)),
     }
     return response
 
 
-@router.delete("/{photo_id}", status_code=204, openapi_extra=openapi_lifecycle("beta"))
+@router.delete(
+    "/{photo_id}",
+    status_code=204,
+    openapi_extra={
+        **openapi_lifecycle("beta"),
+        "security": [{"OAuth2": []}],
+    },
+)
 def delete_photo(photo_id: int, db: Session = Depends(get_db)):
     ok = tphoto_crud.delete_photo(db, photo_id=photo_id, soft=True)
     if not ok:

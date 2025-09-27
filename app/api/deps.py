@@ -6,6 +6,7 @@ API dependencies for authentication and database access.
 
 from typing import Optional
 
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.core.security import auth0_validator, extract_scopes
@@ -72,6 +73,7 @@ def get_current_user(
         user = get_user_by_id(db, user_id=user_id)  # type: ignore[name-defined]
         if user is None:
             raise credentials_exception
+        setattr(user, "_token_payload", token_payload)
         return user
 
     # For Auth0 tokens, find user by Auth0 user ID
@@ -135,6 +137,7 @@ def get_current_user(
                         auth0_user_id,
                     )
                     logger.info(f"Updated user {user.id} with Auth0 ID {auth0_user_id}")
+                    setattr(user, "_token_payload", token_payload)
                     return user
                 else:
                     logger.warning(
@@ -209,26 +212,38 @@ def get_current_user_optional(
     return None
 
 
+class _TokenContext(BaseModel):
+    token_payload: dict
+
+
+def get_token_context(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> _TokenContext:
+    if credentials is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    token_payload = auth0_validator.validate_auth0_token(credentials.credentials)
+    if not token_payload:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return _TokenContext(token_payload=token_payload)
+
+
 def require_scopes(*required_scopes: str):
     def _dep(
+        ctx: _TokenContext = Depends(get_token_context),
         db: Session = Depends(get_db),
-        credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
     ) -> User:
-        if credentials is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Not authenticated",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        token_payload = auth0_validator.validate_auth0_token(credentials.credentials)
-        if not token_payload:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        user: Optional[User] = None
-        if token_payload.get("token_type") == "auth0":
+        token_payload = ctx.token_payload
+        token_type = token_payload.get("token_type")
+
+        if token_type == "auth0":  # nosec B105
             scopes = extract_scopes(token_payload)
             missing = [s for s in required_scopes if s not in scopes]
             if missing:
@@ -242,20 +257,26 @@ def require_scopes(*required_scopes: str):
                 if auth0_user_id
                 else None
             )
-        elif token_payload.get("token_type") == "legacy":
-            # For tests/dev, emulate admin via admin_ind
+            if not user:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User not found",
+                )
+        elif token_type == "legacy":  # nosec B105
             user_id = token_payload.get("user_id")
-            user = get_user_by_id(db, user_id=user_id) if user_id is not None else None  # type: ignore[name-defined]
+            user = get_user_by_id(db, user_id=user_id) if user_id is not None else None
             if not user or not is_admin(user):
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
                     detail="Admin privileges required",
                 )
-        if not user:
+        else:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="User not found",
+                detail="Unsupported token type",
             )
+
+        setattr(user, "_token_payload", token_payload)
         return user
 
     return _dep

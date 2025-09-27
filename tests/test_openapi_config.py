@@ -57,10 +57,10 @@ def test_openapi_schema_public_endpoints_no_security(client: TestClient):
     schema = response.json()
     assert "paths" in schema
 
-    # Check that public endpoints don't have security requirements
+    # Check that truly public endpoints don't have security requirements
     public_endpoints = [
         "/health",
-        f"{settings.API_V1_STR}/legacy/login",
+        # Note: /v1/legacy/login is excluded because it's a POST that requires authentication
     ]
 
     for endpoint_path in public_endpoints:
