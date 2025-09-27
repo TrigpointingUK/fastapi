@@ -1,30 +1,96 @@
-# """
-# Tests for app.core.security utilities focusing on legacy tokens and scopes.
-# """
-#
-# from datetime import timedelta
-#
-# from app.core import security
-#
-#
-# def test_legacy_token_validate_success(monkeypatch):
-#     # Legacy JWT functionality removed - Auth0 is now always enabled
-#     token = security.create_access_token(
-#         subject=123, expires_delta=timedelta(minutes=5)
-#     )
-#     payload = security.validate_legacy_jwt_token(token)
-#     assert payload is not None
-#     assert int(payload["sub"]) == 123
-#
-#
-# def test_legacy_token_validate_invalid():
-#     assert security.validate_legacy_jwt_token("not-a-token") is None
-#
-#
-# def test_extract_scopes():
-#     assert security.extract_scopes({"scope": "user:admin trig:admin"}) == {
-#         "user:admin",
-#         "trig:admin",
-#     }
-#     assert security.extract_scopes({"permissions": ["a", "b"]}) == {"a", "b"}
-#     assert security.extract_scopes({}) == set()
+"""
+Comprehensive tests for core security functions.
+"""
+
+from app.core.security import (
+    extract_scopes,
+    get_password_hash,
+    verify_password,
+)
+
+
+class TestSecurityFunctions:
+    """Test cases for core security functions."""
+
+    def test_extract_scopes_valid_token(self):
+        """Test extracting scopes from a valid JWT token."""
+        token_payload = {
+            "scope": "trig:read trig:write user:admin",
+            "token_type": "auth0",
+        }
+        scopes = extract_scopes(token_payload)
+        assert scopes == {"trig:read", "trig:write", "user:admin"}
+
+    def test_extract_scopes_empty_scope(self):
+        """Test extracting scopes from token with empty scope."""
+        token_payload = {"scope": "", "token_type": "auth0"}
+        scopes = extract_scopes(token_payload)
+        assert scopes == set()
+
+    def test_extract_scopes_no_scope_key(self):
+        """Test extracting scopes from token without scope key."""
+        token_payload = {"token_type": "auth0"}
+        scopes = extract_scopes(token_payload)
+        assert scopes == set()
+
+    def test_extract_scopes_whitespace_scope(self):
+        """Test extracting scopes with whitespace."""
+        token_payload = {
+            "scope": "  trig:read   trig:write  user:admin  ",
+            "token_type": "auth0",
+        }
+        scopes = extract_scopes(token_payload)
+        assert scopes == {"trig:read", "trig:write", "user:admin"}
+
+    def test_verify_password_valid(self):
+        """Test password verification with valid password."""
+        plain_password = "testpassword123"
+        hashed_password = get_password_hash(plain_password)
+        assert verify_password(plain_password, hashed_password)
+        assert not verify_password("wrongpassword", hashed_password)
+
+    def test_verify_password_invalid(self):
+        """Test password verification with invalid password."""
+        plain_password = "testpassword123"
+        hashed_password = get_password_hash(plain_password)
+        assert not verify_password("wrongpassword", hashed_password)
+
+    def test_get_password_hash(self):
+        """Test password hashing function."""
+        password = "testpassword123"
+        hash1 = get_password_hash(password)
+        hash2 = get_password_hash(password)
+
+        # Hashes should be different due to salt
+        assert hash1 != hash2
+        # But both should verify the original password
+        assert verify_password(password, hash1)
+        assert verify_password(password, hash2)
+
+    def test_get_password_hash_consistency(self):
+        """Test that password hashing is consistent."""
+        password = "testpassword123"
+        hash1 = get_password_hash(password)
+        hash2 = get_password_hash(password)
+
+        # Hashes should be different due to salt
+        assert hash1 != hash2
+        # But both should verify the original password
+        assert verify_password(password, hash1)
+        assert verify_password(password, hash2)
+
+    def test_password_verification_edge_cases(self):
+        """Test password verification with edge cases."""
+        # Empty password
+        empty_hash = get_password_hash("")
+        assert verify_password("", empty_hash)
+
+        # Very long password
+        long_password = "a" * 1000
+        long_hash = get_password_hash(long_password)
+        assert verify_password(long_password, long_hash)
+
+        # Password with special characters
+        special_password = "!@#$%^&*()_+{}[]|\\:;\"'<>?,./"
+        special_hash = get_password_hash(special_password)
+        assert verify_password(special_password, special_hash)

@@ -57,6 +57,7 @@ class S3Service:
                 Body=photo_bytes,
                 ContentType="image/jpeg",
                 CacheControl="public, max-age=31536000",  # 1 year
+                ACL="public-read",
             )
             uploaded_keys.append(photo_key)
             logger.info(f"Uploaded photo to S3: {photo_key}")
@@ -68,6 +69,7 @@ class S3Service:
                 Body=thumbnail_bytes,
                 ContentType="image/jpeg",
                 CacheControl="public, max-age=31536000",  # 1 year
+                ACL="public-read",
             )
             uploaded_keys.append(thumbnail_key)
             logger.info(f"Uploaded thumbnail to S3: {thumbnail_key}")
