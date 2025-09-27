@@ -45,6 +45,9 @@ class TestS3Service:
         assert photo_key == expected_photo_key
         assert thumb_key == expected_thumb_key
         assert mock_client.put_object.call_count == 2
+        photo_call, thumb_call = mock_client.put_object.call_args_list
+        assert photo_call.kwargs["ACL"] == "public-read"
+        assert thumb_call.kwargs["ACL"] == "public-read"
 
     @patch("app.services.s3_service.boto3.client")
     def test_upload_failure_rolls_back(self, mock_boto_client):
