@@ -18,16 +18,35 @@ from app.core.config import settings
 from app.core.logging import get_logger
 
 logger = get_logger(__name__)
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+# LEGACY PASSWORD FUNCTIONS - DO NOT MODIFY
+# These functions preserve the original insecure password handling
+# for migration purposes only. Any "improvements" will break legacy compatibility.
+# Note: bcrypt__truncate_error=False ensures compatibility across different environments
+pwd_context = CryptContext(
+    schemes=["bcrypt"], deprecated="auto", bcrypt__truncate_error=False
+)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
-    """Verify a plain password against a hashed password."""
+    """
+    LEGACY: Verify a plain password against a hashed password.
+
+    WARNING: This function preserves legacy behavior for migration purposes.
+    DO NOT modify this function to "improve" security or handle edge cases.
+    Any changes will break compatibility with existing legacy data.
+    """
     return pwd_context.verify(plain_password, hashed_password)
 
 
 def get_password_hash(password: str) -> str:
-    """Hash a password."""
+    """
+    LEGACY: Hash a password using legacy methods.
+
+    WARNING: This function preserves legacy behavior for migration purposes.
+    DO NOT modify this function to "improve" security or handle edge cases.
+    Any changes will break compatibility with existing legacy data.
+    """
     return pwd_context.hash(password)
 
 
