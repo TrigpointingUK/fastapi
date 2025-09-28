@@ -27,6 +27,12 @@ RUN pip install -r requirements.txt
 COPY app/ ./app/
 COPY res/ ./res/
 
+# Inject build metadata into app/__version__.py
+# These args are supplied by CI; defaults provide sensible fallbacks for local builds
+ARG GIT_SHA=unknown
+ARG BUILD_TIME=unknown
+RUN printf "__version__ = \"%s\"\n__build_time__ = \"%s\"\n" "$GIT_SHA" "$BUILD_TIME" > app/__version__.py
+
 # Create non-root user
 RUN groupadd -r appuser && useradd -r -g appuser appuser
 RUN chown -R appuser:appuser /app
