@@ -127,10 +127,10 @@ def create_photo(
     request: Request,
     log_id: int = Query(..., description="Parent log ID"),
     file: UploadFile = File(..., description="Image file (JPEG)"),
-    caption: str = Form(..., alias="name", description="Photo caption"),
+    caption: str = Form(..., description="Photo caption"),
     text_desc: str = Form("", description="Photo description"),
     type: str = Form(..., regex="^[TFLPO]$", description="Photo type"),
-    licence: str = Form(..., regex="^[YCN]$", description="Licence", alias="license"),
+    license: str = Form(..., regex="^[YCN]$", description="License"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -138,10 +138,10 @@ def create_photo(
     Upload a photo with metadata.
 
     - **file**: JPEG image file
-    - **name**: Photo caption (required)
+    - **caption**: Photo caption (required)
     - **text_desc**: Photo description (optional)
     - **type**: Photo type (T=trigpoint, F=flush bracket, L=landscape, P=people, O=other)
-    - **licence**: Licence (Y=public domain, C=creative commons, N=private)
+    - **license**: License (Y=public domain, C=creative commons, N=private)
     """
     # Authorise based on log ownership or admin
     tlog: TLog | None = db.query(TLog).filter(TLog.id == log_id).first()
@@ -214,7 +214,7 @@ def create_photo(
                 "name": caption,
                 "text_desc": text_desc,
                 "ip_addr": client_ip,
-                "public_ind": licence,
+                "public_ind": license,
                 "deleted_ind": "N",
                 "source": "F",
             },
