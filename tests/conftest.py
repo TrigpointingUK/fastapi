@@ -15,7 +15,7 @@ from app.main import app
 from app.models.user import TLog, User
 from fastapi.testclient import TestClient
 
-# from app.core.security import create_access_token  # Legacy JWT removed
+# Legacy JWT tokens removed - Auth0 only
 
 
 # Filter out deprecation warnings that are not actionable
@@ -62,24 +62,53 @@ def db():
 
 @pytest.fixture(scope="function")
 def client(monkeypatch):
-    """Create test client with token validator patched for legacy tokens."""
+    """Create test client with token validator patched for Auth0 tokens only."""
 
     def _validate(token: str):
-        # Simple mapping: 'legacy_user_<id>' -> legacy token for that user
-        if token.startswith("legacy_user_"):
+        # Auth0 test tokens only - no legacy tokens supported
+        if token.startswith("auth0_user_"):
             try:
                 user_id = int(token.split("_", 2)[2])
-                return {"token_type": "legacy", "user_id": user_id}
+                return {"token_type": "auth0", "auth0_user_id": f"auth0|{user_id}"}
             except Exception:
                 return None
-        # allow 'admin' legacy too if needed later
-        if token == "legacy_admin":
-            return {"token_type": "legacy", "user_id": 1000}
+        # Admin token
+        if token == "auth0_admin":
+            return {
+                "token_type": "auth0",
+                "auth0_user_id": "auth0|admin",
+                "scope": "user:admin",
+            }
         return None
 
+    # Mock both token validation and Auth0 API calls
     monkeypatch.setattr(
         "app.core.security.auth0_validator.validate_auth0_token", _validate
     )
+
+    # Mock the Auth0 service to prevent real API calls during tests
+    def mock_find_user_by_auth0_id(auth0_user_id: str):
+        # Return None to prevent Auth0 sync - we'll use existing database users
+        return None
+
+    monkeypatch.setattr(
+        "app.services.auth0_service.auth0_service.find_user_by_auth0_id",
+        mock_find_user_by_auth0_id,
+    )
+
+    # Also mock get_user_by_auth0_id to directly map auth0_user_id to database user_id
+    def mock_get_user_by_auth0_id(db, auth0_user_id: str):
+        if auth0_user_id.startswith("auth0|"):
+            try:
+                user_id = int(auth0_user_id.split("|")[1])
+                from app.crud.user import get_user_by_id
+
+                return get_user_by_id(db, user_id=user_id)
+            except ValueError:
+                pass
+        return None
+
+    monkeypatch.setattr("app.crud.user.get_user_by_auth0_id", mock_get_user_by_auth0_id)
 
     with TestClient(app) as c:
         yield c

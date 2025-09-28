@@ -649,7 +649,7 @@ class Auth0Service:
             email: Email address (optional)
             name: Display name
             password: Password for the new user
-            user_id: Legacy user ID to store in app_metadata
+            user_id: Database user ID to store in app_metadata
             firstname: First name for given_name field (optional)
             surname: Surname for family_name field (optional)
 
@@ -669,7 +669,7 @@ class Auth0Service:
             "email_verified": False,
             "verify_email": False,
             "app_metadata": {
-                "legacy_user_id": user_id,
+                "database_user_id": user_id,
                 "original_username": username,
             },
         }

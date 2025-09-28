@@ -118,7 +118,7 @@ class TestPhotoRotate:
             # Mock S3 upload
             mock_s3_upload.return_value = ("new_photo.jpg", "new_thumb.jpg")
 
-            headers = {"Authorization": "Bearer legacy_user_301"}
+            headers = {"Authorization": "Bearer auth0_user_301"}
             resp = client.post(
                 f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
                 json={"angle": 90},
@@ -178,7 +178,7 @@ class TestPhotoRotate:
             )
             mock_s3_upload.return_value = ("new_photo.jpg", "new_thumb.jpg")
 
-            headers = {"Authorization": "Bearer legacy_user_301"}
+            headers = {"Authorization": "Bearer auth0_user_301"}
             resp = client.post(
                 f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
                 json={"angle": 180},
@@ -215,7 +215,7 @@ class TestPhotoRotate:
             )
             mock_s3_upload.return_value = ("new_photo.jpg", "new_thumb.jpg")
 
-            headers = {"Authorization": "Bearer legacy_user_301"}
+            headers = {"Authorization": "Bearer auth0_user_301"}
             # Don't specify angle - should default to 90
             resp = client.post(
                 f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
@@ -230,7 +230,7 @@ class TestPhotoRotate:
         user, tlog = seed_user_and_tlog(db)
         photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=5004)
 
-        headers = {"Authorization": "Bearer legacy_user_301"}
+        headers = {"Authorization": "Bearer auth0_user_301"}
         resp = client.post(
             f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
             json={"angle": 45},  # Invalid angle
@@ -245,7 +245,7 @@ class TestPhotoRotate:
         # Create user first so auth works
         user, tlog = seed_user_and_tlog(db)
 
-        headers = {"Authorization": "Bearer legacy_user_301"}
+        headers = {"Authorization": "Bearer auth0_user_301"}
         resp = client.post(
             f"{settings.API_V1_STR}/photos/99999/rotate",
             json={"angle": 90},
@@ -272,7 +272,7 @@ class TestPhotoRotate:
         db.commit()
 
         # Try to rotate with different user
-        headers = {"Authorization": "Bearer legacy_user_999"}
+        headers = {"Authorization": "Bearer auth0_user_999"}
         resp = client.post(
             f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
             json={"angle": 90},
@@ -303,7 +303,7 @@ class TestPhotoRotate:
             # Mock download failure
             mock_get.side_effect = Exception("Download failed")
 
-            headers = {"Authorization": "Bearer legacy_user_301"}
+            headers = {"Authorization": "Bearer auth0_user_301"}
             resp = client.post(
                 f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
                 json={"angle": 90},
@@ -334,7 +334,7 @@ class TestPhotoRotate:
             # Mock image processing failure
             mock_image_open.side_effect = Exception("Image processing failed")
 
-            headers = {"Authorization": "Bearer legacy_user_301"}
+            headers = {"Authorization": "Bearer auth0_user_301"}
             resp = client.post(
                 f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
                 json={"angle": 90},
@@ -375,7 +375,7 @@ class TestPhotoRotate:
             # Mock S3 upload failure
             mock_s3_upload.return_value = (None, None)
 
-            headers = {"Authorization": "Bearer legacy_user_301"}
+            headers = {"Authorization": "Bearer auth0_user_301"}
             resp = client.post(
                 f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
                 json={"angle": 90},
@@ -432,7 +432,7 @@ class TestPhotoRotate:
             # Mock database creation failure
             mock_create.side_effect = Exception("Database error")
 
-            headers = {"Authorization": "Bearer legacy_user_301"}
+            headers = {"Authorization": "Bearer auth0_user_301"}
             resp = client.post(
                 f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
                 json={"angle": 90},
@@ -476,7 +476,7 @@ class TestPhotoRotate:
             )
             mock_s3_upload.return_value = ("new_photo.jpg", "new_thumb.jpg")
 
-            headers = {"Authorization": "Bearer legacy_user_301"}
+            headers = {"Authorization": "Bearer auth0_user_301"}
             resp = client.post(
                 f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
                 json={"angle": 90},

@@ -37,7 +37,7 @@ def get_auth0_debug(
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    token_type = token_payload.get("token_type", "unknown")
+    token_type = token_payload.get("token_type", "auth0")
     auth0_user_id = token_payload.get("auth0_user_id") or token_payload.get("sub", "")
 
     database_user_found = False

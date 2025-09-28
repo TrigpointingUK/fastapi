@@ -154,7 +154,8 @@ def create_photo(
             raise HTTPException(status_code=403, detail="Access denied")
 
         from app.core.security import extract_scopes
-        from app.crud.user import is_admin
+
+        pass  # Auth0 only - no legacy admin check needed
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
@@ -162,9 +163,7 @@ def create_photo(
                 raise HTTPException(
                     status_code=403, detail="Missing required scope: trig:admin"
                 )
-        elif token_payload.get("token_type") == "legacy":
-            if not is_admin(current_user):
-                raise HTTPException(status_code=403, detail="Admin privileges required")
+        # Legacy tokens not supported - Auth0 only
 
     client_ip = request.client.host if request.client else "127.0.0.1"
 
@@ -379,7 +378,8 @@ def update_photo(
             raise HTTPException(status_code=403, detail="Access denied")
 
         from app.core.security import extract_scopes
-        from app.crud.user import is_admin
+
+        pass  # Auth0 only - no legacy admin check needed
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
@@ -387,9 +387,7 @@ def update_photo(
                 raise HTTPException(
                     status_code=403, detail="Missing required scope: trig:admin"
                 )
-        elif token_payload.get("token_type") == "legacy":
-            if not is_admin(current_user):
-                raise HTTPException(status_code=403, detail="Admin privileges required")
+        # Legacy tokens not supported - Auth0 only
 
     # Proceed with update
     updated = tphoto_crud.update_photo(
@@ -459,7 +457,8 @@ def delete_photo(
             raise HTTPException(status_code=403, detail="Access denied")
 
         from app.core.security import extract_scopes
-        from app.crud.user import is_admin
+
+        pass  # Auth0 only - no legacy admin check needed
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
@@ -467,9 +466,7 @@ def delete_photo(
                 raise HTTPException(
                     status_code=403, detail="Missing required scope: trig:admin"
                 )
-        elif token_payload.get("token_type") == "legacy":
-            if not is_admin(current_user):
-                raise HTTPException(status_code=403, detail="Admin privileges required")
+        # Legacy tokens not supported - Auth0 only
 
     ok = tphoto_crud.delete_photo(db, photo_id=photo_id, soft=True)
     if not ok:
@@ -659,7 +656,8 @@ def rotate_photo(
             raise HTTPException(status_code=403, detail="Access denied")
 
         from app.core.security import extract_scopes
-        from app.crud.user import is_admin
+
+        pass  # Auth0 only - no legacy admin check needed
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
@@ -667,9 +665,7 @@ def rotate_photo(
                 raise HTTPException(
                     status_code=403, detail="Missing required scope: trig:admin"
                 )
-        elif token_payload.get("token_type") == "legacy":
-            if not is_admin(current_user):
-                raise HTTPException(status_code=403, detail="Admin privileges required")
+        # Legacy tokens not supported - Auth0 only
 
     # Get server URL for constructing full URLs
     server: Server | None = (

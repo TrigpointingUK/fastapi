@@ -5,10 +5,11 @@ User endpoints with permission-based field filtering.
 import io
 import json
 import os
-from typing import Optional, Union
+from typing import Dict, Optional, Union
 
 import numpy as np
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import (
@@ -28,12 +29,14 @@ from app.models.user import User
 from app.schemas.tlog import TLogResponse
 from app.schemas.tphoto import TPhotoResponse
 from app.schemas.user import (
+    UserBreakdown,
     UserPrefs,
     UserResponse,
     UserStats,
     UserWithIncludes,
 )
 from app.services.badge_service import BadgeService
+from app.utils.condition_mapping import get_condition_counts_by_description
 from app.utils.geocalibrate import CalibrationResult
 from app.utils.url import join_url
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -63,16 +66,30 @@ def get_current_user_profile(
     Get the current authenticated user's profile.
 
     - Supports optional includes via the `include` query parameter:
-      - stats: adds aggregate log stats for the user
+      - stats: adds basic log stats (totals only) for the user
+      - breakdown: adds detailed breakdown statistics (requires stats)
       - prefs: adds the user's preferences (always allowed on /me)
     """
 
-    result = UserWithIncludes(**UserResponse.model_validate(current_user).model_dump())
+    # Create UserResponse with member_since field
+    user_response = UserResponse.model_validate(current_user)
+    user_response.member_since = current_user.crt_date  # type: ignore
+    result = UserWithIncludes(**user_response.model_dump())
 
     if include:
         tokens = {t.strip() for t in include.split(",") if t.strip()}
 
+        # Validate include tokens
+        valid_includes = {"stats", "breakdown", "prefs"}
+        invalid_tokens = tokens - valid_includes
+        if invalid_tokens:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid include parameter(s): {', '.join(sorted(invalid_tokens))}. Valid options: {', '.join(sorted(valid_includes))}",
+            )
+
         if "stats" in tokens:
+            # Calculate basic stats
             total_logs = (
                 db.query(user_crud.TLog)
                 .filter(user_crud.TLog.user_id == current_user.id)
@@ -84,8 +101,71 @@ def get_current_user_profile(
                 .distinct()
                 .count()
             )
+
             result.stats = UserStats(
-                total_logs=int(total_logs), total_trigs_logged=int(total_trigs)
+                total_logs=int(total_logs),
+                total_trigs_logged=int(total_trigs),
+            )
+
+        if "breakdown" in tokens:
+            # Calculate breakdowns by trig characteristics (distinct trigpoints only)
+            by_current_use_raw = (
+                db.query(
+                    Trig.current_use, func.count(func.distinct(user_crud.TLog.trig_id))
+                )
+                .join(user_crud.TLog, user_crud.TLog.trig_id == Trig.id)
+                .filter(user_crud.TLog.user_id == current_user.id)
+                .group_by(Trig.current_use)
+                .all()
+            )
+            by_current_use: Dict[str, int] = {
+                str(use): int(count) for use, count in by_current_use_raw
+            }
+
+            by_historic_use_raw = (
+                db.query(
+                    Trig.historic_use, func.count(func.distinct(user_crud.TLog.trig_id))
+                )
+                .join(user_crud.TLog, user_crud.TLog.trig_id == Trig.id)
+                .filter(user_crud.TLog.user_id == current_user.id)
+                .group_by(Trig.historic_use)
+                .all()
+            )
+            by_historic_use: Dict[str, int] = {
+                str(use): int(count) for use, count in by_historic_use_raw
+            }
+
+            by_physical_type_raw = (
+                db.query(
+                    Trig.physical_type,
+                    func.count(func.distinct(user_crud.TLog.trig_id)),
+                )
+                .join(user_crud.TLog, user_crud.TLog.trig_id == Trig.id)
+                .filter(user_crud.TLog.user_id == current_user.id)
+                .group_by(Trig.physical_type)
+                .all()
+            )
+            by_physical_type: Dict[str, int] = {
+                str(ptype): int(count) for ptype, count in by_physical_type_raw
+            }
+
+            # Calculate breakdown by log condition (all logs counted)
+            condition_counts_raw = (
+                db.query(user_crud.TLog.condition, func.count(user_crud.TLog.id))
+                .filter(user_crud.TLog.user_id == current_user.id)
+                .group_by(user_crud.TLog.condition)
+                .all()
+            )
+            condition_counts: Dict[str, int] = {
+                str(cond): int(count) for cond, count in condition_counts_raw
+            }
+            by_condition = get_condition_counts_by_description(condition_counts)
+
+            result.breakdown = UserBreakdown(
+                by_current_use=by_current_use,
+                by_historic_use=by_historic_use,
+                by_physical_type=by_physical_type,
+                by_condition=by_condition,
             )
 
         if "prefs" in tokens:
@@ -160,26 +240,42 @@ def get_user_badge(
 def get_user(
     user_id: int,
     include: Optional[str] = Query(
-        None, description="Comma-separated includes: stats,prefs"
+        None, description="Comma-separated includes: stats,breakdown,prefs"
     ),
     db: Session = Depends(get_db),
     current_user: Optional[User] = Depends(get_current_user_optional),
-    credentials=Depends(security),
 ):
     """
     Get a user by ID.
+
+    - Supports optional includes via the `include` query parameter:
+      - stats: adds basic log stats (totals only) for the user
+      - breakdown: adds detailed breakdown statistics
+      - prefs: adds the user's preferences (requires admin or own profile)
     """
     user = user_crud.get_user_by_id(db, user_id=user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Build base response using Pydantic model validation
-    result = UserWithIncludes(**UserResponse.model_validate(user).model_dump())
+    # Build base response using Pydantic model validation with member_since field
+    user_response = UserResponse.model_validate(user)
+    user_response.member_since = user.crt_date  # type: ignore
+    result = UserWithIncludes(**user_response.model_dump())
 
     # Handle includes...
     tokens = {t.strip() for t in include.split(",")} if include else set()
 
+    # Validate include tokens
+    valid_includes = {"stats", "breakdown", "prefs"}
+    invalid_tokens = tokens - valid_includes
+    if invalid_tokens:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid include parameter(s): {', '.join(sorted(invalid_tokens))}. Valid options: {', '.join(sorted(valid_includes))}",
+        )
+
     if "stats" in tokens:
+        # Calculate basic stats
         total_logs = (
             db.query(user_crud.TLog).filter(user_crud.TLog.user_id == user_id).count()
         )
@@ -189,29 +285,98 @@ def get_user(
             .distinct()
             .count()
         )
+
         result.stats = UserStats(
-            total_logs=int(total_logs), total_trigs_logged=int(total_trigs)
+            total_logs=int(total_logs),
+            total_trigs_logged=int(total_trigs),
+        )
+
+    if "breakdown" in tokens:
+        # Calculate breakdowns by trig characteristics (distinct trigpoints only)
+        by_current_use_raw = (
+            db.query(
+                Trig.current_use, func.count(func.distinct(user_crud.TLog.trig_id))
+            )
+            .join(user_crud.TLog, user_crud.TLog.trig_id == Trig.id)
+            .filter(user_crud.TLog.user_id == user_id)
+            .group_by(Trig.current_use)
+            .all()
+        )
+        by_current_use: Dict[str, int] = {
+            str(use): int(count) for use, count in by_current_use_raw
+        }
+
+        by_historic_use_raw = (
+            db.query(
+                Trig.historic_use, func.count(func.distinct(user_crud.TLog.trig_id))
+            )
+            .join(user_crud.TLog, user_crud.TLog.trig_id == Trig.id)
+            .filter(user_crud.TLog.user_id == user_id)
+            .group_by(Trig.historic_use)
+            .all()
+        )
+        by_historic_use: Dict[str, int] = {
+            str(use): int(count) for use, count in by_historic_use_raw
+        }
+
+        by_physical_type_raw = (
+            db.query(
+                Trig.physical_type, func.count(func.distinct(user_crud.TLog.trig_id))
+            )
+            .join(user_crud.TLog, user_crud.TLog.trig_id == Trig.id)
+            .filter(user_crud.TLog.user_id == user_id)
+            .group_by(Trig.physical_type)
+            .all()
+        )
+        by_physical_type: Dict[str, int] = {
+            str(ptype): int(count) for ptype, count in by_physical_type_raw
+        }
+
+        # Calculate breakdown by log condition (all logs counted)
+        condition_counts_raw = (
+            db.query(user_crud.TLog.condition, func.count(user_crud.TLog.id))
+            .filter(user_crud.TLog.user_id == user_id)
+            .group_by(user_crud.TLog.condition)
+            .all()
+        )
+        condition_counts: Dict[str, int] = {
+            str(cond): int(count) for cond, count in condition_counts_raw
+        }
+        by_condition = get_condition_counts_by_description(condition_counts)
+
+        result.breakdown = UserBreakdown(
+            by_current_use=by_current_use,
+            by_historic_use=by_historic_use,
+            by_physical_type=by_physical_type,
+            by_condition=by_condition,
         )
 
     if "prefs" in tokens:
         allowed = False
-        if current_user and current_user.id == user.id:
-            allowed = True
-        else:
-            try:
-                from app.core.security import auth0_validator, extract_scopes
 
-                if credentials is not None:
-                    payload = auth0_validator.validate_auth0_token(
-                        credentials.credentials
-                    )
-                    scopes = extract_scopes(payload or {}) if payload else set()
+        # Allow if user is requesting their own preferences
+        if current_user and int(current_user.id) == user_id:
+            allowed = True
+
+        # Or if user has admin scope (Auth0 only)
+        if not allowed and current_user:
+            try:
+                from app.core.security import extract_scopes
+
+                # Get token payload from the user object (set by auth dependency)
+                token_payload = getattr(current_user, "_token_payload", None)
+                if token_payload and token_payload.get("token_type") == "auth0":
+                    scopes = extract_scopes(token_payload)
                     if "user:admin" in scopes:
                         allowed = True
             except Exception:
-                allowed = False
+                pass  # nosec B110 - Auth0 token parsing failure is acceptable
+
         if not allowed:
-            raise HTTPException(status_code=403, detail="Forbidden")
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: You can only view your own preferences or need admin privileges",
+            )
 
         result.prefs = UserPrefs(
             status_max=int(user.status_max),
@@ -227,13 +392,18 @@ def get_user(
 @router.get("")
 def list_users(
     name: Optional[str] = Query(None, description="Filter by username (contains)"),
+    include: Optional[str] = Query(None, description="Comma-separated includes: stats"),
     skip: int = Query(0, ge=0, description="Number of records to skip"),
     limit: int = Query(
         10, ge=1, le=100, description="Maximum number of records to return"
     ),
     db: Session = Depends(get_db),
 ):
-    """Filtered collection endpoint for users returning envelope with items and pagination."""
+    """Filtered collection endpoint for users returning envelope with items and pagination.
+
+    - Supports optional includes via the `include` query parameter:
+      - stats: adds basic log stats (totals only) for each user
+    """
     # Explicit empty string should mean: return all users (no name filter)
     if name is not None and name.strip() == "":
         query = db.query(user_crud.User)
@@ -274,7 +444,69 @@ def list_users(
         base + "?" + "&".join(params + [f"skip={prev_offset}"]) if skip > 0 else None
     )
 
-    items_serialized = [UserResponse.model_validate(u).model_dump() for u in items]
+    # Parse include tokens
+    tokens = {t.strip() for t in include.split(",")} if include else set()
+
+    # Validate include tokens (only 'stats' supported for list endpoint)
+    valid_includes = {"stats"}
+    invalid_tokens = tokens - valid_includes
+    if invalid_tokens:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid include parameter(s): {', '.join(sorted(invalid_tokens))}. Valid options for user list: {', '.join(sorted(valid_includes))}",
+        )
+
+    # If stats are requested, get user IDs for bulk stats calculation
+    user_stats: Dict[int, UserStats] = {}
+    if "stats" in tokens:
+        user_ids = [int(u.id) for u in items]
+        if user_ids:
+            # Calculate basic stats for all users at once
+            total_logs_query = (
+                db.query(user_crud.TLog.user_id, func.count(user_crud.TLog.id))
+                .filter(user_crud.TLog.user_id.in_(user_ids))
+                .group_by(user_crud.TLog.user_id)
+                .all()
+            )
+
+            total_trigs_query = (
+                db.query(
+                    user_crud.TLog.user_id,
+                    func.count(func.distinct(user_crud.TLog.trig_id)),
+                )
+                .filter(user_crud.TLog.user_id.in_(user_ids))
+                .group_by(user_crud.TLog.user_id)
+                .all()
+            )
+
+            # Convert to dictionaries for fast lookup
+            logs_by_user: Dict[int, int] = {
+                user_id: count for user_id, count in total_logs_query
+            }
+            trigs_by_user: Dict[int, int] = {
+                user_id: count for user_id, count in total_trigs_query
+            }
+
+            for user_id in user_ids:
+                user_stats[user_id] = UserStats(
+                    total_logs=logs_by_user.get(user_id, 0),
+                    total_trigs_logged=trigs_by_user.get(user_id, 0),
+                )
+
+    # Serialize users with optional stats
+    items_serialized = []
+    for u in items:
+        user_response = UserResponse.model_validate(u)
+        user_response.member_since = u.crt_date  # type: ignore
+
+        # Create UserWithIncludes response
+        result = UserWithIncludes(**user_response.model_dump())
+
+        # Add stats if requested
+        if "stats" in tokens and int(u.id) in user_stats:
+            result.stats = user_stats[int(u.id)]
+
+        items_serialized.append(result.model_dump())
     return {
         "items": items_serialized,
         "pagination": {

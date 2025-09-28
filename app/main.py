@@ -88,7 +88,6 @@ def custom_openapi():
     # Note: GET requests to these paths are public, but POST/PUT/DELETE require auth
     public_endpoints = {
         "/health",
-        f"{settings.API_V1_STR}/legacy/login",
         f"{settings.API_V1_STR}/trigs",
         f"{settings.API_V1_STR}/trigs/{{trig_id}}",
         f"{settings.API_V1_STR}/trigs/{{trig_id}}/logs",
@@ -108,6 +107,12 @@ def custom_openapi():
         f"{settings.API_V1_STR}/logs/{{log_id}}/photos",
     }
 
+    # Define endpoints that are public regardless of HTTP method
+    # Used for special cases like migration/onboarding endpoints
+    fully_public_endpoints = {
+        f"{settings.API_V1_STR}/legacy/login",
+    }
+
     # Define endpoints with optional auth (should not have required security)
     optional_auth_endpoints: set[str] = {
         f"{settings.API_V1_STR}/users/{{user_id}}",
@@ -124,14 +129,20 @@ def custom_openapi():
             if method in ["get", "post", "put", "delete", "patch"]:
                 endpoint = openapi_schema["paths"][path][method]
 
+                # Skip fully public endpoints (all HTTP methods)
+                if path in fully_public_endpoints:
+                    continue
+
                 # Skip public endpoints (GET requests only)
                 if path in public_endpoints and method == "get":
                     continue
 
-                # For optional auth endpoints, remove any existing security requirements
+                # For optional auth endpoints, set optional security (grey padlock in Swagger)
                 if path in optional_auth_endpoints:
-                    if "security" in endpoint:
-                        del endpoint["security"]
+                    endpoint["security"] = [
+                        {"OAuth2": []},
+                        {},
+                    ]  # Empty object makes it optional
                     continue
 
                 # Add security requirement to write endpoints and admin endpoints

@@ -242,7 +242,7 @@ def test_create_photo_with_user_facing_names_works(
 
     user, tlog = seed_user_and_tlog(db)
 
-    headers = {"Authorization": f"Bearer legacy_user_{user.id}"}
+    headers = {"Authorization": f"Bearer auth0_user_{user.id}"}
 
     # Create test image
     test_image = create_test_image()
@@ -299,7 +299,7 @@ def test_create_photo_comprehensive_validation(
 
     user, tlog = seed_user_and_tlog(db)
 
-    headers = {"Authorization": f"Bearer legacy_user_{user.id}"}
+    headers = {"Authorization": f"Bearer auth0_user_{user.id}"}
 
     # Create test image
     test_image = create_test_image()

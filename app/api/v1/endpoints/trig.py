@@ -72,11 +72,14 @@ def get_trig(
     stats_obj: Optional[TrigStatsSchema] = None
     if include:
         tokens = {t.strip() for t in include.split(",") if t.strip()}
-        unknown = tokens - {"details", "stats"}
-        if unknown:
+
+        # Validate include tokens
+        valid_includes = {"details", "stats"}
+        invalid_tokens = tokens - valid_includes
+        if invalid_tokens:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unknown include(s): {', '.join(sorted(unknown))}",
+                detail=f"Invalid include parameter(s): {', '.join(sorted(invalid_tokens))}. Valid options: {', '.join(sorted(valid_includes))}",
             )
         if "details" in tokens:
             details_obj = TrigDetails.model_validate(trig)
@@ -391,11 +394,14 @@ def list_logs_for_trig(
     # Handle includes
     if include:
         tokens = {t.strip() for t in include.split(",") if t.strip()}
-        unknown = tokens - {"photos"}
-        if unknown:
+
+        # Validate include tokens
+        valid_includes = {"photos"}
+        invalid_tokens = tokens - valid_includes
+        if invalid_tokens:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unknown include(s): {', '.join(sorted(unknown))}",
+                detail=f"Invalid include parameter(s): {', '.join(sorted(invalid_tokens))}. Valid options: {', '.join(sorted(valid_includes))}",
             )
         if "photos" in tokens:
             for out, orig in zip(items_serialized, items):

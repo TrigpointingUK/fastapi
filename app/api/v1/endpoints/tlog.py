@@ -44,11 +44,14 @@ def list_logs(
     # Handle includes
     if include:
         tokens = {t.strip() for t in include.split(",") if t.strip()}
-        unknown = tokens - {"photos"}
-        if unknown:
+
+        # Validate include tokens
+        valid_includes = {"photos"}
+        invalid_tokens = tokens - valid_includes
+        if invalid_tokens:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unknown include(s): {', '.join(sorted(unknown))}",
+                detail=f"Invalid include parameter(s): {', '.join(sorted(invalid_tokens))}. Valid options: {', '.join(sorted(valid_includes))}",
             )
         if "photos" in tokens:
             # Attach photos list for each log item
@@ -129,11 +132,14 @@ def get_log(
     photos_out: Optional[list[TPhotoResponse]] = None
     if include:
         tokens = {t.strip() for t in include.split(",") if t.strip()}
-        unknown = tokens - {"photos"}
-        if unknown:
+
+        # Validate include tokens
+        valid_includes = {"photos"}
+        invalid_tokens = tokens - valid_includes
+        if invalid_tokens:
             raise HTTPException(
                 status_code=400,
-                detail=f"Unknown include(s): {', '.join(sorted(unknown))}",
+                detail=f"Invalid include parameter(s): {', '.join(sorted(invalid_tokens))}. Valid options: {', '.join(sorted(valid_includes))}",
             )
         if "photos" in tokens:
             photos = tphoto_crud.list_all_photos_for_log(db, log_id=int(log.id))
@@ -207,7 +213,8 @@ def update_log_endpoint(
             raise HTTPException(status_code=403, detail="Access denied")
 
         from app.core.security import extract_scopes
-        from app.crud.user import is_admin
+
+        pass  # Auth0 only - no legacy admin check needed
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
@@ -215,9 +222,7 @@ def update_log_endpoint(
                 raise HTTPException(
                     status_code=403, detail="Missing required scope: trig:admin"
                 )
-        elif token_payload.get("token_type") == "legacy":
-            if not is_admin(current_user):
-                raise HTTPException(status_code=403, detail="Admin privileges required")
+        # Legacy tokens not supported - Auth0 only
 
     updated = tlog_crud.update_log(
         db, log_id=log_id, updates=payload.model_dump(exclude_none=True)
@@ -250,7 +255,8 @@ def delete_log_endpoint(
             raise HTTPException(status_code=403, detail="Access denied")
 
         from app.core.security import extract_scopes
-        from app.crud.user import is_admin
+
+        pass  # Auth0 only - no legacy admin check needed
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
@@ -258,9 +264,7 @@ def delete_log_endpoint(
                 raise HTTPException(
                     status_code=403, detail="Missing required scope: trig:admin"
                 )
-        elif token_payload.get("token_type") == "legacy":
-            if not is_admin(current_user):
-                raise HTTPException(status_code=403, detail="Admin privileges required")
+        # Legacy tokens not supported - Auth0 only
 
     # Soft-delete photos then hard-delete log
     tlog_crud.soft_delete_photos_for_log(db, log_id=log_id)

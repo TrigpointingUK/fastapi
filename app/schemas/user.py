@@ -3,7 +3,7 @@ Pydantic schemas for user endpoints with permission-based field filtering.
 """
 
 from datetime import date  # noqa: F401
-from typing import Optional
+from typing import Dict, Optional
 
 from pydantic import BaseModel, Field
 
@@ -18,6 +18,7 @@ class UserResponse(BaseModel):
     surname: str
     homepage: Optional[str] = Field(..., description="User homepage URL")
     about: str
+    member_since: Optional[date] = Field(None, description="Date user joined")
 
     class Config:
         from_attributes = True
@@ -26,6 +27,24 @@ class UserResponse(BaseModel):
 class UserStats(BaseModel):
     total_logs: int
     total_trigs_logged: int
+
+
+class UserBreakdown(BaseModel):
+    # Breakdown by trig characteristics (distinct trigpoints only)
+    by_current_use: Dict[str, int] = Field(
+        {}, description="Trigpoints logged grouped by current use"
+    )
+    by_historic_use: Dict[str, int] = Field(
+        {}, description="Trigpoints logged grouped by historic use"
+    )
+    by_physical_type: Dict[str, int] = Field(
+        {}, description="Trigpoints logged grouped by physical type"
+    )
+
+    # Breakdown by log condition (all logs counted)
+    by_condition: Dict[str, int] = Field(
+        {}, description="All logs grouped by condition"
+    )
 
 
 class UserPrefs(BaseModel):
@@ -38,6 +57,7 @@ class UserPrefs(BaseModel):
 
 class UserWithIncludes(UserResponse):
     stats: Optional[UserStats] = None
+    breakdown: Optional[UserBreakdown] = None
     prefs: Optional[UserPrefs] = None
 
 
@@ -54,7 +74,7 @@ class Auth0UserInfo(BaseModel):
     email_verified: Optional[bool] = Field(None, description="Email verified status")
 
     # Token metadata
-    token_type: str = Field(..., description="Token type (auth0 or legacy)")
+    token_type: str = Field(..., description="Token type (auth0)")
     audience: Optional[list[str] | str] = Field(
         None, description="Token audience (string or list as provided in token)"
     )
