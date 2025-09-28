@@ -23,6 +23,7 @@ def seed_user_and_tlog(db: Session) -> tuple[User, TLog]:
         firstname="Rotate",
         surname="User",
         email="r@example.com",
+        auth0_user_id="auth0|301",
     )
     tlog = TLog(
         id=3001,
@@ -267,6 +268,7 @@ class TestPhotoRotate:
             firstname="Other",
             surname="User",
             email="other@example.com",
+            auth0_user_id="auth0|999",
         )
         db.add(other_user)
         db.commit()
@@ -280,7 +282,7 @@ class TestPhotoRotate:
         )
 
         assert resp.status_code == 403
-        assert "Admin privileges required" in resp.json()["detail"]
+        assert "Missing required scope" in resp.json()["detail"]
 
     def test_rotate_photo_no_auth(self, client: TestClient, db: Session):
         """Test rotation without authentication."""

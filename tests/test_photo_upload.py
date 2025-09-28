@@ -20,6 +20,7 @@ def seed_user_and_tlog(db: Session) -> tuple[User, TLog]:
         firstname="Upload",
         surname="User",
         email="upload@example.com",
+        auth0_user_id="auth0|102",
     )
     tlog = TLog(
         id=1002,
