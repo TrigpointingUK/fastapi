@@ -22,7 +22,10 @@ logger = get_logger(__name__)
 # LEGACY PASSWORD FUNCTIONS - DO NOT MODIFY
 # These functions preserve the original insecure password handling
 # for migration purposes only. Any "improvements" will break legacy compatibility.
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Note: bcrypt__truncate_error=False ensures compatibility across different environments
+pwd_context = CryptContext(
+    schemes=["bcrypt"], deprecated="auto", bcrypt__truncate_error=False
+)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
