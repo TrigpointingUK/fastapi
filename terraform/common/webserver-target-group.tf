@@ -92,25 +92,7 @@ resource "aws_lb_listener_rule" "forum" {
   }
 }
 
-resource "aws_lb_listener_rule" "phpmyadmin" {
-  listener_arn = aws_lb_listener.app_https[0].arn
-  priority     = 121
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.webserver.arn
-  }
-
-  condition {
-    host_header {
-      values = ["phpmyadmin.trigpointing.uk"]
-    }
-  }
-
-  tags = {
-    Name = "${var.project_name}-phpmyadmin-listener-rule"
-  }
-}
+# phpMyAdmin listener rule moved to phpmyadmin.tf when phpMyAdmin ECS service is enabled
 
 resource "aws_lb_listener_rule" "static" {
   listener_arn = aws_lb_listener.app_https[0].arn

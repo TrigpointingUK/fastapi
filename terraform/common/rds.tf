@@ -88,8 +88,9 @@ resource "aws_db_instance" "main" {
   # Password rotation
   manage_master_user_password = true
 
-  # Performance Insights (disabled for t3.micro)
-  performance_insights_enabled = false
+  # Performance Insights (enabled with Database Insights Advanced mode)
+  performance_insights_enabled = true
+  performance_insights_retention_period = 465
 
   tags = {
     Name = "fastapi-db"
