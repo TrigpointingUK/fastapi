@@ -14,7 +14,6 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import (
     get_current_user,
-    get_current_user_optional,
     get_db,
 )
 from app.api.lifecycle import openapi_lifecycle
@@ -33,6 +32,7 @@ from app.schemas.user import (
     UserPrefs,
     UserResponse,
     UserStats,
+    UserUpdate,
     UserWithIncludes,
 )
 from app.services.badge_service import BadgeService
@@ -181,6 +181,48 @@ def get_current_user_profile(
     return result
 
 
+@router.patch(
+    "/me",
+    response_model=UserResponse,
+    openapi_extra=openapi_lifecycle(
+        "beta",
+        note="Update the current authenticated user's profile and preferences",
+    ),
+)
+def update_current_user_profile(
+    user_updates: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+) -> UserResponse:
+    """
+    Update the current authenticated user's profile and preferences.
+
+    All fields are optional - only provided fields will be updated.
+    """
+    # Update only the fields that were provided
+    update_data = user_updates.model_dump(exclude_unset=True)
+
+    for field, value in update_data.items():
+        setattr(current_user, field, value)
+
+    # Update the timestamp
+    from datetime import datetime
+
+    current_user.upd_timestamp = datetime.now()  # type: ignore
+
+    try:
+        db.commit()
+        db.refresh(current_user)
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to update user: {str(e)}")
+
+    # Return updated user data
+    user_response = UserResponse.model_validate(current_user)
+    user_response.member_since = current_user.crt_date  # type: ignore
+    return user_response
+
+
 @router.get(
     "/{user_id}/badge",
     responses={
@@ -240,18 +282,18 @@ def get_user_badge(
 def get_user(
     user_id: int,
     include: Optional[str] = Query(
-        None, description="Comma-separated includes: stats,breakdown,prefs"
+        None, description="Comma-separated includes: stats,breakdown"
     ),
     db: Session = Depends(get_db),
-    current_user: Optional[User] = Depends(get_current_user_optional),
 ):
     """
-    Get a user by ID.
+    Get a user by ID - public data only.
 
     - Supports optional includes via the `include` query parameter:
       - stats: adds basic log stats (totals only) for the user
       - breakdown: adds detailed breakdown statistics
-      - prefs: adds the user's preferences (requires admin or own profile)
+
+    For private data including preferences, use GET /users/me
     """
     user = user_crud.get_user_by_id(db, user_id=user_id)
     if not user:
@@ -266,7 +308,7 @@ def get_user(
     tokens = {t.strip() for t in include.split(",")} if include else set()
 
     # Validate include tokens
-    valid_includes = {"stats", "breakdown", "prefs"}
+    valid_includes = {"stats", "breakdown"}
     invalid_tokens = tokens - valid_includes
     if invalid_tokens:
         raise HTTPException(
@@ -349,41 +391,6 @@ def get_user(
             by_historic_use=by_historic_use,
             by_physical_type=by_physical_type,
             by_condition=by_condition,
-        )
-
-    if "prefs" in tokens:
-        allowed = False
-
-        # Allow if user is requesting their own preferences
-        if current_user and int(current_user.id) == user_id:
-            allowed = True
-
-        # Or if user has admin scope (Auth0 only)
-        if not allowed and current_user:
-            try:
-                from app.core.security import extract_scopes
-
-                # Get token payload from the user object (set by auth dependency)
-                token_payload = getattr(current_user, "_token_payload", None)
-                if token_payload and token_payload.get("token_type") == "auth0":
-                    scopes = extract_scopes(token_payload)
-                    if "user:admin" in scopes:
-                        allowed = True
-            except Exception:
-                pass  # nosec B110 - Auth0 token parsing failure is acceptable
-
-        if not allowed:
-            raise HTTPException(
-                status_code=403,
-                detail="Access denied: You can only view your own preferences or need admin privileges",
-            )
-
-        result.prefs = UserPrefs(
-            status_max=int(user.status_max),
-            distance_ind=str(user.distance_ind),
-            public_ind=str(user.public_ind),
-            online_map_type=str(user.online_map_type),
-            online_map_type2=str(user.online_map_type2),
         )
 
     return result

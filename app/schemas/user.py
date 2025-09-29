@@ -55,6 +55,28 @@ class UserPrefs(BaseModel):
     online_map_type2: str
 
 
+class UserUpdate(BaseModel):
+    """Schema for updating user preferences and profile information."""
+
+    homepage: Optional[str] = Field(
+        None, max_length=255, description="User homepage URL"
+    )
+    about: Optional[str] = Field(None, description="About/description text")
+    status_max: Optional[int] = Field(None, description="Status preference")
+    distance_ind: Optional[str] = Field(
+        None, pattern="^[KM]$", description="Distance units (K=km, M=miles)"
+    )
+    public_ind: Optional[str] = Field(
+        None, pattern="^[YN]$", description="Public visibility (Y/N)"
+    )
+    online_map_type: Optional[str] = Field(
+        None, max_length=10, description="Primary map type preference"
+    )
+    online_map_type2: Optional[str] = Field(
+        None, max_length=10, description="Secondary map type preference"
+    )
+
+
 class UserWithIncludes(UserResponse):
     stats: Optional[UserStats] = None
     breakdown: Optional[UserBreakdown] = None
