@@ -32,8 +32,8 @@ def _make_user(
     return user
 
 
-@patch("app.api.v1.endpoints.auth.update_user_auth0_mapping")
-@patch("app.api.v1.endpoints.auth.auth0_service")
+@patch("app.api.v1.endpoints.legacy.update_user_auth0_mapping")
+@patch("app.api.v1.endpoints.legacy.auth0_service")
 def test_login_persists_auth0_user_id(
     mock_auth0_service,
     mock_update_mapping,
