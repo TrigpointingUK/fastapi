@@ -183,7 +183,7 @@ def get_current_user_profile(
 
 @router.patch(
     "/me",
-    response_model=UserResponse,
+    response_model=UserWithIncludes,
     openapi_extra=openapi_lifecycle(
         "beta",
         note="Update the current authenticated user's profile and preferences",
@@ -193,7 +193,7 @@ def update_current_user_profile(
     user_updates: UserUpdate,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
-) -> UserResponse:
+) -> UserWithIncludes:
     """
     Update the current authenticated user's profile and preferences.
 
@@ -217,10 +217,21 @@ def update_current_user_profile(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to update user: {str(e)}")
 
-    # Return updated user data
+    # Return updated user data with prefs
     user_response = UserResponse.model_validate(current_user)
     user_response.member_since = current_user.crt_date  # type: ignore
-    return user_response
+    result = UserWithIncludes(**user_response.model_dump())
+
+    # Always include prefs in PATCH response since they might have been updated
+    result.prefs = UserPrefs(
+        status_max=int(current_user.status_max),
+        distance_ind=str(current_user.distance_ind),
+        public_ind=str(current_user.public_ind),
+        online_map_type=str(current_user.online_map_type),
+        online_map_type2=str(current_user.online_map_type2),
+    )
+
+    return result
 
 
 @router.get(
