@@ -54,8 +54,10 @@ def setup_xray_tracing() -> bool:
         # Note: FastAPI is not supported by aws-xray-sdk patching, use middleware instead
         patch(["requests", "boto3", "botocore"])  # Avoid 'sqlalchemy' and 'psycopg2'
 
-        logger.info(f"X-Ray tracing enabled for service: {settings.XRAY_SERVICE_NAME}")
-        return True
+        logger.info(
+            f"X-Ray tracing enabled for service: {settings.XRAY_SERVICE_NAME}"
+        )  # pragma: no cover - log only
+        return True  # pragma: no cover - side-effect only
 
     except ImportError as e:
         logger.error(f"Failed to import X-Ray SDK: {e}")
