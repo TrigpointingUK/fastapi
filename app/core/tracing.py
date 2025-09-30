@@ -191,8 +191,9 @@ def trace_function(name: Optional[str] = None):
 
                 subsegment_name = name or f"{func.__module__}.{func.__name__}"
 
-                # Create a subsegment instead of a new segment
-                with xray_recorder.capture_subsegment(subsegment_name):
+                # Create a subsegment using the async recorder's method
+                # Use in_subsegment for sync functions (it works with async recorder too)
+                with xray_recorder.in_subsegment(subsegment_name):
                     return func(*args, **kwargs)
             except Exception as e:
                 logger.warning(f"Failed to trace function {func.__name__}: {e}")

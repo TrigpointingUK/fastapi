@@ -192,57 +192,48 @@ if xray_enabled:
                 if request.url.path == "/debug/xray":
                     return await call_next(request)
 
-                # Start a segment for this request only if one doesn't already exist
-                segment_created_here = False
-                segment = None
-                try:
-                    # Reuse existing segment if present; otherwise begin a new root segment
-                    segment = self.recorder.current_segment()
-                    if segment is None:
-                        segment = self.recorder.begin_segment()
-                        segment_created_here = True
-                    # Store reference for downstream usage
-                    request.state.xray_segment = segment
-                except Exception as e:
-                    logger.warning(f"Failed to create X-Ray segment: {e}")
-                    # If segment creation fails, continue without tracing
-                    return await call_next(request)
+                # Create segment name for this request
+                segment_name = f"{request.method} {request.url.path}"
 
                 try:
-                    # Add HTTP metadata the correct way for X-Ray (with error handling)
-                    if segment:
-                        try:
-                            segment.put_http_meta("method", request.method)
-                            segment.put_http_meta("url", str(request.url))
-                            if request.headers.get("user-agent"):
-                                segment.put_http_meta(
-                                    "user_agent", request.headers.get("user-agent")
+                    # Use capture context manager for proper segment lifecycle
+                    with self.recorder.capture(segment_name) as segment:
+                        # Add HTTP metadata the correct way for X-Ray (with error handling)
+                        if segment:
+                            try:
+                                segment.put_http_meta("method", request.method)
+                                segment.put_http_meta("url", str(request.url))
+                                if request.headers.get("user-agent"):
+                                    segment.put_http_meta(
+                                        "user_agent", request.headers.get("user-agent")
+                                    )
+                                if request.client:
+                                    segment.put_http_meta(
+                                        "client_ip", request.client.host
+                                    )
+                            except Exception as meta_err:
+                                logger.debug(
+                                    f"Failed to add X-Ray request metadata: {meta_err}"
                                 )
-                            if request.client:
-                                segment.put_http_meta("client_ip", request.client.host)
-                        except Exception as meta_err:
-                            logger.debug(
-                                f"Failed to add X-Ray request metadata (segment may have ended): {meta_err}"
-                            )
 
-                    # Process the request
-                    response: Response = await call_next(request)
+                        # Process the request
+                        response: Response = await call_next(request)
 
-                    # Add response metadata (with error handling for race conditions)
-                    if segment:
-                        try:
-                            segment.put_http_meta("status", response.status_code)
-                            if response.headers.get("content-length"):
-                                segment.put_http_meta(
-                                    "content_length",
-                                    response.headers.get("content-length"),
+                        # Add response metadata (with error handling for race conditions)
+                        if segment:
+                            try:
+                                segment.put_http_meta("status", response.status_code)
+                                if response.headers.get("content-length"):
+                                    segment.put_http_meta(
+                                        "content_length",
+                                        response.headers.get("content-length"),
+                                    )
+                            except Exception as meta_err:
+                                logger.debug(
+                                    f"Failed to add X-Ray response metadata: {meta_err}"
                                 )
-                        except Exception as meta_err:
-                            logger.debug(
-                                f"Failed to add X-Ray metadata (segment may have ended): {meta_err}"
-                            )
 
-                    return response
+                        return response
 
                 except Exception as e:
                     # Mark segment as error with traceback stack
@@ -250,31 +241,14 @@ if xray_enabled:
                         import sys
                         import traceback
 
-                        if segment:
+                        current_segment = self.recorder.current_segment()
+                        if current_segment:
                             _, _, tb = sys.exc_info()
                             stack = traceback.extract_tb(tb) if tb else None
-                            segment.add_exception(e, stack)
+                            current_segment.add_exception(e, stack)
                     except Exception as add_exc_err:
                         logger.debug(f"Failed to record X-Ray exception: {add_exc_err}")
                     raise
-                finally:
-                    # Always end the segment
-                    try:
-                        # Only end the segment if we created it in this middleware
-                        if segment_created_here:
-                            # Restore current entity before ending to handle async context switches
-                            if segment is not None and hasattr(
-                                self.recorder, "_context"
-                            ):
-                                try:
-                                    self.recorder._context.set_trace_entity(segment)  # type: ignore[attr-defined]
-                                except Exception as context_err:
-                                    logger.debug(
-                                        f"Could not set X-Ray current entity before end: {context_err}"
-                                    )
-                            self.recorder.end_segment()
-                    except Exception as e:
-                        logger.warning(f"Failed to end X-Ray segment: {e}")
 
         app.add_middleware(XRayMiddleware, recorder=xray_recorder)
         logger.info("X-Ray custom middleware added successfully")
