@@ -16,11 +16,8 @@ memory = 512
 domain_name           = "api.trigpointing.uk"
 enable_cloudflare_ssl = true
 
-log_level           = "INFO"
-cors_origins        = ["https://trigpointing.uk", "https://api.trigpointing.uk"]
-db_pool_size        = 10
-db_pool_recycle     = 300
-xray_enabled        = true
-xray_service_name   = "trigpointing-api-production"
-xray_sampling_rate  = 0.1
-xray_daemon_address = null
+log_level       = "INFO"
+cors_origins    = ["https://trigpointing.uk", "https://api.trigpointing.uk"]
+db_pool_size    = 10
+db_pool_recycle = 300
+xray_enabled    = false

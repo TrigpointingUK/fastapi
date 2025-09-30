@@ -275,10 +275,6 @@ class TestEnvironmentVariableConfig:
         monkeypatch.setenv("BACKEND_CORS_ORIGINS", '["https://a.com","https://b.com"]')
         monkeypatch.setenv("DATABASE_POOL_SIZE", "20")
         monkeypatch.setenv("DATABASE_POOL_RECYCLE", "600")
-        monkeypatch.setenv("XRAY_ENABLED", "true")
-        monkeypatch.setenv("XRAY_SERVICE_NAME", "svc")
-        monkeypatch.setenv("XRAY_SAMPLING_RATE", "0.25")
-        monkeypatch.setenv("XRAY_DAEMON_ADDRESS", "127.0.0.1:2000")
 
         s = Settings()
         assert s.LOG_LEVEL == "WARNING"
@@ -287,7 +283,3 @@ class TestEnvironmentVariableConfig:
         assert str(s.BACKEND_CORS_ORIGINS[1]) == "https://b.com/"
         assert s.DATABASE_POOL_SIZE == 20
         assert s.DATABASE_POOL_RECYCLE == 600
-        assert s.XRAY_ENABLED is True
-        assert s.XRAY_SERVICE_NAME == "svc"
-        assert s.XRAY_SAMPLING_RATE == 0.25
-        assert s.XRAY_DAEMON_ADDRESS == "127.0.0.1:2000"

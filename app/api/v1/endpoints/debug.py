@@ -3,7 +3,6 @@ from typing import Optional
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
-from app.core.config import settings
 from app.core.security import auth0_validator, extract_scopes
 from app.crud.user import get_user_by_auth0_id, get_user_by_email, get_user_by_name
 from app.schemas.user import Auth0UserInfo
@@ -89,66 +88,3 @@ def get_auth0_debug(
         database_username=database_username,
         database_email=database_email,
     )
-
-
-@router.get("/xray")
-def debug_xray():
-    """
-    Debug X-Ray tracing functionality under /v1/debug/xray.
-    Requires OAuth2 unless disabled by OpenAPI config.
-    """
-    xray_enabled = settings.XRAY_ENABLED
-
-    if not xray_enabled:
-        return {"error": "X-Ray is not enabled"}
-
-    debug_info = {
-        "xray_enabled": xray_enabled,
-        "service_name": settings.XRAY_SERVICE_NAME,
-        "sampling_rate": settings.XRAY_SAMPLING_RATE,
-        "daemon_address": settings.XRAY_DAEMON_ADDRESS,
-    }
-
-    try:
-        from aws_xray_sdk.core import xray_recorder
-
-        # Get recorder info
-        debug_info["recorder_type"] = type(xray_recorder).__name__
-        debug_info["recorder_service"] = getattr(xray_recorder, "service", "not_set")
-        debug_info["recorder_daemon_address"] = getattr(
-            xray_recorder, "daemon_address", "not_set"
-        )
-
-        # Try to create a simple trace manually
-        segment = xray_recorder.begin_segment("debug_xray_test")
-
-        if segment:
-            segment.put_annotation("test", "debug")
-            segment.put_metadata(
-                "debug_info",
-                {
-                    "service_name": settings.XRAY_SERVICE_NAME,
-                    "sampling_rate": settings.XRAY_SAMPLING_RATE,
-                    "daemon_address": settings.XRAY_DAEMON_ADDRESS,
-                },
-            )
-
-            result = {
-                "status": "success",
-                "message": "X-Ray trace created successfully",
-                "trace_id": segment.trace_id,
-                "segment_id": segment.id,
-                "debug_info": debug_info,
-            }
-
-            xray_recorder.end_segment()
-            return result
-        else:
-            return {"error": "No segment created", "debug_info": debug_info}
-
-    except Exception as e:  # pragma: no cover - debug-only endpoint
-        return {
-            "error": f"X-Ray error: {str(e)}",
-            "type": type(e).__name__,
-            "debug_info": debug_info,
-        }

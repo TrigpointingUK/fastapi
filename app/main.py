@@ -7,7 +7,7 @@ import logging
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.core.tracing import setup_xray_tracing
+from app.core.profiling import ProfilingMiddleware, should_enable_profiling
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
@@ -16,10 +16,6 @@ logger = logging.getLogger(__name__)
 
 # Configure logging first
 setup_logging()
-
-# Set up tracing - use only AWS X-Ray SDK to avoid conflicts
-xray_enabled = setup_xray_tracing()
-otel_enabled = False  # Disabled to avoid conflicts with X-Ray SDK
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -174,112 +170,20 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Add X-Ray middleware for FastAPI using custom middleware
-if xray_enabled:
-    try:
-        from aws_xray_sdk.core import xray_recorder
-        from starlette.middleware.base import BaseHTTPMiddleware
-        from starlette.requests import Request
-        from starlette.responses import Response
-
-        class XRayMiddleware(BaseHTTPMiddleware):
-            def __init__(self, app, recorder=None):
-                super().__init__(app)
-                self.recorder = recorder or xray_recorder
-
-            async def dispatch(self, request: Request, call_next):
-                # Skip X-Ray for the debug endpoint (it creates its own segment)
-                if request.url.path == "/debug/xray":
-                    return await call_next(request)
-
-                # Start a segment for this request only if one doesn't already exist
-                segment_created_here = False
-                segment = None
-                try:
-                    # Reuse existing segment if present; otherwise begin a new root segment
-                    segment = self.recorder.current_segment()
-                    if segment is None:
-                        segment = self.recorder.begin_segment()
-                        segment_created_here = True
-                    # Store reference for downstream usage
-                    request.state.xray_segment = segment
-                except Exception as e:
-                    logger.warning(f"Failed to create X-Ray segment: {e}")
-                    # If segment creation fails, continue without tracing
-                    return await call_next(request)
-
-                try:
-                    # Add HTTP metadata the correct way for X-Ray (with error handling)
-                    if segment:
-                        try:
-                            segment.put_http_meta("method", request.method)
-                            segment.put_http_meta("url", str(request.url))
-                            if request.headers.get("user-agent"):
-                                segment.put_http_meta(
-                                    "user_agent", request.headers.get("user-agent")
-                                )
-                            if request.client:
-                                segment.put_http_meta("client_ip", request.client.host)
-                        except Exception as meta_err:
-                            logger.debug(
-                                f"Failed to add X-Ray request metadata (segment may have ended): {meta_err}"
-                            )
-
-                    # Process the request
-                    response: Response = await call_next(request)
-
-                    # Add response metadata (with error handling for race conditions)
-                    if segment:
-                        try:
-                            segment.put_http_meta("status", response.status_code)
-                            if response.headers.get("content-length"):
-                                segment.put_http_meta(
-                                    "content_length",
-                                    response.headers.get("content-length"),
-                                )
-                        except Exception as meta_err:
-                            logger.debug(
-                                f"Failed to add X-Ray metadata (segment may have ended): {meta_err}"
-                            )
-
-                    return response
-
-                except Exception as e:
-                    # Mark segment as error with traceback stack
-                    try:
-                        import sys
-                        import traceback
-
-                        if segment:
-                            _, _, tb = sys.exc_info()
-                            stack = traceback.extract_tb(tb) if tb else None
-                            segment.add_exception(e, stack)
-                    except Exception as add_exc_err:
-                        logger.debug(f"Failed to record X-Ray exception: {add_exc_err}")
-                    raise
-                finally:
-                    # Always end the segment
-                    try:
-                        # Only end the segment if we created it in this middleware
-                        if segment_created_here:
-                            # Restore current entity before ending to handle async context switches
-                            if segment is not None and hasattr(
-                                self.recorder, "_context"
-                            ):
-                                try:
-                                    self.recorder._context.set_trace_entity(segment)  # type: ignore[attr-defined]
-                                except Exception as context_err:
-                                    logger.debug(
-                                        f"Could not set X-Ray current entity before end: {context_err}"
-                                    )
-                            self.recorder.end_segment()
-                    except Exception as e:
-                        logger.warning(f"Failed to end X-Ray segment: {e}")
-
-        app.add_middleware(XRayMiddleware, recorder=xray_recorder)
-        logger.info("X-Ray custom middleware added successfully")
-    except Exception as e:
-        logger.error(f"Error setting up X-Ray middleware: {e}")
+# Set up profiling middleware (development and staging only)
+if settings.PROFILING_ENABLED and should_enable_profiling(settings.ENVIRONMENT):
+    app.add_middleware(
+        ProfilingMiddleware,
+        default_format=settings.PROFILING_DEFAULT_FORMAT,
+    )
+    logger.info(
+        f"Profiling enabled for {settings.ENVIRONMENT} environment "
+        f"(default format: {settings.PROFILING_DEFAULT_FORMAT})"
+    )
+elif settings.PROFILING_ENABLED and not should_enable_profiling(settings.ENVIRONMENT):
+    logger.warning(
+        f"Profiling disabled in {settings.ENVIRONMENT} environment for security"
+    )
 
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
@@ -296,57 +200,12 @@ def health_check():
     except ImportError:
         version_info = {"version": "unknown", "build_time": "unknown"}
 
-    tracing_info = {
-        "xray_enabled": xray_enabled,
-        "otel_enabled": otel_enabled,
-        "tracing_conflict_resolved": True,  # Indicate that the conflict has been resolved
-    }
-
-    # Add X-Ray configuration details if enabled
-    if xray_enabled:
-        tracing_info.update(
-            {
-                "xray_service_name": settings.XRAY_SERVICE_NAME,
-                "xray_sampling_rate": settings.XRAY_SAMPLING_RATE,
-                "xray_daemon_address": settings.XRAY_DAEMON_ADDRESS,
-            }
-        )
-
-        # Try to get X-Ray status
-        try:
-            from aws_xray_sdk.core import xray_recorder
-
-            # Check if recorder is configured
-            tracing_info["xray_recorder_type"] = type(xray_recorder).__name__
-
-            # For AsyncAWSXRayRecorder, check if it's properly configured
-            if hasattr(xray_recorder, "service"):
-                tracing_info["xray_recorder_service"] = xray_recorder.service
-            if hasattr(xray_recorder, "daemon_address"):
-                tracing_info["xray_recorder_daemon_address"] = (
-                    xray_recorder.daemon_address
-                )
-            if hasattr(xray_recorder, "_context"):
-                tracing_info["xray_recorder_has_context"] = (
-                    xray_recorder._context is not None
-                )
-
-            # Try to check if sampling is working
-            tracing_info["xray_recorder_configured"] = True
-
-        except Exception as e:
-            tracing_info["xray_recorder_error"] = str(e)
-
     return {
         "status": "healthy",
         "environment": settings.ENVIRONMENT,
         "version": version_info["version"],
         "build_time": version_info["build_time"],
-        "tracing": tracing_info,
     }
-
-
-# moved to /v1/debug/xray under debug router
 
 
 if __name__ == "__main__":

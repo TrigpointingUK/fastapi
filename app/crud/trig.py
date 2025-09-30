@@ -7,11 +7,9 @@ from typing import Optional
 from sqlalchemy import Float, cast, func, literal
 from sqlalchemy.orm import Session
 
-from app.core.tracing import trace_function
 from app.models.trig import Trig
 
 
-@trace_function("crud.trig.get_by_id")
 def get_trig_by_id(db: Session, trig_id: int) -> Optional[Trig]:
     """
     Get a trigpoint by ID.
@@ -26,7 +24,6 @@ def get_trig_by_id(db: Session, trig_id: int) -> Optional[Trig]:
     return db.query(Trig).filter(Trig.id == trig_id).first()
 
 
-@trace_function("crud.trig.get_by_waypoint")
 def get_trig_by_waypoint(db: Session, waypoint: str) -> Optional[Trig]:
     """
     Get a trigpoint by waypoint code.
@@ -41,7 +38,6 @@ def get_trig_by_waypoint(db: Session, waypoint: str) -> Optional[Trig]:
     return db.query(Trig).filter(Trig.waypoint == waypoint).first()
 
 
-@trace_function("crud.trig.get_by_county")
 def get_trigs_by_county(
     db: Session, county: str, skip: int = 0, limit: int = 100
 ) -> list[Trig]:
@@ -60,7 +56,6 @@ def get_trigs_by_county(
     return db.query(Trig).filter(Trig.county == county).offset(skip).limit(limit).all()
 
 
-@trace_function("crud.trig.search_by_name")
 def search_trigs_by_name(
     db: Session, name_pattern: str, skip: int = 0, limit: int = 100
 ) -> list[Trig]:
@@ -85,7 +80,6 @@ def search_trigs_by_name(
     )
 
 
-@trace_function("crud.trig.get_count")
 def get_trigs_count(db: Session) -> int:
     """
     Get total number of trigpoints.
@@ -99,7 +93,6 @@ def get_trigs_count(db: Session) -> int:
     return db.query(Trig).count()
 
 
-@trace_function("crud.trig.list_filtered")
 def list_trigs_filtered(
     db: Session,
     *,
@@ -144,7 +137,6 @@ def list_trigs_filtered(
     return query.offset(skip).limit(limit).all()
 
 
-@trace_function("crud.trig.count_filtered")
 def count_trigs_filtered(
     db: Session,
     *,

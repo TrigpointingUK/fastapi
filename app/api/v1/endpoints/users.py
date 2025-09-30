@@ -17,9 +17,6 @@ from app.api.deps import (
     get_db,
 )
 from app.api.lifecycle import openapi_lifecycle
-
-# from app.core.security import auth0_validator
-from app.core.tracing import trace_function
 from app.crud import tlog as tlog_crud
 from app.crud import tphoto as tphoto_crud
 from app.crud import user as user_crud
@@ -44,6 +41,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from fastapi.security import HTTPBearer
 
+# from app.core.security import auth0_validator
+
+
 router = APIRouter()
 security = HTTPBearer(auto_error=False)
 
@@ -56,7 +56,6 @@ security = HTTPBearer(auto_error=False)
         note="Returns the current authenticated user's profile. Supports include=stats,prefs.",
     ),
 )
-@trace_function("api.users.get_current_user_profile")
 def get_current_user_profile(
     include: Optional[str] = Query(
         None, description="Comma-separated includes: stats,prefs"
@@ -191,7 +190,6 @@ def get_current_user_profile(
         note="Update the current authenticated user's profile and preferences",
     ),
 )
-@trace_function("api.users.update_current_user_profile")
 def update_current_user_profile(
     user_updates: UserUpdate,
     current_user: User = Depends(get_current_user),
@@ -250,7 +248,6 @@ def update_current_user_profile(
         note="Generates a 200x50px PNG badge showing user statistics including nickname, trigpoints logged, and photos uploaded.",
     ),
 )
-@trace_function("api.users.get_user_badge")
 def get_user_badge(
     user_id: int,
     scale: float = Query(
@@ -294,7 +291,6 @@ def get_user_badge(
 
 
 @router.get("/{user_id}", response_model=UserWithIncludes)
-@trace_function("api.users.get_user")
 def get_user(
     user_id: int,
     include: Optional[str] = Query(
@@ -413,7 +409,6 @@ def get_user(
 
 
 @router.get("")
-@trace_function("api.users.list_users")
 def list_users(
     name: Optional[str] = Query(None, description="Filter by username (contains)"),
     include: Optional[str] = Query(None, description="Comma-separated includes: stats"),
@@ -544,7 +539,6 @@ def list_users(
 
 
 @router.get("/{user_id}/logs", openapi_extra=openapi_lifecycle("beta"))
-@trace_function("api.users.list_logs_for_user")
 def list_logs_for_user(
     user_id: int,
     skip: int = Query(0, ge=0),
