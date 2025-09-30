@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.api.lifecycle import lifecycle, openapi_lifecycle
+from app.core.tracing import trace_function
 from app.crud import status as status_crud
 from app.crud import tlog as tlog_crud
 from app.crud import tphoto as tphoto_crud
@@ -45,6 +46,7 @@ router = APIRouter()
         "beta", note="Shape may change; fieldset stabilising"
     ),
 )
+@trace_function("api.trigs.get_trig")
 def get_trig(
     trig_id: int,
     include: Optional[str] = Query(
@@ -96,6 +98,7 @@ def get_trig(
     response_model=TrigWithIncludes,
     openapi_extra=openapi_lifecycle("beta", note="Returns minimal shape only"),
 )
+@trace_function("api.trigs.get_trig_by_waypoint")
 def get_trig_by_waypoint(
     waypoint: str, _lc=lifecycle("beta"), db: Session = Depends(get_db)
 ):
@@ -121,6 +124,7 @@ def get_trig_by_waypoint(
     "",
     openapi_extra=openapi_lifecycle("beta", note="Filtered collection listing"),
 )
+@trace_function("api.trigs.list_trigs")
 def list_trigs(
     name: Optional[str] = Query(None, description="Filter by trig name (contains)"),
     county: Optional[str] = Query(None, description="Filter by county (exact)"),
@@ -239,6 +243,7 @@ def list_trigs(
         ),
     ),
 )
+@trace_function("api.trigs.get_trig_map")
 def get_trig_map(
     trig_id: int,
     map_variant: Optional[str] = Query(
@@ -378,6 +383,7 @@ def get_trig_map(
     "/{trig_id}/logs",
     openapi_extra=openapi_lifecycle("beta", note="List logs for a trig"),
 )
+@trace_function("api.trigs.list_logs_for_trig")
 def list_logs_for_trig(
     trig_id: int,
     include: Optional[str] = Query(
@@ -456,6 +462,7 @@ def list_logs_for_trig(
     "/{trig_id}/photos",
     openapi_extra=openapi_lifecycle("beta", note="List photos for a trig"),
 )
+@trace_function("api.trigs.list_photos_for_trig")
 def list_photos_for_trig(
     trig_id: int,
     skip: int = Query(0, ge=0),

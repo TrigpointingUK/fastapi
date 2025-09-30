@@ -6,9 +6,11 @@ from typing import Optional
 
 from sqlalchemy.orm import Session
 
+from app.core.tracing import trace_function
 from app.models.trigstats import TrigStats
 
 
+@trace_function("crud.trigstats.get_by_id")
 def get_trigstats_by_id(db: Session, trig_id: int) -> Optional[TrigStats]:
     """
     Get trigstats by trig ID.

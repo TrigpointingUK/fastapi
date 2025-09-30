@@ -9,12 +9,14 @@ from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.logging import get_logger
+from app.core.tracing import trace_function
 from app.models.user import TLog, User
 from app.services.auth0_service import auth0_service
 
 logger = get_logger(__name__)
 
 
+@trace_function("crud.user.get_by_id")
 def get_user_by_id(db: Session, user_id: int) -> Optional[User]:
     """
     Get a user by ID.
@@ -29,6 +31,7 @@ def get_user_by_id(db: Session, user_id: int) -> Optional[User]:
     return db.query(User).filter(User.id == user_id).first()
 
 
+@trace_function("crud.user.get_by_email")
 def get_user_by_email(db: Session, email: str) -> Optional[User]:
     """
     Get a user by email.
@@ -43,6 +46,7 @@ def get_user_by_email(db: Session, email: str) -> Optional[User]:
     return db.query(User).filter(User.email == email).first()
 
 
+@trace_function("crud.user.get_by_name")
 def get_user_by_name(db: Session, name: str) -> Optional[User]:
     """
     Get a user by username.
@@ -80,6 +84,7 @@ def verify_password(plain_password: str, cryptpw: str) -> bool:
         return False
 
 
+@trace_function("crud.user.authenticate")
 def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     """
     Authenticate a user with email and password (legacy function for compatibility).
@@ -100,6 +105,7 @@ def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     return user
 
 
+@trace_function("crud.user.authenticate_flexible")
 def authenticate_user_flexible(
     db: Session, identifier: str, password: str
 ) -> Optional[User]:
@@ -255,6 +261,7 @@ def search_users_by_name(
     )
 
 
+@trace_function("crud.user.get_count")
 def get_users_count(db: Session) -> int:
     """
     Get total number of users.
@@ -347,6 +354,7 @@ def get_all_usernames(db: Session) -> List[str]:
     return [str(user.name) for user in users if user.name]
 
 
+@trace_function("crud.user.get_log_stats")
 def get_user_log_stats(db: Session, user_ids: List[int]) -> Dict[int, Dict[str, Any]]:
     """
     Get log statistics for a list of user IDs.
@@ -447,6 +455,7 @@ def get_users_by_email(db: Session, email: str) -> List[User]:
     return db.query(User).filter(func.lower(User.email) == email.lower()).all()
 
 
+@trace_function("crud.user.get_by_auth0_id")
 def get_user_by_auth0_id(db: Session, auth0_user_id: str) -> Optional[User]:
     """
     Get a user by Auth0 user ID.
@@ -483,6 +492,7 @@ def update_user_auth0_id(db: Session, user_id: int, auth0_user_id: str) -> bool:
     return True
 
 
+@trace_function("crud.user.update_auth0_mapping")
 def update_user_auth0_mapping(db: Session, user_id: int, auth0_user_id: str) -> bool:
     """
     Update user's Auth0 mapping with user ID.

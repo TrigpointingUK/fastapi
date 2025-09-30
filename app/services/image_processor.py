@@ -9,6 +9,7 @@ from typing import Optional, Tuple
 from PIL import Image, ImageOps
 
 from app.core.config import settings
+from app.core.tracing import trace_function
 
 logger = logging.getLogger(__name__)
 
@@ -20,6 +21,7 @@ class ImageProcessor:
         """Initialise the image processor."""
         pass
 
+    @trace_function("service.image_processor.process_image")
     def process_image(self, image_bytes: bytes) -> Tuple[
         Optional[bytes],
         Optional[bytes],
@@ -123,6 +125,7 @@ class ImageProcessor:
 
         return new_width, new_height
 
+    @trace_function("service.image_processor.validate_image")
     def validate_image(self, image_bytes: bytes) -> Tuple[bool, str]:
         """Validate uploaded image file."""
         try:

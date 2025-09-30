@@ -9,6 +9,7 @@ from typing import Any, Tuple
 from PIL import Image, ImageDraw, ImageFont
 from sqlalchemy.orm import Session
 
+from app.core.tracing import trace_function
 from app.crud.user import get_user_by_id
 from app.models import TLog, TPhoto
 
@@ -31,6 +32,7 @@ class BadgeService:
         else:  # pragma: no cover - runtime safeguard
             self.logo_path = candidate_paths[-1]
 
+    @trace_function("service.badge.get_user_statistics")
     def get_user_statistics(self, db: Session, user_id: int) -> Tuple[int, int]:
         """
         Get user statistics: distinct trigpoints logged and total photos.
@@ -54,6 +56,7 @@ class BadgeService:
 
         return distinct_trigs, total_photos
 
+    @trace_function("service.badge.generate_badge")
     def generate_badge(
         self, db: Session, user_id: int, scale: float = 1.0
     ) -> io.BytesIO:
