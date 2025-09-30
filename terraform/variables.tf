@@ -115,8 +115,14 @@ variable "db_pool_recycle" {
   default     = 300
 }
 
-variable "pyinstrument_enabled_enabled" {
-  description = "Enable pyinstrument profiling"
+variable "profiling_enabled" {
+  description = "Enable pyinstrument profiling middleware"
   type        = bool
   default     = false
+}
+
+variable "profiling_default_format" {
+  description = "Default profiling output format (html or speedscope)"
+  type        = string
+  default     = "html"
 }

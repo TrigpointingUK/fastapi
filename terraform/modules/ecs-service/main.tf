@@ -52,16 +52,12 @@ resource "aws_ecs_task_definition" "app" {
           value = tostring(var.db_pool_recycle)
         },
         {
-          name  = "XRAY_ENABLED"
-          value = tostring(var.xray_enabled)
+          name  = "PROFILING_ENABLED"
+          value = tostring(var.profiling_enabled)
         },
         {
-          name  = "XRAY_SERVICE_NAME"
-          value = var.xray_service_name
-        },
-        {
-          name  = "XRAY_SAMPLING_RATE"
-          value = tostring(var.xray_sampling_rate)
+          name  = "PROFILING_DEFAULT_FORMAT"
+          value = var.profiling_default_format
         }
         ],
         # Optional base environment variables
@@ -69,12 +65,6 @@ resource "aws_ecs_task_definition" "app" {
           {
             name  = "BACKEND_CORS_ORIGINS"
             value = jsonencode(var.cors_origins)
-          }
-        ] : [],
-        var.xray_daemon_address != null ? [
-          {
-            name  = "XRAY_DAEMON_ADDRESS"
-            value = var.xray_daemon_address
           }
         ] : [],
       )
@@ -152,52 +142,17 @@ resource "aws_ecs_task_definition" "app" {
       }
       essential = true
     }
-    ],
-    # Add X-Ray daemon container if X-Ray is enabled
-    var.xray_enabled ? [
-      {
-        name   = "${var.project_name}-xray-daemon"
-        image  = "amazon/aws-xray-daemon:latest"
-        cpu    = 32
-        memory = 256
-        portMappings = [
-          {
-            containerPort = 2000
-            protocol      = "udp"
-          }
-        ]
-        logConfiguration = {
-          logDriver = "awslogs"
-          options = {
-            awslogs-group         = var.cloudwatch_log_group_name
-            awslogs-region        = var.aws_region
-            awslogs-stream-prefix = "xray-daemon"
-          }
-        }
-        healthCheck = {
-          command     = ["CMD-SHELL", "timeout 1 bash -c '</dev/tcp/127.0.0.1/2000' || exit 1"]
-          interval    = 30
-          timeout     = 5
-          retries     = 3
-          startPeriod = 10
-        }
-        essential = false
-      }
-    ] : []
-  ))
+  ]))
 
   tags = {
     Name = "${var.project_name}-${var.environment}-task-definition"
   }
 }
 
-## X-Ray permissions are included in the ecs_credentials_access policy below
-## to avoid hitting the AWS limit of 10 managed policy attachments per role.
-
-# IAM policy for ECS tasks to read database credentials
+# IAM policy for ECS tasks to read database credentials and secrets
 resource "aws_iam_policy" "ecs_credentials_access" {
   name        = "${var.project_name}-${var.environment}-ecs-credentials-access"
-  description = "Allow ECS tasks to read database credentials"
+  description = "Allow ECS tasks to read database credentials and application secrets"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -212,17 +167,6 @@ resource "aws_iam_policy" "ecs_credentials_access" {
           var.secrets_arn,
           var.credentials_secret_arn
         ]
-      },
-      # X-Ray permissions folded into this policy to reduce managed attachments
-      {
-        Effect = "Allow",
-        Action = [
-          "xray:PutTraceSegments",
-          "xray:PutTelemetryRecords",
-          "xray:GetSamplingRules",
-          "xray:GetSamplingTargets"
-        ],
-        Resource = "*"
       }
     ]
   })

@@ -137,7 +137,7 @@ resource "cloudflare_record" "auth" {
   content         = "trigpointing-cd-7upjl47sjenr2gbr.edge.tenants.eu.auth0.com"
   type            = "CNAME"
   proxied         = false # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true # Allow overwriting existing records
+  allow_overwrite = true  # Allow overwriting existing records
 
   comment = "Auth0 subdomain for TrigpointingUK - managed by Terraform"
 }
