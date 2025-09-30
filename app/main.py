@@ -174,105 +174,16 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Add X-Ray middleware for FastAPI using custom middleware
+# Add X-Ray middleware for FastAPI using dedicated module
 if xray_enabled:
     try:
-        from aws_xray_sdk.core import xray_recorder
-        from starlette.middleware.base import BaseHTTPMiddleware
-        from starlette.requests import Request
-        from starlette.responses import Response
+        from app.core.xray_middleware import XRayMiddleware
 
-        class XRayMiddleware(BaseHTTPMiddleware):
-            def __init__(self, app, recorder=None):
-                super().__init__(app)
-                self.recorder = recorder or xray_recorder
-
-            async def dispatch(self, request: Request, call_next):
-                # Skip X-Ray for the debug endpoint (it creates its own segment)
-                if request.url.path == "/debug/xray":
-                    return await call_next(request)
-
-                # Use service name as segment name (not the path) to avoid creating
-                # a separate service node for each endpoint
-                segment = None
-                segment_created = False
-
-                try:
-                    # Begin segment manually for async compatibility
-                    # Use the configured service name instead of path
-                    segment = self.recorder.begin_segment(
-                        name=settings.XRAY_SERVICE_NAME
-                    )
-                    segment_created = True
-
-                    # Add HTTP metadata
-                    if segment:
-                        try:
-                            segment.put_http_meta("method", request.method)
-                            segment.put_http_meta("url", str(request.url))
-                            if request.headers.get("user-agent"):
-                                segment.put_http_meta(
-                                    "user_agent", request.headers.get("user-agent")
-                                )
-                            if request.client:
-                                segment.put_http_meta("client_ip", request.client.host)
-                        except Exception as meta_err:
-                            logger.debug(
-                                f"Failed to add X-Ray request metadata: {meta_err}"
-                            )
-
-                    # Process the request
-                    response: Response = await call_next(request)
-
-                    # Add response metadata - MUST be done before returning response
-                    if segment:
-                        try:
-                            segment.put_http_meta("status", response.status_code)
-                            if response.headers.get("content-length"):
-                                segment.put_http_meta(
-                                    "content_length",
-                                    response.headers.get("content-length"),
-                                )
-                        except Exception as meta_err:
-                            logger.debug(
-                                f"Failed to add X-Ray response metadata: {meta_err}"
-                            )
-
-                    # End segment BEFORE returning response to ensure metadata is captured
-                    if segment_created:
-                        try:
-                            self.recorder.end_segment()
-                            segment_created = False  # Mark as ended
-                        except Exception as e:
-                            logger.warning(f"Failed to end X-Ray segment: {e}")
-
-                    return response
-
-                except Exception as e:
-                    # Mark segment as error with traceback stack
-                    try:
-                        import sys
-                        import traceback
-
-                        if segment:
-                            _, _, tb = sys.exc_info()
-                            stack = traceback.extract_tb(tb) if tb else None
-                            segment.add_exception(e, stack)
-                    except Exception as add_exc_err:
-                        logger.debug(f"Failed to record X-Ray exception: {add_exc_err}")
-                    raise
-
-                finally:
-                    # Clean up segment if it wasn't already ended
-                    if segment_created:
-                        try:
-                            self.recorder.end_segment()
-                        except Exception as e:
-                            logger.debug(f"Failed to end X-Ray segment in finally: {e}")
-
-        app.add_middleware(XRayMiddleware, recorder=xray_recorder)
-        logger.info("X-Ray custom middleware added successfully")
-    except Exception as e:
+        app.add_middleware(XRayMiddleware, service_name=settings.XRAY_SERVICE_NAME)
+        logger.info(
+            "X-Ray custom middleware added successfully"
+        )  # pragma: no cover - log only
+    except Exception as e:  # pragma: no cover - environment dependent
         logger.error(f"Error setting up X-Ray middleware: {e}")
 
 # Include API router
