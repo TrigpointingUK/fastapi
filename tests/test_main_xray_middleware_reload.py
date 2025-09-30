@@ -14,7 +14,7 @@ def test_main_import_xray_enabled(monkeypatch):
     # Provide XRayMiddleware class import path
     import types
 
-    mod = types.SimpleNamespace()
+    mod = types.ModuleType("app.core.xray_middleware")
 
     class _MW:
         def __init__(self, *a, **k):

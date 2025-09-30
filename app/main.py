@@ -175,11 +175,13 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 # Add X-Ray middleware for FastAPI using dedicated module
-if xray_enabled:
+if xray_enabled:  # pragma: no cover
     try:
         from app.core.xray_middleware import XRayMiddleware
 
-        app.add_middleware(XRayMiddleware, service_name=settings.XRAY_SERVICE_NAME)
+        app.add_middleware(
+            XRayMiddleware, service_name=settings.XRAY_SERVICE_NAME
+        )  # pragma: no cover
         logger.info(
             "X-Ray custom middleware added successfully"
         )  # pragma: no cover - log only

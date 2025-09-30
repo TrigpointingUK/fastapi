@@ -2,6 +2,9 @@
 Execute real setup_xray_tracing to cover configure arguments.
 """
 
+import sys
+from types import SimpleNamespace
+
 from app.core import tracing
 
 
@@ -16,5 +19,20 @@ def test_setup_xray_tracing_real(monkeypatch):
         raising=False,
     )
 
-    # Should not raise; returns True when SDK available
-    assert tracing.setup_xray_tracing() in (True, False)
+    # Provide minimal stubs so configure path executes
+    class _Rec:
+        def configure(self, **kwargs):  # noqa: D401
+            pass
+
+    sys.modules["aws_xray_sdk.core"] = SimpleNamespace(
+        xray_recorder=_Rec(), patch=lambda libs: None
+    )
+
+    class _AsyncCtx:  # noqa: D401
+        pass
+
+    sys.modules["aws_xray_sdk.core.async_context"] = SimpleNamespace(
+        AsyncContext=_AsyncCtx
+    )
+
+    assert tracing.setup_xray_tracing() is True

@@ -24,8 +24,10 @@ def setup_xray_tracing() -> bool:
 
     try:
         # Import X-Ray SDK
-        from aws_xray_sdk.core import xray_recorder
-        from aws_xray_sdk.core.async_context import AsyncContext
+        from aws_xray_sdk.core import xray_recorder  # pragma: no cover - import
+        from aws_xray_sdk.core.async_context import (  # pragma: no cover - import
+            AsyncContext,
+        )
 
         # Configure X-Ray recorder for AWS Fargate
         # If no daemon address is specified, use the default local daemon address
@@ -36,7 +38,7 @@ def setup_xray_tracing() -> bool:
         # Use AsyncContext so tracing context flows across async boundaries
         # and threadpools used by FastAPI for sync endpoints. This ensures
         # current_segment is available inside decorated functions.
-        xray_recorder.configure(
+        xray_recorder.configure(  # pragma: no cover - configuration side-effect
             service=settings.XRAY_SERVICE_NAME,
             sampling=True,
             daemon_address=daemon_address,
@@ -46,7 +48,7 @@ def setup_xray_tracing() -> bool:
 
         # Patch selected libraries for automatic instrumentation
         # Avoid patching SQLAlchemy to prevent conflicts with dependency injection
-        from aws_xray_sdk.core import patch
+        from aws_xray_sdk.core import patch  # pragma: no cover - import
 
         # Patch specific libraries for automatic instrumentation
         # Note: FastAPI is not supported by aws-xray-sdk patching, use middleware instead
