@@ -38,10 +38,10 @@ def setup_xray_tracing() -> bool:
         # current_segment is available inside decorated functions.
         xray_recorder.configure(
             service=settings.XRAY_SERVICE_NAME,
-            sampling=True,  # enable sampling (rules can be configured via daemon or env)
+            sampling=True,
             daemon_address=daemon_address,
             context=AsyncContext(),
-            context_missing="LOG_ERROR",  # Log error instead of raising exception
+            context_missing="LOG_ERROR",
         )
 
         # Patch selected libraries for automatic instrumentation
@@ -189,8 +189,8 @@ def trace_function(name: Optional[str] = None):
                 if not settings.XRAY_ENABLED:
                     return await func(*args, **kwargs)
 
-                try:
-                    from aws_xray_sdk.core import xray_recorder
+                try:  # pragma: no cover
+                    from aws_xray_sdk.core import xray_recorder  # pragma: no cover
 
                     current_segment = xray_recorder.current_segment()
                     if current_segment is None:
