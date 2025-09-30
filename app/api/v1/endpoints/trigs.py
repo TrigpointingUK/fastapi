@@ -329,7 +329,7 @@ async def get_trig_map(
                 edge_mask = alpha_ch.filter(ImageFilter.FIND_EDGES)
                 try:
                     edge_mask = edge_mask.filter(ImageFilter.MaxFilter(3))
-                except Exception:
+                except Exception:  # pragma: no cover - Pillow compatibility fallback
                     edge_mask = edge_mask
                 sc = (102, 102, 102, 255)
                 if coastline_colour:
@@ -372,10 +372,10 @@ async def get_trig_map(
             new_w = max(1, int(round(base.width * scale)))
             try:
                 resample = Image.Resampling.LANCZOS  # type: ignore[attr-defined]
-            except Exception:
-                try:
+            except Exception:  # pragma: no cover - Pillow compatibility
+                try:  # pragma: no cover
                     resample = Image.Resampling.NEAREST  # type: ignore[attr-defined]
-                except Exception:
+                except Exception:  # pragma: no cover
                     resample = 0  # type: ignore[assignment]
             base = base.resize((new_w, height), resample=resample)
 
