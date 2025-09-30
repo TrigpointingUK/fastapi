@@ -20,4 +20,4 @@ log_level       = "INFO"
 cors_origins    = ["https://trigpointing.uk", "https://api.trigpointing.uk"]
 db_pool_size    = 10
 db_pool_recycle = 300
-xray_enabled    = false
+pyinstrument_enabled = false

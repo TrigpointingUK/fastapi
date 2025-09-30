@@ -115,26 +115,8 @@ variable "db_pool_recycle" {
   default     = 300
 }
 
-variable "xray_enabled" {
-  description = "Enable X-Ray tracing"
+variable "pyinstrument_enabled_enabled" {
+  description = "Enable pyinstrument profiling"
   type        = bool
-  default     = true
-}
-
-variable "xray_service_name" {
-  description = "X-Ray service name"
-  type        = string
-  default     = "trigpointing-api-staging"
-}
-
-variable "xray_sampling_rate" {
-  description = "X-Ray sampling rate (0.0 to 1.0)"
-  type        = number
-  default     = 0.1
-}
-
-variable "xray_daemon_address" {
-  description = "X-Ray daemon address (optional)"
-  type        = string
-  default     = null
+  default     = false
 }
