@@ -192,14 +192,17 @@ if xray_enabled:
                 if request.url.path == "/debug/xray":
                     return await call_next(request)
 
-                # Create segment name for this request
-                segment_name = f"{request.method} {request.url.path}"
+                # Use service name as segment name (not the path) to avoid creating
+                # a separate service node for each endpoint
                 segment = None
                 segment_created = False
 
                 try:
                     # Begin segment manually for async compatibility
-                    segment = self.recorder.begin_segment(segment_name)
+                    # Use the configured service name instead of path
+                    segment = self.recorder.begin_segment(
+                        name=settings.XRAY_SERVICE_NAME
+                    )
                     segment_created = True
 
                     # Add HTTP metadata
@@ -221,7 +224,7 @@ if xray_enabled:
                     # Process the request
                     response: Response = await call_next(request)
 
-                    # Add response metadata
+                    # Add response metadata - MUST be done before returning response
                     if segment:
                         try:
                             segment.put_http_meta("status", response.status_code)
@@ -234,6 +237,14 @@ if xray_enabled:
                             logger.debug(
                                 f"Failed to add X-Ray response metadata: {meta_err}"
                             )
+
+                    # End segment BEFORE returning response to ensure metadata is captured
+                    if segment_created:
+                        try:
+                            self.recorder.end_segment()
+                            segment_created = False  # Mark as ended
+                        except Exception as e:
+                            logger.warning(f"Failed to end X-Ray segment: {e}")
 
                     return response
 
@@ -252,12 +263,12 @@ if xray_enabled:
                     raise
 
                 finally:
-                    # Always end the segment if we created it
+                    # Clean up segment if it wasn't already ended
                     if segment_created:
                         try:
                             self.recorder.end_segment()
                         except Exception as e:
-                            logger.warning(f"Failed to end X-Ray segment: {e}")
+                            logger.debug(f"Failed to end X-Ray segment in finally: {e}")
 
         app.add_middleware(XRayMiddleware, recorder=xray_recorder)
         logger.info("X-Ray custom middleware added successfully")
