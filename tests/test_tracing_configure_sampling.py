@@ -31,9 +31,6 @@ def test_setup_xray_with_sampling_parameter(monkeypatch):
     sys.modules["aws_xray_sdk.core"] = SimpleNamespace(
         xray_recorder=RecorderStub(), patch=lambda libs: None
     )
-    sys.modules["aws_xray_sdk.core.async_context"] = SimpleNamespace(
-        AsyncContext=type("_Ctx", (), {})
-    )
 
     # Import and call setup_xray_tracing
     from app.core import tracing

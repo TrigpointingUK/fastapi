@@ -28,11 +28,4 @@ def test_setup_xray_tracing_real(monkeypatch):
         xray_recorder=_Rec(), patch=lambda libs: None
     )
 
-    class _AsyncCtx:  # noqa: D401
-        pass
-
-    sys.modules["aws_xray_sdk.core.async_context"] = SimpleNamespace(
-        AsyncContext=_AsyncCtx
-    )
-
     assert tracing.setup_xray_tracing() is True

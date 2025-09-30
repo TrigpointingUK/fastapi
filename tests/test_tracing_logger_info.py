@@ -28,9 +28,6 @@ def test_setup_xray_logs_success_message(monkeypatch, caplog):
     sys.modules["aws_xray_sdk.core"] = SimpleNamespace(
         xray_recorder=RecorderStub(), patch=lambda libs: None
     )
-    sys.modules["aws_xray_sdk.core.async_context"] = SimpleNamespace(
-        AsyncContext=type("_Ctx", (), {})
-    )
 
     # Import fresh to ensure setup runs
     from app.core import tracing

@@ -25,9 +25,6 @@ def setup_xray_tracing() -> bool:
     try:
         # Import X-Ray SDK
         from aws_xray_sdk.core import xray_recorder  # pragma: no cover - import
-        from aws_xray_sdk.core.async_context import (  # pragma: no cover - import
-            AsyncContext,
-        )
 
         # Configure X-Ray recorder for AWS Fargate
         # If no daemon address is specified, use the default local daemon address
@@ -35,14 +32,15 @@ def setup_xray_tracing() -> bool:
         daemon_address = settings.XRAY_DAEMON_ADDRESS or "127.0.0.1:2000"
         logger.info(f"Using X-Ray daemon address: {daemon_address}")
 
-        # Use AsyncContext so tracing context flows across async boundaries
-        # and threadpools used by FastAPI for sync endpoints. This ensures
-        # current_segment is available inside decorated functions.
+        # Use default ThreadLocalContext for uvloop compatibility
+        # AsyncContext is incompatible with uvloop (used by uvicorn[standard])
+        # ThreadLocalContext works fine for FastAPI's request-scoped tracing pattern
+        # where middleware creates segments and decorators create subsegments
         xray_recorder.configure(  # pragma: no cover - configuration side-effect
             service=settings.XRAY_SERVICE_NAME,
             sampling=True,
             daemon_address=daemon_address,
-            context=AsyncContext(),
+            # context=AsyncContext(),  # Removed: incompatible with uvloop
             context_missing="LOG_ERROR",
         )
 

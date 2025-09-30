@@ -19,7 +19,4 @@ def test_tracing_import_lines(monkeypatch):
     sys.modules["aws_xray_sdk.core"] = SimpleNamespace(
         xray_recorder=_Rec(), patch=lambda libs: None
     )
-    sys.modules["aws_xray_sdk.core.async_context"] = SimpleNamespace(
-        AsyncContext=type("_Ctx", (), {})
-    )
     assert tracing.setup_xray_tracing() in (True, False)

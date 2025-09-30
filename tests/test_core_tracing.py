@@ -55,11 +55,6 @@ def test_setup_xray_tracing_enabled(monkeypatch):
         "aws_xray_sdk.core",
         SimpleNamespace(xray_recorder=stub, patch=lambda libs: None),
     )
-    monkeypatch.setitem(
-        sys.modules,
-        "aws_xray_sdk.core.async_context",
-        SimpleNamespace(AsyncContext=object),
-    )
     monkeypatch.setattr(
         "app.core.config.settings.XRAY_SERVICE_NAME", "test-service", raising=False
     )
