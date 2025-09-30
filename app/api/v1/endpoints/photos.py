@@ -12,7 +12,6 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db
 from app.api.lifecycle import openapi_lifecycle
 from app.core.config import settings
-from app.core.tracing import trace_function
 from app.crud import tphoto as tphoto_crud
 from app.models.server import Server
 from app.models.user import TLog, User
@@ -43,7 +42,6 @@ router = APIRouter()
 
 
 @router.get("", openapi_extra=openapi_lifecycle("beta"))
-@trace_function("api.photos.list_photos")
 def list_photos(
     trig_id: int | None = Query(None),
     log_id: int | None = Query(None),
@@ -125,7 +123,6 @@ def list_photos(
         "security": [{"OAuth2": []}],
     },
 )
-@trace_function("api.photos.create_photo")
 def create_photo(
     request: Request,
     log_id: int = Query(..., description="Parent log ID"),
@@ -308,7 +305,6 @@ def create_photo(
     response_model=TPhotoResponse,
     openapi_extra=openapi_lifecycle("beta"),
 )
-@trace_function("api.photos.get_photo")
 def get_photo(photo_id: int, db: Session = Depends(get_db)):
     photo = tphoto_crud.get_photo_by_id(db, photo_id=photo_id)
     if not photo:
@@ -358,7 +354,6 @@ def get_photo(photo_id: int, db: Session = Depends(get_db)):
         "security": [{"OAuth2": []}],
     },
 )
-@trace_function("api.photos.update_photo")
 def update_photo(
     photo_id: int,
     payload: TPhotoUpdate,

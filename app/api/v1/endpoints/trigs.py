@@ -14,7 +14,6 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
 from app.api.lifecycle import lifecycle, openapi_lifecycle
-from app.core.tracing import in_subsegment_safe, trace_function
 from app.crud import status as status_crud
 from app.crud import tlog as tlog_crud
 from app.crud import tphoto as tphoto_crud
@@ -46,7 +45,6 @@ router = APIRouter()
         "beta", note="Shape may change; fieldset stabilising"
     ),
 )
-@trace_function("api.trigs.get_trig")
 def get_trig(
     trig_id: int,
     include: Optional[str] = Query(
@@ -98,7 +96,6 @@ def get_trig(
     response_model=TrigWithIncludes,
     openapi_extra=openapi_lifecycle("beta", note="Returns minimal shape only"),
 )
-@trace_function("api.trigs.get_trig_by_waypoint")
 def get_trig_by_waypoint(
     waypoint: str, _lc=lifecycle("beta"), db: Session = Depends(get_db)
 ):
@@ -124,7 +121,6 @@ def get_trig_by_waypoint(
     "",
     openapi_extra=openapi_lifecycle("beta", note="Filtered collection listing"),
 )
-@trace_function("api.trigs.list_trigs")
 def list_trigs(
     name: Optional[str] = Query(None, description="Filter by trig name (contains)"),
     county: Optional[str] = Query(None, description="Filter by county (exact)"),
@@ -243,7 +239,6 @@ def list_trigs(
         ),
     ),
 )
-@trace_function("api.trigs.get_trig_map")
 async def get_trig_map(
     trig_id: int,
     map_variant: Optional[str] = Query(
@@ -267,8 +262,7 @@ async def get_trig_map(
     db: Session = Depends(get_db),
 ):
     # Fetch trig
-    with in_subsegment_safe("db.get_trig_by_id"):
-        trig = trig_crud.get_trig_by_id(db, trig_id=trig_id)
+    trig = trig_crud.get_trig_by_id(db, trig_id=trig_id)
     if trig is None:
         raise HTTPException(status_code=404, detail="Trigpoint not found")
 
@@ -295,15 +289,13 @@ async def get_trig_map(
     calib_path = os.path.join(res_dir, calib_filename)
 
     # Load image (keep alpha) and calibration
-    with in_subsegment_safe("fs.load_image"):
-        base = (
-            Image.open(map_path).convert("RGBA")
-            if os.path.isfile(map_path)
-            else Image.new("RGBA", (800, 900), (0, 0, 0, 0))
-        )
-    with in_subsegment_safe("fs.load_calibration"):
-        with open(calib_path, "r") as f:
-            d = json.load(f)
+    base = (
+        Image.open(map_path).convert("RGBA")
+        if os.path.isfile(map_path)
+        else Image.new("RGBA", (800, 900), (0, 0, 0, 0))
+    )
+    with open(calib_path, "r") as f:
+        d = json.load(f)
     calib = CalibrationResult(
         affine=np.array(d["affine"], dtype=float),
         inverse=np.array(d["inverse"], dtype=float),
@@ -313,76 +305,72 @@ async def get_trig_map(
 
     # Optionally recolour land and reapply coastline stroke
     if land_colour and land_colour.strip().lower() != "none":
-        with in_subsegment_safe("image.recolour_and_stroke"):
-            hc = land_colour.strip()
-            if hc.startswith("#"):
-                hc = hc[1:]
-            if len(hc) == 6:
-                r = int(hc[0:2], 16)
-                g = int(hc[2:4], 16)
-                b = int(hc[4:6], 16)
-                alpha_ch = base.getchannel("A")
-                recol = Image.new("RGBA", base.size, (r, g, b, 255))
-                recol.putalpha(alpha_ch)
-                base = recol
-                # stroke
-                edge_mask = alpha_ch.filter(ImageFilter.FIND_EDGES)
-                try:
-                    edge_mask = edge_mask.filter(ImageFilter.MaxFilter(3))
-                except Exception:  # pragma: no cover - Pillow compatibility fallback
-                    edge_mask = edge_mask
-                sc = (102, 102, 102, 255)
-                if coastline_colour:
-                    s = coastline_colour.strip()
-                    if s.startswith("#"):
-                        s = s[1:]
-                    if len(s) == 6:
-                        sc = (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16), 255)
-                stroke_layer = Image.new("RGBA", base.size, sc)
-                base.paste(stroke_layer, (0, 0), edge_mask)
+        hc = land_colour.strip()
+        if hc.startswith("#"):
+            hc = hc[1:]
+        if len(hc) == 6:
+            r = int(hc[0:2], 16)
+            g = int(hc[2:4], 16)
+            b = int(hc[4:6], 16)
+            alpha_ch = base.getchannel("A")
+            recol = Image.new("RGBA", base.size, (r, g, b, 255))
+            recol.putalpha(alpha_ch)
+            base = recol
+            # stroke
+            edge_mask = alpha_ch.filter(ImageFilter.FIND_EDGES)
+            try:
+                edge_mask = edge_mask.filter(ImageFilter.MaxFilter(3))
+            except Exception:  # pragma: no cover - Pillow compatibility fallback
+                edge_mask = edge_mask
+            sc = (102, 102, 102, 255)
+            if coastline_colour:
+                s = coastline_colour.strip()
+                if s.startswith("#"):
+                    s = s[1:]
+                if len(s) == 6:
+                    sc = (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16), 255)
+            stroke_layer = Image.new("RGBA", base.size, sc)
+            base.paste(stroke_layer, (0, 0), edge_mask)
 
     # Draw a single opaque dot at trig location
-    with in_subsegment_safe("image.draw_trig_dot"):
-        x, y = calib.lonlat_to_xy(float(trig.wgs_long), float(trig.wgs_lat))
-        draw = ImageDraw.Draw(base)
-        r = max(1, int(round(dot_diameter / 2)))
-        if dot_colour and dot_colour.strip().lower() != "none":
-            s = dot_colour.strip()
-            if s.startswith("#"):
-                s = s[1:]
-            if len(s) >= 6:
-                rr = int(s[0:2], 16)
-                gg = int(s[2:4], 16)
-                bb = int(s[4:6], 16)
-                fill = (rr, gg, bb, 255)  # hardcoded 100% alpha
-            else:
-                fill = (0, 0, 170, 255)
-            bbox = [
-                int(round(x - r)),
-                int(round(y - r)),
-                int(round(x + r)),
-                int(round(y + r)),
-            ]
-            draw.ellipse(bbox, fill=fill, outline=None)
+    x, y = calib.lonlat_to_xy(float(trig.wgs_long), float(trig.wgs_lat))
+    draw = ImageDraw.Draw(base)
+    r = max(1, int(round(dot_diameter / 2)))
+    if dot_colour and dot_colour.strip().lower() != "none":
+        s = dot_colour.strip()
+        if s.startswith("#"):
+            s = s[1:]
+        if len(s) >= 6:
+            rr = int(s[0:2], 16)
+            gg = int(s[2:4], 16)
+            bb = int(s[4:6], 16)
+            fill = (rr, gg, bb, 255)  # hardcoded 100% alpha
+        else:
+            fill = (0, 0, 170, 255)
+        bbox = [
+            int(round(x - r)),
+            int(round(y - r)),
+            int(round(x + r)),
+            int(round(y + r)),
+        ]
+        draw.ellipse(bbox, fill=fill, outline=None)
 
     # Optional final scaling
-    with in_subsegment_safe("image.resize"):
-        if isinstance(height, int) and height > 0 and base.height != height:
-            scale = float(height) / float(base.height)
-            new_w = max(1, int(round(base.width * scale)))
-            try:
-                resample = Image.Resampling.LANCZOS  # type: ignore[attr-defined]
-            except Exception:  # pragma: no cover - Pillow compatibility
-                try:  # pragma: no cover
-                    resample = Image.Resampling.NEAREST  # type: ignore[attr-defined]
-                except Exception:  # pragma: no cover
-                    resample = 0  # type: ignore[assignment]
-            base = base.resize((new_w, height), resample=resample)
+    if isinstance(height, int) and height > 0 and base.height != height:
+        scale = float(height) / float(base.height)
+        new_w = max(1, int(round(base.width * scale)))
+        try:
+            resample = Image.Resampling.LANCZOS  # type: ignore[attr-defined]
+        except Exception:  # pragma: no cover - Pillow compatibility
+            try:  # pragma: no cover
+                resample = Image.Resampling.NEAREST  # type: ignore[attr-defined]
+            except Exception:  # pragma: no cover
+                resample = 0  # type: ignore[assignment]
+        base = base.resize((new_w, height), resample=resample)
 
-    with in_subsegment_safe("image.encode_png"):
-        buf = io.BytesIO()
-        base.save(buf, format="PNG")
-        buf.seek(0)
+    buf = io.BytesIO()
+    base.save(buf, format="PNG")
+    buf.seek(0)
     return StreamingResponse(buf, media_type="image/png")
 
 
@@ -390,7 +378,6 @@ async def get_trig_map(
     "/{trig_id}/logs",
     openapi_extra=openapi_lifecycle("beta", note="List logs for a trig"),
 )
-@trace_function("api.trigs.list_logs_for_trig")
 def list_logs_for_trig(
     trig_id: int,
     include: Optional[str] = Query(
@@ -469,7 +456,6 @@ def list_logs_for_trig(
     "/{trig_id}/photos",
     openapi_extra=openapi_lifecycle("beta", note="List photos for a trig"),
 )
-@trace_function("api.trigs.list_photos_for_trig")
 def list_photos_for_trig(
     trig_id: int,
     skip: int = Query(0, ge=0),

@@ -9,7 +9,6 @@ import boto3
 from botocore.exceptions import BotoCoreError, ClientError
 
 from app.core.config import settings
-from app.core.tracing import trace_function
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +25,6 @@ class S3Service:
             logger.error(f"Failed to initialise S3 client: {e}")
             self.s3_client = None
 
-    @trace_function("service.s3.upload_photo_and_thumbnail")
     def upload_photo_and_thumbnail(
         self, photo_id: int, photo_bytes: bytes, thumbnail_bytes: bytes
     ) -> tuple[Optional[str], Optional[str]]:
@@ -106,7 +104,6 @@ class S3Service:
             except (ClientError, BotoCoreError) as e:
                 logger.error(f"Failed to rollback S3 upload {key}: {e}")
 
-    @trace_function("service.s3.delete_photo_and_thumbnail")
     def delete_photo_and_thumbnail(self, photo_id: int) -> bool:
         """Delete photo and thumbnail from S3."""
         if not self.s3_client:

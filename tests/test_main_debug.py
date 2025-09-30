@@ -2,10 +2,6 @@
 Tests for main application debug endpoints.
 """
 
-from unittest.mock import patch
-
-from app.core.config import settings
-
 # from app.core.security import create_access_token  # Legacy JWT removed
 from fastapi.testclient import TestClient
 
@@ -66,28 +62,3 @@ def test_debug_auth_short_token_removed(client: TestClient):
         "/debug/auth", headers={"Authorization": f"Bearer {short_token}"}
     )
     assert response.status_code == 404
-
-
-def test_debug_xray_disabled(client: TestClient):
-    """Test debug xray endpoint when X-Ray is disabled."""
-    with patch("app.main.xray_enabled", False):
-        response = client.get(f"{settings.API_V1_STR}/debug/xray")
-        assert response.status_code == 200
-        data = response.json()
-        assert data["error"] == "X-Ray is not enabled"
-
-
-def test_debug_xray_success(client: TestClient):
-    """Test debug xray endpoint when X-Ray is enabled and working."""
-    with patch("app.main.xray_enabled", True), patch(
-        "app.main.settings"
-    ) as mock_settings:
-
-        mock_settings.XRAY_SERVICE_NAME = "test-service"
-        mock_settings.XRAY_SAMPLING_RATE = 0.1
-        mock_settings.XRAY_DAEMON_ADDRESS = "127.0.0.1:2000"
-
-        response = client.get(f"{settings.API_V1_STR}/debug/xray")
-        assert response.status_code == 200
-        # Response can be success or error, but should be JSON
-        _ = response.json()

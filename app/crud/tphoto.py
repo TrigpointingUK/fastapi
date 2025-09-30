@@ -6,12 +6,10 @@ from typing import List, Optional
 
 from sqlalchemy.orm import Session
 
-from app.core.tracing import trace_function
 from app.models.tphoto import TPhoto
 from app.models.user import TLog
 
 
-@trace_function("crud.tphoto.get_by_id")
 def get_photo_by_id(db: Session, photo_id: int) -> Optional[TPhoto]:
     """Fetch a photo by primary key, excluding soft-deleted rows by default."""
     return (
@@ -21,7 +19,6 @@ def get_photo_by_id(db: Session, photo_id: int) -> Optional[TPhoto]:
     )
 
 
-@trace_function("crud.tphoto.update")
 def update_photo(db: Session, photo_id: int, updates: dict) -> Optional[TPhoto]:
     """Update mutable fields on a photo and return the updated row."""
     photo = db.query(TPhoto).filter(TPhoto.id == photo_id).first()
@@ -38,7 +35,6 @@ def update_photo(db: Session, photo_id: int, updates: dict) -> Optional[TPhoto]:
     return photo
 
 
-@trace_function("crud.tphoto.delete")
 def delete_photo(db: Session, photo_id: int, soft: bool = True) -> bool:
     """Delete a photo. Soft delete sets deleted_ind='Y' by default."""
     photo = db.query(TPhoto).filter(TPhoto.id == photo_id).first()

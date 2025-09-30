@@ -61,13 +61,6 @@ class Settings(BaseSettings):
     # Logging Configuration
     LOG_LEVEL: str = "INFO"
 
-    # AWS X-Ray Configuration
-    XRAY_ENABLED: bool = False
-    XRAY_SERVICE_NAME: str = "trigpointing-api"
-    XRAY_SAMPLING_RATE: float = 0.1  # 10% sampling rate
-    XRAY_DAEMON_ADDRESS: Optional[str] = None  # e.g., "127.0.0.1:2000"
-    XRAY_TRACE_HEADER: str = "X-Amzn-Trace-Id"
-
     # Orientation model (ONNX) configuration
     ORIENTATION_MODEL_ENABLED: bool = False
     ORIENTATION_MODEL_PATH: Optional[str] = None

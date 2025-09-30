@@ -7,7 +7,6 @@ import logging
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
-from app.core.tracing import setup_xray_tracing
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
@@ -16,10 +15,6 @@ logger = logging.getLogger(__name__)
 
 # Configure logging first
 setup_logging()
-
-# Set up tracing - use only AWS X-Ray SDK to avoid conflicts
-xray_enabled = setup_xray_tracing()
-otel_enabled = False  # Disabled to avoid conflicts with X-Ray SDK
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -174,18 +169,6 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-# Add X-Ray middleware for FastAPI using dedicated module
-if xray_enabled:  # pragma: no cover
-    try:
-        from app.core.xray_middleware import XRayMiddleware  # pragma: no cover
-
-        app.add_middleware(
-            XRayMiddleware, service_name=settings.XRAY_SERVICE_NAME
-        )  # pragma: no cover
-        logger.info("X-Ray custom middleware added successfully")  # pragma: no cover
-    except Exception as e:  # pragma: no cover
-        logger.error(f"Error setting up X-Ray middleware: {e}")  # pragma: no cover
-
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
@@ -201,53 +184,11 @@ def health_check():
     except ImportError:
         version_info = {"version": "unknown", "build_time": "unknown"}
 
-    tracing_info = {
-        "xray_enabled": xray_enabled,
-        "otel_enabled": otel_enabled,
-        "tracing_conflict_resolved": True,  # Indicate that the conflict has been resolved
-    }
-
-    # Add X-Ray configuration details if enabled
-    if xray_enabled:
-        tracing_info.update(
-            {
-                "xray_service_name": settings.XRAY_SERVICE_NAME,
-                "xray_sampling_rate": settings.XRAY_SAMPLING_RATE,
-                "xray_daemon_address": settings.XRAY_DAEMON_ADDRESS,
-            }
-        )
-
-        # Try to get X-Ray status
-        try:
-            from aws_xray_sdk.core import xray_recorder
-
-            # Check if recorder is configured
-            tracing_info["xray_recorder_type"] = type(xray_recorder).__name__
-
-            # For AsyncAWSXRayRecorder, check if it's properly configured
-            if hasattr(xray_recorder, "service"):
-                tracing_info["xray_recorder_service"] = xray_recorder.service
-            if hasattr(xray_recorder, "daemon_address"):
-                tracing_info["xray_recorder_daemon_address"] = (
-                    xray_recorder.daemon_address
-                )
-            if hasattr(xray_recorder, "_context"):
-                tracing_info["xray_recorder_has_context"] = (
-                    xray_recorder._context is not None
-                )
-
-            # Try to check if sampling is working
-            tracing_info["xray_recorder_configured"] = True
-
-        except Exception as e:
-            tracing_info["xray_recorder_error"] = str(e)
-
     return {
         "status": "healthy",
         "environment": settings.ENVIRONMENT,
         "version": version_info["version"],
         "build_time": version_info["build_time"],
-        "tracing": tracing_info,
     }
 
 

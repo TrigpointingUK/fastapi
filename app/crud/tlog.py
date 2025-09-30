@@ -7,17 +7,14 @@ from typing import Iterable, List, Optional, Tuple
 from sqlalchemy import asc, desc, func
 from sqlalchemy.orm import Session
 
-from app.core.tracing import trace_function
 from app.models.tphoto import TPhoto
 from app.models.user import TLog
 
 
-@trace_function("crud.tlog.get_by_id")
 def get_log_by_id(db: Session, log_id: int) -> Optional[TLog]:
     return db.query(TLog).filter(TLog.id == log_id).first()
 
 
-@trace_function("crud.tlog.list_filtered")
 def list_logs_filtered(
     db: Session,
     *,
@@ -56,7 +53,6 @@ def list_logs_filtered(
     return q.offset(skip).limit(limit).all()
 
 
-@trace_function("crud.tlog.count_filtered")
 def count_logs_filtered(
     db: Session, *, trig_id: Optional[int] = None, user_id: Optional[int] = None
 ) -> int:
@@ -68,7 +64,6 @@ def count_logs_filtered(
     return int(q.scalar() or 0)
 
 
-@trace_function("crud.tlog.create")
 def create_log(
     db: Session,
     *,
@@ -83,7 +78,6 @@ def create_log(
     return log
 
 
-@trace_function("crud.tlog.update")
 def update_log(db: Session, *, log_id: int, updates: dict) -> Optional[TLog]:
     log = db.query(TLog).filter(TLog.id == log_id).first()
     if not log:
@@ -122,7 +116,6 @@ def soft_delete_photos_for_log(db: Session, *, log_id: int) -> int:
     return count
 
 
-@trace_function("crud.tlog.get_trig_count")
 def get_trig_count(db: Session, trig_id: int) -> int:
     """Get count of rows matching trig_id in tlog table."""
     return db.query(func.count(TLog.id)).filter(TLog.trig_id == trig_id).scalar() or 0

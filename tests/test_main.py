@@ -14,9 +14,9 @@ def test_health_check(client: TestClient):
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "healthy"
-    assert "tracing" in data
-    assert "xray_enabled" in data["tracing"]
-    assert "otel_enabled" in data["tracing"]
+    assert data["environment"] == settings.ENVIRONMENT
+    assert "version" in data
+    assert "build_time" in data
 
 
 def test_openapi_docs(client: TestClient):
