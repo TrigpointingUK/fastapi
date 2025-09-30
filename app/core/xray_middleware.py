@@ -27,9 +27,16 @@ class XRayMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: Callable) -> Response:
         """
         Process the request and add X-Ray tracing.
+
+        Uses manual segment management (begin_segment/end_segment) instead of
+        capture() context manager because ThreadLocalContext doesn't propagate
+        correctly through async/await boundaries with the context manager pattern.
         """
         if not self.xray_enabled:
             return await call_next(request)
+
+        segment = None
+        segment_started = False
 
         try:
             from aws_xray_sdk.core import xray_recorder
@@ -37,62 +44,87 @@ class XRayMiddleware(BaseHTTPMiddleware):
             # Start timing
             start_time = time.time()
 
-            # Create segment for this request
-            segment_name = f"{request.method} {request.url.path}"
+            # Create segment name from request
+            segment_name = self.service_name
 
-            with xray_recorder.capture(segment_name) as segment:
-                # Add request metadata
-                if segment:
-                    segment.put_metadata(
-                        "request",
-                        {
-                            "method": request.method,
-                            "url": str(request.url),
-                            "path": request.url.path,
-                            "query_params": dict(request.query_params),
-                            "headers": dict(request.headers),
-                            "client_ip": (
-                                request.client.host if request.client else None
-                            ),
-                        },
-                    )
+            # Manually begin segment for ThreadLocalContext compatibility with async
+            segment = xray_recorder.begin_segment(name=segment_name)
+            segment_started = True
 
-                # Process the request
-                response = await call_next(request)
+            # Add request metadata
+            if segment:
+                try:
+                    segment.put_http_meta("method", request.method)
+                    segment.put_http_meta("url", str(request.url))
+                    if request.client:
+                        segment.put_http_meta("client_ip", request.client.host)
+                    if request.headers.get("user-agent"):
+                        segment.put_http_meta(
+                            "user_agent", request.headers.get("user-agent")
+                        )
+                except Exception as meta_err:
+                    logger.debug(f"Failed to add X-Ray request metadata: {meta_err}")
 
-                # Calculate duration
-                duration = time.time() - start_time
+            # Process the request
+            response = await call_next(request)
 
-                # Add response metadata
-                if segment:
-                    segment.put_metadata(
-                        "response",
-                        {
-                            "status_code": response.status_code,
-                            "headers": dict(response.headers),
-                            "duration_ms": duration * 1000,
-                        },
-                    )
+            # Calculate duration
+            duration = time.time() - start_time
+
+            # Add response metadata
+            if segment:
+                try:
+                    segment.put_http_meta("status", response.status_code)
+                    if response.headers.get("content-length"):
+                        segment.put_http_meta(
+                            "content_length", response.headers.get("content-length")
+                        )
 
                     # Add custom annotations for better filtering
                     segment.put_annotation("http.method", request.method)
                     segment.put_annotation("http.status_code", response.status_code)
-                    segment.put_annotation("http.url", str(request.url))
+                    segment.put_annotation("http.path", request.url.path)
                     segment.put_annotation("duration_ms", duration * 1000)
 
-                    # Add error information if status code indicates error
+                    # Mark errors
                     if response.status_code >= 400:
                         segment.put_annotation("error", True)
-                        segment.put_annotation(
-                            "error_type", f"HTTP_{response.status_code}"
-                        )
+                except Exception as meta_err:
+                    logger.debug(f"Failed to add X-Ray response metadata: {meta_err}")
 
-                return response
+            # End segment before returning
+            if segment_started:
+                try:
+                    xray_recorder.end_segment()
+                    segment_started = False
+                except Exception as e:
+                    logger.warning(f"Failed to end X-Ray segment: {e}")
+
+            return response
 
         except Exception as e:
-            logger.error(f"X-Ray middleware error: {e}")
-            # Fall back to normal processing
-            return await call_next(request)
+            # Mark segment as error
+            if segment:
+                try:
+                    import sys
+                    import traceback
+
+                    _, _, tb = sys.exc_info()
+                    stack = traceback.extract_tb(tb) if tb else None
+                    segment.add_exception(e, stack)
+                except Exception as add_exc_err:
+                    logger.debug(f"Failed to record X-Ray exception: {add_exc_err}")
+
+            # Re-raise the exception
+            raise
+
+        finally:
+            # Ensure segment is ended in all cases
+            if segment_started:
+                try:
+                    xray_recorder.end_segment()
+                except Exception as e:
+                    logger.debug(f"Failed to end X-Ray segment in finally: {e}")
 
 
 def add_xray_headers(response: Response, trace_id: Optional[str] = None) -> Response:

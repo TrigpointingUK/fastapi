@@ -14,17 +14,22 @@ This occurs during application startup when X-Ray tries to configure `AsyncConte
 
 ## Solution
 
-**Use the default `ThreadLocalContext`** instead of `AsyncContext`.
+**Two-part solution:**
+
+1. **Use default `ThreadLocalContext`** instead of `AsyncContext` (uvloop compatible)
+2. **Use manual segment management** (`begin_segment`/`end_segment`) instead of context managers
 
 ### Why This Works
 
-1. **FastAPI's request-scoped pattern**: Each HTTP request is handled independently
-2. **Middleware creates top-level segments**: `XRayMiddleware` creates a segment per request
-3. **Decorators create subsegments**: Within each request, `@trace_function` and `in_subsegment_safe()` create subsegments
-4. **No complex async patterns**: We're not doing cross-thread context passing or fan-out patterns that would require AsyncContext
+1. **ThreadLocalContext + Manual segment management**: Using `begin_segment()`/`end_segment()` instead of context managers allows ThreadLocalContext to work correctly across async boundaries
+2. **FastAPI's request-scoped pattern**: Each HTTP request is handled independently
+3. **Middleware creates top-level segments**: `XRayMiddleware` manually manages segment lifecycle
+4. **Decorators create subsegments**: Within each request, `@trace_function` and `in_subsegment_safe()` create subsegments
+5. **Context manager pattern doesn't work**: The `with xray_recorder.capture()` pattern loses context across `await` in async middleware
 
 ### Configuration
 
+**Tracing setup** (`app/core/tracing.py`):
 ```python
 xray_recorder.configure(
     service=settings.XRAY_SERVICE_NAME,
@@ -33,6 +38,21 @@ xray_recorder.configure(
     # context=AsyncContext(),  # ❌ Incompatible with uvloop
     context_missing="LOG_ERROR",  # Use default ThreadLocalContext ✓
 )
+```
+
+**Middleware** (`app/core/xray_middleware.py`):
+```python
+# ❌ DON'T use context manager - loses context in async
+# with xray_recorder.capture(segment_name) as segment:
+#     response = await call_next(request)
+
+# ✓ DO use manual segment management
+segment = xray_recorder.begin_segment(name=service_name)
+try:
+    response = await call_next(request)
+    return response
+finally:
+    xray_recorder.end_segment()
 ```
 
 ## Tradeoffs
