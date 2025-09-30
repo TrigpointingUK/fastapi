@@ -166,10 +166,10 @@ def add_trace_metadata(metadata: dict) -> None:
 
 def trace_function(name: Optional[str] = None):
     """
-    Decorator to trace a function with X-Ray.
+    Decorator to trace a function with X-Ray subsegments.
 
     Args:
-        name: Optional name for the trace segment
+        name: Optional name for the trace subsegment
     """
 
     def decorator(func):
@@ -183,9 +183,16 @@ def trace_function(name: Optional[str] = None):
             try:
                 from aws_xray_sdk.core import xray_recorder
 
-                segment_name = name or f"{func.__module__}.{func.__name__}"
+                # Check if we're already in a trace context
+                current_segment = xray_recorder.current_segment()
+                if current_segment is None:
+                    # No active segment, skip tracing
+                    return func(*args, **kwargs)
 
-                with xray_recorder.capture(segment_name):
+                subsegment_name = name or f"{func.__module__}.{func.__name__}"
+
+                # Create a subsegment instead of a new segment
+                with xray_recorder.capture_subsegment(subsegment_name):
                     return func(*args, **kwargs)
             except Exception as e:
                 logger.warning(f"Failed to trace function {func.__name__}: {e}")
