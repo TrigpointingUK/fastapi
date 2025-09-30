@@ -49,7 +49,7 @@ variable "key_pair_name" {
 variable "db_instance_class" {
   description = "RDS instance class"
   type        = string
-  default     = "db.t3.micro"
+  default     = "db.t4g.medium"
 }
 
 variable "db_allocated_storage" {
@@ -61,7 +61,7 @@ variable "db_allocated_storage" {
 variable "db_max_allocated_storage" {
   description = "RDS maximum allocated storage in GB"
   type        = number
-  default     = 100
+  default     = 50
 }
 
 # CloudFlare SSL Configuration

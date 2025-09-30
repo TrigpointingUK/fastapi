@@ -12,6 +12,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, get_db
 from app.api.lifecycle import openapi_lifecycle
 from app.core.config import settings
+from app.core.tracing import trace_function
 from app.crud import tphoto as tphoto_crud
 from app.models.server import Server
 from app.models.user import TLog, User
@@ -42,6 +43,7 @@ router = APIRouter()
 
 
 @router.get("", openapi_extra=openapi_lifecycle("beta"))
+@trace_function("api.photos.list_photos")
 def list_photos(
     trig_id: int | None = Query(None),
     log_id: int | None = Query(None),
@@ -123,14 +125,15 @@ def list_photos(
         "security": [{"OAuth2": []}],
     },
 )
+@trace_function("api.photos.create_photo")
 def create_photo(
     request: Request,
     log_id: int = Query(..., description="Parent log ID"),
     file: UploadFile = File(..., description="Image file (JPEG)"),
-    caption: str = Form(..., alias="name", description="Photo caption"),
+    caption: str = Form(..., description="Photo caption"),
     text_desc: str = Form("", description="Photo description"),
     type: str = Form(..., regex="^[TFLPO]$", description="Photo type"),
-    licence: str = Form(..., regex="^[YCN]$", description="Licence", alias="license"),
+    license: str = Form(..., regex="^[YCN]$", description="License"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -138,10 +141,10 @@ def create_photo(
     Upload a photo with metadata.
 
     - **file**: JPEG image file
-    - **name**: Photo caption (required)
+    - **caption**: Photo caption (required)
     - **text_desc**: Photo description (optional)
     - **type**: Photo type (T=trigpoint, F=flush bracket, L=landscape, P=people, O=other)
-    - **licence**: Licence (Y=public domain, C=creative commons, N=private)
+    - **license**: License (Y=public domain, C=creative commons, N=private)
     """
     # Authorise based on log ownership or admin
     tlog: TLog | None = db.query(TLog).filter(TLog.id == log_id).first()
@@ -154,7 +157,8 @@ def create_photo(
             raise HTTPException(status_code=403, detail="Access denied")
 
         from app.core.security import extract_scopes
-        from app.crud.user import is_admin
+
+        pass  # Auth0 only - no legacy admin check needed
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
@@ -162,9 +166,7 @@ def create_photo(
                 raise HTTPException(
                     status_code=403, detail="Missing required scope: trig:admin"
                 )
-        elif token_payload.get("token_type") == "legacy":
-            if not is_admin(current_user):
-                raise HTTPException(status_code=403, detail="Admin privileges required")
+        # Legacy tokens not supported - Auth0 only
 
     client_ip = request.client.host if request.client else "127.0.0.1"
 
@@ -214,7 +216,7 @@ def create_photo(
                 "name": caption,
                 "text_desc": text_desc,
                 "ip_addr": client_ip,
-                "public_ind": licence,
+                "public_ind": license,
                 "deleted_ind": "N",
                 "source": "F",
             },
@@ -306,6 +308,7 @@ def create_photo(
     response_model=TPhotoResponse,
     openapi_extra=openapi_lifecycle("beta"),
 )
+@trace_function("api.photos.get_photo")
 def get_photo(photo_id: int, db: Session = Depends(get_db)):
     photo = tphoto_crud.get_photo_by_id(db, photo_id=photo_id)
     if not photo:
@@ -355,6 +358,7 @@ def get_photo(photo_id: int, db: Session = Depends(get_db)):
         "security": [{"OAuth2": []}],
     },
 )
+@trace_function("api.photos.update_photo")
 def update_photo(
     photo_id: int,
     payload: TPhotoUpdate,
@@ -379,7 +383,8 @@ def update_photo(
             raise HTTPException(status_code=403, detail="Access denied")
 
         from app.core.security import extract_scopes
-        from app.crud.user import is_admin
+
+        pass  # Auth0 only - no legacy admin check needed
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
@@ -387,9 +392,7 @@ def update_photo(
                 raise HTTPException(
                     status_code=403, detail="Missing required scope: trig:admin"
                 )
-        elif token_payload.get("token_type") == "legacy":
-            if not is_admin(current_user):
-                raise HTTPException(status_code=403, detail="Admin privileges required")
+        # Legacy tokens not supported - Auth0 only
 
     # Proceed with update
     updated = tphoto_crud.update_photo(
@@ -459,7 +462,8 @@ def delete_photo(
             raise HTTPException(status_code=403, detail="Access denied")
 
         from app.core.security import extract_scopes
-        from app.crud.user import is_admin
+
+        pass  # Auth0 only - no legacy admin check needed
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
@@ -467,9 +471,7 @@ def delete_photo(
                 raise HTTPException(
                     status_code=403, detail="Missing required scope: trig:admin"
                 )
-        elif token_payload.get("token_type") == "legacy":
-            if not is_admin(current_user):
-                raise HTTPException(status_code=403, detail="Admin privileges required")
+        # Legacy tokens not supported - Auth0 only
 
     ok = tphoto_crud.delete_photo(db, photo_id=photo_id, soft=True)
     if not ok:
@@ -659,7 +661,8 @@ def rotate_photo(
             raise HTTPException(status_code=403, detail="Access denied")
 
         from app.core.security import extract_scopes
-        from app.crud.user import is_admin
+
+        pass  # Auth0 only - no legacy admin check needed
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
@@ -667,9 +670,7 @@ def rotate_photo(
                 raise HTTPException(
                     status_code=403, detail="Missing required scope: trig:admin"
                 )
-        elif token_payload.get("token_type") == "legacy":
-            if not is_admin(current_user):
-                raise HTTPException(status_code=403, detail="Admin privileges required")
+        # Legacy tokens not supported - Auth0 only
 
     # Get server URL for constructing full URLs
     server: Server | None = (

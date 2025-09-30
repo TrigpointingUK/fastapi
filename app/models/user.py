@@ -37,7 +37,7 @@ class User(Base):
     cryptpw = Column(String(34), nullable=False, default="")
 
     # Auth0 integration
-    auth0_user_id = Column(CHAR(24), nullable=True, index=True)
+    auth0_user_id = Column(String(50), nullable=True, index=True)
 
     # Timestamps
     crt_date = Column(Date, nullable=False, default=date(1900, 1, 1))

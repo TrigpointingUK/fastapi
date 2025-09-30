@@ -16,6 +16,7 @@ import requests
 
 from app.core.config import settings
 from app.core.logging import get_logger
+from app.core.tracing import trace_function
 from app.utils.username_sanitizer import sanitize_username_for_auth0
 
 logger = get_logger(__name__)
@@ -286,6 +287,7 @@ class Auth0Service:
             logger.error(json.dumps(log_data))
             return None
 
+    @trace_function("service.auth0.find_user_by_nickname_or_name")
     def find_user_by_nickname_or_name(self, nickname: str) -> Optional[Dict]:
         """
         Find a user by display identity (nickname/name) in Auth0.
@@ -369,6 +371,7 @@ class Auth0Service:
             )
             return None
 
+    @trace_function("service.auth0.find_user_by_auth0_id")
     def find_user_by_auth0_id(self, auth0_user_id: str) -> Optional[Dict]:
         """
         Find a user by Auth0 user ID.
@@ -410,6 +413,7 @@ class Auth0Service:
             logger.debug(json.dumps(log_data))
             return None
 
+    @trace_function("service.auth0.find_user_by_email")
     def find_user_by_email(self, email: str) -> Optional[Dict]:
         """
         Find a user by email in Auth0.
@@ -462,6 +466,7 @@ class Auth0Service:
             logger.debug(json.dumps(log_data))
             return None
 
+    @trace_function("service.auth0.find_user_comprehensive")
     def find_user_comprehensive(
         self, username: str, email: Optional[str] = None
     ) -> Optional[Dict]:
@@ -649,7 +654,7 @@ class Auth0Service:
             email: Email address (optional)
             name: Display name
             password: Password for the new user
-            user_id: Legacy user ID to store in app_metadata
+            user_id: Database user ID to store in app_metadata
             firstname: First name for given_name field (optional)
             surname: Surname for family_name field (optional)
 
@@ -669,7 +674,7 @@ class Auth0Service:
             "email_verified": False,
             "verify_email": False,
             "app_metadata": {
-                "legacy_user_id": user_id,
+                "database_user_id": user_id,
                 "original_username": username,
             },
         }

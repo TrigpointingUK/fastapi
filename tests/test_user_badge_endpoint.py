@@ -18,8 +18,8 @@ class TestUserBadgeEndpoint:
         """Set up test client."""
         self.client = TestClient(app)
 
-    @patch("app.api.v1.endpoints.user.BadgeService")
-    @patch("app.api.v1.endpoints.user.get_db")
+    @patch("app.api.v1.endpoints.users.BadgeService")
+    @patch("app.api.v1.endpoints.users.get_db")
     def test_get_user_badge_success(self, mock_get_db, mock_badge_service_class):
         """Test successful badge generation."""
         # Mock database session
@@ -44,8 +44,8 @@ class TestUserBadgeEndpoint:
         call_args = mock_service.generate_badge.call_args
         assert call_args[0][1] == 1  # user_id should be 1
 
-    @patch("app.api.v1.endpoints.user.BadgeService")
-    @patch("app.api.v1.endpoints.user.get_db")
+    @patch("app.api.v1.endpoints.users.BadgeService")
+    @patch("app.api.v1.endpoints.users.get_db")
     def test_get_user_badge_user_not_found(self, mock_get_db, mock_badge_service_class):
         """Test badge generation when user is not found."""
         # Mock database session
@@ -65,8 +65,8 @@ class TestUserBadgeEndpoint:
         # Accept normalised not-found message
         assert "User not found" in response.json()["detail"]
 
-    @patch("app.api.v1.endpoints.user.BadgeService")
-    @patch("app.api.v1.endpoints.user.get_db")
+    @patch("app.api.v1.endpoints.users.BadgeService")
+    @patch("app.api.v1.endpoints.users.get_db")
     def test_get_user_badge_logo_not_found(self, mock_get_db, mock_badge_service_class):
         """Test badge generation when logo file is not found."""
         # Mock database session
@@ -86,8 +86,8 @@ class TestUserBadgeEndpoint:
         assert "Server configuration error" in response.json()["detail"]
         assert "Logo file not found" in response.json()["detail"]
 
-    @patch("app.api.v1.endpoints.user.BadgeService")
-    @patch("app.api.v1.endpoints.user.get_db")
+    @patch("app.api.v1.endpoints.users.BadgeService")
+    @patch("app.api.v1.endpoints.users.get_db")
     def test_get_user_badge_general_error(self, mock_get_db, mock_badge_service_class):
         """Test badge generation with general error."""
         # Mock database session
@@ -125,8 +125,8 @@ class TestUserBadgeEndpoint:
             in response.json()["detail"][0]["msg"].lower()
         )
 
-    @patch("app.api.v1.endpoints.user.BadgeService")
-    @patch("app.api.v1.endpoints.user.get_db")
+    @patch("app.api.v1.endpoints.users.BadgeService")
+    @patch("app.api.v1.endpoints.users.get_db")
     def test_get_user_badge_with_scale(self, mock_get_db, mock_badge_service_class):
         """Test badge generation with scale parameter."""
         # Mock database session
@@ -149,8 +149,8 @@ class TestUserBadgeEndpoint:
         call_args = mock_service.generate_badge.call_args
         assert call_args[1]["scale"] == 2.0  # Check keyword argument
 
-    @patch("app.api.v1.endpoints.user.BadgeService")
-    @patch("app.api.v1.endpoints.user.get_db")
+    @patch("app.api.v1.endpoints.users.BadgeService")
+    @patch("app.api.v1.endpoints.users.get_db")
     def test_get_user_badge_invalid_scale(self, mock_get_db, mock_badge_service_class):
         """Test badge generation with invalid scale parameter."""
         response = self.client.get("/v1/users/1/badge?scale=10.0")  # Too large

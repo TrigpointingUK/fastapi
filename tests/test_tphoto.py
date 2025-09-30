@@ -19,6 +19,7 @@ def seed_user_and_tlog(db: Session) -> tuple[User, TLog]:
         firstname="Photo",
         surname="User",
         email="p@example.com",
+        auth0_user_id="auth0|101",
     )
     tlog = TLog(
         id=1001,
@@ -85,7 +86,7 @@ def test_update_photo(client: TestClient, db: Session):
     _, tlog = seed_user_and_tlog(db)
     photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=2003)
 
-    headers = {"Authorization": "Bearer legacy_user_101"}
+    headers = {"Authorization": "Bearer auth0_user_101"}
     resp = client.patch(
         f"{settings.API_V1_STR}/photos/{photo.id}",
         json={"caption": "New Name", "license": "N", "type": "F"},
@@ -102,7 +103,7 @@ def test_delete_photo_soft(client: TestClient, db: Session):
     _, tlog = seed_user_and_tlog(db)
     photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=2004)
 
-    headers = {"Authorization": "Bearer legacy_user_101"}
+    headers = {"Authorization": "Bearer auth0_user_101"}
     resp = client.delete(f"{settings.API_V1_STR}/photos/{photo.id}", headers=headers)
     assert resp.status_code == 204
 

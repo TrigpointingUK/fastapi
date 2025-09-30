@@ -31,7 +31,7 @@ def test_require_scopes_missing_auth():
     assert "Not authenticated" in r.json().get("detail", "")
 
 
-# def test_require_scopes_legacy_admin_ok(monkeypatch):
+# def test_require_scopes_auth0_admin_ok(monkeypatch):
 #     """Legacy tokens emulate admin via admin_ind; ensure 200 with legacy token."""
 #     app = _build_app()
 #     client = TestClient(app)

@@ -288,7 +288,7 @@ class TestAuth0Service:
                 "email_verified": True,
                 "verify_email": False,
                 "app_metadata": {
-                    "legacy_user_id": 123,
+                    "database_user_id": 123,
                     "original_username": "testuser",
                 },
                 "email": "test@example.com",
@@ -315,7 +315,7 @@ class TestAuth0Service:
         # Check that password and app_metadata are included
         user_data = call_args[0][2]
         assert user_data["password"] == "password123"
-        assert user_data["app_metadata"]["legacy_user_id"] == 123
+        assert user_data["app_metadata"]["database_user_id"] == 123
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
     @patch("app.services.auth0_service.settings")
@@ -346,7 +346,7 @@ class TestAuth0Service:
                 "email_verified": True,
                 "verify_email": False,
                 "app_metadata": {
-                    "legacy_user_id": 123,
+                    "database_user_id": 123,
                     "original_username": "testuser",
                 },
                 "email": "test@example.com",

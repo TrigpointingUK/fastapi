@@ -13,9 +13,7 @@ from app.core.security import auth0_validator, extract_scopes
 from app.crud.user import (
     get_user_by_auth0_id,
     get_user_by_email,
-    get_user_by_id,
     get_user_by_name,
-    is_admin,
     update_user_auth0_mapping,
 )
 from app.db.database import get_db
@@ -57,24 +55,11 @@ def get_current_user(
         raise credentials_exception
 
     logger.info(
-        f"Token validated successfully, type: {token_payload.get('token_type')}",
+        "Auth0 token validated successfully",
         extra={
-            "token_type": token_payload.get("token_type"),
             "auth0_user_id": token_payload.get("auth0_user_id"),
-            "legacy_user_id": token_payload.get("user_id"),
         },
     )
-
-    # Allow legacy tokens in dev/test mode
-    if token_payload.get("token_type") == "legacy":
-        user_id = token_payload.get("user_id")
-        if user_id is None:
-            raise credentials_exception
-        user = get_user_by_id(db, user_id=user_id)  # type: ignore[name-defined]
-        if user is None:
-            raise credentials_exception
-        setattr(user, "_token_payload", token_payload)
-        return user
 
     # For Auth0 tokens, find user by Auth0 user ID
     if token_payload.get("token_type") == "auth0":
@@ -154,8 +139,10 @@ def get_current_user(
 
             # If no user found or Auth0 sync failed, raise credentials exception
             raise credentials_exception
+        setattr(user, "_token_payload", token_payload)
         return user
 
+    # Only Auth0 tokens are supported
     raise credentials_exception
 
 
@@ -203,7 +190,10 @@ def get_current_user_optional(
                             int(user.id),
                             auth0_user_id,
                         )
+                        setattr(user, "_token_payload", token_payload)
                         return user
+            if user:
+                setattr(user, "_token_payload", token_payload)
             return user
 
     except Exception:
@@ -262,18 +252,10 @@ def require_scopes(*required_scopes: str):
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="User not found",
                 )
-        elif token_type == "legacy":  # nosec B105
-            user_id = token_payload.get("user_id")
-            user = get_user_by_id(db, user_id=user_id) if user_id is not None else None
-            if not user or not is_admin(user):
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Admin privileges required",
-                )
         else:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Unsupported token type",
+                detail="Only Auth0 tokens are supported",
             )
 
         setattr(user, "_token_payload", token_payload)

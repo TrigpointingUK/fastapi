@@ -12,6 +12,7 @@ from botocore.exceptions import BotoCoreError, ClientError
 from PIL import Image
 
 from app.core.config import settings
+from app.core.tracing import trace_function
 from app.services.orientation_model import OrientationClassifier
 
 logger = logging.getLogger(__name__)
@@ -34,6 +35,7 @@ class RekognitionService:
             else None
         )
 
+    @trace_function("service.rekognition.analyse_orientation")
     def analyse_orientation(self, image_bytes: bytes) -> Optional[Dict]:
         """
         Analyse image orientation using AWS Rekognition.
@@ -341,6 +343,7 @@ class RekognitionService:
             logger.error(f"Orientation analysis failed: {e}")
             return {"error": str(e)}
 
+    @trace_function("service.rekognition.moderate_content")
     def moderate_content(self, image_bytes: bytes) -> Optional[Dict]:
         """
         Analyse image for inappropriate content using AWS Rekognition.
