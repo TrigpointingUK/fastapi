@@ -61,6 +61,10 @@ class Settings(BaseSettings):
     # Logging Configuration
     LOG_LEVEL: str = "INFO"
 
+    # Profiling Configuration
+    PROFILING_ENABLED: bool = False  # Enable profiling middleware
+    PROFILING_DEFAULT_FORMAT: str = "html"  # Options: "html" or "speedscope"
+
     # Orientation model (ONNX) configuration
     ORIENTATION_MODEL_ENABLED: bool = False
     ORIENTATION_MODEL_PATH: Optional[str] = None

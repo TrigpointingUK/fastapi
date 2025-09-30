@@ -7,6 +7,7 @@ import logging
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
+from app.core.profiling import ProfilingMiddleware, should_enable_profiling
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
@@ -169,6 +170,21 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
+# Set up profiling middleware (development and staging only)
+if settings.PROFILING_ENABLED and should_enable_profiling(settings.ENVIRONMENT):
+    app.add_middleware(
+        ProfilingMiddleware,
+        default_format=settings.PROFILING_DEFAULT_FORMAT,
+    )
+    logger.info(
+        f"Profiling enabled for {settings.ENVIRONMENT} environment "
+        f"(default format: {settings.PROFILING_DEFAULT_FORMAT})"
+    )
+elif settings.PROFILING_ENABLED and not should_enable_profiling(settings.ENVIRONMENT):
+    logger.warning(
+        f"Profiling disabled in {settings.ENVIRONMENT} environment for security"
+    )
+
 # Include API router
 app.include_router(api_router, prefix=settings.API_V1_STR)
 
@@ -190,9 +206,6 @@ def health_check():
         "version": version_info["version"],
         "build_time": version_info["build_time"],
     }
-
-
-# moved to /v1/debug/xray under debug router
 
 
 if __name__ == "__main__":

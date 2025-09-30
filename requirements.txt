@@ -29,6 +29,9 @@ Pillow==11.1.0
 numpy==2.1.3
 onnxruntime==1.19.2
 
+# Profiling
+pyinstrument==5.0.0
+
 # Development dependencies
 black==25.1.0
 isort==6.0.1
