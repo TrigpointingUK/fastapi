@@ -3,7 +3,8 @@ AWS X-Ray tracing configuration and utilities.
 """
 
 import logging
-from typing import Optional
+from contextlib import contextmanager
+from typing import Iterator, Optional
 
 from app.core.config import settings
 
@@ -24,6 +25,7 @@ def setup_xray_tracing() -> bool:
     try:
         # Import X-Ray SDK
         from aws_xray_sdk.core import xray_recorder
+        from aws_xray_sdk.core.async_context import AsyncContext
 
         # Configure X-Ray recorder for AWS Fargate
         # If no daemon address is specified, use the default local daemon address
@@ -31,10 +33,14 @@ def setup_xray_tracing() -> bool:
         daemon_address = settings.XRAY_DAEMON_ADDRESS or "127.0.0.1:2000"
         logger.info(f"Using X-Ray daemon address: {daemon_address}")
 
+        # Use AsyncContext so tracing context flows across async boundaries
+        # and threadpools used by FastAPI for sync endpoints. This ensures
+        # current_segment is available inside decorated functions.
         xray_recorder.configure(
             service=settings.XRAY_SERVICE_NAME,
-            sampling=settings.XRAY_SAMPLING_RATE,
+            sampling=True,  # enable sampling (rules can be configured via daemon or env)
             daemon_address=daemon_address,
+            context=AsyncContext(),
             context_missing="LOG_ERROR",  # Log error instead of raising exception
         )
 
@@ -173,32 +179,80 @@ def trace_function(name: Optional[str] = None):
     """
 
     def decorator(func):
+        import inspect
         from functools import wraps
 
+        if inspect.iscoroutinefunction(func):
+
+            @wraps(func)
+            async def async_wrapper(*args, **kwargs):
+                if not settings.XRAY_ENABLED:
+                    return await func(*args, **kwargs)
+
+                try:
+                    from aws_xray_sdk.core import xray_recorder
+
+                    current_segment = xray_recorder.current_segment()
+                    if current_segment is None:
+                        return await func(*args, **kwargs)
+
+                    subsegment_name = name or f"{func.__module__}.{func.__name__}"
+                    with xray_recorder.in_subsegment(subsegment_name):
+                        return await func(*args, **kwargs)
+                except Exception as e:
+                    logger.warning(
+                        f"Failed to trace async function {func.__name__}: {e}"
+                    )
+                    return await func(*args, **kwargs)
+
+            return async_wrapper
+
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def sync_wrapper(*args, **kwargs):
             if not settings.XRAY_ENABLED:
                 return func(*args, **kwargs)
 
             try:
                 from aws_xray_sdk.core import xray_recorder
 
-                # Check if we're already in a trace context
                 current_segment = xray_recorder.current_segment()
                 if current_segment is None:
-                    # No active segment, skip tracing
                     return func(*args, **kwargs)
 
                 subsegment_name = name or f"{func.__module__}.{func.__name__}"
-
-                # Create a subsegment using the async recorder's method
-                # Use in_subsegment for sync functions (it works with async recorder too)
                 with xray_recorder.in_subsegment(subsegment_name):
                     return func(*args, **kwargs)
             except Exception as e:
                 logger.warning(f"Failed to trace function {func.__name__}: {e}")
                 return func(*args, **kwargs)
 
-        return wrapper
+        return sync_wrapper
 
     return decorator
+
+
+@contextmanager
+def in_subsegment_safe(name: str) -> Iterator[None]:
+    """
+    Context manager that opens an X-Ray subsegment if a current segment exists.
+
+    Falls back to a no-op when X-Ray is disabled or context is missing.
+    """
+    if not settings.XRAY_ENABLED:
+        yield None
+        return
+
+    try:
+        from aws_xray_sdk.core import xray_recorder
+
+        current_segment = xray_recorder.current_segment()
+        if current_segment is None:
+            # No active segment, no-op
+            yield None
+            return
+
+        with xray_recorder.in_subsegment(name):
+            yield None
+    except Exception as e:
+        logger.debug(f"in_subsegment_safe fallback due to: {e}")
+        yield None
