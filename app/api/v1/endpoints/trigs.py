@@ -9,7 +9,7 @@ from math import cos, radians, sqrt
 from typing import Optional
 
 import numpy as np
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_db
@@ -234,49 +234,35 @@ def list_trigs(
     openapi_extra=openapi_lifecycle(
         "beta",
         note=(
-            "Renders a transparent-background PNG with land fill and coastline stroke. "
-            "Draws a single dot at the trig's WGS84 position."
+            "Loads a pre-styled map PNG and draws a single dot at the trig's WGS84 position. "
+            "Use scripts/make_styled_map.py to create new map styles."
         ),
     ),
 )
 async def get_trig_map(
     trig_id: int,
-    map_variant: Optional[str] = Query(
-        "stretched53", description="Map variant: stretched53 (default) or wgs84"
+    style: str = Query(
+        "stretched53_default",
+        description="Style name (base filename without extension) from res/ directory",
     ),
-    dot_colour: Optional[str] = Query(
-        "#0000ff", description="Hex #RRGGBB for the trig dot"
-    ),
+    dot_colour: str = Query("#0000ff", description="Hex #RRGGBB for the trig dot"),
     dot_diameter: int = Query(
-        50, ge=1, le=100, description="Dot diameter in pixels (default 50)"
-    ),
-    land_colour: Optional[str] = Query(
-        "#dddddd", description="Hex fill for land; 'none' to keep original"
-    ),
-    coastline_colour: Optional[str] = Query(
-        "#666666", description="Stroke colour for coastline edges"
-    ),
-    height: int = Query(
-        110, ge=10, le=4000, description="Output image height in pixels (default 110)"
+        5, ge=1, le=100, description="Dot diameter in pixels (default 5)"
     ),
     db: Session = Depends(get_db),
 ):
+    """
+    Render a map PNG with a dot at the trig location.
+
+    This endpoint loads pre-styled [.png, .json] pairs from res/ directory.
+    To create new styles, use scripts/make_styled_map.py.
+    """
     # Fetch trig
     trig = trig_crud.get_trig_by_id(db, trig_id=trig_id)
     if trig is None:
         raise HTTPException(status_code=404, detail="Trigpoint not found")
 
-    # Choose assets
-    image_filename = (
-        "ukmap_wgs84_stretched53.png"
-        if (map_variant or "").lower() == "stretched53"
-        else "ukmap_wgs84.png"
-    )
-    calib_filename = (
-        "uk_map_calibration_wgs84_stretched53.json"
-        if (map_variant or "").lower() == "stretched53"
-        else "uk_map_calibration_wgs84.json"
-    )
+    # Load pre-styled assets
     res_dir = os.path.normpath(
         os.path.join(
             os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
@@ -285,15 +271,21 @@ async def get_trig_map(
             "res",
         )
     )
-    map_path = os.path.join(res_dir, image_filename)
-    calib_path = os.path.join(res_dir, calib_filename)
+    map_path = os.path.join(res_dir, f"{style}.png")
+    calib_path = os.path.join(res_dir, f"{style}.json")
 
-    # Load image (keep alpha) and calibration
-    base = (
-        Image.open(map_path).convert("RGBA")
-        if os.path.isfile(map_path)
-        else Image.new("RGBA", (800, 900), (0, 0, 0, 0))
-    )
+    # Validate files exist
+    if not os.path.isfile(map_path):
+        raise HTTPException(
+            status_code=404, detail=f"Map style '{style}' not found (missing PNG)"
+        )
+    if not os.path.isfile(calib_path):
+        raise HTTPException(
+            status_code=404, detail=f"Map style '{style}' not found (missing JSON)"
+        )
+
+    # Load image and calibration
+    base = Image.open(map_path).convert("RGBA")
     with open(calib_path, "r") as f:
         d = json.load(f)
     calib = CalibrationResult(
@@ -303,71 +295,32 @@ async def get_trig_map(
         bounds_geo=tuple(d.get("bounds_geo", (-11.0, 49.0, 2.5, 61.5))),
     )
 
-    # Optionally recolour land and reapply coastline stroke
-    if land_colour and land_colour.strip().lower() != "none":
-        hc = land_colour.strip()
-        if hc.startswith("#"):
-            hc = hc[1:]
-        if len(hc) == 6:
-            r = int(hc[0:2], 16)
-            g = int(hc[2:4], 16)
-            b = int(hc[4:6], 16)
-            alpha_ch = base.getchannel("A")
-            recol = Image.new("RGBA", base.size, (r, g, b, 255))
-            recol.putalpha(alpha_ch)
-            base = recol
-            # stroke
-            edge_mask = alpha_ch.filter(ImageFilter.FIND_EDGES)
-            try:
-                edge_mask = edge_mask.filter(ImageFilter.MaxFilter(3))
-            except Exception:  # pragma: no cover - Pillow compatibility fallback
-                edge_mask = edge_mask
-            sc = (102, 102, 102, 255)
-            if coastline_colour:
-                s = coastline_colour.strip()
-                if s.startswith("#"):
-                    s = s[1:]
-                if len(s) == 6:
-                    sc = (int(s[0:2], 16), int(s[2:4], 16), int(s[4:6], 16), 255)
-            stroke_layer = Image.new("RGBA", base.size, sc)
-            base.paste(stroke_layer, (0, 0), edge_mask)
-
     # Draw a single opaque dot at trig location
     x, y = calib.lonlat_to_xy(float(trig.wgs_long), float(trig.wgs_lat))
     draw = ImageDraw.Draw(base)
     r = max(1, int(round(dot_diameter / 2)))
-    if dot_colour and dot_colour.strip().lower() != "none":
-        s = dot_colour.strip()
-        if s.startswith("#"):
-            s = s[1:]
-        if len(s) >= 6:
-            rr = int(s[0:2], 16)
-            gg = int(s[2:4], 16)
-            bb = int(s[4:6], 16)
-            fill = (rr, gg, bb, 255)  # hardcoded 100% alpha
-        else:
-            fill = (0, 0, 170, 255)
-        bbox = [
-            int(round(x - r)),
-            int(round(y - r)),
-            int(round(x + r)),
-            int(round(y + r)),
-        ]
-        draw.ellipse(bbox, fill=fill, outline=None)
 
-    # Optional final scaling
-    if isinstance(height, int) and height > 0 and base.height != height:
-        scale = float(height) / float(base.height)
-        new_w = max(1, int(round(base.width * scale)))
-        try:
-            resample = Image.Resampling.LANCZOS  # type: ignore[attr-defined]
-        except Exception:  # pragma: no cover - Pillow compatibility
-            try:  # pragma: no cover
-                resample = Image.Resampling.NEAREST  # type: ignore[attr-defined]
-            except Exception:  # pragma: no cover
-                resample = 0  # type: ignore[assignment]
-        base = base.resize((new_w, height), resample=resample)
+    # Parse dot colour
+    s = dot_colour.strip()
+    if s.startswith("#"):
+        s = s[1:]
+    if len(s) >= 6:
+        rr = int(s[0:2], 16)
+        gg = int(s[2:4], 16)
+        bb = int(s[4:6], 16)
+        fill = (rr, gg, bb, 255)  # hardcoded 100% alpha
+    else:
+        fill = (0, 0, 170, 255)  # fallback blue
 
+    bbox = [
+        int(round(x - r)),
+        int(round(y - r)),
+        int(round(x + r)),
+        int(round(y + r)),
+    ]
+    draw.ellipse(bbox, fill=fill, outline=None)
+
+    # Return PNG
     buf = io.BytesIO()
     base.save(buf, format="PNG")
     buf.seek(0)
