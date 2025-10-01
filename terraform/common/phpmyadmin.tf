@@ -34,6 +34,10 @@ module "phpmyadmin" {
   cpu                          = 256
   memory                       = 512
   desired_count                = 1
+  min_capacity                 = 0
+  max_capacity                 = 1
+  cpu_target_value             = 70
+  memory_target_value          = 80
   ecs_cluster_id               = aws_ecs_cluster.main.id
   ecs_cluster_name             = aws_ecs_cluster.main.name
   ecs_task_execution_role_arn  = aws_iam_role.ecs_task_execution_role.arn

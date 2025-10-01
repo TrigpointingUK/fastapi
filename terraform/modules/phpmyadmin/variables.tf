@@ -80,3 +80,27 @@ variable "cloudwatch_log_group_name" {
   description = "CloudWatch log group name"
   type        = string
 }
+
+variable "min_capacity" {
+  description = "Minimum number of tasks for auto scaling"
+  type        = number
+  default     = 0
+}
+
+variable "max_capacity" {
+  description = "Maximum number of tasks for auto scaling"
+  type        = number
+  default     = 1
+}
+
+variable "cpu_target_value" {
+  description = "Target CPU utilisation for auto scaling"
+  type        = number
+  default     = 70
+}
+
+variable "memory_target_value" {
+  description = "Target memory utilisation for auto scaling"
+  type        = number
+  default     = 80
+}
