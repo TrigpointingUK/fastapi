@@ -1,17 +1,17 @@
 # RDS Subnet Group
 resource "aws_db_subnet_group" "main" {
-  name       = "fastapi-db-subnet-group"
+  name       = "trigpointing-db-subnet-group"
   subnet_ids = aws_subnet.private[*].id
 
   tags = {
-    Name = "fastapi-db-subnet-group"
+    Name = "trigpointing-db-subnet-group"
   }
 }
 
 # RDS Parameter Group
 resource "aws_db_parameter_group" "main" {
-  family = "mysql8.0"
-  name   = "fastapi-db-params"
+  family      = "mysql8.4"
+  name_prefix = "trigpointing-db-params-"
 
   parameter {
     name         = "innodb_buffer_pool_size"
@@ -32,27 +32,27 @@ resource "aws_db_parameter_group" "main" {
   }
 
   lifecycle {
+    create_before_destroy = true
     ignore_changes = [
-      parameter
+      parameter,
+      tags
     ]
   }
 
   tags = {
-    Name = "fastapi-db-params"
+    Name = "trigpointing-db-params"
   }
 }
 
 # RDS Instance
 resource "aws_db_instance" "main" {
-  identifier = "fastapi-db"
+  identifier = "trigpointing-db"
 
   # Engine
   engine         = "mysql"
-  engine_version = "8.0"
+  engine_version = "8.4.6"
   instance_class = var.db_instance_class
 
-  # Database
-  db_name = "fastapi_common"
 
   # Storage
   allocated_storage     = var.db_allocated_storage
@@ -66,11 +66,12 @@ resource "aws_db_instance" "main" {
   publicly_accessible    = false
 
   # Maintenance
-  parameter_group_name       = aws_db_parameter_group.main.name
-  backup_retention_period    = 7
-  backup_window              = "03:00-04:00"
-  maintenance_window         = "Sun:04:00-Sun:05:00"
-  auto_minor_version_upgrade = false
+  parameter_group_name        = aws_db_parameter_group.main.name
+  backup_retention_period     = 7
+  backup_window               = "03:00-04:00"
+  maintenance_window          = "Sun:04:00-Sun:05:00"
+  auto_minor_version_upgrade  = false
+  allow_major_version_upgrade = true
 
   # Monitoring
   monitoring_interval = 60
@@ -78,8 +79,8 @@ resource "aws_db_instance" "main" {
 
   # Security
   deletion_protection       = false
-  skip_final_snapshot       = false
-  final_snapshot_identifier = "fastapi-final-snapshot"
+  skip_final_snapshot       = true
+  final_snapshot_identifier = "trigpointing-final-snapshot"
 
   # Initial admin user
   username = "admin"
@@ -88,12 +89,12 @@ resource "aws_db_instance" "main" {
   # Password rotation
   manage_master_user_password = true
 
-  # Performance Insights (enabled with Database Insights Advanced mode)
-  performance_insights_enabled          = true
-  performance_insights_retention_period = 465
+  # Performance Insights (configurable - set to false to disable, 7 days for free tier, 465+ for advanced)
+  performance_insights_enabled          = var.db_performance_insights_enabled
+  # performance_insights_retention_period = var.db_performance_insights_retention_period
 
   tags = {
-    Name = "fastapi-db"
+    Name = "trigpointing-db"
   }
 }
 
