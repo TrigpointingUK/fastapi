@@ -4,19 +4,25 @@ Comprehensive tests for main.py to improve coverage.
 
 from unittest.mock import patch
 
-from app.main import app, health_check
+from app.main import app
+from fastapi.testclient import TestClient
 
 
 class TestMainModule:
     """Test main module functionality."""
 
-    def test_health_check(self):
-        """Test health check endpoint."""
-        response = health_check()
-        assert response["status"] == "healthy"
-        assert "version" in response
-        assert "build_time" in response
-        assert "environment" in response
+    def test_health_check(self, db):
+        """Test health check endpoint via test client."""
+        # Use test client to properly invoke dependency injection
+        with TestClient(app) as client:
+            response = client.get("/health")
+            assert response.status_code == 200
+            data = response.json()
+            assert data["status"] == "healthy"
+            assert "version" in data
+            assert "build_time" in data
+            assert "environment" in data
+            assert data["database"] == "connected"
 
     def test_app_creation(self):
         """Test FastAPI app creation."""
@@ -102,22 +108,6 @@ class TestMainModule:
         # We can't easily test the actual settings usage without more complex mocking
         # but we can ensure the app was created
         assert app is not None
-
-    def test_health_check_response_type(self):
-        """Test that health check returns correct response type."""
-        response = health_check()
-        assert isinstance(response, dict)
-        assert "status" in response
-        assert response["status"] == "healthy"
-
-    def test_health_check_function_name(self):
-        """Test that health check function has correct name."""
-        assert health_check.__name__ == "health_check"
-
-    def test_health_check_docstring(self):
-        """Test that health check has docstring."""
-        assert health_check.__doc__ is not None
-        assert "Health check endpoint" in health_check.__doc__
 
     def test_main_execution_imports(self):
         """Test that main execution imports required modules."""
