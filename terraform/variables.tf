@@ -115,26 +115,14 @@ variable "db_pool_recycle" {
   default     = 300
 }
 
-variable "xray_enabled" {
-  description = "Enable X-Ray tracing"
+variable "profiling_enabled" {
+  description = "Enable pyinstrument profiling middleware"
   type        = bool
-  default     = true
+  default     = false
 }
 
-variable "xray_service_name" {
-  description = "X-Ray service name"
+variable "profiling_default_format" {
+  description = "Default profiling output format (html or speedscope)"
   type        = string
-  default     = "trigpointing-api-staging"
-}
-
-variable "xray_sampling_rate" {
-  description = "X-Ray sampling rate (0.0 to 1.0)"
-  type        = number
-  default     = 0.1
-}
-
-variable "xray_daemon_address" {
-  description = "X-Ray daemon address (optional)"
-  type        = string
-  default     = null
+  default     = "html"
 }

@@ -84,20 +84,15 @@ module "ecs_service" {
   cors_origins                 = var.cors_origins
   db_pool_size                 = var.db_pool_size
   db_pool_recycle              = var.db_pool_recycle
-  xray_enabled                 = var.xray_enabled
-  xray_service_name            = var.xray_service_name
-  xray_sampling_rate           = var.xray_sampling_rate
-  xray_daemon_address          = var.xray_daemon_address
+  profiling_enabled            = var.profiling_enabled
+  profiling_default_format     = var.profiling_default_format
 }
 
 module "monitoring" {
   source = "../monitoring"
 
-  project_name            = var.project_name
-  environment             = var.environment
-  aws_region              = var.aws_region
-  xray_sampling_rate      = var.xray_sampling_rate
-  enable_xray_daemon_role = false # Not needed for Fargate
-  enable_xray_daemon_logs = false # Not needed for Fargate
-  log_retention_days      = 14
+  project_name       = var.project_name
+  environment        = var.environment
+  aws_region         = var.aws_region
+  log_retention_days = 14
 }

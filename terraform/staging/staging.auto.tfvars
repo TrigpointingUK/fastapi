@@ -16,8 +16,9 @@ memory = 512
 domain_name           = "api.trigpointing.me"
 enable_cloudflare_ssl = true
 
-log_level       = "DEBUG"
-cors_origins    = ["https://trigpointing.me", "https://api.trigpointing.me"]
-db_pool_size    = 5
-db_pool_recycle = 300
-xray_enabled    = false
+log_level                = "DEBUG"
+cors_origins             = ["https://trigpointing.me", "https://api.trigpointing.me"]
+db_pool_size             = 5
+db_pool_recycle          = 300
+profiling_enabled        = true
+profiling_default_format = "html"
