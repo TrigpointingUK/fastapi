@@ -50,25 +50,6 @@ variable "additional_allowed_secret_arns" {
   default     = []
 }
 
-# X-Ray Configuration
-variable "xray_sampling_rate" {
-  description = "X-Ray sampling rate (0.0 to 1.0)"
-  type        = number
-  default     = 0.1
-}
-
-variable "enable_xray_daemon_role" {
-  description = "Enable IAM role for X-Ray daemon (if running on EC2)"
-  type        = bool
-  default     = false
-}
-
-variable "enable_xray_daemon_logs" {
-  description = "Enable CloudWatch logs for X-Ray daemon"
-  type        = bool
-  default     = false
-}
-
 variable "log_retention_days" {
   description = "Number of days to retain CloudWatch logs"
   type        = number
