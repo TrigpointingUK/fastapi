@@ -62,8 +62,8 @@ def test_get_trig_map_invalid_dot_colour(client: TestClient, db: Session):
     assert len(response.content) > 0
 
 
-def test_get_trig_map_no_dot_colour(client: TestClient, db: Session):
-    """Test get_trig_map with dot_colour='none' (skips dot drawing)."""
+def test_get_trig_map_extreme_dot_sizes(client: TestClient, db: Session):
+    """Test get_trig_map with extreme dot sizes (boundary values)."""
     test_trig = Trig(
         id=101,
         waypoint="TP0101",
@@ -98,10 +98,19 @@ def test_get_trig_map_no_dot_colour(client: TestClient, db: Session):
     db.commit()
     db.refresh(test_trig)
 
-    # Call with dot_colour='none' to skip dot drawing
+    # Test minimum dot size (1 pixel)
     response = client.get(
         f"/v1/trigs/{test_trig.id}/map",
-        params={"dot_colour": "none"},
+        params={"dot_diameter": 1},
+    )
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "image/png"
+
+    # Test maximum dot size (100 pixels)
+    response = client.get(
+        f"/v1/trigs/{test_trig.id}/map",
+        params={"dot_diameter": 100},
     )
 
     assert response.status_code == 200

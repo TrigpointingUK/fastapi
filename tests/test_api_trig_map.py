@@ -59,8 +59,8 @@ def test_get_trig_map_default_params(client: TestClient, db: Session):
     assert response.content[:8] == b"\x89PNG\r\n\x1a\n"
 
 
-def test_get_trig_map_with_custom_colours(client: TestClient, db: Session):
-    """Test get_trig_map with custom land and coastline colours."""
+def test_get_trig_map_with_custom_dot(client: TestClient, db: Session):
+    """Test get_trig_map with custom dot colour and size."""
     # Create a test trig
     test_trig = Trig(
         id=2,
@@ -96,15 +96,12 @@ def test_get_trig_map_with_custom_colours(client: TestClient, db: Session):
     db.commit()
     db.refresh(test_trig)
 
-    # Call with custom colours
+    # Call with custom dot parameters
     response = client.get(
         f"/v1/trigs/{test_trig.id}/map",
         params={
-            "land_colour": "#aabbcc",
-            "coastline_colour": "#112233",
             "dot_colour": "#ff0000",
             "dot_diameter": 30,
-            "height": 200,
         },
     )
 
@@ -113,8 +110,8 @@ def test_get_trig_map_with_custom_colours(client: TestClient, db: Session):
     assert len(response.content) > 0
 
 
-def test_get_trig_map_wgs84_variant(client: TestClient, db: Session):
-    """Test get_trig_map with wgs84 map variant."""
+def test_get_trig_map_custom_style(client: TestClient, db: Session):
+    """Test get_trig_map with custom style parameter."""
     test_trig = Trig(
         id=3,
         waypoint="TP0003",
@@ -149,9 +146,9 @@ def test_get_trig_map_wgs84_variant(client: TestClient, db: Session):
     db.commit()
     db.refresh(test_trig)
 
-    # Call with wgs84 variant
+    # Call with default style (should work)
     response = client.get(
-        f"/v1/trigs/{test_trig.id}/map", params={"map_variant": "wgs84"}
+        f"/v1/trigs/{test_trig.id}/map", params={"style": "stretched53_default"}
     )
 
     assert response.status_code == 200
@@ -167,8 +164,8 @@ def test_get_trig_map_not_found(client: TestClient, db: Session):
     assert "not found" in response.json()["detail"].lower()
 
 
-def test_get_trig_map_no_land_colour(client: TestClient, db: Session):
-    """Test get_trig_map with land_colour='none'."""
+def test_get_trig_map_missing_style(client: TestClient, db: Session):
+    """Test get_trig_map with non-existent style."""
     test_trig = Trig(
         id=4,
         waypoint="TP0004",
@@ -203,10 +200,10 @@ def test_get_trig_map_no_land_colour(client: TestClient, db: Session):
     db.commit()
     db.refresh(test_trig)
 
-    # Call with land_colour='none' to skip recolouring
+    # Call with non-existent style
     response = client.get(
-        f"/v1/trigs/{test_trig.id}/map", params={"land_colour": "none"}
+        f"/v1/trigs/{test_trig.id}/map", params={"style": "nonexistent_style"}
     )
 
-    assert response.status_code == 200
-    assert response.headers["content-type"] == "image/png"
+    assert response.status_code == 404
+    assert "style" in response.json()["detail"].lower()
