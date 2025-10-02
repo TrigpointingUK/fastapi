@@ -143,7 +143,7 @@ resource "aws_secretsmanager_secret_version" "phpbb_credentials" {
 # Legacy credentials secret (manually created, imported into Terraform)
 resource "aws_secretsmanager_secret" "legacy_credentials" {
   name                    = "fastapi-legacy-credentials"
-  description             = "Legacy database credentials for DMS migration"
+  description             = "Legacy database credentials for data migration"
   recovery_window_in_days = 7
 
   tags = {
