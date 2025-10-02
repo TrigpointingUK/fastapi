@@ -174,3 +174,14 @@ output "https_listener_arn" {
   description = "ARN of the shared HTTPS listener"
   value       = var.enable_cloudflare_ssl ? aws_lb_listener.app_https[0].arn : null
 }
+
+# Wiki S3 Bucket
+output "wiki_s3_bucket_name" {
+  description = "Name of the S3 bucket for MediaWiki uploads"
+  value       = aws_s3_bucket.wiki.id
+}
+
+output "wiki_s3_bucket_arn" {
+  description = "ARN of the S3 bucket for MediaWiki uploads"
+  value       = aws_s3_bucket.wiki.arn
+}

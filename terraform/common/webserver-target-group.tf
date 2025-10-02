@@ -114,22 +114,4 @@ resource "aws_lb_listener_rule" "static" {
   }
 }
 
-resource "aws_lb_listener_rule" "wiki" {
-  listener_arn = aws_lb_listener.app_https[0].arn
-  priority     = 123
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.webserver.arn
-  }
-
-  condition {
-    host_header {
-      values = ["wiki.trigpointing.uk"]
-    }
-  }
-
-  tags = {
-    Name = "${var.project_name}-wiki-listener-rule"
-  }
-}
+# Wiki listener rule moved to mediawiki.tf when MediaWiki ECS service is enabled

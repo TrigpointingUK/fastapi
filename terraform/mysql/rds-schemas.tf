@@ -20,6 +20,13 @@ resource "mysql_database" "phpbb" {
   depends_on = [data.terraform_remote_state.common]
 }
 
+# Create mediawiki schema
+resource "mysql_database" "mediawiki" {
+  name = "mediawiki"
+
+  depends_on = [data.terraform_remote_state.common]
+}
+
 
 # Create production user
 resource "mysql_user" "production" {
@@ -105,4 +112,33 @@ resource "mysql_grant" "backups_staging" {
   privileges = ["SELECT"]
 
   depends_on = [mysql_user.backups, mysql_database.staging]
+}
+
+# Create mediawiki user
+resource "mysql_user" "mediawiki" {
+  user               = "mediawiki_user"
+  host               = "%"
+  plaintext_password = random_password.mediawiki_password.result
+
+  depends_on = [data.terraform_remote_state.common]
+}
+
+# Grant full permissions to mediawiki user on mediawiki schema
+resource "mysql_grant" "mediawiki" {
+  user       = mysql_user.mediawiki.user
+  host       = mysql_user.mediawiki.host
+  database   = mysql_database.mediawiki.name
+  privileges = ["ALL"]
+
+  depends_on = [mysql_user.mediawiki, mysql_database.mediawiki]
+}
+
+# Grant SELECT permissions to backups user on mediawiki schema
+resource "mysql_grant" "backups_mediawiki" {
+  user       = mysql_user.backups.user
+  host       = mysql_user.backups.host
+  database   = mysql_database.mediawiki.name
+  privileges = ["SELECT"]
+
+  depends_on = [mysql_user.backups, mysql_database.mediawiki]
 }
