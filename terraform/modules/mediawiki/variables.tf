@@ -103,13 +103,13 @@ variable "image_uri" {
   type        = string
 }
 
-variable "db_host" {
-  description = "Database host"
+variable "mediawiki_db_credentials_arn" {
+  description = "ARN of AWS Secrets Manager secret containing MediaWiki database credentials"
   type        = string
 }
 
-variable "localsettings_secret_arn" {
-  description = "ARN of AWS Secrets Manager secret containing LocalSettings.php"
+variable "mediawiki_app_secrets_arn" {
+  description = "ARN of AWS Secrets Manager secret containing MediaWiki application secrets"
   type        = string
 }
 

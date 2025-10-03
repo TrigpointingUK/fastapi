@@ -29,20 +29,66 @@ resource "aws_ecs_task_definition" "mediawiki" {
         }
       ]
       secrets = [
+        # Database credentials from trigpointing-mediawiki-credentials
         {
-          name      = "MEDIAWIKI_LOCAL_SETTINGS"
-          valueFrom = var.localsettings_secret_arn
+          name      = "MEDIAWIKI_DB_HOST"
+          valueFrom = "${var.mediawiki_db_credentials_arn}:host::"
+        },
+        {
+          name      = "MEDIAWIKI_DB_NAME"
+          valueFrom = "${var.mediawiki_db_credentials_arn}:dbname::"
+        },
+        {
+          name      = "MEDIAWIKI_DB_USER"
+          valueFrom = "${var.mediawiki_db_credentials_arn}:username::"
+        },
+        {
+          name      = "MEDIAWIKI_DB_PASSWORD"
+          valueFrom = "${var.mediawiki_db_credentials_arn}:password::"
+        },
+        # Application secrets from trigpointing-mediawiki-app-secrets
+        {
+          name      = "MW_SITENAME"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:MW_SITENAME::"
+        },
+        {
+          name      = "MW_SERVER"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:MW_SERVER::"
+        },
+        {
+          name      = "MW_SECRET_KEY"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:MW_SECRET_KEY::"
+        },
+        {
+          name      = "MW_UPGRADE_KEY"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:MW_UPGRADE_KEY::"
+        },
+        {
+          name      = "CACHE_TLS"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:CACHE_TLS::"
+        },
+        {
+          name      = "MW_ENABLE_LOCAL_LOGIN"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:MW_ENABLE_LOCAL_LOGIN::"
+        },
+        {
+          name      = "OIDC_PROVIDER_URL"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:OIDC_PROVIDER_URL::"
+        },
+        {
+          name      = "OIDC_CLIENT_ID"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:OIDC_CLIENT_ID::"
+        },
+        {
+          name      = "OIDC_CLIENT_SECRET"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:OIDC_CLIENT_SECRET::"
+        },
+        {
+          name      = "OIDC_REDIRECT_URI"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:OIDC_REDIRECT_URI::"
         }
       ]
       environment = [
-        {
-          name  = "MEDIAWIKI_DB_HOST"
-          value = var.db_host
-        },
-        {
-          name  = "MEDIAWIKI_DB_NAME"
-          value = "mediawiki"
-        },
         {
           name  = "AWS_S3_BUCKET"
           value = var.s3_bucket_name
