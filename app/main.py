@@ -4,11 +4,15 @@ Main FastAPI application entry point.
 
 import logging
 
+from sqlalchemy import text
+from sqlalchemy.orm import Session
+
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.profiling import ProfilingMiddleware, should_enable_profiling
-from fastapi import FastAPI
+from app.db.database import get_db
+from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPBearer
 
@@ -190,8 +194,8 @@ app.include_router(api_router, prefix=settings.API_V1_STR)
 
 
 @app.get("/health")
-def health_check():
-    """Health check endpoint."""
+def health_check(db: Session = Depends(get_db)):
+    """Health check endpoint with database connectivity verification."""
     # Import version information
     try:
         from app.__version__ import __build_time__, __version__
@@ -200,11 +204,43 @@ def health_check():
     except ImportError:
         version_info = {"version": "unknown", "build_time": "unknown"}
 
+    # Check database connectivity
+    db_status = "unknown"
+    db_error = None
+    try:
+        # Query trig table to verify database connectivity
+        # Use a simple count query that doesn't depend on specific data existing
+        result = db.execute(text("SELECT COUNT(*) FROM trig LIMIT 1"))
+        count = result.scalar()
+        db_status = "connected"
+        logger.debug(
+            f"Database health check passed (trig count query returned: {count})"
+        )
+    except Exception as e:
+        db_status = "error"
+        db_error = str(e)
+        logger.error(f"Database health check failed: {e}")
+
+    # Return unhealthy status if database is not connected
+    if db_status != "connected":
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail={
+                "status": "unhealthy",
+                "environment": settings.ENVIRONMENT,
+                "version": version_info["version"],
+                "build_time": version_info["build_time"],
+                "database": db_status,
+                "error": db_error,
+            },
+        )
+
     return {
         "status": "healthy",
         "environment": settings.ENVIRONMENT,
         "version": version_info["version"],
         "build_time": version_info["build_time"],
+        "database": db_status,
     }
 
 

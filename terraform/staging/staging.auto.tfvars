@@ -6,7 +6,7 @@ container_image = "ghcr.io/trigpointinguk/fastapi:develop"
 # Scaling settings
 desired_count = 1
 min_capacity  = 1
-max_capacity  = 3
+max_capacity  = 1
 
 # Resource allocation
 cpu    = 256

@@ -9,6 +9,11 @@ output "staging_schema_name" {
   value       = mysql_database.staging.name
 }
 
+output "mediawiki_schema_name" {
+  description = "Name of the mediawiki database schema"
+  value       = mysql_database.mediawiki.name
+}
+
 # Note: Admin credentials are managed by RDS and available in common infrastructure
 
 output "production_credentials_arn" {
@@ -35,7 +40,8 @@ output "legacy_credentials_arn" {
   sensitive   = true
 }
 
-output "dms_secret_access_role_arn" {
-  description = "ARN of the DMS role for secret access"
-  value       = aws_iam_role.dms_secret_access.arn
+output "mediawiki_credentials_arn" {
+  description = "ARN of the mediawiki credentials secret"
+  value       = aws_secretsmanager_secret.mediawiki_credentials.arn
+  sensitive   = true
 }

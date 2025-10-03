@@ -50,4 +50,9 @@ resource "aws_security_group" "rds" {
   tags = {
     Name = "fastapi-rds-sg"
   }
+
+  # Ignore changes to ingress rules managed separately
+  lifecycle {
+    ignore_changes = [ingress]
+  }
 }

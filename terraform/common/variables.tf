@@ -49,19 +49,31 @@ variable "key_pair_name" {
 variable "db_instance_class" {
   description = "RDS instance class"
   type        = string
-  default     = "db.t4g.medium"
+  default     = "db.t4g.micro"
 }
 
 variable "db_allocated_storage" {
   description = "RDS allocated storage in GB"
   type        = number
-  default     = 20
+  default     = 5
 }
 
 variable "db_max_allocated_storage" {
   description = "RDS maximum allocated storage in GB"
   type        = number
-  default     = 50
+  default     = 10
+}
+
+variable "db_performance_insights_enabled" {
+  description = "Enable Performance Insights for RDS"
+  type        = bool
+  default     = false
+}
+
+variable "db_performance_insights_retention_period" {
+  description = "Performance Insights retention period in days (7 for free tier, 465+ for advanced)"
+  type        = number
+  default     = 7
 }
 
 # CloudFlare SSL Configuration

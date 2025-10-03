@@ -113,65 +113,6 @@ output "webserver_security_group_id" {
   value       = aws_security_group.webserver.id
 }
 
-# DMS Endpoints - Disabled for initial deployment
-# output "dms_staging_endpoint_arn" {
-#   description = "ARN of the DMS staging user endpoint"
-#   value       = aws_dms_endpoint.staging_user.endpoint_arn
-# }
-
-# output "dms_production_endpoint_arn" {
-#   description = "ARN of the DMS production user endpoint"
-#   value       = aws_dms_endpoint.production_user.endpoint_arn
-# }
-
-# DMS Replication Configs - Disabled for initial deployment
-# output "dms_staging_config_arn" {
-#   description = "ARN of the DMS staging replication config"
-#   value       = aws_dms_replication_config.staging.arn
-# }
-
-# output "dms_production_config_arn" {
-#   description = "ARN of the DMS production replication config"
-#   value       = aws_dms_replication_config.production.arn
-# }
-
-# DMS Target Endpoints
-output "dms_staging_target_arn" {
-  description = "ARN of the DMS staging target endpoint"
-  value       = aws_dms_endpoint.staging_target.endpoint_arn
-}
-
-output "dms_production_target_arn" {
-  description = "ARN of the DMS production target endpoint"
-  value       = aws_dms_endpoint.production_target.endpoint_arn
-}
-
-output "dms_service_role_arn" {
-  description = "ARN of the DMS service role"
-  value       = aws_iam_role.dms_service_role.arn
-}
-
-output "dms_security_group_id" {
-  description = "ID of the DMS security group"
-  value       = aws_security_group.dms.id
-}
-
-output "dms_replication_subnet_group_id" {
-  description = "ID of the DMS replication subnet group"
-  value       = aws_dms_replication_subnet_group.main.id
-}
-
-# DMS Serverless Migration Tasks
-output "dms_staging_migration_arn" {
-  description = "ARN of the DMS staging migration task"
-  value       = aws_dms_replication_config.staging_migration.arn
-}
-
-output "dms_production_migration_arn" {
-  description = "ARN of the DMS production migration task"
-  value       = aws_dms_replication_config.production_migration.arn
-}
-
 # ALB Outputs
 output "alb_arn" {
   description = "ARN of the Application Load Balancer"
@@ -232,4 +173,27 @@ output "api_production_record_id" {
 output "https_listener_arn" {
   description = "ARN of the shared HTTPS listener"
   value       = var.enable_cloudflare_ssl ? aws_lb_listener.app_https[0].arn : null
+}
+
+# Wiki S3 Bucket
+output "wiki_s3_bucket_name" {
+  description = "Name of the S3 bucket for MediaWiki uploads"
+  value       = aws_s3_bucket.wiki.id
+}
+
+output "wiki_s3_bucket_arn" {
+  description = "ARN of the S3 bucket for MediaWiki uploads"
+  value       = aws_s3_bucket.wiki.arn
+}
+
+# ElastiCache Outputs
+output "elasticache_valkey_endpoint" {
+  description = "ElastiCache Valkey serverless endpoint"
+  value       = aws_elasticache_serverless_cache.valkey.endpoint[0].address
+  sensitive   = true
+}
+
+output "elasticache_valkey_port" {
+  description = "ElastiCache Valkey serverless port"
+  value       = aws_elasticache_serverless_cache.valkey.endpoint[0].port
 }

@@ -40,6 +40,16 @@ resource "random_password" "phpbb_password" {
   min_numeric      = 1
 }
 
+resource "random_password" "mediawiki_password" {
+  length           = 32
+  special          = true
+  override_special = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+  min_special      = 1
+  min_upper        = 1
+  min_lower        = 1
+  min_numeric      = 1
+}
+
 
 # Note: Admin user credentials are managed by the RDS instance itself
 # and stored in the common infrastructure. Use those for database administration.
@@ -130,11 +140,35 @@ resource "aws_secretsmanager_secret_version" "phpbb_credentials" {
   secret_id = aws_secretsmanager_secret.phpbb_credentials.id
   secret_string = jsonencode({
     username             = "phpbb_user"
-    password             = random_password.backups_password.result
+    password             = random_password.phpbb_password.result
     engine               = "mysql"
     host                 = split(":", data.terraform_remote_state.common.outputs.rds_endpoint)[0]
     port                 = data.terraform_remote_state.common.outputs.rds_port
-    dbname               = "phpbb_db" # Backups user has access to both schemas
+    dbname               = "phpbb_db"
+    dbInstanceIdentifier = data.terraform_remote_state.common.outputs.rds_identifier
+  })
+}
+
+# MediaWiki user credentials (manual rotation)
+resource "aws_secretsmanager_secret" "mediawiki_credentials" {
+  name                    = "trigpointing-mediawiki-credentials"
+  description             = "MediaWiki user credentials for RDS"
+  recovery_window_in_days = 7
+
+  tags = {
+    Name = "trigpointing-mediawiki-credentials"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "mediawiki_credentials" {
+  secret_id = aws_secretsmanager_secret.mediawiki_credentials.id
+  secret_string = jsonencode({
+    username             = "mediawiki_user"
+    password             = random_password.mediawiki_password.result
+    engine               = "mysql"
+    host                 = split(":", data.terraform_remote_state.common.outputs.rds_endpoint)[0]
+    port                 = data.terraform_remote_state.common.outputs.rds_port
+    dbname               = "mediawiki"
     dbInstanceIdentifier = data.terraform_remote_state.common.outputs.rds_identifier
   })
 }
@@ -143,7 +177,7 @@ resource "aws_secretsmanager_secret_version" "phpbb_credentials" {
 # Legacy credentials secret (manually created, imported into Terraform)
 resource "aws_secretsmanager_secret" "legacy_credentials" {
   name                    = "fastapi-legacy-credentials"
-  description             = "Legacy database credentials for DMS migration"
+  description             = "Legacy database credentials for data migration"
   recovery_window_in_days = 7
 
   tags = {
