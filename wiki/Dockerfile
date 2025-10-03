@@ -21,3 +21,4 @@ RUN php -r "copy('https://getcomposer.org/installer','composer-setup.php');" \
 # No need to copy it into the image
 
 EXPOSE 80
+
