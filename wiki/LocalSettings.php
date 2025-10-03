@@ -58,8 +58,8 @@ $wgAWSBucketName = getenv('AWS_S3_BUCKET') ?: '';
 $wgAWSCredentials = false; // false = use IAM role
 
 // Serve images via signed URLs (since bucket is private)
-$wgAWSRepoHashLevels = 0; // Flat directory structure
-$wgAWSRepoDeletedHashLevels = 0;
+$wgAWSRepoHashLevels = 2;
+$wgAWSRepoDeletedHashLevels = 3;
 
 # -- Auth0 via PluggableAuth + OpenID Connect --
 wfLoadExtension( 'PluggableAuth' );
