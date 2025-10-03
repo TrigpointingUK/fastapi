@@ -3,6 +3,8 @@
 $wgSitename = getenv('MW_SITENAME') ?: 'TrigpointingUK Wiki';
 $wgServer   = getenv('MW_SERVER')   ?: 'https://wiki.trigpointing.uk';
 $wgScriptPath = "";  // adjust if you deploy under /w
+$wgArticlePath = '/$1';     // emit /PageTitle links instead of /wiki/PageTitle
+$wgUsePathInfo = true;      // (usually true by default)
 
 # -- DB --
 $wgDBtype     = 'mysql';
@@ -93,3 +95,5 @@ wfLoadSkin( 'MinervaNeue' );
 wfLoadSkin( 'MonoBook' );
 wfLoadSkin( 'Timeless' );
 wfLoadSkin( 'Vector' );
+
+

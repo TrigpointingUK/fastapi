@@ -24,6 +24,11 @@ RUN php -r "copy('https://getcomposer.org/installer','composer-setup.php');" \
  && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
  && composer update -n --no-dev
 
+RUN a2enmod rewrite
+COPY apache-shorturl-root.conf /etc/apache2/conf-available/shorturl-root.conf
+RUN a2enconf shorturl-root
+ 
+
 # Bake parameterised LocalSettings.php into image
 COPY LocalSettings.php /var/www/html/LocalSettings.php
 
