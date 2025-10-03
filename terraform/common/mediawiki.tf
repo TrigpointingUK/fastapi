@@ -55,7 +55,7 @@ resource "aws_iam_role_policy" "ecs_mediawiki_secrets" {
           "secretsmanager:GetSecretValue"
         ]
         Resource = [
-          var.mediawiki_app_secrets_arn,
+          aws_secretsmanager_secret.mediawiki_app_secrets.arn,
           var.mediawiki_db_credentials_arn
         ]
       }
