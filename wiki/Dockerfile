@@ -1,8 +1,15 @@
 FROM mediawiki:1.43
 
-# Install tools & composer
-RUN apt-get update && apt-get install -y git unzip && rm -rf /var/lib/apt/lists/*
 WORKDIR /var/www/html
+
+# tools + build deps (PHP provides $PHPIZE_DEPS)
+RUN set -eux; \
+apt-get update; \
+apt-get install -y --no-install-recommends git unzip $PHPIZE_DEPS; \
+pecl install redis; \
+docker-php-ext-enable redis; \
+    apt-get purge -y --auto-remove -o APT::Autoremove::RecommendsImportant=false $PHPIZE_DEPS; \
+    rm -rf /var/lib/apt/lists/*
 
 # Clone MediaWiki extensions
 RUN set -eux; \
