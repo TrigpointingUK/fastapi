@@ -88,3 +88,8 @@ variable "webserver_ami" {
   type        = string
   default     = "ami-0b35c16246996ff02"
 }
+
+variable "mediawiki_db_credentials_arn" {
+  description = "ARN of the MediaWiki database credentials secret in AWS Secrets Manager"
+  type        = string
+}

@@ -17,8 +17,7 @@ RUN php -r "copy('https://getcomposer.org/installer','composer-setup.php');" \
  && php composer-setup.php --install-dir=/usr/local/bin --filename=composer \
  && composer update -n --no-dev
 
-# LocalSettings.php will be mounted at runtime from AWS Secrets Manager
-# No need to copy it into the image
+# Bake parameterised LocalSettings.php into image
+COPY LocalSettings.php /var/www/html/LocalSettings.php
 
 EXPOSE 80
-

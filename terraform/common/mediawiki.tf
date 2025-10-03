@@ -1,10 +1,10 @@
 # MediaWiki database schema is created in terraform/mysql/
 # See terraform/mysql/rds-schemas.tf for database and user configuration
 
-# AWS Secrets Manager secret for LocalSettings.php
-resource "aws_secretsmanager_secret" "mediawiki_localsettings" {
-  name        = "${var.project_name}-mediawiki-localsettings"
-  description = "LocalSettings.php configuration for MediaWiki"
+# AWS Secrets Manager secret for MediaWiki application secrets
+resource "aws_secretsmanager_secret" "mediawiki_app_secrets" {
+  name        = "${var.project_name}-mediawiki-app-secrets"
+  description = "Application secrets for MediaWiki (keys, OIDC config, etc.)"
 
   lifecycle {
     ignore_changes = [
@@ -13,16 +13,25 @@ resource "aws_secretsmanager_secret" "mediawiki_localsettings" {
   }
 
   tags = {
-    Name = "${var.project_name}-mediawiki-localsettings"
+    Name = "${var.project_name}-mediawiki-app-secrets"
   }
 }
 
-# Initial secret version with placeholder content
-# This will be ignored after initial creation
-resource "aws_secretsmanager_secret_version" "mediawiki_localsettings" {
-  secret_id = aws_secretsmanager_secret.mediawiki_localsettings.id
+# Initial secret version with placeholder values
+# This will be ignored after initial creation - populate manually
+resource "aws_secretsmanager_secret_version" "mediawiki_app_secrets" {
+  secret_id = aws_secretsmanager_secret.mediawiki_app_secrets.id
   secret_string = jsonencode({
-    content = "<?php\n# Placeholder - replace with actual LocalSettings.php content\n"
+    MW_SITENAME            = "TrigpointingUK Wiki"
+    MW_SERVER              = "https://wiki.trigpointing.uk"
+    MW_SECRET_KEY          = "CHANGE-ME-random-64-char-hex-string"
+    MW_UPGRADE_KEY         = "CHANGE-ME-random-16-char-string"
+    CACHE_TLS              = "true"
+    MW_ENABLE_LOCAL_LOGIN  = "false"
+    OIDC_PROVIDER_URL      = "https://YOUR-AUTH0-DOMAIN.auth0.com"
+    OIDC_CLIENT_ID         = "YOUR-AUTH0-CLIENT-ID"
+    OIDC_CLIENT_SECRET     = "YOUR-AUTH0-CLIENT-SECRET"
+    OIDC_REDIRECT_URI      = "https://wiki.trigpointing.uk/wiki/Special:PluggableAuthLogin"
   })
 
   lifecycle {
@@ -32,7 +41,7 @@ resource "aws_secretsmanager_secret_version" "mediawiki_localsettings" {
   }
 }
 
-# IAM policy to allow ECS task execution role to read the LocalSettings secret
+# IAM policy to allow ECS task execution role to read MediaWiki secrets
 resource "aws_iam_role_policy" "ecs_mediawiki_secrets" {
   name = "${var.project_name}-ecs-mediawiki-secrets"
   role = aws_iam_role.ecs_task_execution_role.id
@@ -45,7 +54,10 @@ resource "aws_iam_role_policy" "ecs_mediawiki_secrets" {
         Action = [
           "secretsmanager:GetSecretValue"
         ]
-        Resource = aws_secretsmanager_secret.mediawiki_localsettings.arn
+        Resource = [
+          var.mediawiki_app_secrets_arn,
+          var.mediawiki_db_credentials_arn
+        ]
       }
     ]
   })
@@ -158,13 +170,13 @@ module "mediawiki" {
   ecs_security_group_id        = aws_security_group.mediawiki_ecs.id
   private_subnet_ids           = aws_subnet.private[*].id
   target_group_arn             = aws_lb_target_group.mediawiki.arn
-  cloudwatch_log_group_name    = "/aws/ecs/${var.project_name}-mediawiki-common"
-  image_uri                    = "ghcr.io/trigpointinguk/fastapi/mediawiki:main"
-  db_host                      = aws_db_instance.main.address
-  localsettings_secret_arn     = aws_secretsmanager_secret.mediawiki_localsettings.arn
-  s3_bucket_name               = aws_s3_bucket.wiki.id
-  cache_host                   = aws_elasticache_serverless_cache.valkey.endpoint[0].address
-  cache_port                   = aws_elasticache_serverless_cache.valkey.endpoint[0].port
+  cloudwatch_log_group_name      = "/aws/ecs/${var.project_name}-mediawiki-common"
+  image_uri                      = "ghcr.io/trigpointinguk/fastapi/mediawiki:main"
+  s3_bucket_name                 = aws_s3_bucket.wiki.id
+  cache_host                     = aws_elasticache_serverless_cache.valkey.endpoint[0].address
+  cache_port                     = aws_elasticache_serverless_cache.valkey.endpoint[0].port
+  mediawiki_db_credentials_arn   = var.mediawiki_db_credentials_arn
+  mediawiki_app_secrets_arn      = aws_secretsmanager_secret.mediawiki_app_secrets.arn
 
   depends_on = [aws_lb_listener_rule.mediawiki, aws_s3_bucket.wiki, aws_elasticache_serverless_cache.valkey]
 }
