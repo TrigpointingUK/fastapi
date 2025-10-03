@@ -117,3 +117,14 @@ variable "s3_bucket_name" {
   description = "Name of S3 bucket for MediaWiki file uploads"
   type        = string
 }
+
+variable "cache_host" {
+  description = "ElastiCache host endpoint"
+  type        = string
+}
+
+variable "cache_port" {
+  description = "ElastiCache port"
+  type        = number
+  default     = 6379
+}

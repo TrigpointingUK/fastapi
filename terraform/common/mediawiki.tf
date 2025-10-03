@@ -163,6 +163,8 @@ module "mediawiki" {
   db_host                      = aws_db_instance.main.address
   localsettings_secret_arn     = aws_secretsmanager_secret.mediawiki_localsettings.arn
   s3_bucket_name               = aws_s3_bucket.wiki.id
+  cache_host                   = aws_elasticache_serverless_cache.valkey.endpoint[0].address
+  cache_port                   = aws_elasticache_serverless_cache.valkey.endpoint[0].port
 
-  depends_on = [aws_lb_listener_rule.mediawiki, aws_s3_bucket.wiki]
+  depends_on = [aws_lb_listener_rule.mediawiki, aws_s3_bucket.wiki, aws_elasticache_serverless_cache.valkey]
 }

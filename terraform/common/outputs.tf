@@ -185,3 +185,15 @@ output "wiki_s3_bucket_arn" {
   description = "ARN of the S3 bucket for MediaWiki uploads"
   value       = aws_s3_bucket.wiki.arn
 }
+
+# ElastiCache Outputs
+output "elasticache_valkey_endpoint" {
+  description = "ElastiCache Valkey serverless endpoint"
+  value       = aws_elasticache_serverless_cache.valkey.endpoint[0].address
+  sensitive   = true
+}
+
+output "elasticache_valkey_port" {
+  description = "ElastiCache Valkey serverless port"
+  value       = aws_elasticache_serverless_cache.valkey.endpoint[0].port
+}

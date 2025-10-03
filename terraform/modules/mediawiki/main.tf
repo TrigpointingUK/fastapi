@@ -50,6 +50,14 @@ resource "aws_ecs_task_definition" "mediawiki" {
         {
           name  = "AWS_REGION"
           value = var.aws_region
+        },
+        {
+          name  = "CACHE_HOST"
+          value = var.cache_host
+        },
+        {
+          name  = "CACHE_PORT"
+          value = tostring(var.cache_port)
         }
       ]
 

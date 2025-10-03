@@ -151,12 +151,12 @@ resource "aws_secretsmanager_secret_version" "phpbb_credentials" {
 
 # MediaWiki user credentials (manual rotation)
 resource "aws_secretsmanager_secret" "mediawiki_credentials" {
-  name                    = "${var.project_name}-mediawiki-credentials"
+  name                    = "trigpointing-mediawiki-credentials"
   description             = "MediaWiki user credentials for RDS"
   recovery_window_in_days = 7
 
   tags = {
-    Name = "${var.project_name}-mediawiki-credentials"
+    Name = "trigpointing-mediawiki-credentials"
   }
 }
 

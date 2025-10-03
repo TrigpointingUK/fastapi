@@ -72,6 +72,14 @@ ECS Fargate Task (common environment)
 - **Lifecycle**: Old versions expire after 90 days
 - **CORS**: Configured for `https://wiki.trigpointing.uk`
 
+### 8. ElastiCache (Valkey)
+- **Type**: Serverless Valkey 7
+- **Storage**: 1 GB maximum (minimum for serverless)
+- **ECPUs**: 1000 maximum (minimum for serverless)
+- **Purpose**: MediaWiki object caching and session storage
+- **Access**: Private subnets, accessible from MediaWiki ECS tasks only
+- **Snapshots**: Daily at 03:00 UTC, 1-day retention
+
 ## Deployment Steps
 
 ### Prerequisites
@@ -136,6 +144,18 @@ wfLoadExtension('AWS');
 $wgAWSCredentials = false; // Use IAM role
 $wgAWSRegion = getenv('AWS_REGION') ?: 'eu-west-1';
 $wgAWSBucketName = getenv('AWS_S3_BUCKET') ?: 'trigpointinguk-wiki';
+
+# ElastiCache Valkey Configuration
+$wgMainCacheType = CACHE_REDIS;
+$wgSessionCacheType = CACHE_REDIS;
+$wgObjectCaches['redis'] = [
+    'class' => 'RedisBagOStuff',
+    'servers' => [getenv('CACHE_HOST') . ':' . getenv('CACHE_PORT')],
+    'connectTimeout' => 1,
+    'persistent' => false,
+    'password' => '', // Serverless doesn't require password
+    'automaticFailOver' => true,
+];
 
 # OpenID Connect Configuration (if using OIDC)
 wfLoadExtension('PluggableAuth');
@@ -276,9 +296,10 @@ mysql -h <rds-endpoint> -u mediawiki_user -p mediawiki
    - ALB uses Cloudflare origin certificates
    - No additional cert needed for wiki.trigpointing.uk
 
-6. **Cache Configuration**
-   - Consider adding ElastiCache (Redis/Memcached) for MediaWiki caching
-   - Update LocalSettings.php with cache configuration
+6. **Cache Configuration** ✅ CREATED
+   - ElastiCache Serverless Valkey deployed (1 GB, minimal ECPUs)
+   - Environment variables: `CACHE_HOST` and `CACHE_PORT` automatically set
+   - Update LocalSettings.php to use Valkey for object caching and sessions
    - Will significantly improve performance
 
 7. **File Upload Limits**
