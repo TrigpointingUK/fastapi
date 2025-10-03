@@ -17,33 +17,34 @@ $wgDBprefix = getenv('MEDIAWIKI_DB_PREFIX') ?: '';
 $wgSecretKey  = getenv('MW_SECRET_KEY')  ?: 'CHANGE-ME';
 $wgUpgradeKey = getenv('MW_UPGRADE_KEY') ?: 'CHANGE-ME';
 
-# -- Caching & Sessions (Redis / Valkey) --
-$cacheHost = getenv('CACHE_HOST') ?: '';
-$cachePort = getenv('CACHE_PORT') ?: '6379';
-if ($cacheHost) {
-    // Use TLS if your ElastiCache/Valkey is encrypted (serverless usually is)
-    $useTls = (getenv('CACHE_TLS') ?: 'true') === 'true';
-    $server = ($useTls ? 'tls://' : '') . $cacheHost . ':' . $cachePort;
+# --- Redis / Valkey (ElastiCache) ---
+$redisHost = getenv('CACHE_HOST') ?: '';
+$redisPort = (int)(getenv('CACHE_PORT') ?: 6379);
+$useTls    = (getenv('CACHE_TLS') ?: 'true') === 'true';
+
+if ($redisHost !== '') {
+    $server = ($useTls ? 'tls://' : '') . $redisHost . ':' . $redisPort;
 
     $wgObjectCaches['redis'] = [
-        'class' => 'RedisBagOStuff',
-        'servers' => [ $server ],
-        'persistent' => true,
-        'connectTimeout' => 1.0,
+        'class'           => 'RedisBagOStuff',
+        'servers'         => [ $server ],   // or ['host' => $redisHost, 'port' => $redisPort, 'password' => null, 'persistent' => true]
+        'persistent'      => true,
+        'connectTimeout'  => 1.0,
     ];
-    $wgMainCacheType    = CACHE_REDIS;
-    $wgParserCacheType  = CACHE_REDIS;
-    $wgSessionCacheType = CACHE_REDIS;
+
+    $wgMainCacheType    = 'redis';
+    $wgParserCacheType  = 'redis';
+    $wgSessionCacheType = 'redis';
 
     $wgJobTypeConf['default'] = [
-        'class' => 'JobQueueRedis',
+        'class'       => 'JobQueueRedis',
         'redisServer' => $server,
         'redisConfig' => [],
     ];
 } else {
-    $wgMainCacheType    = CACHE_NONE;
-    $wgParserCacheType  = CACHE_NONE;
-    $wgSessionCacheType = CACHE_DB;
+    $wgMainCacheType    = 'none';
+    $wgParserCacheType  = 'none';
+    $wgSessionCacheType = 'db';
 }
 
 # -- Uploads on S3 (AWS extension) --
