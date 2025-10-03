@@ -53,6 +53,13 @@ $wgAWSRegion     = getenv('AWS_REGION') ?: 'eu-west-1';
 $wgAWSBucketName = getenv('AWS_S3_BUCKET') ?: '';
 // Optional: $wgAWSBucketTopSubdirectory = "/$wgDBname";
 
+// Use IAM role credentials (ECS task role provides these automatically)
+$wgAWSCredentials = false; // false = use IAM role
+
+// Serve images via signed URLs (since bucket is private)
+$wgAWSRepoHashLevels = 0; // Flat directory structure
+$wgAWSRepoDeletedHashLevels = 0;
+
 # -- Auth0 via PluggableAuth + OpenID Connect --
 wfLoadExtension( 'PluggableAuth' );
 wfLoadExtension( 'OpenIDConnect' );
