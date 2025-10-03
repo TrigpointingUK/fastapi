@@ -159,7 +159,7 @@ module "mediawiki" {
   private_subnet_ids           = aws_subnet.private[*].id
   target_group_arn             = aws_lb_target_group.mediawiki.arn
   cloudwatch_log_group_name    = "/aws/ecs/${var.project_name}-mediawiki-common"
-  image_uri                    = "ghcr.io/ianh/fastapi/mediawiki:main"
+  image_uri                    = "ghcr.io/trigpointinguk/fastapi/mediawiki:main"
   db_host                      = aws_db_instance.main.address
   localsettings_secret_arn     = aws_secretsmanager_secret.mediawiki_localsettings.arn
   s3_bucket_name               = aws_s3_bucket.wiki.id
