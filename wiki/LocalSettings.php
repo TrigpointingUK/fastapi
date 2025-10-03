@@ -81,3 +81,8 @@ $wgPluggableAuth_Config = [[
 # -- Misc --
 $wgCacheDirectory = '/tmp/mw-cache';
 $wgShowExceptionDetails = true;
+
+wfLoadSkin( 'MinervaNeue' );
+wfLoadSkin( 'MonoBook' );
+wfLoadSkin( 'Timeless' );
+wfLoadSkin( 'Vector' );
