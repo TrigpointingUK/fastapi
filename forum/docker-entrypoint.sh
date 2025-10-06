@@ -9,16 +9,19 @@ if [ -d /mnt/phpbb/phpbb ]; then
 
     # Remove existing directories and replace with symlinks
     if [ -d /mnt/phpbb/phpbb/files ]; then
+        echo "Removing existing files directory..."
         rm -rf /var/www/html/files
         ln -sf /mnt/phpbb/phpbb/files /var/www/html/files
     fi
 
     if [ -d /mnt/phpbb/phpbb/store ]; then
+        echo "Removing existing store directory..."
         rm -rf /var/www/html/store
         ln -sf /mnt/phpbb/phpbb/store /var/www/html/store
     fi
 
     if [ -d /mnt/phpbb/phpbb/images/avatars/upload ]; then
+        echo "Removing existing avatars directory..."
         rm -rf /var/www/html/images/avatars/upload
         ln -sf /mnt/phpbb/phpbb/images/avatars/upload /var/www/html/images/avatars/upload
     fi
