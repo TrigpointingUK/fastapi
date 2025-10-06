@@ -19,17 +19,8 @@ ARG PHPBB_VERSION=3.3.15
 RUN set -eux; \
     base="https://download.phpbb.com/pub/release/3.3/${PHPBB_VERSION}"; \
     mkdir -p /tmp/phpBB3; \
-<<<<<<< HEAD
-    if curl -fSL "$base/phpBB-${PHPBB_VERSION}.zip" -o /tmp/phpbb.zip; then \
-        unzip -q /tmp/phpbb.zip -d /tmp; \
-    else \
-        curl -fSL "$base/phpBB-${PHPBB_VERSION}.tar.bz2" -o /tmp/phpbb.tar.bz2; \
-        tar -xjf /tmp/phpbb.tar.bz2 -C /tmp; \
-    fi; \
-=======
     curl -fSL "$base/phpBB-${PHPBB_VERSION}.tar.bz2" -o /tmp/phpbb.tar.bz2; \
     tar -xjf /tmp/phpbb.tar.bz2 -C /tmp; \
->>>>>>> 8e24469 (debug)
     mv /tmp/phpBB3/* /var/www/html/; \
     rm -rf /tmp/phpbb.zip /tmp/phpbb.tar.bz2 /tmp/phpBB3; \
     chown -R www-data:www-data /var/www/html
