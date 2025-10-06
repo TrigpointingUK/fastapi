@@ -281,4 +281,17 @@ tf-fmt: ## Format Terraform files
 pre-commit: ## Run pre-commit hooks
 	pre-commit run --all-files
 
-ci: format-check lint type-check security test ## Run all CI checks
+ci: terraform-format-check format-check lint type-check security test ## Run all CI checks
+
+terraform-format-check: ## Check Terraform formatting; auto-format and fail if mismatches
+	@command -v terraform >/dev/null 2>&1 || { echo "❌ terraform not installed. Please install Terraform to run formatting checks."; exit 1; }
+	@echo "🔎 Checking Terraform formatting..."
+	@cd terraform && terraform fmt -check -recursive .
+	@if [ $$? -ne 0 ]; then \
+	  echo "⚠️  Terraform files need formatting. Applying formatting..."; \
+	  (cd terraform && terraform fmt -recursive .); \
+	  echo "❌ Formatting changes applied. Commit the changes and re-run CI."; \
+	  exit 1; \
+	else \
+	  echo "✅ Terraform formatting is correct."; \
+	fi

@@ -41,35 +41,35 @@ resource "aws_security_group_rule" "efs_from_phpbb_ecs" {
 module "phpbb" {
   source = "../modules/phpbb"
 
-  project_name                 = var.project_name
-  environment                  = "common"
-  aws_region                   = var.aws_region
-  cpu                          = 512
-  memory                       = 1024
-  desired_count                = 1
-  min_capacity                 = 1
-  max_capacity                 = 3
-  cpu_target_value             = 70
-  memory_target_value          = 80
-  ecs_cluster_id               = aws_ecs_cluster.main.id
-  ecs_cluster_name             = aws_ecs_cluster.main.name
-  ecs_task_execution_role_arn  = aws_iam_role.ecs_task_execution_role.arn
-  ecs_task_role_arn            = aws_iam_role.ecs_task_role.arn
-  ecs_security_group_id        = aws_security_group.phpbb_ecs.id
-  private_subnet_ids           = aws_subnet.private[*].id
-  target_group_arn             = aws_lb_target_group.phpbb.arn
-  image_uri                    = "ghcr.io/trigpointinguk/fastapi/forum:main"
+  project_name                = var.project_name
+  environment                 = "common"
+  aws_region                  = var.aws_region
+  cpu                         = 512
+  memory                      = 1024
+  desired_count               = 1
+  min_capacity                = 1
+  max_capacity                = 3
+  cpu_target_value            = 70
+  memory_target_value         = 80
+  ecs_cluster_id              = aws_ecs_cluster.main.id
+  ecs_cluster_name            = aws_ecs_cluster.main.name
+  ecs_task_execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
+  ecs_task_role_arn           = aws_iam_role.ecs_task_role.arn
+  ecs_security_group_id       = aws_security_group.phpbb_ecs.id
+  private_subnet_ids          = aws_subnet.private[*].id
+  target_group_arn            = aws_lb_target_group.phpbb.arn
+  image_uri                   = "ghcr.io/trigpointinguk/fastapi/forum:main"
 
   # Database config
-  db_credentials_arn           = var.phpbb_db_credentials_arn
-  db_host                      = split(":", aws_db_instance.main.endpoint)[0]
-  db_name                      = "phpbb_db"
-  db_user                      = "phpbb_user"
-  table_prefix                 = "phpbb_"
+  db_credentials_arn = var.phpbb_db_credentials_arn
+  db_host            = split(":", aws_db_instance.main.endpoint)[0]
+  db_name            = "phpbb_db"
+  db_user            = "phpbb_user"
+  table_prefix       = "phpbb_"
 
   # EFS config
-  efs_file_system_id           = aws_efs_file_system.phpbb.id
-  efs_access_point_id          = aws_efs_access_point.phpbb.id
+  efs_file_system_id  = aws_efs_file_system.phpbb.id
+  efs_access_point_id = aws_efs_access_point.phpbb.id
 }
 
 resource "aws_lb_listener_rule" "forum" {
