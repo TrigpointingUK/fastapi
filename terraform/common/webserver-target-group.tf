@@ -72,25 +72,7 @@ resource "aws_lb_listener_rule" "test2" {
 }
 
 # Production listener rules for trigpointing.uk domains
-resource "aws_lb_listener_rule" "forum" {
-  listener_arn = aws_lb_listener.app_https[0].arn
-  priority     = 120
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.webserver.arn
-  }
-
-  condition {
-    host_header {
-      values = ["forum.trigpointing.uk"]
-    }
-  }
-
-  tags = {
-    Name = "${var.project_name}-forum-listener-rule"
-  }
-}
+## forum.trigpointing.uk rule moved to forum.tf to point to phpBB ECS target group
 
 # phpMyAdmin listener rule moved to phpmyadmin.tf when phpMyAdmin ECS service is enabled
 

@@ -28,3 +28,8 @@ RUN set -eux; \
     mv /tmp/phpBB3/* /var/www/html/; \
     rm -rf /tmp/phpbb.zip /tmp/phpbb.tar.bz2 /tmp/phpBB3; \
     chown -R www-data:www-data /var/www/html
+
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["apache2-foreground"]

@@ -127,12 +127,12 @@ resource "aws_secretsmanager_secret_version" "backups_credentials" {
 }
 
 resource "aws_secretsmanager_secret" "phpbb_credentials" {
-  name                    = "${var.project_name}-phpbb-credentials"
+  name                    = "trigpointing-phpbb-credentials"
   description             = "PHPBB user credentials for RDS"
   recovery_window_in_days = 7
 
   tags = {
-    Name = "${var.project_name}-phpbb-credentials"
+    Name = "trigpointing-phpbb-credentials"
   }
 }
 

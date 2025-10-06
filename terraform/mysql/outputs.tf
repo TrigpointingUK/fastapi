@@ -45,3 +45,9 @@ output "mediawiki_credentials_arn" {
   value       = aws_secretsmanager_secret.mediawiki_credentials.arn
   sensitive   = true
 }
+
+output "phpbb_credentials_arn" {
+  description = "ARN of the phpBB credentials secret"
+  value       = aws_secretsmanager_secret.phpbb_credentials.arn
+  sensitive   = true
+}

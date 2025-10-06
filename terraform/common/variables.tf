@@ -93,3 +93,8 @@ variable "mediawiki_db_credentials_arn" {
   description = "ARN of the MediaWiki database credentials secret in AWS Secrets Manager"
   type        = string
 }
+
+variable "phpbb_db_credentials_arn" {
+  description = "ARN of the phpBB database credentials secret in AWS Secrets Manager"
+  type        = string
+}

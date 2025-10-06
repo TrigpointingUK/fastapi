@@ -78,8 +78,8 @@ resource "mysql_user" "phpbb" {
 
 # Grant full permissions to phpbb user on phpbb schema
 resource "mysql_grant" "phpbb" {
-  user       = mysql_user.staging.user
-  host       = mysql_user.staging.host
+  user       = mysql_user.phpbb.user
+  host       = mysql_user.phpbb.host
   database   = mysql_database.phpbb.name
   privileges = ["ALL"]
 
