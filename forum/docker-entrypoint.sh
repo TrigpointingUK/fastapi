@@ -32,7 +32,7 @@ ls -alR /var/www/html/files
 ls -alR /var/www/html/store
 ls -alR /var/www/html/images/avatars/upload
 
-if [ ! -f /var/www/html/config.php ]; then
+#if [ ! -f /var/www/html/config.php ]; then
 cat > /var/www/html/config.php <<PHP
 <?php
 \$dbms = 'phpbb\\db\\driver\\mysqli';
@@ -50,9 +50,11 @@ cat > /var/www/html/config.php <<PHP
 @define('PHPBB_ENVIRONMENT', 'production');
 PHP
 chown www-data:www-data /var/www/html/config.php
-fi
+#fi
 
 cat /var/www/html/config.php
+
+find /mnt/phpbb -type d -print
 
 # Remove installer if present to prevent install wizard
 if [ -d /var/www/html/install ]; then
