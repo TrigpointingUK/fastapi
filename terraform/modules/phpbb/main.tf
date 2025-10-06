@@ -19,36 +19,9 @@ resource "aws_ecs_task_definition" "phpbb" {
   task_role_arn            = var.ecs_task_role_arn
 
   volume {
-    name = "phpbb-files"
+    name = "phpbb-efs"
     efs_volume_configuration {
       file_system_id     = var.efs_file_system_id
-      root_directory     = "/phpbb/files"
-      transit_encryption = "ENABLED"
-      authorization_config {
-        access_point_id = var.efs_access_point_id
-        iam             = "ENABLED"
-      }
-    }
-  }
-
-  volume {
-    name = "phpbb-store"
-    efs_volume_configuration {
-      file_system_id     = var.efs_file_system_id
-      root_directory     = "/phpbb/store"
-      transit_encryption = "ENABLED"
-      authorization_config {
-        access_point_id = var.efs_access_point_id
-        iam             = "ENABLED"
-      }
-    }
-  }
-
-  volume {
-    name = "phpbb-avatars"
-    efs_volume_configuration {
-      file_system_id     = var.efs_file_system_id
-      root_directory     = "/phpbb/images/avatars/upload"
       transit_encryption = "ENABLED"
       authorization_config {
         access_point_id = var.efs_access_point_id
@@ -97,18 +70,8 @@ resource "aws_ecs_task_definition" "phpbb" {
       ]
       mountPoints = [
         {
-          sourceVolume  = "phpbb-files"
-          containerPath = "/var/www/html/files"
-          readOnly      = false
-        },
-        {
-          sourceVolume  = "phpbb-store"
-          containerPath = "/var/www/html/store"
-          readOnly      = false
-        },
-        {
-          sourceVolume  = "phpbb-avatars"
-          containerPath = "/var/www/html/images/avatars/upload"
+          sourceVolume  = "phpbb-efs"
+          containerPath = "/mnt/phpbb"
           readOnly      = false
         }
       ]
