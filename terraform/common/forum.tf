@@ -28,15 +28,7 @@ resource "aws_security_group" "phpbb_ecs" {
 }
 
 # Allow NFS access from phpBB ECS tasks to EFS
-resource "aws_security_group_rule" "efs_from_phpbb_ecs" {
-  type                     = "ingress"
-  description              = "NFS from phpBB ECS tasks"
-  from_port                = 2049
-  to_port                  = 2049
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.efs.id
-  source_security_group_id = aws_security_group.phpbb_ecs.id
-}
+## NFS ingress for phpBB ECS tasks is defined inline in aws_security_group.efs
 
 ## Allow ECS task execution role to read phpBB DB secret
 resource "aws_iam_role_policy" "ecs_phpbb_secrets" {

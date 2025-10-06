@@ -23,6 +23,15 @@ resource "aws_security_group" "efs" {
     security_groups = [aws_security_group.bastion.id]
   }
 
+  # Allow NFS from phpBB ECS tasks SG (more precise than VPC-wide rule)
+  ingress {
+    description     = "NFS from phpBB ECS tasks"
+    from_port       = 2049
+    to_port         = 2049
+    protocol        = "tcp"
+    security_groups = [aws_security_group.phpbb_ecs.id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0
