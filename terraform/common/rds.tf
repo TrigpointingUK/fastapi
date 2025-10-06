@@ -90,7 +90,7 @@ resource "aws_db_instance" "main" {
   manage_master_user_password = true
 
   # Performance Insights (configurable - set to false to disable, 7 days for free tier, 465+ for advanced)
-  performance_insights_enabled          = var.db_performance_insights_enabled
+  performance_insights_enabled = var.db_performance_insights_enabled
   # performance_insights_retention_period = var.db_performance_insights_retention_period
 
   tags = {

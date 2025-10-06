@@ -22,16 +22,16 @@ resource "aws_secretsmanager_secret" "mediawiki_app_secrets" {
 resource "aws_secretsmanager_secret_version" "mediawiki_app_secrets" {
   secret_id = aws_secretsmanager_secret.mediawiki_app_secrets.id
   secret_string = jsonencode({
-    MW_SITENAME            = "TrigpointingUK Wiki"
-    MW_SERVER              = "https://wiki.trigpointing.uk"
-    MW_SECRET_KEY          = "CHANGE-ME-random-64-char-hex-string"
-    MW_UPGRADE_KEY         = "CHANGE-ME-random-16-char-string"
-    CACHE_TLS              = "true"
-    MW_ENABLE_LOCAL_LOGIN  = "false"
-    OIDC_PROVIDER_URL      = "https://YOUR-AUTH0-DOMAIN.auth0.com"
-    OIDC_CLIENT_ID         = "YOUR-AUTH0-CLIENT-ID"
-    OIDC_CLIENT_SECRET     = "YOUR-AUTH0-CLIENT-SECRET"
-    OIDC_REDIRECT_URI      = "https://wiki.trigpointing.uk/wiki/Special:PluggableAuthLogin"
+    MW_SITENAME           = "TrigpointingUK Wiki"
+    MW_SERVER             = "https://wiki.trigpointing.uk"
+    MW_SECRET_KEY         = "CHANGE-ME-random-64-char-hex-string"
+    MW_UPGRADE_KEY        = "CHANGE-ME-random-16-char-string"
+    CACHE_TLS             = "true"
+    MW_ENABLE_LOCAL_LOGIN = "false"
+    OIDC_PROVIDER_URL     = "https://YOUR-AUTH0-DOMAIN.auth0.com"
+    OIDC_CLIENT_ID        = "YOUR-AUTH0-CLIENT-ID"
+    OIDC_CLIENT_SECRET    = "YOUR-AUTH0-CLIENT-SECRET"
+    OIDC_REDIRECT_URI     = "https://wiki.trigpointing.uk/wiki/Special:PluggableAuthLogin"
   })
 
   lifecycle {
@@ -170,13 +170,13 @@ module "mediawiki" {
   ecs_security_group_id        = aws_security_group.mediawiki_ecs.id
   private_subnet_ids           = aws_subnet.private[*].id
   target_group_arn             = aws_lb_target_group.mediawiki.arn
-  cloudwatch_log_group_name      = "/aws/ecs/${var.project_name}-mediawiki-common"
-  image_uri                      = "ghcr.io/trigpointinguk/fastapi/mediawiki:main"
-  s3_bucket_name                 = aws_s3_bucket.wiki.id
-  cache_host                     = aws_elasticache_serverless_cache.valkey.endpoint[0].address
-  cache_port                     = aws_elasticache_serverless_cache.valkey.endpoint[0].port
-  mediawiki_db_credentials_arn   = var.mediawiki_db_credentials_arn
-  mediawiki_app_secrets_arn      = aws_secretsmanager_secret.mediawiki_app_secrets.arn
+  cloudwatch_log_group_name    = "/aws/ecs/${var.project_name}-mediawiki-common"
+  image_uri                    = "ghcr.io/trigpointinguk/fastapi/mediawiki:main"
+  s3_bucket_name               = aws_s3_bucket.wiki.id
+  cache_host                   = aws_elasticache_serverless_cache.valkey.endpoint[0].address
+  cache_port                   = aws_elasticache_serverless_cache.valkey.endpoint[0].port
+  mediawiki_db_credentials_arn = var.mediawiki_db_credentials_arn
+  mediawiki_app_secrets_arn    = aws_secretsmanager_secret.mediawiki_app_secrets.arn
 
   depends_on = [aws_lb_listener_rule.mediawiki, aws_s3_bucket.wiki, aws_elasticache_serverless_cache.valkey]
 }
