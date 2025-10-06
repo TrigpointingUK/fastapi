@@ -44,7 +44,8 @@ resource "aws_iam_role_policy" "ecs_phpbb_secrets" {
           "secretsmanager:GetSecretValue"
         ],
         Resource = [
-          var.phpbb_db_credentials_arn
+          var.phpbb_db_credentials_arn,
+          "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:trigpointing-phpbb-credentials*"
         ]
       }
     ]
