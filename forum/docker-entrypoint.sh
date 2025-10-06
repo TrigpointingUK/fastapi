@@ -3,7 +3,26 @@ set -e
 # let official script init PHP ext, etc.
 [ -x /usr/local/bin/docker-php-entrypoint ] && docker-php-entrypoint php-fpm >/dev/null 2>&1 || true
 
-# EFS directories are now mounted directly via ECS, no symlinking needed
+# Replace phpBB directories with symlinks to EFS
+if [ -d /mnt/phpbb/phpbb ]; then
+    echo "Setting up EFS symlinks..."
+
+    # Remove existing directories and replace with symlinks
+    if [ -d /mnt/phpbb/phpbb/files ]; then
+        rm -rf /var/www/html/files
+        ln -sf /mnt/phpbb/phpbb/files /var/www/html/files
+    fi
+
+    if [ -d /mnt/phpbb/phpbb/store ]; then
+        rm -rf /var/www/html/store
+        ln -sf /mnt/phpbb/phpbb/store /var/www/html/store
+    fi
+
+    if [ -d /mnt/phpbb/phpbb/images/avatars/upload ]; then
+        rm -rf /var/www/html/images/avatars/upload
+        ln -sf /mnt/phpbb/phpbb/images/avatars/upload /var/www/html/images/avatars/upload
+    fi
+fi
 
 if [ ! -f /var/www/html/config.php ]; then
 cat > /var/www/html/config.php <<PHP
