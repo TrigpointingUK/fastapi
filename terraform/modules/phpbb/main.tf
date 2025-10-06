@@ -71,17 +71,7 @@ resource "aws_ecs_task_definition" "phpbb" {
       mountPoints = [
         {
           sourceVolume  = "phpbb-efs"
-          containerPath = "/var/www/html/files"
-          readOnly      = false
-        },
-        {
-          sourceVolume  = "phpbb-efs"
-          containerPath = "/var/www/html/store"
-          readOnly      = false
-        },
-        {
-          sourceVolume  = "phpbb-efs"
-          containerPath = "/var/www/html/images/avatars/upload"
+          containerPath = "/mnt/phpbb"
           readOnly      = false
         }
       ]
