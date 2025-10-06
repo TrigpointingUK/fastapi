@@ -24,6 +24,7 @@ if [ -d /mnt/phpbb/phpbb ]; then
     fi
 fi
 
+ls -al /var/www/html
 ls -alR /var/www/html/files
 ls -alR /var/www/html/store
 ls -alR /var/www/html/images/avatars/upload
