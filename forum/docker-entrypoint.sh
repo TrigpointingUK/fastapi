@@ -11,18 +11,21 @@ if [ -d /mnt/phpbb/phpbb ]; then
 fi
 
 if [ ! -f /var/www/html/config.php ]; then
-cat > /var/www/html/config.php <<'PHP'
+cat > /var/www/html/config.php <<PHP
 <?php
-$dbms = 'mysqli';
-$dbhost = getenv('PHPBB_DB_HOST');
-$dbport = '';
-$dbname = getenv('PHPBB_DB_NAME');
-$dbuser = getenv('PHPBB_DB_USER');
-$dbpasswd = getenv('PHPBB_DB_PASS');
-$table_prefix = getenv('PHPBB_TABLE_PREFIX') ?: 'phpbb_';
-$acm_type = 'file';
-$load_extensions = '';
+\$dbms = 'phpbb\\db\\driver\\mysqli';
+\$dbhost = '${PHPBB_DB_HOST}';
+\$dbport = '';
+\$dbname = '${PHPBB_DB_NAME}';
+\$dbuser = '${PHPBB_DB_USER}';
+\$dbpasswd = '${PHPBB_DB_PASS}';
+\$table_prefix = '${PHPBB_TABLE_PREFIX}';
+\$phpbb_adm_relative_path = 'adm/';
+\$acm_type = 'phpbb\\cache\\driver\\file';
+\$load_extensions = '';
+
 @define('PHPBB_INSTALLED', true);
+@define('PHPBB_ENVIRONMENT', 'production');
 PHP
 chown www-data:www-data /var/www/html/config.php
 fi
