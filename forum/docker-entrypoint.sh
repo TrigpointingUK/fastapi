@@ -10,26 +10,19 @@ if [ -d /mnt/phpbb/phpbb ]; then
     [ -d /mnt/phpbb/phpbb/images ] && ln -snf /mnt/phpbb/phpbb/images /var/www/html/images
 fi
 
-if [ ! -f /var/www/html/config.php ]; then
-cat > /var/www/html/config.php <<'PHP'
-<?php
-$dbms = 'mysqli';
-$dbhost = getenv('PHPBB_DB_HOST');
-$dbport = '';
-$dbname = getenv('PHPBB_DB_NAME');
-$dbuser = getenv('PHPBB_DB_USER');
-$dbpasswd = getenv('PHPBB_DB_PASS');
-$table_prefix = getenv('PHPBB_TABLE_PREFIX') ?: 'phpbb_';
-$acm_type = 'file';
-$load_extensions = '';
-@define('PHPBB_INSTALLED', true);
-PHP
-chown www-data:www-data /var/www/html/config.php
-fi
+# Don't create config.php - let phpBB installer create it
+# The installer will handle database setup and create config.php with proper settings
 
-# Remove installer if present to prevent install wizard
-if [ -d /var/www/html/install ]; then
-    rm -rf /var/www/html/install
+# After successful installation, the installer creates a .lock file
+# Only remove the installer directory if phpBB is fully installed
+if [ -f /var/www/html/config.php ] && [ -d /var/www/html/install ]; then
+    # Check if there's a lock file indicating successful installation
+    if [ -f /var/www/html/install/install.lock ] || grep -q "PHPBB_INSTALLED" /var/www/html/config.php 2>/dev/null; then
+        echo "phpBB installation detected - removing installer directory"
+        rm -rf /var/www/html/install
+    else
+        echo "phpBB installer present - waiting for installation to complete"
+    fi
 fi
 
 # php-fpm not used in apache image; start apache
