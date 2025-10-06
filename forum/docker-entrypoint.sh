@@ -27,5 +27,10 @@ PHP
 chown www-data:www-data /var/www/html/config.php
 fi
 
+# Remove installer if present to prevent install wizard
+if [ -d /var/www/html/install ]; then
+    rm -rf /var/www/html/install
+fi
+
 # php-fpm not used in apache image; start apache
 exec apache2-foreground
