@@ -56,3 +56,5 @@ resource "aws_security_group" "rds" {
     ignore_changes = [ingress]
   }
 }
+
+## SSM interface endpoints removed (cost); ECS Exec will use NAT egress

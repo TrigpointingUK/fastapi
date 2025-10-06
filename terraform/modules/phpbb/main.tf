@@ -101,11 +101,12 @@ resource "aws_ecs_task_definition" "phpbb" {
 
 # ECS Service for phpBB
 resource "aws_ecs_service" "phpbb" {
-  name            = "${var.project_name}-phpbb-${var.environment}"
-  cluster         = var.ecs_cluster_id
-  task_definition = aws_ecs_task_definition.phpbb.arn
-  desired_count   = var.desired_count
-  launch_type     = "FARGATE"
+  name                   = "${var.project_name}-phpbb-${var.environment}"
+  cluster                = var.ecs_cluster_id
+  task_definition        = aws_ecs_task_definition.phpbb.arn
+  desired_count          = var.desired_count
+  launch_type            = "FARGATE"
+  enable_execute_command = true
 
   network_configuration {
     subnets          = var.private_subnet_ids
