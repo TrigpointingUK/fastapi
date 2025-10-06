@@ -27,11 +27,6 @@ if [ -d /mnt/phpbb/phpbb ]; then
     fi
 fi
 
-ls -al /var/www/html
-ls -alR /var/www/html/files
-ls -alR /var/www/html/store
-ls -alR /var/www/html/images/avatars/upload
-
 #if [ ! -f /var/www/html/config.php ]; then
 cat > /var/www/html/config.php <<PHP
 <?php
@@ -52,6 +47,11 @@ PHP
 chown www-data:www-data /var/www/html/config.php
 #fi
 
+
+ls -al /var/www/html
+ls -alR /var/www/html/files
+ls -alR /var/www/html/store
+ls -alR /var/www/html/images/avatars/upload
 cat /var/www/html/config.php
 
 find /mnt/phpbb -type d -print
