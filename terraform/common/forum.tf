@@ -38,6 +38,27 @@ resource "aws_security_group_rule" "efs_from_phpbb_ecs" {
   source_security_group_id = aws_security_group.phpbb_ecs.id
 }
 
+## Allow ECS task execution role to read phpBB DB secret
+resource "aws_iam_role_policy" "ecs_phpbb_secrets" {
+  name = "${var.project_name}-ecs-phpbb-secrets"
+  role = aws_iam_role.ecs_task_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ],
+        Resource = [
+          var.phpbb_db_credentials_arn
+        ]
+      }
+    ]
+  })
+}
+
 module "phpbb" {
   source = "../modules/phpbb"
 
