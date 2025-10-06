@@ -24,6 +24,10 @@ if [ -d /mnt/phpbb/phpbb ]; then
     fi
 fi
 
+ls -alR /var/www/html/files
+ls -alR /var/www/html/store
+ls -alR /var/www/html/images/avatars/upload
+
 if [ ! -f /var/www/html/config.php ]; then
 cat > /var/www/html/config.php <<PHP
 <?php
@@ -43,6 +47,8 @@ cat > /var/www/html/config.php <<PHP
 PHP
 chown www-data:www-data /var/www/html/config.php
 fi
+
+cat /var/www/html/config.php
 
 # Remove installer if present to prevent install wizard
 if [ -d /var/www/html/install ]; then
