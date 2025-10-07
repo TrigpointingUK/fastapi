@@ -1,0 +1,9 @@
+{
+    "name": "teasel/auth0",
+    "type": "phpbb-extension",
+    "description": "Auth0 OAuth service for phpBB",
+    "version": "1.0.0",
+    "license": "MIT",
+    "extra": { "display-name": "Auth0 OAuth service" },
+    "autoload": { "psr-4": { "teasel\\auth0\\": "src/" } }
+  }

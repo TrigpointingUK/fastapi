@@ -93,6 +93,11 @@ variable "db_credentials_arn" {
   type        = string
 }
 
+variable "phpbb_secrets_arn" {
+  description = "phpBB app secrets ARN"
+  type        = string
+}
+
 variable "db_host" {
   description = "DB host"
   type        = string
