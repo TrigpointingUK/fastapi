@@ -32,6 +32,10 @@ RUN a2enmod rewrite \
 && a2enconf phpbb-auth0 \
 && chown -R www-data:www-data /var/www/html/ext
 
+
+COPY ext_diag.php /var/www/html/ext_diag.php
+RUN chmod +x /var/www/html/ext_diag.php
+
 # Add entrypoint to create config.php and link EFS directories
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
