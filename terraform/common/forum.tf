@@ -87,7 +87,8 @@ resource "aws_iam_role_policy" "ecs_phpbb_secrets" {
         ],
         Resource = [
           var.phpbb_db_credentials_arn,
-          "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:trigpointing-phpbb-credentials*"
+          "arn:aws:secretsmanager:${var.aws_region}:${data.aws_caller_identity.current.account_id}:secret:trigpointing-phpbb-credentials*",
+          aws_secretsmanager_secret.phpbb_app_secrets.arn,
         ]
       }
     ]
@@ -122,6 +123,9 @@ module "phpbb" {
   db_name            = "phpbb_db"
   db_user            = "phpbb_user"
   table_prefix       = "phpbb_"
+
+  # Secrets config
+  phpbb_secrets_arn = aws_secretsmanager_secret.phpbb_app_secrets.arn
 
   # EFS config
   efs_file_system_id  = aws_efs_file_system.phpbb.id

@@ -66,6 +66,26 @@ resource "aws_ecs_task_definition" "phpbb" {
         {
           name      = "PHPBB_DB_PASS"
           valueFrom = "${var.db_credentials_arn}:password::"
+        },
+        {
+          name      = "AUTH0_DOMAIN"
+          valueFrom = "${var.phpbb_secrets_arn}:AUTH0_DOMAIN::"
+        },
+        {
+          name      = "AUTH0_CLIENT_ID"
+          valueFrom = "${var.phpbb_secrets_arn}:AUTH0_CLIENT_ID::"
+        },
+        {
+          name      = "AUTH0_CLIENT_SECRET"
+          valueFrom = "${var.phpbb_secrets_arn}:AUTH0_CLIENT_SECRET::"
+        },
+        {
+          name      = "AUTH0_GROUPS_CLAIM"
+          valueFrom = "${var.phpbb_secrets_arn}:AUTH0_GROUPS_CLAIM::"
+        },
+        {
+          name      = "AUTH0_GROUP_MAP_JSON"
+          valueFrom = "${var.phpbb_secrets_arn}:AUTH0_GROUP_MAP_JSON::"
         }
       ]
       mountPoints = [
