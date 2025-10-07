@@ -1,5 +1,38 @@
 # phpBB ECS Service wiring (common)
 
+# AWS Secrets Manager secret for phpBB application secrets
+resource "aws_secretsmanager_secret" "phpbb_app_secrets" {
+  name        = "${var.project_name}-phpbb-app-secrets"
+  description = "Application secrets for phpBB (config values, keys, etc.)"
+
+  lifecycle {
+    ignore_changes = [
+      # Ignore changes to the secret value - managed manually
+    ]
+  }
+
+  tags = {
+    Name = "${var.project_name}-phpbb-app-secrets"
+  }
+}
+
+# Initial secret version with empty placeholder
+# This will be ignored after initial creation - populate manually as needed
+resource "aws_secretsmanager_secret_version" "phpbb_app_secrets" {
+  secret_id = aws_secretsmanager_secret.phpbb_app_secrets.id
+  secret_string = jsonencode({
+    # Add your phpBB application secrets here manually
+    # Example keys you might need:
+    # PHPBB_COOKIE_SECURE = "true"
+    # PHPBB_SMTP_HOST = "..."
+    # etc.
+  })
+
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
+}
+
 # Security Group for phpBB ECS tasks
 resource "aws_security_group" "phpbb_ecs" {
   name        = "${var.project_name}-phpbb-ecs-tasks-sg"

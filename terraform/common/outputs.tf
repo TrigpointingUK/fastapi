@@ -202,6 +202,11 @@ output "phpbb_efs_security_group_id" {
   value       = aws_security_group.efs.id
 }
 
+output "phpbb_app_secrets_arn" {
+  description = "ARN of the phpBB application secrets in AWS Secrets Manager"
+  value       = aws_secretsmanager_secret.phpbb_app_secrets.arn
+}
+
 # ElastiCache Outputs
 output "elasticache_valkey_endpoint" {
   description = "ElastiCache Valkey serverless endpoint"
