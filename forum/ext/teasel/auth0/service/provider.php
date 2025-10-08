@@ -74,9 +74,11 @@ class provider extends base
             throw new \phpbb\auth\provider\oauth\service\exception('AUTH_PROVIDER_OAUTH_ERROR_INVALID_SERVICE_TYPE');
         }
 
-        $this->service_provider->requestAccessToken(
-            $this->request->variable('code', '')
-        );
+        $code = $this->request->variable('code', '');
+        $this->flog('[auth0] provider.perform_auth_login() code=' . ($code !== '' ? 'present' : 'missing'));
+        $this->service_provider->requestAccessToken($code);
+        // Proactively create/link before phpBB presents link/register
+        $this->ensure_oauth_mapping();
     }
 
     /**
