@@ -51,40 +51,20 @@ class provider extends base
     /**
      * {@inheritdoc}
      */
-    public function get_external_service_config($service_class, $http_client, $token_storage, $scopes)
-    {
-        $domain = getenv('AUTH0_DOMAIN') ?: '';
-        
-        // Create credentials object
-        $credentials = new \OAuth\Common\Consumer\Credentials(
-            $this->get_service_credentials()['key'],
-            $this->get_service_credentials()['secret'],
-            $this->get_callback_uri()
-        );
-        
-        return [
-            $credentials,
-            $http_client,
-            $token_storage,
-            $scopes,
-            new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/authorize'),
-            new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/oauth/token'),
-        ];
-    }
-    
-    /**
-     * Get callback URI for OAuth
-     */
-    protected function get_callback_uri()
-    {
-        return parent::get_callback_uri();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function perform_auth_login()
     {
+        // Set Auth0 endpoints before performing login
+        if ($this->service_provider)
+        {
+            $domain = getenv('AUTH0_DOMAIN') ?: '';
+            $this->service_provider->setAuthorizationEndpoint(
+                new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/authorize')
+            );
+            $this->service_provider->setAccessTokenEndpoint(
+                new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/oauth/token')
+            );
+        }
+        
         return parent::perform_auth_login();
     }
 
