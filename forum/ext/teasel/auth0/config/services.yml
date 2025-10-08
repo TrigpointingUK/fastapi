@@ -1,5 +1,5 @@
 services:
-  teasel.auth0.provider:
+  auth.provider.oauth.service.auth0:
     class: teasel\auth0\service\provider
     arguments:
       - '@config'
