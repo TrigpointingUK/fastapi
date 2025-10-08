@@ -9,6 +9,9 @@ class subscriber implements EventSubscriberInterface
 {
     protected $db; protected $user;
     public function __construct(driver_interface $db, user $user) { $this->db=$db; $this->user=$user; }
+    protected function flog($msg){
+        @file_put_contents('/var/www/html/auth0_debug.log', date('c')." ".$msg."\n", FILE_APPEND);
+    }
     public static function getSubscribedEvents() {
         return [
             'core.auth_oauth_authenticate_after' => 'on_oauth_authenticate_after',
@@ -22,17 +25,17 @@ class subscriber implements EventSubscriberInterface
     }
     public function on_oauth_remote_data_after($event)
     {
-        error_log('[auth0] on_oauth_remote_data_after');
+        $this->flog('[auth0] on_oauth_remote_data_after');
         $this->ensure_oauth_mapping($event);
     }
     public function on_oauth_authenticate_after($event)
     {
-        error_log('[auth0] on_oauth_authenticate_after');
+        $this->flog('[auth0] on_oauth_authenticate_after');
         $this->ensure_oauth_mapping($event);
     }
     public function on_oauth_link_before($event)
     {
-        error_log('[auth0] on_oauth_link_before');
+        $this->flog('[auth0] on_oauth_link_before');
         // Try to create/link then redirect away to avoid showing the prompt
         $made = $this->ensure_oauth_mapping($event);
         if ($made) {
@@ -54,7 +57,7 @@ class subscriber implements EventSubscriberInterface
         // Get the actual service name if available; fall back to 'auth0'
         $provider = method_exists($service, 'get_service_name') ? (string)$service->get_service_name() : 'auth0';
         $external = isset($claims['sub']) ? (string)$claims['sub'] : '';
-        error_log('[auth0] ensure_oauth_mapping provider=' . $provider . ' sub_present=' . ($external !== '' ? 'yes' : 'no'));
+        $this->flog('[auth0] ensure_oauth_mapping provider=' . $provider . ' sub_present=' . ($external !== '' ? 'yes' : 'no'));
         if ($external === '') return false;
 
         // Already linked?
@@ -63,7 +66,7 @@ class subscriber implements EventSubscriberInterface
         $res = $this->db->sql_query($sql);
         $row = $this->db->sql_fetchrow($res);
         $this->db->sql_freeresult($res);
-        if ($row && (int)$row['user_id'] > 0) { error_log('[auth0] mapping exists'); return false; }
+        if ($row && (int)$row['user_id'] > 0) { $this->flog('[auth0] mapping exists'); return false; }
 
         // Try to link by email if present
         $email = isset($claims['email']) ? (string)$claims['email'] : '';
@@ -76,7 +79,7 @@ class subscriber implements EventSubscriberInterface
             $this->db->sql_freeresult($res);
             if ($userRow && (int)$userRow['user_id'] > 0) {
                 $user_id = (int)$userRow['user_id'];
-                error_log('[auth0] linked by email user_id=' . $user_id);
+                $this->flog('[auth0] linked by email user_id=' . $user_id);
             }
         }
 
@@ -100,7 +103,7 @@ class subscriber implements EventSubscriberInterface
             ];
             $newId = user_add($userData);
             if (is_int($newId) && $newId > 0) $user_id = $newId;
-            error_log('[auth0] created user user_id=' . $user_id . ' username=' . $username);
+            $this->flog('[auth0] created user user_id=' . $user_id . ' username=' . $username);
         }
 
         if ($user_id > 0) {
@@ -108,7 +111,7 @@ class subscriber implements EventSubscriberInterface
             $table = (defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts');
             $sql = "INSERT IGNORE INTO $table (user_id,provider,oauth_provider_id) VALUES (".(int)$user_id.", '".$this->db->sql_escape($provider)."', '".$this->db->sql_escape($external)."')";
             $this->db->sql_query($sql);
-            error_log('[auth0] inserted oauth mapping for user_id=' . (int)$user_id);
+            $this->flog('[auth0] inserted oauth mapping for user_id=' . (int)$user_id);
             return true;
         }
         return false;
