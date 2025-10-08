@@ -53,18 +53,7 @@ class provider extends base
      */
     public function perform_auth_login()
     {
-        // Set Auth0 endpoints before performing login
-        if ($this->service_provider)
-        {
-            $domain = getenv('AUTH0_DOMAIN') ?: '';
-            $this->service_provider->setAuthorizationEndpoint(
-                new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/authorize')
-            );
-            $this->service_provider->setAccessTokenEndpoint(
-                new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/oauth/token')
-            );
-        }
-        
+        // Endpoints are already set in auth0.php service class
         return parent::perform_auth_login();
     }
 
