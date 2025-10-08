@@ -34,7 +34,8 @@ RUN a2enmod rewrite \
 
 
 COPY ext_diag.php /var/www/html/ext_diag.php
-RUN chmod +x /var/www/html/ext_diag.php
+COPY ext_auth0_diag.php /var/www/html/ext_auth0_diag.php
+RUN chmod +x /var/www/html/ext_diag.php /var/www/html/ext_auth0_diag.php
 
 # Add entrypoint to create config.php and link EFS directories
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

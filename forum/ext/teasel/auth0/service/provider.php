@@ -51,14 +51,33 @@ class provider extends base
     /**
      * {@inheritdoc}
      */
-    public function get_external_service_config()
+    public function get_external_service_config($service_class, $http_client, $token_storage, $scopes)
     {
         $domain = getenv('AUTH0_DOMAIN') ?: '';
+        
+        // Create credentials object
+        $credentials = new \OAuth\Common\Consumer\Credentials(
+            $this->get_service_credentials()['key'],
+            $this->get_service_credentials()['secret'],
+            $this->get_callback_uri()
+        );
+        
         return [
-            'baseApiUri'          => 'https://' . $domain,
-            'authorizationEndpoint' => '/authorize',
-            'accessTokenEndpoint' => '/oauth/token',
+            $credentials,
+            $http_client,
+            $token_storage,
+            $scopes,
+            new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/authorize'),
+            new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/oauth/token'),
         ];
+    }
+    
+    /**
+     * Get callback URI for OAuth
+     */
+    protected function get_callback_uri()
+    {
+        return parent::get_callback_uri();
     }
 
     /**
@@ -83,11 +102,19 @@ class provider extends base
     protected function get_user_identity()
     {
         $domain = getenv('AUTH0_DOMAIN') ?: '';
-        $token = $this->service_provider->getStorage()->retrieveAccessToken($this->service_name);
         
-        $request = new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/userinfo');
-        $response = $this->service_provider->request($request, 'GET', null, ['Authorization' => 'Bearer ' . $token->getAccessToken()]);
+        // Request user info from Auth0
+        $uri = new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/userinfo');
+        $response = $this->service_provider->request($uri);
         
-        return json_decode($response, true);
+        $data = json_decode($response, true);
+        
+        // Map Auth0 user data to phpBB format
+        return [
+            'user_id' => $data['sub'] ?? '',
+            'username' => $data['email'] ?? $data['nickname'] ?? '',
+            'email' => $data['email'] ?? '',
+            'name' => $data['name'] ?? '',
+        ];
     }
 }
