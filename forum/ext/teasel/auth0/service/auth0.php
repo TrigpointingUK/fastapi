@@ -27,7 +27,8 @@ class auth0 extends AbstractService
      */
     public function getAuthorizationEndpoint()
     {
-        return new Uri($this->baseApiUri . '/authorize');
+        $domain = getenv('AUTH0_DOMAIN') ?: 'auth.example.com';
+        return new Uri('https://' . $domain . '/authorize');
     }
 
     /**
@@ -35,7 +36,8 @@ class auth0 extends AbstractService
      */
     public function getAccessTokenEndpoint()
     {
-        return new Uri($this->baseApiUri . '/oauth/token');
+        $domain = getenv('AUTH0_DOMAIN') ?: 'auth.example.com';
+        return new Uri('https://' . $domain . '/oauth/token');
     }
 
     /**
