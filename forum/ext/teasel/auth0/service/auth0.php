@@ -16,6 +16,13 @@ use OAuth\Common\Storage\TokenStorageInterface;
 class auth0 extends AbstractService
 {
     /**
+     * Defined scopes for Auth0
+     */
+    const SCOPE_OPENID = 'openid';
+    const SCOPE_EMAIL = 'email';
+    const SCOPE_PROFILE = 'profile';
+
+    /**
      * {@inheritdoc}
      */
     public function getAuthorizationEndpoint()
