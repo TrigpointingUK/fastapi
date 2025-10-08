@@ -1,16 +1,14 @@
 services:
   teasel.auth0.provider:
     class: teasel\auth0\service\provider
-    file: '%core.root_path%ext/teasel/auth0/src/service/provider.php'
     arguments:
       - '@config'
     tags:
       - { name: auth.provider.oauth.service }
   teasel.auth0map.subscriber:
     class: teasel\auth0\event\subscriber
-    file: '%core.root_path%ext/teasel/auth0/src/event/subscriber.php'
     arguments:
       - '@dbal.conn'
       - '@user'
     tags: 
-      - { name: event.listener }
+      - { name: event.subscriber }

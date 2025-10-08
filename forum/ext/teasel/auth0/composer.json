@@ -22,7 +22,7 @@
     },
     "autoload": {
         "psr-4": {
-            "teasel\\auth0\\": "src/"
+            "teasel\\auth0\\": ""
         }
     }
 }
