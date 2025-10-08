@@ -110,9 +110,36 @@ class provider extends base
         // Map Auth0 user data to phpBB format
         return [
             'user_id' => $data['sub'] ?? '',
-            'username' => $data['email'] ?? $data['nickname'] ?? '',
+            'username' => $data['email'] ?? $data['nickname'] ?? $data['name'] ?? '',
             'email' => $data['email'] ?? '',
             'name' => $data['name'] ?? '',
         ];
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function get_auth_user_id()
+    {
+        $user_data = $this->get_user_identity();
+        return $user_data['user_id'];
+    }
+
+    /**
+     * Allow auto-linking accounts by email
+     */
+    public function is_email_verified()
+    {
+        // Auth0 verifies emails, so we trust them
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function get_auth_user_email()
+    {
+        $user_data = $this->get_user_identity();
+        return $user_data['email'];
     }
 }
