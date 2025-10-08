@@ -11,9 +11,69 @@ class subscriber implements EventSubscriberInterface
     public function __construct(driver_interface $db, user $user) { $this->db=$db; $this->user=$user; }
     public static function getSubscribedEvents() {
         return [
+            'core.auth_oauth_authenticate_after' => 'on_oauth_authenticate_after',
             'core.auth_oauth_login_after' => 'on_oauth_login_after',
             'core.auth_oauth_link_after' => 'on_oauth_link_after',
         ];
+    }
+    public function on_oauth_authenticate_after($event)
+    {
+        // Ensure an oauth mapping exists before phpBB prompts to link/register
+        $service = $event['service'];
+        if (!$service) return;
+        $claims = $service->get_user_identity();
+        $provider = method_exists($service, 'get_service_name') ? (string)$service->get_service_name() : 'auth0';
+        $external = isset($claims['sub']) ? (string)$claims['sub'] : '';
+        if ($external === '') return;
+
+        // Already linked?
+        $sql = "SELECT user_id FROM phpbb_oauth_accounts WHERE provider='".$this->db->sql_escape($provider)."' AND oauth_provider_id='".$this->db->sql_escape($external)."'";
+        $res = $this->db->sql_query($sql);
+        $row = $this->db->sql_fetchrow($res);
+        $this->db->sql_freeresult($res);
+        if ($row && (int)$row['user_id'] > 0) return;
+
+        // Try to link by email if present
+        $email = isset($claims['email']) ? (string)$claims['email'] : '';
+        $user_id = 0;
+        if ($email !== '') {
+            $sql = "SELECT user_id FROM phpbb_users WHERE user_email='".$this->db->sql_escape($email)."' AND user_type <> 2"; // exclude anonymous
+            $res = $this->db->sql_query($sql);
+            $userRow = $this->db->sql_fetchrow($res);
+            $this->db->sql_freeresult($res);
+            if ($userRow && (int)$userRow['user_id'] > 0) {
+                $user_id = (int)$userRow['user_id'];
+            }
+        }
+
+        if ($user_id === 0) {
+            // Create a new phpBB user using nickname as username
+            global $phpbb_root_path, $phpEx;
+            include_once($phpbb_root_path.'includes/functions_user.'.$phpEx);
+
+            $nickname = isset($claims['nickname']) ? (string)$claims['nickname'] : '';
+            $name = isset($claims['name']) ? (string)$claims['name'] : '';
+            $username = $nickname !== '' ? $nickname : ($name !== '' ? $name : $email);
+            if ($username === '') $username = 'user_'.substr(bin2hex(random_bytes(4)), 0, 8);
+
+            $randomPassword = bin2hex(random_bytes(32));
+
+            $userData = [
+                'username' => $username,
+                'user_password' => $randomPassword,
+                'user_email' => $email,
+                'group_id' => 2, // REGISTERED
+                'user_type' => 0, // NORMAL
+            ];
+            $newId = user_add($userData);
+            if (is_int($newId) && $newId > 0) $user_id = $newId;
+        }
+
+        if ($user_id > 0) {
+            // Insert mapping (ignore if a race created it)
+            $sql = "INSERT IGNORE INTO phpbb_oauth_accounts (user_id,provider,oauth_provider_id) VALUES (".(int)$user_id.", '".$this->db->sql_escape($provider)."', '".$this->db->sql_escape($external)."')";
+            $this->db->sql_query($sql);
+        }
     }
     public function on_oauth_login_after($event)
     {
