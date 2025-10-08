@@ -40,7 +40,7 @@ class provider extends base
     {
         $client_id = getenv('AUTH0_CLIENT_ID') ?: '';
         $client_secret = getenv('AUTH0_CLIENT_SECRET') ?: '';
-        
+
         return [
             'key'    => $client_id,
             'secret' => $client_secret,
@@ -93,27 +93,31 @@ class provider extends base
             $this->service_provider->getStorage()->retrieveAccessToken($this->get_service_name())->getRefreshToken()
         );
     }
-    
+
     /**
      * {@inheritdoc}
      */
     protected function get_user_identity()
     {
         $domain = getenv('AUTH0_DOMAIN') ?: '';
-        
+
         // Request user info from Auth0
         $uri = new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/userinfo');
         $response = $this->service_provider->request($uri);
-        
+
         $data = json_decode($response, true);
-        
-        // Map Auth0 user data to phpBB format
-        return [
-            'user_id' => $data['sub'] ?? '',
-            'username' => $data['email'] ?? $data['nickname'] ?? $data['name'] ?? '',
-            'email' => $data['email'] ?? '',
-            'name' => $data['name'] ?? '',
-        ];
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        // Provide phpBB-friendly aliases but keep all original claims for subscribers
+        $data['user_id'] = $data['sub'] ?? '';
+        // Prefer nickname, then name, then email to avoid phpBB managing usernames
+        $data['username'] = $data['nickname'] ?? ($data['name'] ?? ($data['email'] ?? ''));
+        $data['email'] = $data['email'] ?? '';
+        $data['name'] = $data['name'] ?? '';
+
+        return $data;
     }
 
     /**
