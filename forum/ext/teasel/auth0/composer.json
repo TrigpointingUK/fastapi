@@ -4,6 +4,25 @@
     "description": "Auth0 OAuth service for phpBB",
     "version": "1.0.0",
     "license": "MIT",
-    "extra": { "display-name": "Auth0 OAuth service" },
-    "autoload": { "psr-4": { "teasel\\auth0\\": "src/" } }
-  }
+    "authors": [
+        {
+            "name": "Teasel",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=7.4",
+        "composer/installers": "~1.0"
+    },
+    "extra": {
+        "display-name": "Auth0 OAuth Service",
+        "soft-require": {
+            "phpbb/phpbb": ">=3.3.0"
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "teasel\\auth0\\": "src/"
+        }
+    }
+}
