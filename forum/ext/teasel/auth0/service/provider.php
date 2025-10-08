@@ -45,7 +45,7 @@ class provider extends base
      */
     public function get_external_service_class()
     {
-        return '\\OAuth\\OAuth2\\Service\\Generic';
+        return '\\teasel\\auth0\\service\\auth0';
     }
 
     /**
