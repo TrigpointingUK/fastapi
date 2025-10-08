@@ -1,10 +1,19 @@
-name: CI/CD Pipeline
+name: FastAPI CI/CD Pipeline
 
 on:
   push:
     branches: [ main, develop ]
+    paths:
+      - 'app/**'
+      - 'res/**'
+      - 'tests/**'
+      - '.github/workflows/ci.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'app/**'
+      - 'res/**'
+      - '.github/workflows/ci.yml'
 
 env:
   REGISTRY: ghcr.io
