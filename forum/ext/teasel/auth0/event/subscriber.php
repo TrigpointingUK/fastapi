@@ -12,19 +12,46 @@ class subscriber implements EventSubscriberInterface
     public static function getSubscribedEvents() {
         return [
             'core.auth_oauth_authenticate_after' => 'on_oauth_authenticate_after',
+            // Some phpBB versions expose additional hooks after fetching remote data
+            'core.auth_oauth_remote_data_after' => 'on_oauth_remote_data_after',
+            // Intercept before link/register UI is shown
+            'core.auth_oauth_link_before' => 'on_oauth_link_before',
             'core.auth_oauth_login_after' => 'on_oauth_login_after',
             'core.auth_oauth_link_after' => 'on_oauth_link_after',
         ];
     }
+    public function on_oauth_remote_data_after($event)
+    {
+        $this->ensure_oauth_mapping($event);
+    }
     public function on_oauth_authenticate_after($event)
     {
-        // Ensure an oauth mapping exists before phpBB prompts to link/register
-        $service = $event['service'];
-        if (!$service) return;
+        $this->ensure_oauth_mapping($event);
+    }
+    public function on_oauth_link_before($event)
+    {
+        // Try to create/link then redirect away to avoid showing the prompt
+        $made = $this->ensure_oauth_mapping($event);
+        if ($made) {
+            global $phpbb_root_path, $phpEx;
+            if (!function_exists('redirect')) {
+                include_once($phpbb_root_path.'includes/functions.'.$phpEx);
+            }
+            $target = append_sid($phpbb_root_path.'index.'.$phpEx);
+            redirect($target);
+        }
+    }
+
+    protected function ensure_oauth_mapping($event)
+    {
+        // Ensure an oauth mapping exists; return true if mapping was created
+        $service = $event['service'] ?? null;
+        if (!$service) return false;
         $claims = $service->get_user_identity();
-        $provider = method_exists($service, 'get_service_name') ? (string)$service->get_service_name() : 'auth0';
+        // Use the configured service name constant; default to 'auth0'
+        $provider = 'auth0';
         $external = isset($claims['sub']) ? (string)$claims['sub'] : '';
-        if ($external === '') return;
+        if ($external === '') return false;
 
         // Already linked?
         $sql = 'SELECT user_id FROM ' . (defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts') .
@@ -32,7 +59,7 @@ class subscriber implements EventSubscriberInterface
         $res = $this->db->sql_query($sql);
         $row = $this->db->sql_fetchrow($res);
         $this->db->sql_freeresult($res);
-        if ($row && (int)$row['user_id'] > 0) return;
+        if ($row && (int)$row['user_id'] > 0) return false;
 
         // Try to link by email if present
         $email = isset($claims['email']) ? (string)$claims['email'] : '';
@@ -51,15 +78,14 @@ class subscriber implements EventSubscriberInterface
         if ($user_id === 0) {
             // Create a new phpBB user using nickname as username
             global $phpbb_root_path, $phpEx;
-            include_once($phpbb_root_path.'includes/functions_user.'.$phpEx);
-
+            if (!function_exists('user_add')) {
+                include_once($phpbb_root_path+'includes/functions_user.'.$phpEx);
+            }
             $nickname = isset($claims['nickname']) ? (string)$claims['nickname'] : '';
             $name = isset($claims['name']) ? (string)$claims['name'] : '';
             $username = $nickname !== '' ? $nickname : ($name !== '' ? $name : $email);
             if ($username === '') $username = 'user_'.substr(bin2hex(random_bytes(4)), 0, 8);
-
             $randomPassword = bin2hex(random_bytes(32));
-
             $userData = [
                 'username' => $username,
                 'user_password' => $randomPassword,
@@ -76,7 +102,9 @@ class subscriber implements EventSubscriberInterface
             $table = (defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts');
             $sql = "INSERT IGNORE INTO $table (user_id,provider,oauth_provider_id) VALUES (".(int)$user_id.", '".$this->db->sql_escape($provider)."', '".$this->db->sql_escape($external)."')";
             $this->db->sql_query($sql);
+            return true;
         }
+        return false;
     }
     public function on_oauth_login_after($event)
     {
