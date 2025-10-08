@@ -15,29 +15,6 @@ use phpbb\request\request_interface;
  */
 class provider extends base
 {
-    /** @var string */
-    protected $auth0_domain;
-    
-    /** @var string */
-    protected $client_id;
-    
-    /** @var string */
-    protected $client_secret;
-
-    /**
-     * phpBB config
-     *
-     * @var config
-     */
-    protected $config;
-
-    /**
-     * phpBB request
-     *
-     * @var request_interface
-     */
-    protected $request;
-
     /**
      * Constructor
      *
@@ -46,12 +23,7 @@ class provider extends base
      */
     public function __construct(config $config, request_interface $request)
     {
-        $this->config = $config;
-        $this->request = $request;
-        
-        $this->auth0_domain = getenv('AUTH0_DOMAIN') ?: '';
-        $this->client_id = getenv('AUTH0_CLIENT_ID') ?: '';
-        $this->client_secret = getenv('AUTH0_CLIENT_SECRET') ?: '';
+        parent::__construct($config, $request);
     }
 
     /**
@@ -59,9 +31,12 @@ class provider extends base
      */
     public function get_service_credentials()
     {
+        $client_id = getenv('AUTH0_CLIENT_ID') ?: '';
+        $client_secret = getenv('AUTH0_CLIENT_SECRET') ?: '';
+        
         return [
-            'key'    => $this->client_id,
-            'secret' => $this->client_secret,
+            'key'    => $client_id,
+            'secret' => $client_secret,
         ];
     }
 
@@ -87,8 +62,9 @@ class provider extends base
      */
     public function get_external_service_config()
     {
+        $domain = getenv('AUTH0_DOMAIN') ?: '';
         return [
-            'baseApiUri' => 'https://' . $this->auth0_domain,
+            'baseApiUri' => 'https://' . $domain,
         ];
     }
 
@@ -102,8 +78,9 @@ class provider extends base
             throw new \phpbb\auth\provider\oauth\service\exception('OAUTH_SERVICE_NOT_INITIALIZED');
         }
 
-        $this->service_provider->setAuthorizationEndpoint(new \OAuth\Common\Http\Uri\Uri('https://' . $this->auth0_domain . '/authorize'));
-        $this->service_provider->setAccessTokenEndpoint(new \OAuth\Common\Http\Uri\Uri('https://' . $this->auth0_domain . '/oauth/token'));
+        $domain = getenv('AUTH0_DOMAIN') ?: '';
+        $this->service_provider->setAuthorizationEndpoint(new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/authorize'));
+        $this->service_provider->setAccessTokenEndpoint(new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/oauth/token'));
 
         return parent::perform_auth_login();
     }
