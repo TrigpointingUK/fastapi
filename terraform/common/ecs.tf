@@ -39,6 +39,28 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+# Allow ECS Exec (SSM Messages) from inside tasks - attach to execution role as well
+resource "aws_iam_role_policy" "ecs_task_execution_role_ssm_messages" {
+  name = "${var.project_name}-ecs-exec-execution-ssm"
+  role = aws_iam_role.ecs_task_execution_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
 # ECS Task Role
 resource "aws_iam_role" "ecs_task_role" {
   name = "${var.project_name}-ecs-task-role"
@@ -84,6 +106,28 @@ resource "aws_iam_role_policy" "ecs_task_role_policy" {
           "rekognition:DetectText",
           "rekognition:DetectFaces",
           "rekognition:DetectModerationLabels"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# Allow ECS Exec (SSM Messages) from inside tasks - task role
+resource "aws_iam_role_policy" "ecs_task_role_ssm_messages" {
+  name = "${var.project_name}-ecs-exec-task-ssm"
+  role = aws_iam_role.ecs_task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel"
         ]
         Resource = "*"
       }
