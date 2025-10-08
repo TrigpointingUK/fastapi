@@ -79,7 +79,17 @@ class provider extends base
      */
     public function get_external_service_class()
     {
-        return '\teasel\auth0\service\auth0_service';
+        return '\\teasel\\auth0\\service\\auth0_service';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function get_external_service_config()
+    {
+        return [
+            'baseApiUri' => 'https://' . $this->auth0_domain,
+        ];
     }
 
     /**
