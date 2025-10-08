@@ -23,10 +23,10 @@ try {
         echo "- $service_name: " . get_class($service) . "\n";
     }
     
-    echo "\n\nAttempting to get Auth0 service:\n";
-    if (isset($service_collection['auth0'])) {
-        $auth0_service = $service_collection['auth0'];
-        echo "✓ Service found: " . get_class($auth0_service) . "\n";
+    echo "\n\nAttempting to get Auth0 service directly from container:\n";
+    try {
+        $auth0_service = $phpbb_container->get('auth.provider.oauth.service.auth0');
+        echo "✓ Service instantiated: " . get_class($auth0_service) . "\n";
         
         echo "\nService credentials:\n";
         try {
@@ -35,6 +35,7 @@ try {
             echo "- Secret length: " . strlen($creds['secret'] ?? '') . "\n";
         } catch (\Exception $e) {
             echo "ERROR getting credentials: " . $e->getMessage() . "\n";
+            echo $e->getTraceAsString() . "\n";
         }
         
         echo "\nService scopes:\n";
@@ -54,8 +55,20 @@ try {
             echo "ERROR: " . $e->getMessage() . "\n";
         }
         
+    } catch (\Exception $e) {
+        echo "✗ FAILED to instantiate service\n";
+        echo "Error: " . $e->getMessage() . "\n";
+        echo "Trace:\n" . $e->getTraceAsString() . "\n";
+    }
+    
+    echo "\n\nAttempting to access via collection key 'auth0':\n";
+    if (isset($service_collection['auth0'])) {
+        echo "✓ Found in collection\n";
     } else {
-        echo "✗ Auth0 service NOT found in collection\n";
+        echo "✗ Not found in collection - checking all keys:\n";
+        foreach ($service_collection as $key => $svc) {
+            echo "  - '$key'\n";
+        }
     }
     
 } catch (\Exception $e) {
