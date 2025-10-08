@@ -53,8 +53,14 @@ class provider extends base
      */
     public function perform_auth_login()
     {
-        // Endpoints are already set in auth0.php service class
-        return parent::perform_auth_login();
+        if (!($this->service_provider instanceof \OAuth\OAuth2\Service\AbstractService))
+        {
+            throw new \phpbb\auth\provider\oauth\service\exception('AUTH_PROVIDER_OAUTH_ERROR_INVALID_SERVICE_TYPE');
+        }
+
+        $this->service_provider->requestAccessToken(
+            $this->request->variable('code', '')
+        );
     }
 
     /**
@@ -62,7 +68,14 @@ class provider extends base
      */
     public function perform_token_auth()
     {
-        return parent::perform_token_auth();
+        if (!($this->service_provider instanceof \OAuth\OAuth2\Service\AbstractService))
+        {
+            throw new \phpbb\auth\provider\oauth\service\exception('AUTH_PROVIDER_OAUTH_ERROR_INVALID_SERVICE_TYPE');
+        }
+
+        $this->service_provider->refreshAccessToken(
+            $this->service_provider->getStorage()->retrieveAccessToken($this->get_service_name())->getRefreshToken()
+        );
     }
     
     /**
