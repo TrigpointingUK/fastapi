@@ -10,9 +10,22 @@ class subscriber implements EventSubscriberInterface
     protected $db; protected $user;
     public function __construct(driver_interface $db, user $user) { $this->db=$db; $this->user=$user; }
     public static function getSubscribedEvents() {
-        return ['core.auth_oauth_login_after' => 'on_oauth_login_after'];
+        return [
+            'core.auth_oauth_login_after' => 'on_oauth_login_after',
+            'core.auth_oauth_link_after' => 'on_oauth_link_after',
+        ];
     }
     public function on_oauth_login_after($event)
+    {
+        $this->assign_groups_from_auth0($event);
+    }
+
+    public function on_oauth_link_after($event)
+    {
+        $this->assign_groups_from_auth0($event);
+    }
+
+    protected function assign_groups_from_auth0($event)
     {
         $claims = $event['service']->get_user_identity(); // includes /userinfo payload
         $claim_name = getenv('AUTH0_GROUPS_CLAIM') ?: 'https://forum.trigpointing.uk/phpbb_groups';

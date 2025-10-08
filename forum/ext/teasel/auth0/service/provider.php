@@ -142,4 +142,22 @@ class provider extends base
         $user_data = $this->get_user_identity();
         return $user_data['email'];
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function perform_link()
+    {
+        // Auto-link account by email
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function perform_register()
+    {
+        // Auto-register new users
+        return true;
+    }
 }
