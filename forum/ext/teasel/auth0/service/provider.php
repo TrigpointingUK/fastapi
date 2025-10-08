@@ -15,16 +15,7 @@ use phpbb\request\request_interface;
  */
 class provider extends base
 {
-    /**
-     * Constructor
-     *
-     * @param config $config
-     * @param request_interface $request
-     */
-    public function __construct(config $config, request_interface $request)
-    {
-        parent::__construct($config, $request);
-    }
+    // No constructor needed - base class handles it
 
     /**
      * {@inheritdoc}
