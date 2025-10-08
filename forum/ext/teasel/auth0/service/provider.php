@@ -45,7 +45,7 @@ class provider extends base
      */
     public function get_external_service_class()
     {
-        return '\\teasel\\auth0\\service\\auth0_service';
+        return '\\OAuth\\OAuth2\\Service\\Generic';
     }
 
     /**
@@ -55,7 +55,9 @@ class provider extends base
     {
         $domain = getenv('AUTH0_DOMAIN') ?: '';
         return [
-            'baseApiUri' => 'https://' . $domain,
+            'baseApiUri'          => 'https://' . $domain,
+            'authorizationEndpoint' => '/authorize',
+            'accessTokenEndpoint' => '/oauth/token',
         ];
     }
 
@@ -64,15 +66,6 @@ class provider extends base
      */
     public function perform_auth_login()
     {
-        if (!$this->service_provider)
-        {
-            throw new \phpbb\auth\provider\oauth\service\exception('OAUTH_SERVICE_NOT_INITIALIZED');
-        }
-
-        $domain = getenv('AUTH0_DOMAIN') ?: '';
-        $this->service_provider->setAuthorizationEndpoint(new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/authorize'));
-        $this->service_provider->setAccessTokenEndpoint(new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/oauth/token'));
-
         return parent::perform_auth_login();
     }
 
@@ -81,11 +74,20 @@ class provider extends base
      */
     public function perform_token_auth()
     {
-        if (!$this->service_provider)
-        {
-            throw new \phpbb\auth\provider\oauth\service\exception('OAUTH_SERVICE_NOT_INITIALIZED');
-        }
-
         return parent::perform_token_auth();
+    }
+    
+    /**
+     * {@inheritdoc}
+     */
+    protected function get_user_identity()
+    {
+        $domain = getenv('AUTH0_DOMAIN') ?: '';
+        $token = $this->service_provider->getStorage()->retrieveAccessToken($this->service_name);
+        
+        $request = new \OAuth\Common\Http\Uri\Uri('https://' . $domain . '/userinfo');
+        $response = $this->service_provider->request($request, 'GET', null, ['Authorization' => 'Bearer ' . $token->getAccessToken()]);
+        
+        return json_decode($response, true);
     }
 }
