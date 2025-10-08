@@ -1,8 +1,10 @@
 <?php
 namespace teasel\auth0\service;
 
+use OAuth\Common\Http\Uri\UriInterface;
 use phpbb\auth\provider\oauth\service\base;
 use phpbb\config\config;
+use phpbb\request\request_interface;
 
 /**
  * Auth0 OAuth provider that reads settings from environment variables:
@@ -13,26 +15,43 @@ use phpbb\config\config;
  */
 class provider extends base
 {
+    /** @var string */
+    protected $auth0_domain;
+    
+    /** @var string */
     protected $client_id;
+    
+    /** @var string */
     protected $client_secret;
 
-    public function __construct(config $config)
+    /**
+     * phpBB config
+     *
+     * @var config
+     */
+    protected $config;
+
+    /**
+     * phpBB request
+     *
+     * @var request_interface
+     */
+    protected $request;
+
+    /**
+     * Constructor
+     *
+     * @param config $config
+     * @param request_interface $request
+     */
+    public function __construct(config $config, request_interface $request)
     {
-        $domain = getenv('AUTH0_DOMAIN') ?: '';
+        $this->config = $config;
+        $this->request = $request;
+        
+        $this->auth0_domain = getenv('AUTH0_DOMAIN') ?: '';
         $this->client_id = getenv('AUTH0_CLIENT_ID') ?: '';
         $this->client_secret = getenv('AUTH0_CLIENT_SECRET') ?: '';
-        $scope = getenv('AUTH0_SCOPE') ?: 'openid email profile';
-
-        $credentials = ['key' => $this->client_id, 'secret' => $this->client_secret];
-        $options     = ['scope' => $scope];
-        $endpoints   = [
-            'base_url'     => 'https://' . $domain,
-            'authorize_url'=> '/authorize',
-            'token_url'    => '/oauth/token',
-            'info_url'     => '/userinfo',
-        ];
-
-        parent::__construct($config, $credentials, $options, $endpoints, 'auth0');
     }
 
     /**
@@ -49,8 +68,33 @@ class provider extends base
     /**
      * {@inheritdoc}
      */
+    public function get_auth_scope()
+    {
+        $scope = getenv('AUTH0_SCOPE') ?: 'openid email profile';
+        return explode(' ', $scope);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function get_external_service_class()
+    {
+        return '\teasel\auth0\service\auth0_service';
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     public function perform_auth_login()
     {
+        if (!$this->service_provider)
+        {
+            throw new \phpbb\auth\provider\oauth\service\exception('OAUTH_SERVICE_NOT_INITIALIZED');
+        }
+
+        $this->service_provider->setAuthorizationEndpoint(new \OAuth\Common\Http\Uri\Uri('https://' . $this->auth0_domain . '/authorize'));
+        $this->service_provider->setAccessTokenEndpoint(new \OAuth\Common\Http\Uri\Uri('https://' . $this->auth0_domain . '/oauth/token'));
+
         return parent::perform_auth_login();
     }
 
@@ -59,6 +103,11 @@ class provider extends base
      */
     public function perform_token_auth()
     {
+        if (!$this->service_provider)
+        {
+            throw new \phpbb\auth\provider\oauth\service\exception('OAUTH_SERVICE_NOT_INITIALIZED');
+        }
+
         return parent::perform_token_auth();
     }
 }

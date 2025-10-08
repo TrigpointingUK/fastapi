@@ -3,6 +3,7 @@ services:
     class: teasel\auth0\service\provider
     arguments:
       - '@config'
+      - '@request'
     tags:
       - { name: auth.provider.oauth.service }
   teasel.auth0map.subscriber:
