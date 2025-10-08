@@ -27,7 +27,8 @@ class subscriber implements EventSubscriberInterface
         if ($external === '') return;
 
         // Already linked?
-        $sql = "SELECT user_id FROM phpbb_oauth_accounts WHERE provider='".$this->db->sql_escape($provider)."' AND oauth_provider_id='".$this->db->sql_escape($external)."'";
+        $sql = 'SELECT user_id FROM ' . (defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts') .
+               " WHERE provider='".$this->db->sql_escape($provider)."' AND oauth_provider_id='".$this->db->sql_escape($external)."'";
         $res = $this->db->sql_query($sql);
         $row = $this->db->sql_fetchrow($res);
         $this->db->sql_freeresult($res);
@@ -37,7 +38,8 @@ class subscriber implements EventSubscriberInterface
         $email = isset($claims['email']) ? (string)$claims['email'] : '';
         $user_id = 0;
         if ($email !== '') {
-            $sql = "SELECT user_id FROM phpbb_users WHERE user_email='".$this->db->sql_escape($email)."' AND user_type <> 2"; // exclude anonymous
+            $sql = 'SELECT user_id FROM ' . (defined('USERS_TABLE') ? USERS_TABLE : 'phpbb_users') .
+                   " WHERE user_email='".$this->db->sql_escape($email)."' AND user_type <> 2"; // exclude anonymous
             $res = $this->db->sql_query($sql);
             $userRow = $this->db->sql_fetchrow($res);
             $this->db->sql_freeresult($res);
@@ -71,7 +73,8 @@ class subscriber implements EventSubscriberInterface
 
         if ($user_id > 0) {
             // Insert mapping (ignore if a race created it)
-            $sql = "INSERT IGNORE INTO phpbb_oauth_accounts (user_id,provider,oauth_provider_id) VALUES (".(int)$user_id.", '".$this->db->sql_escape($provider)."', '".$this->db->sql_escape($external)."')";
+            $table = (defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts');
+            $sql = "INSERT IGNORE INTO $table (user_id,provider,oauth_provider_id) VALUES (".(int)$user_id.", '".$this->db->sql_escape($provider)."', '".$this->db->sql_escape($external)."')";
             $this->db->sql_query($sql);
         }
     }
