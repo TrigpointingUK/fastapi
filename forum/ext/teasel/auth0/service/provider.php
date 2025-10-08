@@ -126,8 +126,10 @@ class provider extends base
     public function get_auth_user_id()
     {
         // Ensure a phpBB user and oauth mapping exist before phpBB decides to show link/register
+        $this->flog('[auth0] provider.get_auth_user_id() invoked');
         $this->ensure_oauth_mapping();
         $user_data = $this->get_user_identity();
+        $this->flog('[auth0] provider.get_auth_user_id() returning sub=' . ($user_data['user_id'] ?? ''));
         return $user_data['user_id'];
     }
 
@@ -136,14 +138,17 @@ class provider extends base
      */
     protected function ensure_oauth_mapping()
     {
+        $this->flog('[auth0] provider.ensure_oauth_mapping() start');
         // Access services lazily to avoid hard dependency in constructor
         if (!isset($GLOBALS['phpbb_container'])) {
+            $this->flog('[auth0] provider.ensure_oauth_mapping() no container');
             return;
         }
         $container = $GLOBALS['phpbb_container'];
         try {
             $db = $container->get('dbal.conn');
         } catch (\Exception $e) {
+            $this->flog('[auth0] provider.ensure_oauth_mapping() failed get db: ' . $e->getMessage());
             return;
         }
 
@@ -151,8 +156,10 @@ class provider extends base
         $provider = $this->get_service_name(); // e.g. 'auth.provider.oauth.service.auth0'
         $external = isset($claims['sub']) ? (string)$claims['sub'] : '';
         if ($external === '') {
+            $this->flog('[auth0] provider.ensure_oauth_mapping() missing sub');
             return;
         }
+        $this->flog('[auth0] provider.ensure_oauth_mapping() provider=' . $provider . ' sub_present=yes');
 
         // Already linked?
         $table_oauth = defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts';
@@ -161,6 +168,7 @@ class provider extends base
         $row = $db->sql_fetchrow($res);
         $db->sql_freeresult($res);
         if ($row && (int)$row['user_id'] > 0) {
+            $this->flog('[auth0] provider.ensure_oauth_mapping() mapping exists user_id=' . (int)$row['user_id']);
             return;
         }
 
@@ -174,6 +182,7 @@ class provider extends base
             $db->sql_freeresult($res);
             if ($userRow && (int)$userRow['user_id'] > 0) {
                 $user_id = (int)$userRow['user_id'];
+                $this->flog('[auth0] provider.ensure_oauth_mapping() linked by email user_id=' . $user_id);
             }
         }
 
@@ -201,13 +210,21 @@ class provider extends base
             if (is_int($newId) && $newId > 0) {
                 $user_id = $newId;
             }
+            $this->flog('[auth0] provider.ensure_oauth_mapping() created user_id=' . (int)$user_id . ' username=' . $username);
         }
 
         if ($user_id > 0) {
             // Insert mapping (ignore duplicates)
             $sql = "INSERT IGNORE INTO $table_oauth (user_id,provider,oauth_provider_id) VALUES (" . (int)$user_id . ", '" . $db->sql_escape($provider) . "', '" . $db->sql_escape($external) . "')";
             $db->sql_query($sql);
+            $this->flog('[auth0] provider.ensure_oauth_mapping() inserted mapping for user_id=' . (int)$user_id);
         }
+        $this->flog('[auth0] provider.ensure_oauth_mapping() end');
+    }
+
+    protected function flog($msg)
+    {
+        @file_put_contents('/var/www/html/auth0_debug.log', date('c') . ' ' . $msg . "\n", FILE_APPEND);
     }
 
     /**
