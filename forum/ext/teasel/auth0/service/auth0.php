@@ -88,6 +88,7 @@ class auth0 extends AbstractService
     {
         return ['Accept' => 'application/json'];
     }
+    
 
     /**
      * {@inheritdoc}
