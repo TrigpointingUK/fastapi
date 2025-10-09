@@ -10,7 +10,40 @@ class subscriber implements EventSubscriberInterface
     protected $db; protected $user;
     public function __construct(driver_interface $db, user $user) { $this->db=$db; $this->user=$user; }
     protected function flog($msg){
-        @file_put_contents('/var/www/html/auth0_debug.log', date('c')." ".$msg."\n", FILE_APPEND);
+        // Log to stdout for Docker/containerized environments
+        error_log('[auth0] ' . $msg);
+        // Also log to tmp as fallback
+        @file_put_contents('/tmp/auth0_debug.log', date('c')." ".$msg."\n", FILE_APPEND);
+    }
+    
+    /**
+     * Get unique username by appending numbers if needed
+     */
+    protected function get_unique_username($base, $db)
+    {
+        $table_users = defined('USERS_TABLE') ? USERS_TABLE : 'phpbb_users';
+        $username = $base;
+        $counter = 0;
+        
+        while (true) {
+            $clean = utf8_clean_string($username);
+            $sql = "SELECT user_id FROM $table_users WHERE username_clean='" . $db->sql_escape($clean) . "'";
+            $res = $db->sql_query($sql);
+            $row = $db->sql_fetchrow($res);
+            $db->sql_freeresult($res);
+            
+            if (!$row) {
+                return $username; // Username is available
+            }
+            
+            $counter++;
+            $username = $base . $counter;
+            
+            if ($counter > 100) {
+                // Fallback to random
+                return 'user_' . substr(bin2hex(random_bytes(4)), 0, 8);
+            }
+        }
     }
     public static function getSubscribedEvents() {
         return [
@@ -87,23 +120,46 @@ class subscriber implements EventSubscriberInterface
             // Create a new phpBB user using nickname as username
             global $phpbb_root_path, $phpEx;
             if (!function_exists('user_add')) {
-                include_once($phpbb_root_path+'includes/functions_user.'.$phpEx);
+                include_once($phpbb_root_path.'includes/functions_user.'.$phpEx);
             }
+            if (!function_exists('phpbb_hash')) {
+                include_once($phpbb_root_path.'includes/functions_user.'.$phpEx);
+            }
+            
+            // Determine base username
             $nickname = isset($claims['nickname']) ? (string)$claims['nickname'] : '';
             $name = isset($claims['name']) ? (string)$claims['name'] : '';
-            $username = $nickname !== '' ? $nickname : ($name !== '' ? $name : $email);
-            if ($username === '') $username = 'user_'.substr(bin2hex(random_bytes(4)), 0, 8);
+            $baseUsername = $nickname !== '' ? $nickname : ($name !== '' ? $name : $email);
+            if ($baseUsername === '') {
+                $baseUsername = 'user_'.substr(bin2hex(random_bytes(4)), 0, 8);
+            }
+            
+            // Ensure username is unique
+            $username = $this->get_unique_username($baseUsername, $this->db);
+            
+            // Generate random password and hash it properly
             $randomPassword = bin2hex(random_bytes(32));
+            
             $userData = [
                 'username' => $username,
-                'user_password' => $randomPassword,
+                'user_password' => phpbb_hash($randomPassword),
                 'user_email' => $email,
                 'group_id' => 2, // REGISTERED
                 'user_type' => 0, // NORMAL
+                'user_actkey' => '', // No activation needed
+                'user_inactive_reason' => 0,
+                'user_inactive_time' => 0,
             ];
-            $newId = user_add($userData);
-            if (is_int($newId) && $newId > 0) $user_id = $newId;
-            $this->flog('[auth0] created user user_id=' . $user_id . ' username=' . $username);
+            
+            $newId = user_add($userData, false); // false = suppress validation error array
+            
+            if (is_int($newId) && $newId > 0) {
+                $user_id = $newId;
+                $this->flog('[auth0] created user user_id=' . $user_id . ' username=' . $username);
+            } else {
+                $this->flog('[auth0] user_add FAILED for username=' . $username . ' result=' . var_export($newId, true));
+                return false;
+            }
         }
 
         if ($user_id > 0) {
@@ -111,9 +167,11 @@ class subscriber implements EventSubscriberInterface
             $table = (defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts');
             $sql = "INSERT IGNORE INTO $table (user_id,provider,oauth_provider_id) VALUES (".(int)$user_id.", '".$this->db->sql_escape($provider)."', '".$this->db->sql_escape($external)."')";
             $this->db->sql_query($sql);
-            $this->flog('[auth0] inserted oauth mapping for user_id=' . (int)$user_id);
+            $affected = $this->db->sql_affectedrows();
+            $this->flog('[auth0] inserted oauth mapping for user_id=' . (int)$user_id . ' affected_rows=' . $affected);
             return true;
         }
+        $this->flog('[auth0] ensure_oauth_mapping failed: user_id=0');
         return false;
     }
     public function on_oauth_login_after($event)
