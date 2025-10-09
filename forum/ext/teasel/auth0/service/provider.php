@@ -77,8 +77,59 @@ class provider extends base
         $code = $this->request->variable('code', '');
         $this->flog('[auth0] provider.perform_auth_login() code=' . ($code !== '' ? 'present' : 'missing'));
         $this->service_provider->requestAccessToken($code);
+        
         // Proactively create/link before phpBB presents link/register
-        $this->ensure_oauth_mapping();
+        $success = $this->ensure_oauth_mapping();
+        $this->flog('[auth0] provider.perform_auth_login() ensure_oauth_mapping result=' . ($success ? 'true' : 'false'));
+        
+        // If mapping was created/exists, try to complete the login immediately
+        if ($success && isset($GLOBALS['phpbb_container'])) {
+            $this->complete_login_if_mapped();
+        }
+    }
+    
+    /**
+     * Complete the login if a mapping exists
+     */
+    protected function complete_login_if_mapped()
+    {
+        try {
+            $container = $GLOBALS['phpbb_container'];
+            $db = $container->get('dbal.conn');
+            $claims = $this->get_user_identity();
+            $external = isset($claims['sub']) ? (string)$claims['sub'] : '';
+            $provider = $this->get_service_name_safe();
+            $table_oauth = defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts';
+            
+            $sql = "SELECT user_id FROM $table_oauth WHERE provider='" . $db->sql_escape($provider) . "' AND oauth_provider_id='" . $db->sql_escape($external) . "'";
+            $res = $db->sql_query($sql);
+            $row = $db->sql_fetchrow($res);
+            $db->sql_freeresult($res);
+            
+            if ($row && (int)$row['user_id'] > 0) {
+                $user_id = (int)$row['user_id'];
+                $this->flog('[auth0] provider.complete_login_if_mapped() found user_id=' . $user_id . ', completing login');
+                
+                // Get user object if not already set
+                $user = $container->get('user');
+                
+                // Create session for the user
+                $user->session_begin(false);
+                $user->session_create($user_id, false, false, true);
+                
+                $this->flog('[auth0] provider.complete_login_if_mapped() session created, redirecting');
+                
+                // Redirect to index
+                global $phpbb_root_path, $phpEx;
+                if (!function_exists('redirect')) {
+                    include_once($phpbb_root_path . 'includes/functions.' . $phpEx);
+                }
+                $target = append_sid($phpbb_root_path . 'index.' . $phpEx);
+                redirect($target);
+            }
+        } catch (\Exception $e) {
+            $this->flog('[auth0] provider.complete_login_if_mapped() error: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -86,13 +137,15 @@ class provider extends base
      */
     public function perform_token_auth()
     {
+        $this->flog('[auth0] provider.perform_token_auth() called');
         if (!($this->service_provider instanceof \OAuth\OAuth2\Service\AbstractService))
         {
             throw new \phpbb\auth\provider\oauth\service\exception('AUTH_PROVIDER_OAUTH_ERROR_INVALID_SERVICE_TYPE');
         }
 
+        $service_name = $this->get_service_name_safe();
         $this->service_provider->refreshAccessToken(
-            $this->service_provider->getStorage()->retrieveAccessToken($this->get_service_name())->getRefreshToken()
+            $this->service_provider->getStorage()->retrieveAccessToken($service_name)->getRefreshToken()
         );
     }
 
@@ -101,6 +154,7 @@ class provider extends base
      */
     protected function get_user_identity()
     {
+        $this->flog('[auth0] provider.get_user_identity() called');
         $domain = getenv('AUTH0_DOMAIN') ?: '';
 
         // Request user info from Auth0
@@ -119,6 +173,7 @@ class provider extends base
         $data['email'] = $data['email'] ?? '';
         $data['name'] = $data['name'] ?? '';
 
+        $this->flog('[auth0] provider.get_user_identity() returning sub=' . ($data['sub'] ?? 'none') . ' email=' . ($data['email'] ?? 'none'));
         return $data;
     }
 
@@ -330,6 +385,7 @@ class provider extends base
     public function is_email_verified()
     {
         // Auth0 verifies emails, so we trust them
+        $this->flog('[auth0] provider.is_email_verified() called - returning true');
         return true;
     }
 
@@ -338,8 +394,11 @@ class provider extends base
      */
     public function get_auth_user_email()
     {
+        $this->flog('[auth0] provider.get_auth_user_email() called');
         $user_data = $this->get_user_identity();
-        return $user_data['email'];
+        $email = $user_data['email'] ?? '';
+        $this->flog('[auth0] provider.get_auth_user_email() returning ' . $email);
+        return $email;
     }
 
     /**
