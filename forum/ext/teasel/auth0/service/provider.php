@@ -347,8 +347,38 @@ class provider extends base
      */
     public function perform_link()
     {
-        // Auto-link account by email
-        return true;
+        // Auto-link account - this is called by phpBB when it wants to link an OAuth account
+        $this->flog('[auth0] provider.perform_link() called - ensuring mapping exists');
+        $success = $this->ensure_oauth_mapping();
+        $this->flog('[auth0] provider.perform_link() result=' . ($success ? 'true' : 'false'));
+        // Return an array with 'user_id' key to complete the link, or false to show UI
+        if ($success) {
+            // Get the mapping to return the user_id
+            if (!isset($GLOBALS['phpbb_container'])) {
+                return false;
+            }
+            $container = $GLOBALS['phpbb_container'];
+            try {
+                $db = $container->get('dbal.conn');
+                $claims = $this->get_user_identity();
+                $external = isset($claims['sub']) ? (string)$claims['sub'] : '';
+                $provider = $this->get_service_name_safe();
+                $table_oauth = defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts';
+                
+                $sql = "SELECT user_id FROM $table_oauth WHERE provider='" . $db->sql_escape($provider) . "' AND oauth_provider_id='" . $db->sql_escape($external) . "'";
+                $res = $db->sql_query($sql);
+                $row = $db->sql_fetchrow($res);
+                $db->sql_freeresult($res);
+                
+                if ($row && (int)$row['user_id'] > 0) {
+                    $this->flog('[auth0] provider.perform_link() returning user_id=' . (int)$row['user_id']);
+                    return ['user_id' => (int)$row['user_id']];
+                }
+            } catch (\Exception $e) {
+                $this->flog('[auth0] provider.perform_link() error: ' . $e->getMessage());
+            }
+        }
+        return false;
     }
 
     /**
@@ -356,7 +386,37 @@ class provider extends base
      */
     public function perform_register()
     {
-        // Auto-register new users
-        return true;
+        // Auto-register new users - this is called by phpBB when it wants to register a new user
+        $this->flog('[auth0] provider.perform_register() called - ensuring mapping exists');
+        $success = $this->ensure_oauth_mapping();
+        $this->flog('[auth0] provider.perform_register() result=' . ($success ? 'true' : 'false'));
+        // Return an array with 'user_id' key to complete registration, or false to show UI
+        if ($success) {
+            // Get the mapping to return the user_id
+            if (!isset($GLOBALS['phpbb_container'])) {
+                return false;
+            }
+            $container = $GLOBALS['phpbb_container'];
+            try {
+                $db = $container->get('dbal.conn');
+                $claims = $this->get_user_identity();
+                $external = isset($claims['sub']) ? (string)$claims['sub'] : '';
+                $provider = $this->get_service_name_safe();
+                $table_oauth = defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts';
+                
+                $sql = "SELECT user_id FROM $table_oauth WHERE provider='" . $db->sql_escape($provider) . "' AND oauth_provider_id='" . $db->sql_escape($external) . "'";
+                $res = $db->sql_query($sql);
+                $row = $db->sql_fetchrow($res);
+                $db->sql_freeresult($res);
+                
+                if ($row && (int)$row['user_id'] > 0) {
+                    $this->flog('[auth0] provider.perform_register() returning user_id=' . (int)$row['user_id']);
+                    return ['user_id' => (int)$row['user_id']];
+                }
+            } catch (\Exception $e) {
+                $this->flog('[auth0] provider.perform_register() error: ' . $e->getMessage());
+            }
+        }
+        return false;
     }
 }

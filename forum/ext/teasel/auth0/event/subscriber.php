@@ -69,15 +69,66 @@ class subscriber implements EventSubscriberInterface
     public function on_oauth_link_before($event)
     {
         $this->flog('[auth0] on_oauth_link_before');
-        // Try to create/link then redirect away to avoid showing the prompt
-        $made = $this->ensure_oauth_mapping($event);
-        if ($made) {
+        
+        // Check if mapping exists (either already there or just created)
+        $service = $event['service'] ?? null;
+        if (!$service) {
+            $this->flog('[auth0] on_oauth_link_before: no service, cannot proceed');
+            return;
+        }
+        
+        $claims = $service->get_user_identity();
+        $external = isset($claims['sub']) ? (string)$claims['sub'] : '';
+        $provider = method_exists($service, 'get_service_name') ? (string)$service->get_service_name() : 'auth.provider.oauth.service.auth0';
+        
+        if ($external === '') {
+            $this->flog('[auth0] on_oauth_link_before: no sub found');
+            return;
+        }
+        
+        // Try to create/link if needed
+        $this->ensure_oauth_mapping($event);
+        
+        // Check if mapping now exists
+        $sql = 'SELECT user_id FROM ' . (defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts') .
+               " WHERE provider='".$this->db->sql_escape($provider)."' AND oauth_provider_id='".$this->db->sql_escape($external)."'";
+        $res = $this->db->sql_query($sql);
+        $row = $this->db->sql_fetchrow($res);
+        $this->db->sql_freeresult($res);
+        
+        if ($row && (int)$row['user_id'] > 0) {
+            // Mapping exists - complete the login manually
+            $user_id = (int)$row['user_id'];
+            $this->flog('[auth0] on_oauth_link_before: mapping exists for user_id=' . $user_id . ', completing login');
+            
             global $phpbb_root_path, $phpEx;
-            if (!function_exists('redirect')) {
+            if (!function_exists('login_box')) {
                 include_once($phpbb_root_path.'includes/functions.'.$phpEx);
             }
-            $target = append_sid($phpbb_root_path.'index.'.$phpEx);
-            redirect($target);
+            
+            // Get the user data
+            $sql = 'SELECT * FROM ' . (defined('USERS_TABLE') ? USERS_TABLE : 'phpbb_users') . ' WHERE user_id=' . $user_id;
+            $result = $this->db->sql_query($sql);
+            $user_row = $this->db->sql_fetchrow($result);
+            $this->db->sql_freeresult($result);
+            
+            if ($user_row) {
+                // Complete the login using phpBB's user session
+                $this->user->session_begin(false);
+                $this->user->session_create($user_id, false, false, true);
+                $this->flog('[auth0] on_oauth_link_before: session created for user_id=' . $user_id);
+                
+                // Redirect to index
+                if (!function_exists('redirect')) {
+                    include_once($phpbb_root_path.'includes/functions.'.$phpEx);
+                }
+                $target = append_sid($phpbb_root_path.'index.'.$phpEx);
+                redirect($target);
+            } else {
+                $this->flog('[auth0] on_oauth_link_before: ERROR - could not load user data for user_id=' . $user_id);
+            }
+        } else {
+            $this->flog('[auth0] on_oauth_link_before: WARNING - mapping still does not exist after ensure_oauth_mapping');
         }
     }
 
