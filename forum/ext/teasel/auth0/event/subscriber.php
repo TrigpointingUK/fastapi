@@ -150,7 +150,7 @@ class subscriber implements EventSubscriberInterface
         $res = $this->db->sql_query($sql);
         $row = $this->db->sql_fetchrow($res);
         $this->db->sql_freeresult($res);
-        if ($row && (int)$row['user_id'] > 0) { $this->flog('[auth0] mapping exists'); return false; }
+        if ($row && (int)$row['user_id'] > 0) { $this->flog('[auth0] mapping exists'); return true; } // Mapping exists - success!
 
         // Try to link by email if present
         $email = isset($claims['email']) ? (string)$claims['email'] : '';

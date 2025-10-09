@@ -254,7 +254,7 @@ class provider extends base
         $db->sql_freeresult($res);
         if ($row && (int)$row['user_id'] > 0) {
             $this->flog('[auth0] provider.ensure_oauth_mapping() mapping exists user_id=' . (int)$row['user_id']);
-            return;
+            return true; // Mapping exists - success!
         }
 
         $email = isset($claims['email']) ? (string)$claims['email'] : '';
