@@ -22,7 +22,8 @@ a[href*="mode=sendpassword"] { display: none !important; }
 
 <script>
 (function() {
-    var isLocalLogin = {% if AUTH0_LOCAL_LOGIN %}true{% else %}false{% endif %};
+    // Detect local=1 from URL directly since template variables may not be available in template events
+    var isLocalLogin = window.location.search.indexOf('local=1') !== -1;
 
     // Wait for DOM
     if (document.readyState === "loading") {
