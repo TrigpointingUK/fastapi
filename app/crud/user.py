@@ -192,16 +192,19 @@ def authenticate_user_flexible(
 
             # Store the Auth0 mapping if sync succeeded
             if auth0_user:
+                auth0_user_id_str = str(auth0_user.get("user_id"))
                 update_user_auth0_mapping(
                     db=db,
                     user_id=int(user.id),
-                    auth0_user_id=str(auth0_user.get("user_id")),
+                    auth0_user_id=auth0_user_id_str,
                 )
+                # Update the user object to reflect the database change
+                user.auth0_user_id = auth0_user_id_str  # type: ignore
                 logger.info(
                     "Auth0 sync completed and mapping stored",
                     extra={
                         "user_id": user.id,
-                        "auth0_user_id": auth0_user.get("user_id"),
+                        "auth0_user_id": auth0_user_id_str,
                     },
                 )
         except Exception as e:
