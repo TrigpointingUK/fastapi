@@ -32,11 +32,7 @@ def _make_user(
     return user
 
 
-@patch("app.api.v1.endpoints.legacy.update_user_auth0_mapping")
-@patch("app.api.v1.endpoints.legacy.auth0_service")
 def test_login_persists_auth0_user_id(
-    mock_auth0_service,
-    mock_update_mapping,
     client: TestClient,
     db: Session,
     monkeypatch,
@@ -51,10 +47,14 @@ def test_login_persists_auth0_user_id(
     )
     assert user.auth0_user_id is None
 
-    # Mock sync to return user id only
+    # Mock Auth0 sync to return user id
+    from unittest.mock import MagicMock
+
+    mock_auth0_service = MagicMock()
     mock_auth0_service.sync_user_to_auth0.return_value = {
         "user_id": "auth0|abc123",
     }
+    monkeypatch.setattr("app.crud.user.auth0_service", mock_auth0_service)
 
     # Act
     response = client.post(
@@ -64,11 +64,11 @@ def test_login_persists_auth0_user_id(
 
     # Assert
     assert response.status_code == 200
-    mock_update_mapping.assert_called_once_with(
-        db=ANY,
-        user_id=4201,
-        auth0_user_id="auth0|abc123",
-    )
+    # Sync is now handled in authenticate_user_flexible
+    mock_auth0_service.sync_user_to_auth0.assert_called_once()
+    # Verify the user now has an auth0_user_id in the database
+    db.refresh(user)
+    assert user.auth0_user_id == "auth0|abc123"
 
 
 @patch("app.api.deps.update_user_auth0_mapping")

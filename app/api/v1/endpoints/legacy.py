@@ -9,12 +9,8 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import get_db, require_scopes
 from app.api.lifecycle import openapi_lifecycle
-from app.crud.user import (
-    authenticate_user_flexible,
-    update_user_auth0_mapping,
-)
+from app.crud.user import authenticate_user_flexible
 from app.schemas.user import UserResponse
-from app.services.auth0_service import auth0_service
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -51,31 +47,7 @@ def login_for_access_token(
             detail="Incorrect username/email or password",
         )
 
-    # Sync user to Auth0 and store mapping
-    if not user.auth0_user_id:
-        try:
-            auth0_user = auth0_service.sync_user_to_auth0(
-                username=str(user.name),
-                email=str(user.email) if user.email else None,
-                name=str(user.name),  # mirror nickname as name
-                password=form_data.password,
-                user_id=int(user.id),
-            )
-
-            if auth0_user:
-                # Store Auth0 user ID mapping in the database
-                update_user_auth0_mapping(
-                    db=db,
-                    user_id=int(user.id),
-                    auth0_user_id=str(auth0_user.get("user_id")),
-                )
-        except Exception as e:
-            # Log error but don't fail the login
-            from app.core.logging import get_logger
-
-            logger = get_logger(__name__)
-            logger.error(f"Failed to sync user to Auth0: {e}")
-
+    # Auth0 sync is now handled in authenticate_user_flexible()
     return user
 
 
