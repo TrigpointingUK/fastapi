@@ -15,7 +15,7 @@ class subscriber implements EventSubscriberInterface
         // Also log to tmp as fallback
         @file_put_contents('/tmp/auth0_debug.log', date('c')." ".$msg."\n", FILE_APPEND);
     }
-    
+
     /**
      * Get unique username by appending numbers if needed
      */
@@ -24,21 +24,21 @@ class subscriber implements EventSubscriberInterface
         $table_users = defined('USERS_TABLE') ? USERS_TABLE : 'phpbb_users';
         $username = $base;
         $counter = 0;
-        
+
         while (true) {
             $clean = utf8_clean_string($username);
             $sql = "SELECT user_id FROM $table_users WHERE username_clean='" . $db->sql_escape($clean) . "'";
             $res = $db->sql_query($sql);
             $row = $db->sql_fetchrow($res);
             $db->sql_freeresult($res);
-            
+
             if (!$row) {
                 return $username; // Username is available
             }
-            
+
             $counter++;
             $username = $base . $counter;
-            
+
             if ($counter > 100) {
                 // Fallback to random
                 return 'user_' . substr(bin2hex(random_bytes(4)), 0, 8);
@@ -71,55 +71,55 @@ class subscriber implements EventSubscriberInterface
     public function on_oauth_link_before($event)
     {
         $this->flog('[auth0] on_oauth_link_before');
-        
+
         // Check if mapping exists (either already there or just created)
         $service = $event['service'] ?? null;
         if (!$service) {
             $this->flog('[auth0] on_oauth_link_before: no service, cannot proceed');
             return;
         }
-        
+
         $claims = $service->get_user_identity();
         $external = isset($claims['sub']) ? (string)$claims['sub'] : '';
         $provider = method_exists($service, 'get_service_name') ? (string)$service->get_service_name() : 'auth.provider.oauth.service.auth0';
-        
+
         if ($external === '') {
             $this->flog('[auth0] on_oauth_link_before: no sub found');
             return;
         }
-        
+
         // Try to create/link if needed
         $this->ensure_oauth_mapping($event);
-        
+
         // Check if mapping now exists
         $sql = 'SELECT user_id FROM ' . (defined('OAUTH_ACCOUNTS_TABLE') ? OAUTH_ACCOUNTS_TABLE : 'phpbb_oauth_accounts') .
                " WHERE provider='".$this->db->sql_escape($provider)."' AND oauth_provider_id='".$this->db->sql_escape($external)."'";
         $res = $this->db->sql_query($sql);
         $row = $this->db->sql_fetchrow($res);
         $this->db->sql_freeresult($res);
-        
+
         if ($row && (int)$row['user_id'] > 0) {
             // Mapping exists - complete the login manually
             $user_id = (int)$row['user_id'];
             $this->flog('[auth0] on_oauth_link_before: mapping exists for user_id=' . $user_id . ', completing login');
-            
+
             global $phpbb_root_path, $phpEx;
             if (!function_exists('login_box')) {
                 include_once($phpbb_root_path.'includes/functions.'.$phpEx);
             }
-            
+
             // Get the user data
             $sql = 'SELECT * FROM ' . (defined('USERS_TABLE') ? USERS_TABLE : 'phpbb_users') . ' WHERE user_id=' . $user_id;
             $result = $this->db->sql_query($sql);
             $user_row = $this->db->sql_fetchrow($result);
             $this->db->sql_freeresult($result);
-            
+
             if ($user_row) {
                 // Complete the login using phpBB's user session
                 $this->user->session_begin(false);
                 $this->user->session_create($user_id, false, false, true);
                 $this->flog('[auth0] on_oauth_link_before: session created for user_id=' . $user_id);
-                
+
                 // Redirect to index
                 if (!function_exists('redirect')) {
                     include_once($phpbb_root_path.'includes/functions.'.$phpEx);
@@ -178,7 +178,7 @@ class subscriber implements EventSubscriberInterface
             if (!function_exists('phpbb_hash')) {
                 include_once($phpbb_root_path.'includes/functions_user.'.$phpEx);
             }
-            
+
             // Determine base username
             $nickname = isset($claims['nickname']) ? (string)$claims['nickname'] : '';
             $name = isset($claims['name']) ? (string)$claims['name'] : '';
@@ -186,13 +186,13 @@ class subscriber implements EventSubscriberInterface
             if ($baseUsername === '') {
                 $baseUsername = 'user_'.substr(bin2hex(random_bytes(4)), 0, 8);
             }
-            
+
             // Ensure username is unique
             $username = $this->get_unique_username($baseUsername, $this->db);
-            
+
             // Generate random password and hash it properly
             $randomPassword = bin2hex(random_bytes(32));
-            
+
             $userData = [
                 'username' => $username,
                 'user_password' => phpbb_hash($randomPassword),
@@ -203,9 +203,9 @@ class subscriber implements EventSubscriberInterface
                 'user_inactive_reason' => 0,
                 'user_inactive_time' => 0,
             ];
-            
+
             $newId = user_add($userData, false); // false = suppress validation error array
-            
+
             if (is_int($newId) && $newId > 0) {
                 $user_id = $newId;
                 $this->flog('[auth0] created user user_id=' . $user_id . ' username=' . $username);
@@ -272,7 +272,7 @@ class subscriber implements EventSubscriberInterface
         $sql="DELETE FROM phpbb_user_group WHERE group_id=$gid AND user_id=$uid";
         $this->db->sql_query($sql);
     }
-    
+
     /**
      * Force SSO behaviour in templates:
      * - Hide username/password form on login page (unless ?local=1 is present)
@@ -282,31 +282,31 @@ class subscriber implements EventSubscriberInterface
     public function on_page_header($event)
     {
         global $template, $phpbb_root_path, $phpEx;
-        
+
         // Check if we're on a login-related page
         $is_login_page = (
             isset($_GET['mode']) && $_GET['mode'] === 'login' &&
             basename($_SERVER['PHP_SELF']) === 'ucp.php'
         );
-        
+
         // Check if local=1 is present (break-glass admin login)
         $local_login = isset($_GET['local']) && $_GET['local'] === '1';
-        
+
         if ($is_login_page && !$local_login && !isset($_GET['login'])) {
             // Auto-redirect to Auth0 OAuth login
             $this->flog('[auth0] Auto-redirecting login page to Auth0 OAuth');
-            
+
             // Build OAuth login URL preserving redirect parameter
             $redirect = isset($_GET['redirect']) ? '&redirect=' . urlencode($_GET['redirect']) : '';
-            $oauth_url = append_sid($phpbb_root_path . 'ucp.' . $phpEx, 
+            $oauth_url = append_sid($phpbb_root_path . 'ucp.' . $phpEx,
                 'mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0' . $redirect);
-            
+
             if (!function_exists('redirect')) {
                 include_once($phpbb_root_path . 'includes/functions.' . $phpEx);
             }
             redirect($oauth_url);
         }
-        
+
         // For all pages: inject CSS to hide local login/register links and forms
         // This provides defense-in-depth even if Apache redirects don't catch everything
         $inject_code = '<style>
@@ -325,14 +325,14 @@ a[href*="mode=sendpassword"] { display: none !important; }
 /* Show Auth0 login prominently on login page */
 body.login-page .oauth-login { display: block !important; }
 </style>';
-        
+
         // Add body class and rewrite login links with JavaScript
         if ($is_login_page && $local_login) {
             $inject_code .= '<script>document.body.classList.add("local-login");</script>';
         } else if ($is_login_page) {
             $inject_code .= '<script>document.body.classList.add("login-page");</script>';
         }
-        
+
         // Inject JavaScript to rewrite all login links to use Auth0
         $inject_code .= '<script>
 (function() {
@@ -342,7 +342,7 @@ body.login-page .oauth-login { display: block !important; }
     } else {
         rewriteLoginLinks();
     }
-    
+
     function rewriteLoginLinks() {
         // Find all login links and rewrite them to use Auth0
         document.querySelectorAll(\'a[href*="mode=login"]\').forEach(function(link) {
@@ -351,25 +351,30 @@ body.login-page .oauth-login { display: block !important; }
             if (href.indexOf("login=external") !== -1 || href.indexOf("local=1") !== -1) {
                 return;
             }
-            
+
             // Extract redirect parameter if present
             var redirectMatch = href.match(/[?&]redirect=([^&]*)/);
             var redirect = redirectMatch ? decodeURIComponent(redirectMatch[1]) : "";
-            
+
             // Rewrite to Auth0 OAuth login
             var newHref = "ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0";
             if (redirect) {
                 newHref += "&redirect=" + encodeURIComponent(redirect);
             }
-            
+
             link.setAttribute("href", newHref);
         });
     }
 })();
 </script>';
-        
+
         // Inject the CSS and JavaScript into the page header
-        $template->assign_var('STYLESHEETS', 
-            ($template->retrieve_var('STYLESHEETS') ?? '') . $inject_code);
+        // Use phpBB's proper method to add to page header
+        if (method_exists($template, 'append_var')) {
+            $template->append_var('DEFINITION', $inject_code);
+        } else {
+            // Fallback: output directly
+            echo $inject_code;
+        }
     }
 }
