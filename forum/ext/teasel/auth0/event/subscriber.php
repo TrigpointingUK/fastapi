@@ -307,59 +307,91 @@ class subscriber implements EventSubscriberInterface
             redirect($oauth_url);
         }
 
-        // For all pages: inject CSS to hide local login/register links and forms
-        // This provides defense-in-depth even if Apache redirects don't catch everything
-        $inject_code = '<style>
-/* Hide username/password login form unless ?local=1 is present */
-body.login-page:not(.local-login) #login_box,
-body.login-page:not(.local-login) .login-form,
-body.login-page:not(.local-login) form[method="post"]:has(input[name="username"]),
-body.login-page:not(.local-login) fieldset.fields1 { display: none !important; }
-
-/* Hide "Register" links throughout the site */
-a[href*="mode=register"] { display: none !important; }
-
-/* Hide "Forgot password" links */
-a[href*="mode=sendpassword"] { display: none !important; }
-
-/* Show Auth0 login prominently on login page */
-body.login-page .oauth-login { display: block !important; }
-</style>';
-
-        // Add body class and rewrite login links with JavaScript
+        // For break-glass login, add hidden input to preserve local=1 parameter
         if ($is_login_page && $local_login) {
-            $inject_code .= '<script>document.body.classList.add("local-login");</script>';
-        } else if ($is_login_page) {
-            $inject_code .= '<script>document.body.classList.add("login-page");</script>';
+            $template->assign_var('AUTH0_LOCAL_LOGIN', true);
         }
 
-        // Inject JavaScript to rewrite all login links to use Auth0
-        $inject_code .= '<script>
+        // Hide all username/password login forms site-wide (except when local=1 is present)
+        $hide_local_login = !$local_login;
+        $template->assign_vars([
+            'S_HIDE_LOCAL_LOGIN' => $hide_local_login,
+            'U_AUTH0_LOGIN' => append_sid($phpbb_root_path . 'ucp.' . $phpEx,
+                'mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0'),
+        ]);
+
+        // Inject CSS and JavaScript to hide forms and rewrite links
+        $inject_code = '<style>
+/* Hide username/password login forms everywhere unless we\'re in break-glass mode */';
+
+        if ($hide_local_login) {
+            $inject_code .= '
+/* Hide the quick login form on homepage */
+.headerspace form[action*="mode=login"],
+form.quick-login,
+.quick-login,
+fieldset.quick-login { display: none !important; }
+
+/* Hide username/password fields on login page */
+#login_box,
+.login-form fieldset.fields1 { display: none !important; }
+
+/* Hide login panel on index */
+.panel.login { display: none !important; }';
+        }
+
+        $inject_code .= '
+
+/* Always hide register and password reset links */
+a[href*="mode=register"],
+a[href*="mode=sendpassword"] { display: none !important; }
+</style>
+
+<script>
 (function() {
-    // Wait for DOM to be ready
+    var isLocalLogin = ' . ($local_login ? 'true' : 'false') . ';
+
+    // Wait for DOM
     if (document.readyState === "loading") {
-        document.addEventListener("DOMContentLoaded", rewriteLoginLinks);
+        document.addEventListener("DOMContentLoaded", init);
     } else {
+        init();
+    }
+
+    function init() {
         rewriteLoginLinks();
+        if (isLocalLogin) {
+            preserveLocalParam();
+        }
+    }
+
+    function preserveLocalParam() {
+        // Add local=1 to all login form actions
+        document.querySelectorAll(\'form[action*="mode=login"]\').forEach(function(form) {
+            var action = form.getAttribute("action") || form.action;
+            if (action && action.indexOf("local=1") === -1) {
+                var separator = action.indexOf("?") !== -1 ? "&" : "?";
+                form.action = action + separator + "local=1";
+            }
+        });
     }
 
     function rewriteLoginLinks() {
-        // Find all login links and rewrite them to use Auth0
+        if (isLocalLogin) return; // Don\'t rewrite in local mode
+
+        // Find all login links and rewrite to Auth0
         document.querySelectorAll(\'a[href*="mode=login"]\').forEach(function(link) {
             var href = link.getAttribute("href");
-            // Skip if already pointing to external OAuth or has local=1
-            if (href.indexOf("login=external") !== -1 || href.indexOf("local=1") !== -1) {
+            if (!href || href.indexOf("login=external") !== -1 || href.indexOf("local=1") !== -1) {
                 return;
             }
 
-            // Extract redirect parameter if present
             var redirectMatch = href.match(/[?&]redirect=([^&]*)/);
-            var redirect = redirectMatch ? decodeURIComponent(redirectMatch[1]) : "";
+            var redirect = redirectMatch ? redirectMatch[1] : "";
 
-            // Rewrite to Auth0 OAuth login
             var newHref = "ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0";
             if (redirect) {
-                newHref += "&redirect=" + encodeURIComponent(redirect);
+                newHref += "&redirect=" + redirect;
             }
 
             link.setAttribute("href", newHref);
@@ -368,13 +400,7 @@ body.login-page .oauth-login { display: block !important; }
 })();
 </script>';
 
-        // Inject the CSS and JavaScript into the page header
-        // Use phpBB's proper method to add to page header
-        if (method_exists($template, 'append_var')) {
-            $template->append_var('DEFINITION', $inject_code);
-        } else {
-            // Fallback: output directly
-            echo $inject_code;
-        }
+        // Output the injected code directly (most reliable method)
+        echo $inject_code;
     }
 }
