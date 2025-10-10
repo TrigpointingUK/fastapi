@@ -169,35 +169,58 @@ def authenticate_user_flexible(
         },
     )
 
-    # Sync user to Auth0 after successful authentication
-    try:
-        logger.info(
-            "Starting Auth0 sync for user",
+    # Sync user to Auth0 after successful authentication (only if not already synced)
+    if not user.auth0_user_id:
+        try:
+            logger.info(
+                "Starting Auth0 sync for user (first time)",
+                extra={
+                    "user_id": user.id,
+                    "username": user.name,
+                    "email": user.email,
+                },
+            )
+            auth0_user = auth0_service.sync_user_to_auth0(
+                username=str(user.name),
+                email=str(user.email) if user.email else None,
+                name=str(user.name),
+                password=password,  # Use the plaintext password from the login request
+                user_id=int(user.id),
+                firstname=str(user.firstname) if user.firstname else None,
+                surname=str(user.surname) if user.surname else None,
+            )
+
+            # Store the Auth0 mapping if sync succeeded
+            if auth0_user:
+                update_user_auth0_mapping(
+                    db=db,
+                    user_id=int(user.id),
+                    auth0_user_id=str(auth0_user.get("user_id")),
+                )
+                logger.info(
+                    "Auth0 sync completed and mapping stored",
+                    extra={
+                        "user_id": user.id,
+                        "auth0_user_id": auth0_user.get("user_id"),
+                    },
+                )
+        except Exception as e:
+            # Log the error but don't fail authentication
+            logger.error(
+                "Auth0 sync failed during authentication",
+                extra={
+                    "user_id": user.id,
+                    "username": user.name,
+                    "email": user.email,
+                    "error": str(e),
+                },
+            )
+    else:
+        logger.debug(
+            "Skipping Auth0 sync - user already has auth0_user_id",
             extra={
                 "user_id": user.id,
-                "username": user.name,
-                "email": user.email,
-                "auth0_enabled": True,  # Auth0 is now always enabled
-            },
-        )
-        auth0_service.sync_user_to_auth0(
-            username=str(user.name),
-            email=str(user.email) if user.email else None,
-            name=str(user.name),
-            password=password,  # Use the plaintext password from the login request
-            user_id=int(user.id),
-            firstname=str(user.firstname) if user.firstname else None,
-            surname=str(user.surname) if user.surname else None,
-        )
-    except Exception as e:
-        # Log the error but don't fail authentication
-        logger.error(
-            "Auth0 sync failed during authentication",
-            extra={
-                "user_id": user.id,
-                "username": user.name,
-                "email": user.email,
-                "error": str(e),
+                "auth0_user_id": user.auth0_user_id,
             },
         )
 

@@ -25,11 +25,16 @@ class TestAuth0IntegrationInCRUD:
 
         self.mock_db = Mock(spec=Session)
 
+    @patch("app.crud.user.update_user_auth0_mapping")
     @patch("app.crud.user.auth0_service")
     @patch("app.crud.user.verify_password")
     @patch("app.crud.user.get_user_by_name")
     def test_authenticate_user_flexible_with_auth0_sync_success(
-        self, mock_get_user, mock_verify_password, mock_auth0_service
+        self,
+        mock_get_user,
+        mock_verify_password,
+        mock_auth0_service,
+        mock_update_mapping,
     ):
         """Test successful authentication with Auth0 sync."""
         # Setup mocks
@@ -52,6 +57,11 @@ class TestAuth0IntegrationInCRUD:
             user_id=1,
             firstname=None,
             surname=None,
+        )
+        mock_update_mapping.assert_called_once_with(
+            db=self.mock_db,
+            user_id=1,
+            auth0_user_id="auth0|123",
         )
 
     @patch("app.crud.user.auth0_service")
@@ -81,11 +91,16 @@ class TestAuth0IntegrationInCRUD:
             surname=None,
         )
 
+    @patch("app.crud.user.update_user_auth0_mapping")
     @patch("app.crud.user.auth0_service")
     @patch("app.crud.user.verify_password")
     @patch("app.crud.user.get_user_by_email")
     def test_authenticate_user_flexible_email_with_auth0_sync(
-        self, mock_get_user, mock_verify_password, mock_auth0_service
+        self,
+        mock_get_user,
+        mock_verify_password,
+        mock_auth0_service,
+        mock_update_mapping,
     ):
         """Test authentication with email identifier and Auth0 sync."""
         # Setup mocks
@@ -109,6 +124,11 @@ class TestAuth0IntegrationInCRUD:
             user_id=1,
             firstname=None,
             surname=None,
+        )
+        mock_update_mapping.assert_called_once_with(
+            db=self.mock_db,
+            user_id=1,
+            auth0_user_id="auth0|123",
         )
 
     @patch("app.crud.user.auth0_service")
@@ -152,11 +172,16 @@ class TestAuth0IntegrationInCRUD:
         assert result is None
         mock_auth0_service.sync_user_to_auth0.assert_not_called()
 
+    @patch("app.crud.user.update_user_auth0_mapping")
     @patch("app.crud.user.auth0_service")
     @patch("app.crud.user.verify_password")
     @patch("app.crud.user.get_user_by_name")
     def test_authenticate_user_flexible_user_without_email(
-        self, mock_get_user, mock_verify_password, mock_auth0_service
+        self,
+        mock_get_user,
+        mock_verify_password,
+        mock_auth0_service,
+        mock_update_mapping,
     ):
         """Test authentication with user that has no email."""
         # Setup mocks
@@ -184,6 +209,11 @@ class TestAuth0IntegrationInCRUD:
             user_id=1,
             firstname=None,
             surname=None,
+        )
+        mock_update_mapping.assert_called_once_with(
+            db=self.mock_db,
+            user_id=1,
+            auth0_user_id="auth0|123",
         )
 
     @patch("app.crud.user.auth0_service")
@@ -239,3 +269,30 @@ class TestAuth0IntegrationInCRUD:
             firstname=None,
             surname=None,
         )
+
+    @patch("app.crud.user.auth0_service")
+    @patch("app.crud.user.verify_password")
+    @patch("app.crud.user.get_user_by_name")
+    def test_authenticate_user_flexible_user_already_has_auth0_id(
+        self, mock_get_user, mock_verify_password, mock_auth0_service
+    ):
+        """Test authentication with user that already has auth0_user_id (should skip sync)."""
+        # Setup mocks - user already has Auth0 ID
+        user_with_auth0 = User(
+            id=1,
+            name="testuser",
+            email="test@example.com",
+            cryptpw="$1$salt$hash",
+            public_ind="Y",
+        )
+        user_with_auth0.auth0_user_id = "auth0|existing123"
+        mock_get_user.return_value = user_with_auth0
+        mock_verify_password.return_value = True
+
+        # Call function
+        result = authenticate_user_flexible(self.mock_db, "testuser", "password")
+
+        # Assertions
+        assert result == user_with_auth0
+        # Auth0 sync should NOT be called for users who already have an Auth0 ID
+        mock_auth0_service.sync_user_to_auth0.assert_not_called()
