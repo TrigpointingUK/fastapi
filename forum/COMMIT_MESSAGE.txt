@@ -1,0 +1,37 @@
+feat(forum): enforce Auth0 SSO with break-glass admin access
+
+Implement comprehensive Auth0 SSO enforcement for phpBB forum to ensure
+users always log in via Auth0, while maintaining emergency admin access.
+
+Changes:
+- Enhanced Apache redirects to catch all login URLs and redirect to Auth0
+- Added PHP event listener to auto-redirect login page visits
+- Inject CSS to hide username/password forms and registration links
+- Inject JavaScript to rewrite all login links to Auth0 OAuth
+- Implement break-glass admin access via ?local=1 query parameter
+- Block registration and password reset at Apache level
+- Add comprehensive documentation and deployment guide
+
+Key features:
+- Multi-layered defense (Apache, PHP, JavaScript, CSS)
+- Preserves redirect parameters for proper post-login navigation
+- Emergency admin access: ucp.php?mode=login&local=1
+- Auto-creation of phpBB accounts on first Auth0 login
+- Email-based linking of existing phpBB accounts
+
+Files modified:
+- forum/apache/phpbb-auth0.conf
+- forum/ext/teasel/auth0/event/subscriber.php
+
+Files created:
+- forum/ext/teasel/auth0/README.md
+- forum/AUTH0_SSO_DEPLOYMENT.md
+- forum/CHANGES_SUMMARY.md
+
+Deployment:
+1. Rebuild forum container: docker-compose build forum && docker-compose up -d forum
+2. Clear phpBB cache
+3. Test using checklist in AUTH0_SSO_DEPLOYMENT.md
+
+Break-glass URL: https://forum.trigpointing.uk/ucp.php?mode=login&local=1
+

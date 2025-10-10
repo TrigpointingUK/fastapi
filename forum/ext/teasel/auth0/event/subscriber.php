@@ -54,6 +54,8 @@ class subscriber implements EventSubscriberInterface
             'core.auth_oauth_link_before' => 'on_oauth_link_before',
             'core.auth_oauth_login_after' => 'on_oauth_login_after',
             'core.auth_oauth_link_after' => 'on_oauth_link_after',
+            // Force SSO in templates and hide username/password forms
+            'core.page_header' => 'on_page_header',
         ];
     }
     public function on_oauth_remote_data_after($event)
@@ -269,5 +271,105 @@ class subscriber implements EventSubscriberInterface
     protected function remove_member($gid,$uid){
         $sql="DELETE FROM phpbb_user_group WHERE group_id=$gid AND user_id=$uid";
         $this->db->sql_query($sql);
+    }
+    
+    /**
+     * Force SSO behaviour in templates:
+     * - Hide username/password form on login page (unless ?local=1 is present)
+     * - Auto-redirect to Auth0 login on login page
+     * - Inject CSS to hide local login elements
+     */
+    public function on_page_header($event)
+    {
+        global $template, $phpbb_root_path, $phpEx;
+        
+        // Check if we're on a login-related page
+        $is_login_page = (
+            isset($_GET['mode']) && $_GET['mode'] === 'login' &&
+            basename($_SERVER['PHP_SELF']) === 'ucp.php'
+        );
+        
+        // Check if local=1 is present (break-glass admin login)
+        $local_login = isset($_GET['local']) && $_GET['local'] === '1';
+        
+        if ($is_login_page && !$local_login && !isset($_GET['login'])) {
+            // Auto-redirect to Auth0 OAuth login
+            $this->flog('[auth0] Auto-redirecting login page to Auth0 OAuth');
+            
+            // Build OAuth login URL preserving redirect parameter
+            $redirect = isset($_GET['redirect']) ? '&redirect=' . urlencode($_GET['redirect']) : '';
+            $oauth_url = append_sid($phpbb_root_path . 'ucp.' . $phpEx, 
+                'mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0' . $redirect);
+            
+            if (!function_exists('redirect')) {
+                include_once($phpbb_root_path . 'includes/functions.' . $phpEx);
+            }
+            redirect($oauth_url);
+        }
+        
+        // For all pages: inject CSS to hide local login/register links and forms
+        // This provides defense-in-depth even if Apache redirects don't catch everything
+        $inject_code = '<style>
+/* Hide username/password login form unless ?local=1 is present */
+body.login-page:not(.local-login) #login_box,
+body.login-page:not(.local-login) .login-form,
+body.login-page:not(.local-login) form[method="post"]:has(input[name="username"]),
+body.login-page:not(.local-login) fieldset.fields1 { display: none !important; }
+
+/* Hide "Register" links throughout the site */
+a[href*="mode=register"] { display: none !important; }
+
+/* Hide "Forgot password" links */
+a[href*="mode=sendpassword"] { display: none !important; }
+
+/* Show Auth0 login prominently on login page */
+body.login-page .oauth-login { display: block !important; }
+</style>';
+        
+        // Add body class and rewrite login links with JavaScript
+        if ($is_login_page && $local_login) {
+            $inject_code .= '<script>document.body.classList.add("local-login");</script>';
+        } else if ($is_login_page) {
+            $inject_code .= '<script>document.body.classList.add("login-page");</script>';
+        }
+        
+        // Inject JavaScript to rewrite all login links to use Auth0
+        $inject_code .= '<script>
+(function() {
+    // Wait for DOM to be ready
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", rewriteLoginLinks);
+    } else {
+        rewriteLoginLinks();
+    }
+    
+    function rewriteLoginLinks() {
+        // Find all login links and rewrite them to use Auth0
+        document.querySelectorAll(\'a[href*="mode=login"]\').forEach(function(link) {
+            var href = link.getAttribute("href");
+            // Skip if already pointing to external OAuth or has local=1
+            if (href.indexOf("login=external") !== -1 || href.indexOf("local=1") !== -1) {
+                return;
+            }
+            
+            // Extract redirect parameter if present
+            var redirectMatch = href.match(/[?&]redirect=([^&]*)/);
+            var redirect = redirectMatch ? decodeURIComponent(redirectMatch[1]) : "";
+            
+            // Rewrite to Auth0 OAuth login
+            var newHref = "ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0";
+            if (redirect) {
+                newHref += "&redirect=" + encodeURIComponent(redirect);
+            }
+            
+            link.setAttribute("href", newHref);
+        });
+    }
+})();
+</script>';
+        
+        // Inject the CSS and JavaScript into the page header
+        $template->assign_var('STYLESHEETS', 
+            ($template->retrieve_var('STYLESHEETS') ?? '') . $inject_code);
     }
 }
