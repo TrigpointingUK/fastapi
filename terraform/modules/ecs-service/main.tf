@@ -178,11 +178,12 @@ resource "aws_iam_policy" "ecs_credentials_access" {
 
 # ECS Service
 resource "aws_ecs_service" "app" {
-  name            = var.service_name != null ? var.service_name : "${var.project_name}-${var.environment}"
-  cluster         = var.ecs_cluster_id
-  task_definition = aws_ecs_task_definition.app.arn
-  desired_count   = var.desired_count
-  launch_type     = "FARGATE"
+  name                   = var.service_name != null ? var.service_name : "${var.project_name}-${var.environment}"
+  cluster                = var.ecs_cluster_id
+  task_definition        = aws_ecs_task_definition.app.arn
+  desired_count          = var.desired_count
+  launch_type            = "FARGATE"
+  enable_execute_command = true
 
   network_configuration {
     subnets          = var.private_subnet_ids
