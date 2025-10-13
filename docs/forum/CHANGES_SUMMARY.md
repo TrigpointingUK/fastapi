@@ -199,4 +199,3 @@ If needed, you can quickly disable by:
 ---
 
 **Ready to deploy!** The changes are complete and tested. Follow the deployment steps above to activate Auth0 SSO enforcement on your forum.
-

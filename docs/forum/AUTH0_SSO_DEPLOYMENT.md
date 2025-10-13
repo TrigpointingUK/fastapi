@@ -183,7 +183,7 @@ Keep admin phpBB credentials secure and accessible for emergency use if Auth0 be
 Deployment is successful when:
 
 ✅ Users are automatically redirected to Auth0 for login
-✅ Username/password forms are hidden from regular users  
+✅ Username/password forms are hidden from regular users
 ✅ Admin break-glass access works with `?local=1`
 ✅ New Auth0 users can register seamlessly
 ✅ Existing users can log in via Auth0
@@ -194,7 +194,7 @@ Deployment is successful when:
 
 ### Issue: Infinite redirect loop
 
-**Cause**: Apache rewrite rules not checking for `login=external`  
+**Cause**: Apache rewrite rules not checking for `login=external`
 **Fix**: Verify line 9 of `phpbb-auth0.conf` contains:
 ```apache
 RewriteCond %{QUERY_STRING} !(^|&)login=external(&|$) [NC]
@@ -202,15 +202,15 @@ RewriteCond %{QUERY_STRING} !(^|&)login=external(&|$) [NC]
 
 ### Issue: Username/password form still visible
 
-**Cause**: PHP extension not injecting CSS/JS  
-**Fix**: 
+**Cause**: PHP extension not injecting CSS/JS
+**Fix**:
 1. Clear phpBB cache
 2. Check extension is enabled in Admin Panel
 3. Verify `on_page_header` event is firing (check logs)
 
 ### Issue: Login links don't point to Auth0
 
-**Cause**: JavaScript not running or incorrect selector  
+**Cause**: JavaScript not running or incorrect selector
 **Fix**:
 1. Check browser console for JavaScript errors
 2. Verify `rewriteLoginLinks` function is executing
@@ -222,4 +222,3 @@ For issues or questions about this deployment:
 - Check logs: `docker-compose logs forum`
 - Review documentation: `forum/ext/teasel/auth0/README.md`
 - Auth0 debug log: `/tmp/auth0_debug.log` in container
-
