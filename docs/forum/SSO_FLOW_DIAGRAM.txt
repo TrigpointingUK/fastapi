@@ -9,7 +9,7 @@
    User clicks "Login" on forum
           │
           ├─ [Layer 1: JavaScript]
-          │  └─→ Link already rewritten to: 
+          │  └─→ Link already rewritten to:
           │      ucp.php?mode=login&login=external&oauth_service=auth0
           │
           ├─ [Layer 2: Apache Redirect] (if JS failed)
@@ -23,17 +23,17 @@
           └─ [Layer 4: CSS Hide] (if all redirects failed)
              └─→ Username/password form hidden by CSS
                  Only OAuth button visible
-          
+
           ↓
-          
+
    User redirected to Auth0
           │
           ├─→ User logs in with Google/Facebook/Email/etc.
           │
           └─→ Auth0 redirects back to forum with OAuth token
-          
+
           ↓
-          
+
    phpBB OAuth handler processes token
           │
           ├─→ Checks if oauth_accounts mapping exists
@@ -43,7 +43,7 @@
           │            └─ NO  → Create new user, log in
           │
           └─→ User logged in and redirected to destination
-          
+
 
 ┌─────────────────────────────────────────────────────────────────────────────┐
 │ Break-Glass Admin Login Flow (Emergency Access)                             │
@@ -63,15 +63,15 @@
           └─ [Layer 4: CSS]
              └─→ Body class .local-login added
                  Username/password form shown
-          
+
           ↓
-          
+
    Admin sees traditional login form
           │
           └─→ Enters phpBB username/password
-          
+
           ↓
-          
+
    phpBB processes login normally
           │
           └─→ Admin logged in with phpBB credentials
@@ -161,5 +161,3 @@ Apache Config:    forum/apache/phpbb-auth0.conf
 PHP Extension:    forum/ext/teasel/auth0/event/subscriber.php
 OAuth Service:    auth.provider.oauth.service.auth0
 Break-Glass URL:  ?local=1
-
-

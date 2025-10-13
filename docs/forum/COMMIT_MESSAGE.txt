@@ -34,4 +34,3 @@ Deployment:
 3. Test using checklist in AUTH0_SSO_DEPLOYMENT.md
 
 Break-glass URL: https://forum.trigpointing.uk/ucp.php?mode=login&local=1
-
