@@ -16,6 +16,14 @@ resource "aws_security_group" "elasticache" {
     security_groups = [aws_security_group.mediawiki_ecs.id]
   }
 
+  ingress {
+    description     = "Valkey from bastion (for maintenance)"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
+
   egress {
     from_port   = 0
     to_port     = 0

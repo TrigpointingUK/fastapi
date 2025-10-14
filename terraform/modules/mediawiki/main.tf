@@ -133,11 +133,13 @@ resource "aws_ecs_task_definition" "mediawiki" {
 
 # ECS Service for MediaWiki
 resource "aws_ecs_service" "mediawiki" {
-  name            = "${var.project_name}-mediawiki-${var.environment}"
-  cluster         = var.ecs_cluster_id
-  task_definition = aws_ecs_task_definition.mediawiki.arn
-  desired_count   = var.desired_count
-  launch_type     = "FARGATE"
+  name                   = "${var.project_name}-mediawiki-${var.environment}"
+  cluster                = var.ecs_cluster_id
+  task_definition        = aws_ecs_task_definition.mediawiki.arn
+  desired_count          = var.desired_count
+  launch_type            = "FARGATE"
+  enable_execute_command = true
+
 
   network_configuration {
     subnets          = var.private_subnet_ids
