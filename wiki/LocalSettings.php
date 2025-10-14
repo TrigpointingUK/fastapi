@@ -49,11 +49,6 @@ if ($redisHost !== '') {
     $wgSessionCacheType = 'db';
 }
 
-
-$wgMainCacheType    = 'none';
-$wgParserCacheType  = 'none';
-
-
 # -- Uploads on S3 (AWS extension) --
 $wgEnableUploads = true;
 wfLoadExtension( 'AWS' );
