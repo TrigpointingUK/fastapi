@@ -124,7 +124,7 @@ $wgPluggableAuth_Config = [[
     'preferred_username' => 'nickname',
     'redirectURI'        => $redirectURI,
   ],
-  'buttonLabelMessage' => 'auth0-login'
+  'buttonLabelMessage' => 'auth0-login',
   'groupsyncs' => [
     [
       'type' => 'mapped',
