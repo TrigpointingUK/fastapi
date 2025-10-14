@@ -86,6 +86,15 @@ resource "aws_ecs_task_definition" "mediawiki" {
         {
           name      = "OIDC_REDIRECT_URI"
           valueFrom = "${var.mediawiki_app_secrets_arn}:OIDC_REDIRECT_URI::"
+        },
+        # SMTP credentials for email sending
+        {
+          name      = "SMTP_USERNAME"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:SMTP_USERNAME::"
+        },
+        {
+          name      = "SMTP_PASSWORD"
+          valueFrom = "${var.mediawiki_app_secrets_arn}:SMTP_PASSWORD::"
         }
       ]
       environment = [
