@@ -218,3 +218,29 @@ output "elasticache_valkey_port" {
   description = "ElastiCache Valkey serverless port"
   value       = aws_elasticache_serverless_cache.valkey.endpoint[0].port
 }
+
+# SES SMTP Outputs for MediaWiki
+output "mediawiki_smtp_username" {
+  description = "SMTP username for MediaWiki (AWS Access Key ID)"
+  value       = module.smtp_mediawiki.smtp_username
+  sensitive   = true
+}
+
+output "mediawiki_smtp_password" {
+  description = "SMTP password for MediaWiki"
+  value       = module.smtp_mediawiki.smtp_password
+  sensitive   = true
+}
+
+# SES SMTP Outputs for phpBB
+output "phpbb_smtp_username" {
+  description = "SMTP username for phpBB (AWS Access Key ID)"
+  value       = module.smtp_phpbb.smtp_username
+  sensitive   = true
+}
+
+output "phpbb_smtp_password" {
+  description = "SMTP password for phpBB"
+  value       = module.smtp_phpbb.smtp_password
+  sensitive   = true
+}

@@ -32,6 +32,8 @@ resource "aws_secretsmanager_secret_version" "mediawiki_app_secrets" {
     OIDC_CLIENT_ID        = "YOUR-AUTH0-CLIENT-ID"
     OIDC_CLIENT_SECRET    = "YOUR-AUTH0-CLIENT-SECRET"
     OIDC_REDIRECT_URI     = "https://wiki.trigpointing.uk/wiki/Special:PluggableAuthLogin"
+    SMTP_USERNAME         = "POPULATE-FROM-TERRAFORM-OUTPUT-mediawiki_smtp_username"
+    SMTP_PASSWORD         = "POPULATE-FROM-TERRAFORM-OUTPUT-mediawiki_smtp_password"
   })
 
   lifecycle {

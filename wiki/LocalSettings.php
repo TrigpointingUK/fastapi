@@ -8,7 +8,7 @@ $wgUsePathInfo   = true;      // (usually true by default)
 $wgLogo          = "https://trigpointing.uk/pics/tuk_logo.gif";
 $wgLanguageCode  = "en-GB";
 $wgLocaltimezone = "Europe/London";
-$wgForceHTTPS    = true; 
+$wgForceHTTPS    = true;
 
 # Debug settings (remove after fixing)
 // $wgDebugToolbar = true;
@@ -81,10 +81,25 @@ $wgUploadPath               = ""; // Handled by AWS extension
 $wgUploadDirectory          = ""; // Handled by AWS extension
 
 
-# -- Email --
+# -- Email with SES SMTP --
 $wgEnableEmail      = true;
 $wgEnableUserEmail  = true;
 $wgEmergencyContact = "admin@trigpointing.uk";
+$wgPasswordSender   = "noreply@trigpointing.uk";
+
+$smtpUsername = getenv('SMTP_USERNAME');
+$smtpPassword = getenv('SMTP_PASSWORD');
+
+if ($smtpUsername && $smtpPassword) {
+    $wgSMTP = [
+        'host'     => 'email-smtp.eu-west-1.amazonaws.com',
+        'IDHost'   => 'wiki.trigpointing.uk',
+        'port'     => 587,
+        'auth'     => true,
+        'username' => $smtpUsername,
+        'password' => $smtpPassword,
+    ];
+}
 
 
 # -- Auth0 via PluggableAuth + OpenID Connect --
@@ -172,5 +187,3 @@ $wgNamespacesToBeSearchedDefault[NS_ARCHIVE] = true;
 # Enable subpages in the main and archive namespace
 $wgNamespacesWithSubpages[NS_MAIN] = true;
 $wgNamespacesWithSubpages[NS_ARCHIVE] = true;
-
-
