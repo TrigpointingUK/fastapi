@@ -1,6 +1,6 @@
 <?php
 # -- Basics --
-$wgSitename      = getenv('MW_SITENAME') ?: 'TrigpointingUK';
+$wgSitename      = getenv('MW_SITENAME') ?: 'TrigpointingUK Wiki';
 $wgServer        = getenv('MW_SERVER')   ?: 'https://wiki.trigpointing.uk';
 $wgScriptPath    = "";  // adjust if you deploy under /w
 $wgArticlePath   = '/$1';     // emit /PageTitle links instead of /wiki/PageTitle
