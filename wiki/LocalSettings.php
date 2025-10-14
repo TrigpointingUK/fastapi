@@ -95,6 +95,11 @@ $wgShowExceptionDetails = true;
 # -- Extensions --
 wfLoadExtension( 'Cite' );
 
+# Debug settings (remove after fixing)
+$wgDebugToolbar = true;
+$wgShowExceptionDetails = true;
+$wgShowDBErrorBacktrace = true;
+
 wfLoadSkin( 'MinervaNeue' );
 wfLoadSkin( 'MonoBook' );
 wfLoadSkin( 'Timeless' );
