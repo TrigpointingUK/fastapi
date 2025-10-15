@@ -107,6 +107,7 @@ $clientID      = getenv('OIDC_CLIENT_ID') ?: '';
 $clientSecret  = getenv('OIDC_CLIENT_SECRET') ?: '';
 $redirectURI   = getenv('OIDC_REDIRECT_URI') ?: ($wgServer . '/wiki/Special:PluggableAuthLogin');
 $wgOpenIDConnect_SingleLogout = true;
+$wgPluggableAuth_ButtonLabelLogout = 'Log out';
 
 $wgPluggableAuth_Config = [[
   'plugin' => 'OpenIDConnect',
