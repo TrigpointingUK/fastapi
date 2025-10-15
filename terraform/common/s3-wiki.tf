@@ -97,28 +97,29 @@ resource "aws_s3_bucket_lifecycle_configuration" "wiki" {
 }
 
 # IAM policy for MediaWiki ECS task to access S3 bucket
-resource "aws_iam_role_policy" "mediawiki_s3_access" {
-  name = "${var.project_name}-mediawiki-s3-access"
-  role = aws_iam_role.ecs_task_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:PutObject",
-          "s3:GetObject",
-          "s3:DeleteObject",
-          "s3:ListBucket",
-          "s3:GetObjectVersion",
-          "s3:DeleteObjectVersion"
-        ]
-        Resource = [
-          aws_s3_bucket.wiki.arn,
-          "${aws_s3_bucket.wiki.arn}/*"
-        ]
-      }
-    ]
-  })
-}
+# Commented out - MediaWiki now uses EFS for uploads instead of S3
+# resource "aws_iam_role_policy" "mediawiki_s3_access" {
+#   name = "${var.project_name}-mediawiki-s3-access"
+#   role = aws_iam_role.ecs_task_role.id
+#
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect = "Allow"
+#         Action = [
+#           "s3:PutObject",
+#           "s3:GetObject",
+#           "s3:DeleteObject",
+#           "s3:ListBucket",
+#           "s3:GetObjectVersion",
+#           "s3:DeleteObjectVersion"
+#         ]
+#         Resource = [
+#           aws_s3_bucket.wiki.arn,
+#           "${aws_s3_bucket.wiki.arn}/*"
+#         ]
+#       }
+#     ]
+#   })
+# }

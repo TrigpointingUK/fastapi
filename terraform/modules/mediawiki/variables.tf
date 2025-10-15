@@ -128,3 +128,18 @@ variable "cache_port" {
   type        = number
   default     = 6379
 }
+
+variable "efs_file_system_id" {
+  description = "ID of the EFS file system for MediaWiki uploads"
+  type        = string
+}
+
+variable "efs_access_point_id" {
+  description = "ID of the EFS access point for MediaWiki"
+  type        = string
+}
+
+variable "efs_access_point_arn" {
+  description = "ARN of the EFS access point for MediaWiki"
+  type        = string
+}
