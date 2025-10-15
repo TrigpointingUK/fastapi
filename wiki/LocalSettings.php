@@ -108,6 +108,10 @@ $clientSecret  = getenv('OIDC_CLIENT_SECRET') ?: '';
 $redirectURI   = getenv('OIDC_REDIRECT_URI') ?: ($wgServer . '/wiki/Special:PluggableAuthLogin');
 $wgOpenIDConnect_SingleLogout = true;
 $wgPluggableAuth_ButtonLabelLogout = 'Log out';
+// Override the end_session_endpoint to use Auth0's native logout
+$wgOpenIDConnect_Config['https://auth.trigpointing.uk/'] = [
+  'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo={post_logout_redirect_uri}',
+];
 
 $wgPluggableAuth_Config = [[
   'plugin' => 'OpenIDConnect',
