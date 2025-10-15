@@ -75,7 +75,7 @@ $wgAWSBucketName            = getenv('AWS_S3_BUCKET') ?: '';
 $wgAWSCredentials           = false; // false = use IAM role
 $wgAWSRepoHashLevels        = 2;
 $wgAWSRepoDeletedHashLevels = 3;
-$wgFileBackends['AmazonS3']['useACL'] = false; // Disable ACLs - use bucket policy
+$wgFileBackends['s3']['useACL'] = false; // Disable ACLs - use bucket policy
 $wgFileExtensions           = ['png', 'gif', 'jpg', 'jpeg', 'pdf', 'svg'];
 $wgMaxUploadSize            = 20 * 1024 * 1024; // 20MB
 $wgUploadPath               = ""; // Handled by AWS extension
