@@ -137,7 +137,16 @@ ecs-exec-phpbb: ## Open a shell in the first running phpBB ECS task (requires EC
 	TASK_ARN=$$(aws ecs list-tasks --region $(AWS_REGION) --cluster trigpointing-cluster --service-name trigpointing-phpbb-common --desired-status RUNNING --query 'taskArns[0]' --output text); \
 	[ "$$TASK_ARN" != "None" ] && [ -n "$$TASK_ARN" ] || { echo "❌ No running phpBB task found"; exit 1; }; \
 	echo "🖥️  Executing shell on $$TASK_ARN"; \
-	aws ecs execute-command --region $(AWS_REGION) --cluster trigpointing-cluster --task "$$TASK_ARN" --container trigpointing-phpbb --interactive --command "/bin/sh"
+	aws ecs execute-command --region $(AWS_REGION) --cluster trigpointing-cluster --task "$$TASK_ARN" --container trigpointing-phpbb --interactive --command "/bin/bash"
+
+ecs-exec-mediawiki: ## Open a shell in the first running mediawiki ECS task (requires ECS Exec + SSM perms)
+	@command -v aws >/dev/null 2>&1 || { echo "❌ aws CLI not found."; exit 1; }
+	@echo "🔎 Enabling ECS Exec on service (idempotent)"; \
+	aws ecs update-service --region $(AWS_REGION) --cluster trigpointing-cluster --service trigpointing-mediawiki-common --enable-execute-command >/dev/null 2>&1 || true; \
+	TASK_ARN=$$(aws ecs list-tasks --region $(AWS_REGION) --cluster trigpointing-cluster --service-name trigpointing-mediawiki-common --desired-status RUNNING --query 'taskArns[0]' --output text); \
+	[ "$$TASK_ARN" != "None" ] && [ -n "$$TASK_ARN" ] || { echo "❌ No running mediawiki task found"; exit 1; }; \
+	echo "🖥️  Executing shell on $$TASK_ARN"; \
+	aws ecs execute-command --region $(AWS_REGION) --cluster trigpointing-cluster --task "$$TASK_ARN" --container trigpointing-mediawiki --interactive --command "/bin/bash"
 
 # Development setup
 install: ## Install production dependencies
