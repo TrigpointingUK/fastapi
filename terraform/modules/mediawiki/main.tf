@@ -18,6 +18,18 @@ resource "aws_ecs_task_definition" "mediawiki" {
   execution_role_arn       = var.ecs_task_execution_role_arn
   task_role_arn            = var.ecs_task_role_arn
 
+  volume {
+    name = "mediawiki-efs"
+    efs_volume_configuration {
+      file_system_id     = var.efs_file_system_id
+      transit_encryption = "ENABLED"
+      authorization_config {
+        access_point_id = var.efs_access_point_id
+        iam             = "ENABLED"
+      }
+    }
+  }
+
   container_definitions = jsonencode([
     {
       name  = "${var.project_name}-mediawiki"
@@ -113,6 +125,14 @@ resource "aws_ecs_task_definition" "mediawiki" {
         {
           name  = "CACHE_PORT"
           value = tostring(var.cache_port)
+        }
+      ]
+
+      mountPoints = [
+        {
+          sourceVolume  = "mediawiki-efs"
+          containerPath = "/var/www/html/images"
+          readOnly      = false
         }
       ]
 

@@ -67,19 +67,12 @@ if ($redisHost !== '') {
 $wgCacheDirectory = '/tmp/mw-cache'; // Used for localisation cache
 
 
-# -- Uploads on S3 (AWS extension) --
-$wgEnableUploads = true;
-wfLoadExtension( 'AWS' );
-$wgAWSRegion                = getenv('AWS_REGION') ?: 'eu-west-1';
-$wgAWSBucketName            = getenv('AWS_S3_BUCKET') ?: '';
-$wgAWSCredentials           = false; // false = use IAM role
-$wgAWSRepoHashLevels        = 2;
-$wgAWSRepoDeletedHashLevels = 3;
-$wgFileBackends['s3']['useACL'] = false; // Disable ACLs - use bucket policy
-$wgFileExtensions           = ['png', 'gif', 'jpg', 'jpeg', 'pdf', 'svg'];
-$wgMaxUploadSize            = 20 * 1024 * 1024; // 20MB
-$wgUploadPath               = ""; // Handled by AWS extension
-$wgUploadDirectory          = ""; // Handled by AWS extension
+# -- Uploads on local storage (EFS) --
+$wgEnableUploads    = true;
+$wgUploadDirectory  = "/var/www/html/images";
+$wgUploadPath       = "/images";
+$wgFileExtensions   = ['png', 'gif', 'jpg', 'jpeg', 'pdf', 'svg'];
+$wgMaxUploadSize    = 20 * 1024 * 1024; // 20MB
 
 
 # -- Email with SES SMTP --

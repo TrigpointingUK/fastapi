@@ -199,7 +199,22 @@ output "phpbb_efs_access_point_arn" {
 
 output "phpbb_efs_security_group_id" {
   description = "Security group ID for EFS (phpBB)"
-  value       = aws_security_group.efs.id
+  value       = aws_security_group.efs_phpbb.id
+}
+
+output "mediawiki_efs_file_system_id" {
+  description = "ID of the EFS file system for MediaWiki"
+  value       = aws_efs_file_system.mediawiki.id
+}
+
+output "mediawiki_efs_access_point_arn" {
+  description = "ARN of the EFS access point for MediaWiki"
+  value       = aws_efs_access_point.mediawiki.arn
+}
+
+output "mediawiki_efs_access_point_id" {
+  description = "ID of the EFS access point for MediaWiki"
+  value       = aws_efs_access_point.mediawiki.id
 }
 
 output "phpbb_app_secrets_arn" {
