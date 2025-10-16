@@ -99,21 +99,23 @@ if ($smtpUsername && $smtpPassword) {
 # -- Auth0 via PluggableAuth + OpenID Connect --
 wfLoadExtension( 'PluggableAuth' );
 wfLoadExtension( 'OpenIDConnect' );
-$wgPluggableAuth_EnableLocalLogin = getenv('MW_ENABLE_LOCAL_LOGIN') === 'true';
-$wgGroupPermissions['*']['autocreateaccount'] = true;
 
 $providerURL   = getenv('OIDC_PROVIDER_URL') ?: '';
 $clientID      = getenv('OIDC_CLIENT_ID') ?: '';
 $clientSecret  = getenv('OIDC_CLIENT_SECRET') ?: '';
 $redirectURI   = getenv('OIDC_REDIRECT_URI') ?: ($wgServer . '/wiki/Special:PluggableAuthLogin');
-$wgOpenIDConnect_SingleLogout = true;
-$wgPluggableAuth_ButtonLabelLogout = 'Log out';
+
 // Override the end_session_endpoint to use Auth0's native logout
 $wgOpenIDConnect_Config['https://auth.trigpointing.uk/'] = [
   // 'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo={post_logout_redirect_uri}',
-  // 'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo=https://wiki.trigpointing.uk',
-  'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&post_logout_redirect_uri=https%3A%2F%2Fwiki.trigpointing.uk',
+  'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo=https://wiki.trigpointing.uk/TrigpointingUK',
+  // 'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&post_logout_redirect_uri=https%3A%2F%2Fwiki.trigpointing.uk',
 ];
+
+$wgOpenIDConnect_SingleLogout = true;
+$wgPluggableAuth_EnableLocalLogin = getenv('MW_ENABLE_LOCAL_LOGIN') === 'true';
+$wgPluggableAuth_ButtonLabelLogout = 'Log out';
+$wgGroupPermissions['*']['autocreateaccount'] = true;
 
 $wgPluggableAuth_Config = [[
   'plugin' => 'OpenIDConnect',
