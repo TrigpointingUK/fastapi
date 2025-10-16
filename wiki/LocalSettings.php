@@ -112,7 +112,9 @@ $wgOpenIDConnect_Config[$providerURL] = [
 
 $wgOpenIDConnect_SingleLogout = true;
 $wgPluggableAuth_EnableLocalLogin = getenv('MW_ENABLE_LOCAL_LOGIN') === 'true';
+$wgPluggableAuth_EnableFastLogout = true;
 $wgPluggableAuth_ButtonLabelLogout = 'Log out';
+
 $wgGroupPermissions['*']['autocreateaccount'] = true;
 
 $wgPluggableAuth_Config = [[
