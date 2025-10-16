@@ -109,10 +109,10 @@ $redirectURI   = getenv('OIDC_REDIRECT_URI') ?: ($wgServer . '/wiki/Special:Plug
 $wgOpenIDConnect_Config[$providerURL] = [
   'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo=https://wiki.trigpointing.uk/TrigpointingUK',
 ];
-
 $wgOpenIDConnect_SingleLogout = true;
+
 $wgPluggableAuth_EnableLocalLogin = getenv('MW_ENABLE_LOCAL_LOGIN') === 'true';
-$wgPluggableAuth_EnableFastLogout = true;
+// $wgPluggableAuth_EnableFastLogout = true;
 $wgPluggableAuth_ButtonLabelLogout = 'Log out';
 
 $wgGroupPermissions['*']['autocreateaccount'] = true;
@@ -159,9 +159,9 @@ wfLoadExtension( 'Cite' );
 
 
 # -- Styles --
-wfLoadSkin( 'MinervaNeue' );
-wfLoadSkin( 'MonoBook' );
-wfLoadSkin( 'Timeless' );
+// wfLoadSkin( 'MinervaNeue' );
+// wfLoadSkin( 'MonoBook' );
+// wfLoadSkin( 'Timeless' );
 wfLoadSkin( 'Vector' );
 $wgDefaultSkin = "Vector";
 
