@@ -107,9 +107,7 @@ $redirectURI   = getenv('OIDC_REDIRECT_URI') ?: ($wgServer . '/wiki/Special:Plug
 
 // Override the end_session_endpoint to use Auth0's native logout
 $wgOpenIDConnect_Config[$providerURL] = [
-  // 'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo={post_logout_redirect_uri}',
   'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo=https://wiki.trigpointing.uk/TrigpointingUK',
-  // 'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&post_logout_redirect_uri=https%3A%2F%2Fwiki.trigpointing.uk',
 ];
 
 $wgOpenIDConnect_SingleLogout = true;
@@ -138,6 +136,12 @@ $wgPluggableAuth_Config = [[
     ],
   ],
 ]];
+
+# Temporary debugging - remove after fixing
+$wgDebugLogGroups['PluggableAuth'] = '/tmp/pluggable-auth-debug.log';
+$wgDebugLogGroups['OpenIDConnect'] = '/tmp/openid-connect-debug.log';
+$wgShowExceptionDetails = true;
+
 
 # Auth0 manages all user rights - disable local rights management
 unset( $wgGroupPermissions['bureaucrat'] );
