@@ -9,6 +9,7 @@ $wgLogo          = "https://trigpointing.uk/pics/tuk_logo.gif";
 $wgLanguageCode  = "en-GB";
 $wgLocaltimezone = "Europe/London";
 $wgForceHTTPS    = true;
+$wgMainPageIsDomainRoot = true;  // Make / redirect to main page cleanly
 
 # Debug settings (remove after fixing)
 // $wgDebugToolbar = true;
@@ -116,6 +117,7 @@ $wgPluggableAuth_EnableLocalLogin = getenv('MW_ENABLE_LOCAL_LOGIN') === 'true';
 $wgPluggableAuth_ButtonLabelLogout = 'Log out';
 
 $wgGroupPermissions['*']['autocreateaccount'] = true;
+$wgGroupPermissions['*']['createaccount'] = false;  // Hide "Create account" link
 
 $wgPluggableAuth_Config = [[
   'plugin' => 'OpenIDConnect',
@@ -153,6 +155,14 @@ unset( $wgRemoveGroups['bureaucrat'] );
 unset( $wgGroupsAddToSelf['bureaucrat'] );
 unset( $wgGroupsRemoveFromSelf['bureaucrat'] );
 $wgGroupPermissions['sysop']['userrights'] = false;
+
+# Require login to edit (read-only for anonymous users)
+$wgGroupPermissions['*']['edit'] = false;           // Anonymous cannot edit
+$wgGroupPermissions['*']['createpage'] = false;     // Anonymous cannot create pages
+$wgGroupPermissions['*']['createtalk'] = false;     // Anonymous cannot create talk pages
+$wgGroupPermissions['user']['edit'] = true;         // Logged-in users can edit
+$wgGroupPermissions['user']['createpage'] = true;   // Logged-in users can create
+$wgGroupPermissions['user']['createtalk'] = true;   // Logged-in users can create talk
 
 # -- Extensions --
 wfLoadExtension( 'Cite' );
