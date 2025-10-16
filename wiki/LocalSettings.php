@@ -111,7 +111,8 @@ $wgPluggableAuth_ButtonLabelLogout = 'Log out';
 // Override the end_session_endpoint to use Auth0's native logout
 $wgOpenIDConnect_Config['https://auth.trigpointing.uk/'] = [
   // 'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo={post_logout_redirect_uri}',
-  'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo=https://wiki.trigpointing.uk',
+  // 'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo=https://wiki.trigpointing.uk',
+  'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&post_logout_redirect_uri=https%3A%2F%2Fwiki.trigpointing.uk',
 ];
 
 $wgPluggableAuth_Config = [[
