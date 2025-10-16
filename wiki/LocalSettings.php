@@ -15,6 +15,9 @@ $wgMainPageIsDomainRoot = true;  // Make / redirect to main page cleanly
 // $wgDebugToolbar = true;
 // $wgShowExceptionDetails = true;
 // $wgShowDBErrorBacktrace = true;
+// $wgDebugLogGroups['PluggableAuth'] = '/tmp/pluggable-auth-debug.log';
+// $wgDebugLogGroups['OpenIDConnect'] = '/tmp/openid-connect-debug.log';
+// $wgShowExceptionDetails = true;
 
 # -- Rights --
 $wgRightsText = "Creative Commons Attribution-ShareAlike";
@@ -113,7 +116,7 @@ $wgOpenIDConnect_Config[$providerURL] = [
 $wgOpenIDConnect_SingleLogout = true;
 
 $wgPluggableAuth_EnableLocalLogin = getenv('MW_ENABLE_LOCAL_LOGIN') === 'true';
-// $wgPluggableAuth_EnableFastLogout = true;
+$wgPluggableAuth_EnableFastLogout = true;
 $wgPluggableAuth_ButtonLabelLogout = 'Log out';
 
 $wgGroupPermissions['*']['autocreateaccount'] = true;
@@ -141,10 +144,7 @@ $wgPluggableAuth_Config = [[
   ],
 ]];
 
-# Temporary debugging - remove after fixing
-$wgDebugLogGroups['PluggableAuth'] = '/tmp/pluggable-auth-debug.log';
-$wgDebugLogGroups['OpenIDConnect'] = '/tmp/openid-connect-debug.log';
-$wgShowExceptionDetails = true;
+
 
 
 # Auth0 manages all user rights - disable local rights management
