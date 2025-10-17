@@ -101,8 +101,8 @@ module "phpbb" {
   project_name                = var.project_name
   environment                 = "common"
   aws_region                  = var.aws_region
-  cpu                         = 512
-  memory                      = 1024
+  cpu                         = 256
+  memory                      = 512
   desired_count               = 1
   min_capacity                = 1
   max_capacity                = 3

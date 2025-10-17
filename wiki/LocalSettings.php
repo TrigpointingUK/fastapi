@@ -113,14 +113,19 @@ $redirectURI   = getenv('OIDC_REDIRECT_URI') ?: ($wgServer . '/wiki/Special:Plug
 $wgOpenIDConnect_Config[$providerURL] = [
   'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo=https://wiki.trigpointing.uk/TrigpointingUK',
 ];
-$wgOpenIDConnect_SingleLogout = true;
 
-$wgPluggableAuth_EnableLocalLogin = getenv('MW_ENABLE_LOCAL_LOGIN') === 'true';
-$wgPluggableAuth_EnableFastLogout = true;
-$wgPluggableAuth_ButtonLabelLogout = 'Log out';
+$wgOpenIDConnect_ForceReauth                  = true; // Reauthenticate users with auth0 every time
+$wgOpenIDConnect_SingleLogout                 = false;  // Log out of all Auth0 applications
+$wgOpenIDConnect_MigrateUsersByEmail          = true;
+$wgOpenIDConnect_MigrateUsersByUsername       = true;
 
 $wgGroupPermissions['*']['autocreateaccount'] = true;
-$wgGroupPermissions['*']['createaccount'] = false;  // Hide "Create account" link
+$wgGroupPermissions['*']['createaccount']     = false;  // Hide "Create account" link
+$wgPluggableAuth_EnableAutoLogin              = false; // Anonymous access is permitted
+$wgPluggableAuth_EnableLocalLogin             = getenv('MW_ENABLE_LOCAL_LOGIN') === 'true';
+$wgPluggableAuth_EnableLocalProperties        = false; // Users cannot edit their email address etc
+$wgPluggableAuth_EnableFastLogout             = true; // Avoid additional logout confirmation page
+$wgPluggableAuth_ButtonLabelLogout            = 'Log out';
 
 $wgPluggableAuth_Config = [[
   'plugin' => 'OpenIDConnect',
@@ -128,7 +133,7 @@ $wgPluggableAuth_Config = [[
     'providerURL'        => $providerURL,
     'clientID'           => $clientID,
     'clientsecret'       => $clientSecret,
-    'scope'              => [ 'openid', 'profile', 'email', 'roles' ],
+    'scope'              => [ 'openid', 'profile', 'email'],
     'preferred_username' => 'nickname',
     'redirectURI'        => $redirectURI,
   ],
