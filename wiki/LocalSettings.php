@@ -109,15 +109,15 @@ $clientID      = getenv('OIDC_CLIENT_ID') ?: '';
 $clientSecret  = getenv('OIDC_CLIENT_SECRET') ?: '';
 $redirectURI   = getenv('OIDC_REDIRECT_URI') ?: ($wgServer . '/wiki/Special:PluggableAuthLogin');
 
-// Override the end_session_endpoint to use Auth0's native logout
-$wgOpenIDConnect_Config[$providerURL] = [
-  'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo=https://wiki.trigpointing.uk/TrigpointingUK',
-];
+// // Override the end_session_endpoint to use Auth0's native logout
+// $wgOpenIDConnect_Config[$providerURL] = [
+//   'end_session_endpoint' => 'https://auth.trigpointing.uk/v2/logout?client_id=' . $clientID . '&returnTo=https://wiki.trigpointing.uk/TrigpointingUK',
+// ];
 
 $wgOpenIDConnect_ForceReauth                  = true;   // Reauthenticate users with auth0 every time
 $wgOpenIDConnect_SingleLogout                 = false;  // Log out of all Auth0 applications
 $wgOpenIDConnect_MigrateUsersByEmail          = true;
-$wgOpenIDConnect_MigrateUsersByUsername       = true;
+$wgOpenIDConnect_MigrateUsersByUsername       = false;
 
 $wgGroupPermissions['*']['autocreateaccount'] = true;
 $wgGroupPermissions['*']['createaccount']     = false;  // Hide "Create account" link
@@ -136,6 +136,8 @@ $wgPluggableAuth_Config = [[
     'scope'              => [ 'openid', 'profile', 'email'],
     'preferred_username' => 'nickname',
     'redirectURI'        => $redirectURI,
+    'post_logout_redirect_uri' => 'https://wiki.trigpointing.uk',
+
   ],
   'buttonLabelMessage' => 'auth0-login',
   'groupsyncs' => [
