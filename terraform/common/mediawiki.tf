@@ -156,8 +156,8 @@ module "mediawiki" {
   project_name                 = var.project_name
   environment                  = "common"
   aws_region                   = var.aws_region
-  cpu                          = 512
-  memory                       = 1024
+  cpu                          = 256
+  memory                       = 512
   desired_count                = 1
   min_capacity                 = 1
   max_capacity                 = 3
@@ -174,7 +174,6 @@ module "mediawiki" {
   target_group_arn             = aws_lb_target_group.mediawiki.arn
   cloudwatch_log_group_name    = "/aws/ecs/${var.project_name}-mediawiki-common"
   image_uri                    = "ghcr.io/trigpointinguk/fastapi/mediawiki:main"
-  s3_bucket_name               = aws_s3_bucket.wiki.id
   cache_host                   = aws_elasticache_serverless_cache.valkey.endpoint[0].address
   cache_port                   = aws_elasticache_serverless_cache.valkey.endpoint[0].port
   mediawiki_db_credentials_arn = var.mediawiki_db_credentials_arn
@@ -183,5 +182,5 @@ module "mediawiki" {
   efs_access_point_id          = aws_efs_access_point.mediawiki.id
   efs_access_point_arn         = aws_efs_access_point.mediawiki.arn
 
-  depends_on = [aws_lb_listener_rule.mediawiki, aws_s3_bucket.wiki, aws_elasticache_serverless_cache.valkey]
+  depends_on = [aws_lb_listener_rule.mediawiki, aws_elasticache_serverless_cache.valkey]
 }

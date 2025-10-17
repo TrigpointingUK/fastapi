@@ -51,13 +51,13 @@ data "aws_ami" "fck_nat" {
   }
 }
 
-# fck-nat instances (one per availability zone)
+# fck-nat instance (single instance in first AZ)
 resource "aws_instance" "fck_nat" {
-  count = length(var.availability_zones)
+  count = 1
 
   ami                    = data.aws_ami.fck_nat.id
   instance_type          = "t3.nano" # Minimal instance type for cost efficiency
-  subnet_id              = aws_subnet.public[count.index].id
+  subnet_id              = aws_subnet.public[0].id
   vpc_security_group_ids = [aws_security_group.fck_nat.id]
   source_dest_check      = false # Required for NAT functionality
 
@@ -65,7 +65,7 @@ resource "aws_instance" "fck_nat" {
   monitoring = true
 
   tags = {
-    Name = "${var.project_name}-fck-nat-${count.index + 1}"
+    Name = "${var.project_name}-fck-nat"
     Type = "fck-nat"
   }
 
@@ -74,21 +74,22 @@ resource "aws_instance" "fck_nat" {
   }
 }
 
-# Elastic IPs for fck-nat instances
+# Elastic IP for fck-nat instance
 resource "aws_eip" "fck_nat" {
-  count = length(var.availability_zones)
+  count = 1
 
-  instance = aws_instance.fck_nat[count.index].id
+  instance = aws_instance.fck_nat[0].id
   domain   = "vpc"
 
   tags = {
-    Name = "${var.project_name}-fck-nat-eip-${count.index + 1}"
+    Name = "${var.project_name}-fck-nat-eip"
   }
 
   depends_on = [aws_internet_gateway.main]
 }
 
 # Use null_resource to replace existing NAT gateway routes with fck-nat routes
+# This runs once per route table, but all point to the single fck-nat instance
 resource "null_resource" "replace_nat_routes" {
   count = length(var.availability_zones)
 
@@ -101,35 +102,43 @@ resource "null_resource" "replace_nat_routes" {
       # Set AWS region
       export AWS_DEFAULT_REGION=${var.aws_region}
 
-      echo "Getting network interface ID for fck-nat instance ${aws_instance.fck_nat[count.index].id}"
+      echo "Getting network interface ID for fck-nat instance ${aws_instance.fck_nat[0].id}"
 
       # Get the network interface ID of the fck-nat instance
       NETWORK_INTERFACE_ID=$(aws ec2 describe-instances \
         --region ${var.aws_region} \
-        --instance-ids ${aws_instance.fck_nat[count.index].id} \
+        --instance-ids ${aws_instance.fck_nat[0].id} \
         --query 'Reservations[0].Instances[0].NetworkInterfaces[0].NetworkInterfaceId' \
         --output text)
 
       if [ -z "$NETWORK_INTERFACE_ID" ] || [ "$NETWORK_INTERFACE_ID" = "None" ]; then
-        echo "Error: Could not get network interface ID for instance ${aws_instance.fck_nat[count.index].id}"
+        echo "Error: Could not get network interface ID for instance ${aws_instance.fck_nat[0].id}"
         exit 1
       fi
 
-      echo "Replacing route in route table ${aws_route_table.private[count.index].id} to use fck-nat instance network interface $NETWORK_INTERFACE_ID"
+      echo "Configuring route in route table ${aws_route_table.private[count.index].id} to use fck-nat instance network interface $NETWORK_INTERFACE_ID"
 
-      # Replace the existing route
-      aws ec2 replace-route \
+      # Try to replace the existing route, or create it if it doesn't exist
+      if ! aws ec2 replace-route \
         --region ${var.aws_region} \
         --route-table-id ${aws_route_table.private[count.index].id} \
         --destination-cidr-block 0.0.0.0/0 \
-        --network-interface-id $NETWORK_INTERFACE_ID
+        --network-interface-id $NETWORK_INTERFACE_ID 2>/dev/null; then
+        
+        echo "Route doesn't exist, creating new route..."
+        aws ec2 create-route \
+          --region ${var.aws_region} \
+          --route-table-id ${aws_route_table.private[count.index].id} \
+          --destination-cidr-block 0.0.0.0/0 \
+          --network-interface-id $NETWORK_INTERFACE_ID
+      fi
 
-      echo "Successfully replaced route for route table ${aws_route_table.private[count.index].id}"
+      echo "Successfully configured route for route table ${aws_route_table.private[count.index].id}"
     EOT
   }
 
   triggers = {
-    fck_nat_instance_id = aws_instance.fck_nat[count.index].id
+    fck_nat_instance_id = aws_instance.fck_nat[0].id
     route_table_id      = aws_route_table.private[count.index].id
   }
 }

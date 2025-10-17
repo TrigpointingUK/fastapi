@@ -111,10 +111,6 @@ resource "aws_ecs_task_definition" "mediawiki" {
       ]
       environment = [
         {
-          name  = "AWS_S3_BUCKET"
-          value = var.s3_bucket_name
-        },
-        {
           name  = "AWS_REGION"
           value = var.aws_region
         },
