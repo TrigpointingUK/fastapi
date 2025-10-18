@@ -1,0 +1,153 @@
+/*
+ * Custom Green Theme for Trigpointing UK Forum
+ * Overrides default prosilver blue theme with green colour scheme
+ */
+
+/* Primary green colours */
+:root {
+    --tuk-green-dark: #4A7729;
+    --tuk-green-medium: #5D9732;
+    --tuk-green-light: #6FA83B;
+    --tuk-green-lighter: #8BC34A;
+}
+
+/* Header and navigation */
+.headerbar {
+    background-color: #5D9732;
+    background-image: none;
+}
+
+.navbar {
+    background-color: #4A7729;
+}
+
+.forabg {
+    background-color: #6FA83B;
+    background-image: none;
+}
+
+.forumbg {
+    background-color: #f9f9f9;
+    background-image: none;
+}
+
+/* Links */
+a {
+    color: #4A7729;
+}
+
+a:hover {
+    color: #5D9732;
+}
+
+/* Buttons */
+.button, input.button1, input.button2 {
+    background-color: #5D9732;
+    border-color: #4A7729;
+}
+
+.button:hover, input.button1:hover, input.button2:hover {
+    background-color: #6FA83B;
+}
+
+/* Forum list headers */
+.forabg .bg1, .forabg .bg2, .forabg .bg3 {
+    background-color: #8BC34A;
+}
+
+/* Forum topics headers */
+.forumbg .header {
+    background-color: #6FA83B;
+}
+
+/* Navigation bar links */
+.navbar a {
+    color: #ffffff;
+}
+
+/* Site description */
+.site-description {
+    color: #ffffff;
+}
+
+/* Panel backgrounds */
+.panel {
+    background-color: #f5f5f5;
+}
+
+/* Topic list alternating rows */
+.bg1 {
+    background-color: #ffffff;
+}
+
+.bg2 {
+    background-color: #f5f5f5;
+}
+
+.bg3 {
+    background-color: #e8f5e9;
+}
+
+/* Active/hover states for forums */
+.row-item:hover {
+    background-color: #e8f5e9;
+}
+
+/* Breadcrumbs */
+.breadcrumbs {
+    color: #5D9732;
+}
+
+/* Forum category headers */
+.forabg .header {
+    background-color: #5D9732;
+    color: #ffffff;
+}
+
+/* Pagination */
+.pagination li a {
+    background-color: #ffffff;
+    border-color: #5D9732;
+    color: #4A7729;
+}
+
+.pagination li.active span {
+    background-color: #5D9732;
+    color: #ffffff;
+}
+
+.pagination li a:hover {
+    background-color: #e8f5e9;
+}
+
+/* Post backgrounds */
+.post {
+    background-color: #ffffff;
+}
+
+.post:target {
+    background-color: #e8f5e9;
+}
+
+/* Search box and inputs */
+#search-box input.button2,
+input[type="submit"] {
+    background-color: #5D9732;
+    color: #ffffff;
+}
+
+/* Forum statistics */
+.stat-block {
+    background-color: #f5f5f5;
+}
+
+/* Quick links dropdown */
+#quick-links a:hover {
+    background-color: #e8f5e9;
+}
+
+/* Footer */
+.copyright {
+    color: #5D9732;
+}
+
