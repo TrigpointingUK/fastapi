@@ -82,7 +82,11 @@ def test_create_user_missing_token(db: Session):
 
 
 def test_create_user_duplicate_username(db: Session, mock_m2m_token):
-    """Test that duplicate username returns 409."""
+    """Test that duplicate username returns 409 with proper error message.
+
+    This test verifies the error format that the Auth0 Action relies on
+    to detect username collisions and retry with a different name.
+    """
     # Create first user directly in DB
     create_user(
         db=db,
@@ -105,7 +109,11 @@ def test_create_user_duplicate_username(db: Session, mock_m2m_token):
     )
 
     assert response.status_code == 409
-    assert "username" in response.json()["detail"].lower()
+    detail = response.json()["detail"]
+    # Auth0 Action checks for "username" in the error message
+    assert "username" in detail.lower()
+    # Verify it includes the attempted username for debugging
+    assert "duplicate" in detail.lower()
 
 
 def test_create_user_duplicate_email(db: Session, mock_m2m_token):

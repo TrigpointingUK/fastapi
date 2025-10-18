@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from sqlalchemy.orm import Session
 
-from app.crud.user import get_user_by_auth0_id, get_user_by_name
+from app.crud.user import create_user, get_user_by_auth0_id, get_user_by_name
 from app.main import app
 from fastapi.testclient import TestClient
 
@@ -46,6 +46,61 @@ def test_full_provisioning_flow(db: Session):
         assert user.surname == ""  # Empty as expected
         assert user.cryptpw != ""  # Random string
         assert len(user.cryptpw) > 20  # Random token
+
+
+def test_username_collision_retry_flow(db: Session):
+    """Test Auth0 Action retry behavior when username collisions occur.
+
+    Simulates the Action's behavior of retrying with suffixed usernames
+    when a collision is detected.
+    """
+    # Create first user to cause collision
+    create_user(
+        db=db,
+        username="john",
+        email="john1@example.com",
+        auth0_user_id="auth0|john1",
+    )
+
+    with patch("app.api.deps.auth0_validator.validate_m2m_token") as mock_token:
+        mock_token.return_value = {
+            "aud": "https://api.trigpointing.me/v1/",
+            "client_id": "test_m2m_client",
+        }
+
+        # First attempt - collision with "john"
+        response = client.post(
+            "/v1/users",
+            json={
+                "username": "john",
+                "email": "john2@example.com",
+                "auth0_user_id": "auth0|john2",
+            },
+            headers={"Authorization": "Bearer m2m_token"},
+        )
+
+        assert response.status_code == 409
+        detail = response.json()["detail"]
+        assert "username" in detail.lower()
+
+        # Second attempt - with random suffix (simulating Action retry)
+        response = client.post(
+            "/v1/users",
+            json={
+                "username": "john432524",  # With 6-digit suffix
+                "email": "john2@example.com",
+                "auth0_user_id": "auth0|john2",
+            },
+            headers={"Authorization": "Bearer m2m_token"},
+        )
+
+        assert response.status_code == 201
+
+        # Verify user created with suffixed username
+        user = get_user_by_name(db, "john432524")
+        assert user is not None
+        assert user.email == "john2@example.com"
+        assert user.auth0_user_id == "auth0|john2"
 
 
 def test_provisioning_then_profile_update(db: Session):
