@@ -14,16 +14,19 @@ User ← Auth0 Login ← Auth0 Token ← FastAPI API ← Database User ← Creat
 
 ## Key Features
 
-- **Native Auth0 Registration**: Users register via Auth0 Universal Login
+- **Native Auth0 Registration**: Users register via Auth0 Universal Login (email + password)
 - **Automatic Provisioning**: Post-registration Action calls FastAPI webhook
+- **Nickname-Based Display Names**: Uses Auth0 `nickname` (not `username`) to allow spaces and special characters
 - **Profile Management**: Users can update name/email which syncs back to Auth0
 - **Database-Only Fields**: Firstname and surname are stored only in the database
 - **Legacy Compatibility**: Random `cryptpw` field for legacy cookie support
 
+**Important**: Auth0 `username` field is NOT used because it has restrictions (no spaces, special characters). Instead, the `user.name` database column maps to Auth0 `nickname`, which allows flexible display names that your users already have.
+
 ## Database Schema
 
 ### Fields Synced from Auth0
-- `name` (username/nickname) - syncs bidirectionally
+- `name` (nickname/display name) - syncs bidirectionally with Auth0 `nickname`
 - `email` - syncs bidirectionally
 - `auth0_user_id` - set once at creation
 
@@ -111,22 +114,39 @@ In Auth0 Dashboard → Authentication → Database:
 1. Select your connection (e.g., "Username-Password-Authentication")
 2. Settings tab:
    - Enable "Disable Sign Ups" → **OFF** (enable signups)
-   - Enable "Requires Username" → **ON**
+   - Enable "Requires Username" → **OFF** (usernames have restrictions; use nickname instead)
 3. Save changes
 
 ### 2. Configure Signup Form
 
-Ensure signup form collects:
+**Minimum signup form (email + password only)**:
 - Email (required, login identifier)
 - Password (required)
-- Username/nickname (required)
 
-**Do NOT collect**:
+**Important**: 
+- Do NOT enable "Requires Username" - Auth0 usernames don't allow spaces or special characters
+- Your `user.name` column maps to Auth0 `nickname` (which allows spaces, special characters, etc.)
+- Nickname can be set after registration via the Post-Registration Action or by the user later
+
+**Do NOT collect at signup**:
 - Firstname
-- Surname
+- Surname  
 - Other profile fields
 
 These are database-only and user sets them later.
+
+### 2a. Nickname Handling Strategy
+
+Since Auth0 signup only requires email/password, you have two options for nicknames:
+
+**Option 1: Generate from email (Recommended)**
+- Action generates nickname from email prefix (e.g., "user@example.com" → "user")
+- User can change it later via `PATCH /v1/users/me`
+
+**Option 2: Collect via Universal Login customization**
+- Customize Auth0 Universal Login to collect nickname at signup
+- Requires Auth0 Custom Login Page or New Universal Login customization
+- More complex but provides better UX
 
 ### 3. Create M2M Application for Webhook
 
@@ -145,8 +165,13 @@ If not already done via Terraform:
 exports.onExecutePostUserRegistration = async (event, api) => {
   const axios = require('axios');
   
+  // Generate nickname from email if not provided
+  // Auth0 signup only collects email/password by default
+  // Nickname allows spaces and special characters (unlike username)
+  const nickname = event.user.nickname || event.user.email.split('@')[0];
+  
   const payload = {
-    username: event.user.nickname || event.user.email.split('@')[0],
+    username: nickname,  // Maps to user.name (nickname/display name)
     email: event.user.email,
     auth0_user_id: event.user.user_id
   };
@@ -164,9 +189,15 @@ exports.onExecutePostUserRegistration = async (event, api) => {
       }
     );
     console.log('User provisioned successfully:', event.user.user_id);
+    
+    // Optionally set nickname in Auth0 if it was generated
+    if (!event.user.nickname) {
+      api.user.setUserMetadata('nickname', nickname);
+    }
   } catch (error) {
     console.error('User provisioning failed:', error.response?.data || error.message);
     // Don't fail registration - user is already in Auth0
+    // User can update nickname later via PATCH /v1/users/me
   }
 };
 ```
@@ -267,13 +298,14 @@ curl -X POST https://api-staging.trigpointing.me/v1/users \
 2. **Test Registration Flow**:
 - Go to Auth0 Universal Login
 - Click "Sign Up"
-- Enter email, password, and username
+- Enter email and password (nickname generated from email by Action)
 - Verify user created in database:
   ```sql
   SELECT id, name, email, auth0_user_id, firstname, surname, cryptpw 
   FROM user 
   WHERE email = 'test@example.com';
   ```
+- Verify `name` column contains generated nickname (e.g., email prefix)
 
 3. **Test Profile Update**:
 - Get user token
