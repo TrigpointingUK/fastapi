@@ -139,9 +139,11 @@ These are database-only and user sets them later.
 
 Since Auth0 signup only requires email/password, you have two options for nicknames:
 
-**Option 1: Generate from email (Recommended)**
+**Option 1: Generate from email (Implemented)**
 - Action generates nickname from email prefix (e.g., "user@example.com" → "user")
-- User can change it later via `PATCH /v1/users/me`
+- On collision, appends random 6-digit number (e.g., "user432524")
+- This avoids predictable patterns and DoS attacks on common names
+- User can change it later via `PATCH /v1/users/me` to something more memorable
 
 **Option 2: Collect via Universal Login customization**
 - Customize Auth0 Universal Login to collect nickname at signup
@@ -165,40 +167,62 @@ If not already done via Terraform:
 exports.onExecutePostUserRegistration = async (event, api) => {
   const axios = require('axios');
   
-  // Generate nickname from email if not provided
+  // Generate base nickname from email prefix
   // Auth0 signup only collects email/password by default
   // Nickname allows spaces and special characters (unlike username)
-  const nickname = event.user.nickname || event.user.email.split('@')[0];
+  const baseNickname = event.user.nickname || event.user.email.split('@')[0];
   
-  const payload = {
-    username: nickname,  // Maps to user.name (nickname/display name)
-    email: event.user.email,
-    auth0_user_id: event.user.user_id
-  };
+  // Try to create user, handling username collisions with random suffixes
+  let nickname = baseNickname;
+  let attempt = 0;
+  const maxAttempts = 10;
   
-  try {
-    await axios.post(
-      event.secrets.FASTAPI_URL + '/v1/users',
-      payload,
-      {
-        headers: {
-          'Authorization': `Bearer ${event.secrets.M2M_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        timeout: 5000
-      }
-    );
-    console.log('User provisioned successfully:', event.user.user_id);
+  while (attempt < maxAttempts) {
+    const payload = {
+      username: nickname,  // Maps to user.name (nickname/display name)
+      email: event.user.email,
+      auth0_user_id: event.user.user_id
+    };
     
-    // Optionally set nickname in Auth0 if it was generated
-    if (!event.user.nickname) {
+    try {
+      await axios.post(
+        event.secrets.FASTAPI_URL + '/v1/users',
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${event.secrets.M2M_TOKEN}`,
+            'Content-Type': 'application/json'
+          },
+          timeout: 5000
+        }
+      );
+      
+      console.log('User provisioned successfully:', event.user.user_id, 'with nickname:', nickname);
+      
+      // Set the final nickname in Auth0 user metadata
       api.user.setUserMetadata('nickname', nickname);
+      return; // Success!
+      
+    } catch (error) {
+      if (error.response?.status === 409 && 
+          error.response?.data?.detail?.toLowerCase().includes('username')) {
+        // Username collision - generate random 6-digit suffix
+        // This avoids predictable patterns and potential DoS attacks
+        const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+        nickname = `${baseNickname}${randomSuffix}`;
+        attempt++;
+        console.log(`Username collision on attempt ${attempt}, trying: ${nickname}`);
+      } else {
+        // Other error - log but don't fail registration
+        console.error('User provisioning failed:', error.response?.data || error.message);
+        console.error('User registered in Auth0 but not in database. Manual sync may be required.');
+        return;
+      }
     }
-  } catch (error) {
-    console.error('User provisioning failed:', error.response?.data || error.message);
-    // Don't fail registration - user is already in Auth0
-    // User can update nickname later via PATCH /v1/users/me
   }
+  
+  console.error('Failed to find unique username after', maxAttempts, 'attempts for user:', event.user.user_id);
+  console.error('User registered in Auth0 but not in database. Manual provisioning required.');
 };
 ```
 
@@ -372,6 +396,25 @@ curl -X POST https://api-staging.trigpointing.me/v1/users \
 1. Check if user already exists in database
 2. Verify Auth0 Action not being triggered multiple times
 3. Check for race conditions in concurrent registrations
+
+### Issue: Users Assigned Random Number Suffixes
+
+**Symptom**: User gets nickname like "john432524" instead of "john".
+
+**Cause**: Username collision - "john" already taken. Action automatically appended random 6-digit number.
+
+**Solutions**:
+1. This is expected behaviour for common email prefixes
+2. User can change nickname via:
+   ```bash
+   PATCH /v1/users/me
+   {
+     "name": "preferred_nickname"
+   }
+   ```
+3. New nickname must be unique - API returns 409 if taken
+4. Consider UX: show onboarding prompt suggesting users customize their nickname
+5. The random suffix prevents DoS attacks on common names
 
 ## Migration Path
 
