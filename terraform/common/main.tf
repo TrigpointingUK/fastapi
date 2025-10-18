@@ -17,6 +17,10 @@ terraform {
       source  = "hashicorp/tls"
       version = "~> 4.0"
     }
+    auth0 = {
+      source  = "auth0/auth0"
+      version = "~> 1.0"
+    }
   }
 
   backend "s3" {
@@ -40,6 +44,15 @@ provider "aws" {
 provider "cloudflare" {
   # API token will be read from CLOUDFLARE_API_TOKEN environment variable
   # or from ~/.cloudflare/credentials file
+}
+
+provider "auth0" {
+  domain        = var.auth0_domain
+  client_id     = var.auth0_terraform_client_id
+  client_secret = var.auth0_terraform_client_secret
+  # Credentials will be read from environment variables:
+  # AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET
+  # Or can be set via variables
 }
 
 # Data sources
