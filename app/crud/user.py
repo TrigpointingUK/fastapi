@@ -3,6 +3,8 @@ CRUD operations for users with Unix crypt authentication.
 """
 
 import crypt as unix_crypt
+import secrets
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from sqlalchemy import func
@@ -485,6 +487,84 @@ def get_user_by_auth0_id(db: Session, auth0_user_id: str) -> Optional[User]:
         User object or None if not found
     """
     return db.query(User).filter(User.auth0_user_id == auth0_user_id).first()
+
+
+def create_user(db: Session, username: str, email: str, auth0_user_id: str) -> User:
+    """
+    Create a new user in the database (called from Auth0 webhook).
+
+    This function creates a user with Auth0 as the authentication provider.
+    The cryptpw field is set to a random string for legacy cookie compatibility.
+    Firstname and surname are left empty for the user to fill in later.
+
+    Args:
+        db: Database session
+        username: Username/nickname from Auth0
+        email: Email address from Auth0
+        auth0_user_id: Auth0 user ID
+
+    Returns:
+        Created User object
+
+    Raises:
+        ValueError: If username, email, or auth0_user_id already exists
+    """
+    # Validate uniqueness
+    if get_user_by_name(db, username):
+        raise ValueError(f"Username '{username}' already exists")
+
+    if get_user_by_email(db, email):
+        raise ValueError(f"Email '{email}' already exists")
+
+    if get_user_by_auth0_id(db, auth0_user_id):
+        raise ValueError(f"Auth0 user ID '{auth0_user_id}' already exists")
+
+    # Generate random cryptpw for legacy cookie compatibility
+    # User cannot log in with this via legacy auth
+    random_cryptpw = secrets.token_urlsafe(32)
+
+    # Get current date and time
+    now = datetime.now()
+    current_date = now.date()
+    current_time = now.time()
+
+    # Create new user with sensible defaults
+    new_user = User(
+        name=username,
+        email=email,
+        auth0_user_id=auth0_user_id,
+        cryptpw=random_cryptpw,
+        firstname="",  # Database-only field, user sets later
+        surname="",  # Database-only field, user sets later
+        email_valid="Y",  # Auth0 has verified the email
+        email_ind="N",  # Default: don't send emails
+        public_ind="N",  # Default: profile not public
+        homepage="",
+        distance_ind="K",  # Default: kilometres
+        about="",
+        status_max=0,
+        crt_date=current_date,
+        crt_time=current_time,
+        upd_timestamp=now,
+        online_map_type="",
+        online_map_type2="lla",
+    )
+
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    logger.info(
+        "User created via Auth0 webhook",
+        extra={
+            "user_id": new_user.id,
+            "username": username,
+            "email": email,
+            "auth0_user_id": auth0_user_id,
+        },
+    )
+
+    return new_user
 
 
 def update_user_auth0_id(db: Session, user_id: int, auth0_user_id: str) -> bool:
