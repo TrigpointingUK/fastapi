@@ -240,7 +240,7 @@ class subscriber implements EventSubscriberInterface
     protected function assign_groups_from_auth0($event)
     {
         $claims = $event['service']->get_user_identity(); // includes /userinfo payload
-        $claim_name = getenv('AUTH0_GROUPS_CLAIM') ?: 'https://forum.trigpointing.uk/phpbb_groups';
+        $claim_name = getenv('AUTH0_GROUPS_CLAIM') ?: 'https://trigpointing.uk/roles';
         $roles = [];
         if (isset($claims[$claim_name]) && is_array($claims[$claim_name])) {
             $roles = $claims[$claim_name];

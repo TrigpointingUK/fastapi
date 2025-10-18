@@ -137,7 +137,6 @@ $wgPluggableAuth_Config = [[
     'preferred_username' => 'nickname',
     'redirectURI'        => $redirectURI,
     'post_logout_redirect_uri' => 'https://wiki.trigpointing.uk',
-
   ],
   'buttonLabelMessage' => 'auth0-login',
   'groupsyncs' => [
