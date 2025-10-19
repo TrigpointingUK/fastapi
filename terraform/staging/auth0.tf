@@ -4,13 +4,49 @@
 # for the staging environment with its own tenant.
 
 # ============================================================================
-# SES EMAIL IDENTITY
+# SES DOMAIN IDENTITY
 # ============================================================================
 
-# Verify ownership of the staging domain email address
-# Note: This is a new resource for staging environment
-resource "aws_ses_email_identity" "noreply" {
-  email = "noreply@trigpointing.me"
+# Verify ownership of the entire staging domain
+# This allows sending from any email address @trigpointing.me
+resource "aws_ses_domain_identity" "trigpointing_me" {
+  domain = "trigpointing.me"
+}
+
+# DKIM tokens for domain verification (improves deliverability)
+resource "aws_ses_domain_dkim" "trigpointing_me" {
+  domain = aws_ses_domain_identity.trigpointing_me.domain
+}
+
+# Add DNS records to Cloudflare for domain verification
+resource "cloudflare_record" "ses_verification" {
+  zone_id = data.cloudflare_zones.staging.zones[0].id
+  name    = "_amazonses.trigpointing.me"
+  content = aws_ses_domain_identity.trigpointing_me.verification_token
+  type    = "TXT"
+  ttl     = 600
+
+  comment = "SES domain verification for trigpointing.me"
+}
+
+# DKIM DNS records (3 records for email authentication)
+resource "cloudflare_record" "ses_dkim" {
+  count = 3
+
+  zone_id = data.cloudflare_zones.staging.zones[0].id
+  name    = "${aws_ses_domain_dkim.trigpointing_me.dkim_tokens[count.index]}._domainkey.trigpointing.me"
+  content = "${aws_ses_domain_dkim.trigpointing_me.dkim_tokens[count.index]}.dkim.amazonses.com"
+  type    = "CNAME"
+  ttl     = 600
+
+  comment = "SES DKIM record ${count.index + 1} for trigpointing.me"
+}
+
+# Get Cloudflare zone info
+data "cloudflare_zones" "staging" {
+  filter {
+    name = "trigpointing.me"
+  }
 }
 
 # ============================================================================
