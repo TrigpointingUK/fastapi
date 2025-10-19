@@ -11,6 +11,9 @@ module "auth0" {
   # Auth0 Domains
   auth0_custom_domain = var.auth0_custom_domain
 
+  # Cloudflare Configuration
+  cloudflare_zone_name = "trigpointing.uk"
+
   # Database Connection
   database_connection_name = "production-users"
 

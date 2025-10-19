@@ -16,6 +16,10 @@ terraform {
       source  = "auth0/auth0"
       version = "~> 1.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
   }
 }
 
@@ -310,4 +314,36 @@ data "auth0_tenant" "current" {}
 # Get M2M client credentials (includes secret)
 data "auth0_client" "m2m_api" {
   client_id = auth0_client.m2m_api.id
+}
+
+# Get Cloudflare zone information
+data "cloudflare_zones" "domain" {
+  filter {
+    name = var.cloudflare_zone_name
+  }
+}
+
+# ============================================================================
+# CUSTOM DOMAIN
+# ============================================================================
+
+# Configure Auth0 custom domain for branded authentication
+resource "auth0_custom_domain" "main" {
+  domain = var.auth0_custom_domain
+  type   = "auth0_managed_certs" # Auth0 manages SSL certificates
+
+  # Auth0 will automatically verify via CNAME once DNS is configured
+}
+
+# Create CNAME record in Cloudflare pointing to Auth0
+# This is DNS-only (not proxied) as required by Auth0
+resource "cloudflare_record" "auth0_custom_domain" {
+  zone_id = data.cloudflare_zones.domain.zones[0].id
+  name    = split(".", var.auth0_custom_domain)[0] # Extract subdomain (e.g., "auth" from "auth.trigpointing.me")
+  content = auth0_custom_domain.main.verification[0].methods[0].name
+  type    = "CNAME"
+  proxied = false # MUST be false for Auth0 custom domains
+  ttl     = 1     # Auto TTL
+
+  comment = "Auth0 custom domain for ${var.environment} - managed by Terraform"
 }

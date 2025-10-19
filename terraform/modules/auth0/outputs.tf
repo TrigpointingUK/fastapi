@@ -69,3 +69,18 @@ output "custom_domain" {
   value       = var.auth0_custom_domain
 }
 
+output "custom_domain_id" {
+  description = "Auth0 custom domain resource ID"
+  value       = auth0_custom_domain.main.id
+}
+
+output "custom_domain_status" {
+  description = "Auth0 custom domain verification status"
+  value       = auth0_custom_domain.main.status
+}
+
+output "custom_domain_verification" {
+  description = "Auth0 custom domain verification details"
+  value       = auth0_custom_domain.main.verification
+}
+

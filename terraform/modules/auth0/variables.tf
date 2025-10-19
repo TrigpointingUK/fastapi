@@ -14,6 +14,11 @@ variable "auth0_custom_domain" {
   type        = string
 }
 
+variable "cloudflare_zone_name" {
+  description = "Cloudflare zone name for DNS records (e.g., trigpointing.me)"
+  type        = string
+}
+
 variable "database_connection_name" {
   description = "Name of the Auth0 database connection"
   type        = string
