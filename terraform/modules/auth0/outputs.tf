@@ -71,6 +71,11 @@ output "action_id" {
   value       = var.enable_post_registration_action ? auth0_action.post_user_registration[0].id : null
 }
 
+output "post_login_action_id" {
+  description = "Post Login Action ID"
+  value       = var.enable_post_login_action ? auth0_action.post_login[0].id : null
+}
+
 output "tenant_domain" {
   description = "Auth0 tenant domain"
   value       = data.auth0_tenant.current.domain

@@ -370,6 +370,36 @@ resource "auth0_trigger_actions" "post_user_registration" {
   }
 }
 
+# Post-Login Action: Add roles to tokens
+resource "auth0_action" "post_login" {
+  count = var.enable_post_login_action ? 1 : 0
+
+  name    = "${var.name_prefix}-post-login"
+  runtime = "node18"
+  deploy  = true
+
+  supported_triggers {
+    id      = "post-login"
+    version = "v3"
+  }
+
+  code = templatefile("${path.module}/actions/post-login.js.tpl", {
+    namespace = var.custom_claims_namespace
+  })
+}
+
+# Bind Post-Login Action to trigger
+resource "auth0_trigger_actions" "post_login" {
+  count = var.enable_post_login_action ? 1 : 0
+
+  trigger = "post-login"
+
+  actions {
+    id           = auth0_action.post_login[0].id
+    display_name = auth0_action.post_login[0].name
+  }
+}
+
 # ============================================================================
 # DATA SOURCES
 # ============================================================================

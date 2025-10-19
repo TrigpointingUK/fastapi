@@ -104,6 +104,18 @@ variable "enable_post_registration_action" {
   default     = true
 }
 
+variable "enable_post_login_action" {
+  description = "Whether to enable the post-login Action for adding roles to tokens"
+  type        = bool
+  default     = true
+}
+
+variable "custom_claims_namespace" {
+  description = "Namespace for custom claims in tokens (must be a valid URI)"
+  type        = string
+  default     = "https://trigpointing.uk/"
+}
+
 variable "admin_role_name" {
   description = "Name of the admin role"
   type        = string

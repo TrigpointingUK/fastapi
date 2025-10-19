@@ -89,8 +89,10 @@ module "auth0" {
   primary_color         = "#005f00"
   page_background_color = "#ffffff"
 
-  # Enable post-registration Action
+  # Actions
   enable_post_registration_action = true
+  enable_post_login_action        = true
+  custom_claims_namespace         = "https://trigpointing.uk/"
 }
 
 # ============================================================================
