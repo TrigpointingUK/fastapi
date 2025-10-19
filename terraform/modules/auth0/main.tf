@@ -23,9 +23,22 @@ terraform {
   }
 }
 
+# Handle resource renames (prevents destroy/create cycles)
+moved {
+  from = auth0_client.swagger_ui
+  to   = auth0_client.swagger
+}
+
+moved {
+  from = auth0_client.web_app
+  to   = auth0_client.website
+}
+
 # ============================================================================
 # DATABASE CONNECTION
 # ============================================================================
+# Note: The default 'Username-Password-Authentication' connection should be
+# manually deleted in the Auth0 dashboard to avoid confusion.
 
 resource "auth0_connection" "database" {
   name     = var.database_connection_name

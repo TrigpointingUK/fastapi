@@ -16,7 +16,7 @@ module "auth0" {
   cloudflare_zone_name = "trigpointing.uk"
 
   # Database Connection
-  database_connection_name = "production-users"
+  database_connection_name = "tuk-users"
 
   # API Configuration
   api_name       = "tuk-api"

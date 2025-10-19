@@ -16,7 +16,7 @@ module "auth0" {
   cloudflare_zone_name = "trigpointing.me"
 
   # Database Connection
-  database_connection_name = "staging-users"
+  database_connection_name = "tme-users"
 
   # API Configuration
   api_name       = "tme-api"
