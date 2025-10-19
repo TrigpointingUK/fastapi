@@ -489,3 +489,26 @@ resource "auth0_branding" "main" {
     page_background = var.page_background_color
   }
 }
+
+# ============================================================================
+# TENANT CONFIGURATION
+# ============================================================================
+
+# Configure tenant to use custom domain for emails and notifications
+resource "auth0_tenant" "main" {
+  # Friendly name
+  friendly_name = "Trigpointing UK - ${title(var.environment)}"
+
+  # Picture URL
+  picture_url = var.logo_url
+
+  # Support contact
+  support_email = var.from_email
+  support_url   = var.environment == "production" ? "https://www.trigpointing.uk" : "https://www.trigpointing.me"
+
+  # Flags for custom domain usage
+  flags {
+    # Use custom domain in emails instead of tenant domain
+    enable_custom_domain_in_emails = true
+  }
+}
