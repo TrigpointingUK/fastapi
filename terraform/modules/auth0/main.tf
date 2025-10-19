@@ -270,7 +270,7 @@ resource "auth0_action" "post_user_registration" {
 
   supported_triggers {
     id      = "post-user-registration"
-    version = "v3"
+    version = "v2"
   }
 
   code = templatefile("${path.module}/actions/post-user-registration.js.tpl", {
