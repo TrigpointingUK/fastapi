@@ -8,6 +8,8 @@
 # ============================================================================
 
 # Verify ownership of the production domain email address
+# Note: If migrating from common, use terraform import:
+#   terraform import aws_ses_email_identity.noreply noreply@trigpointing.uk
 resource "aws_ses_email_identity" "noreply" {
   email = "noreply@trigpointing.uk"
 }

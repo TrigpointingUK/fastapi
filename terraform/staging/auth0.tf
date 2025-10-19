@@ -8,6 +8,7 @@
 # ============================================================================
 
 # Verify ownership of the staging domain email address
+# Note: This is a new resource for staging environment
 resource "aws_ses_email_identity" "noreply" {
   email = "noreply@trigpointing.me"
 }
