@@ -1,5 +1,5 @@
 /**
- * Auth0 Post User Registration Action for T:ME (trigpointing.me)
+ * Auth0 Post User Registration Action for ${environment}
  * 
  * This Action is triggered after a user successfully registers via Auth0.
  * It provisions the user in the FastAPI/MySQL database via webhook.
@@ -12,7 +12,7 @@
  * 5. Set final nickname in Auth0 user metadata
  * 
  * Environment Variables (from Secrets):
- * - FASTAPI_URL: Base URL of FastAPI (e.g., https://api.trigpointing.me)
+ * - FASTAPI_URL: Base URL of FastAPI
  * - M2M_TOKEN: Machine-to-Machine token for webhook authentication
  */
 
@@ -42,14 +42,14 @@ exports.onExecutePostUserRegistration = async (event, api) => {
         payload,
         {
           headers: {
-            'Authorization': `Bearer ${event.secrets.M2M_TOKEN}`,
+            'Authorization': `Bearer $${event.secrets.M2M_TOKEN}`,
             'Content-Type': 'application/json'
           },
           timeout: 5000
         }
       );
       
-      console.log('User provisioned successfully:', event.user.user_id, 'with nickname:', nickname);
+      console.log('[${environment}] User provisioned successfully:', event.user.user_id, 'with nickname:', nickname);
       
       // Set the final nickname in Auth0 user metadata
       api.user.setUserMetadata('nickname', nickname);
@@ -61,19 +61,19 @@ exports.onExecutePostUserRegistration = async (event, api) => {
         // Username collision - generate random 6-digit suffix
         // This avoids predictable patterns and potential DoS attacks
         const randomSuffix = Math.floor(100000 + Math.random() * 900000);
-        nickname = `${baseNickname}${randomSuffix}`;
+        nickname = `$${baseNickname}$${randomSuffix}`;
         attempt++;
-        console.log(`Username collision on attempt ${attempt}, trying: ${nickname}`);
+        console.log(`[${environment}] Username collision on attempt $${attempt}, trying: $${nickname}`);
       } else {
         // Other error - log but don't fail registration
-        console.error('User provisioning failed:', error.response?.data || error.message);
-        console.error('User registered in Auth0 but not in database. Manual sync may be required.');
+        console.error('[${environment}] User provisioning failed:', error.response?.data || error.message);
+        console.error('[${environment}] User registered in Auth0 but not in database. Manual sync may be required.');
         return;
       }
     }
   }
   
-  console.error('Failed to find unique username after', maxAttempts, 'attempts for user:', event.user.user_id);
-  console.error('User registered in Auth0 but not in database. Manual provisioning required.');
+  console.error('[${environment}] Failed to find unique username after', maxAttempts, 'attempts for user:', event.user.user_id);
+  console.error('[${environment}] User registered in Auth0 but not in database. Manual provisioning required.');
 };
 

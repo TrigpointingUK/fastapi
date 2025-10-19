@@ -143,6 +143,7 @@ test.db
 *.tfplan
 .terraform/
 .terraform.lock.hcl
+terraform.tfvars
 
 # CloudFlare certificates (keep private)
 *cert*.tfvars

@@ -1,0 +1,313 @@
+# Auth0 Module - Manages Auth0 resources for a single environment
+#
+# This module creates:
+# - Database connection for user authentication
+# - API resource server with scopes
+# - M2M client for API access
+# - SPA client for Swagger UI
+# - Regular web application client
+# - Native Android client
+# - Admin role with permissions
+# - Post User Registration Action (optional)
+
+terraform {
+  required_providers {
+    auth0 = {
+      source  = "auth0/auth0"
+      version = "~> 1.0"
+    }
+  }
+}
+
+# ============================================================================
+# DATABASE CONNECTION
+# ============================================================================
+
+resource "auth0_connection" "database" {
+  name     = var.database_connection_name
+  strategy = "auth0"
+
+  options {
+    password_policy = "good"
+    password_history {
+      enable = true
+      size   = 5
+    }
+    password_no_personal_info {
+      enable = true
+    }
+    password_dictionary {
+      enable = true
+    }
+    password_complexity_options {
+      min_length = 8
+    }
+    brute_force_protection = true
+
+    # Configuration settings
+    disable_signup    = false
+    requires_username = false # Use nickname instead (allows spaces, special chars)
+
+    # Validation
+    import_mode          = false
+    non_persistent_attrs = []
+  }
+}
+
+# Enable connection for all our clients
+resource "auth0_connection_clients" "database_clients" {
+  connection_id = auth0_connection.database.id
+
+  enabled_clients = [
+    auth0_client.m2m_api.id,
+    auth0_client.swagger_ui.id,
+    auth0_client.web_app.id,
+    auth0_client.android.id,
+  ]
+}
+
+# ============================================================================
+# API RESOURCE SERVER
+# ============================================================================
+
+resource "auth0_resource_server" "api" {
+  name       = var.api_name
+  identifier = var.api_identifier
+
+  # Token settings
+  token_lifetime = 86400 # 24 hours
+  signing_alg    = "RS256"
+
+  # RBAC
+  enforce_policies                                = true
+  token_dialect                                   = "access_token_authz"
+  skip_consent_for_verifiable_first_party_clients = true
+}
+
+# Define API scopes/permissions
+resource "auth0_resource_server_scopes" "api_scopes" {
+  resource_server_identifier = auth0_resource_server.api.identifier
+
+  scopes {
+    name        = "read:users"
+    description = "Read user data"
+  }
+  scopes {
+    name        = "write:users"
+    description = "Write user data"
+  }
+  scopes {
+    name        = "read:trigs"
+    description = "Read trig data"
+  }
+  scopes {
+    name        = "write:trigs"
+    description = "Write trig data"
+  }
+  scopes {
+    name        = "read:photos"
+    description = "Read photo data"
+  }
+  scopes {
+    name        = "write:photos"
+    description = "Write photo data"
+  }
+  scopes {
+    name        = "admin"
+    description = "Administrator access"
+  }
+}
+
+# ============================================================================
+# APPLICATIONS (CLIENTS)
+# ============================================================================
+
+# M2M Application for API access
+resource "auth0_client" "m2m_api" {
+  name        = "${var.environment}-api-m2m"
+  description = "Machine to Machine application for ${var.environment} API"
+  app_type    = "non_interactive"
+
+  grant_types = [
+    "client_credentials",
+  ]
+
+  jwt_configuration {
+    alg = "RS256"
+  }
+}
+
+# Single Page Application (Swagger UI)
+resource "auth0_client" "swagger_ui" {
+  name        = "${var.environment}-swagger-ui"
+  description = "SPA for Swagger/OpenAPI documentation OAuth2 authentication"
+  app_type    = "spa"
+
+  callbacks           = var.swagger_callback_urls
+  allowed_origins     = var.swagger_allowed_origins
+  web_origins         = var.swagger_allowed_origins
+  allowed_logout_urls = [for url in var.swagger_callback_urls : replace(url, "/oauth2-redirect", "")]
+
+  grant_types = [
+    "authorization_code",
+    "refresh_token",
+  ]
+
+  jwt_configuration {
+    alg = "RS256"
+  }
+
+  oidc_conformant = true
+}
+
+# Regular Web Application
+resource "auth0_client" "web_app" {
+  name        = "${var.environment}-web-app"
+  description = "Main web application for ${var.environment}"
+  app_type    = "regular_web"
+
+  callbacks = var.web_app_callback_urls
+
+  grant_types = [
+    "authorization_code",
+    "refresh_token",
+  ]
+
+  jwt_configuration {
+    alg = "RS256"
+  }
+
+  oidc_conformant = true
+}
+
+# Native Application (Android)
+resource "auth0_client" "android" {
+  name        = "${var.environment}-android"
+  description = "Android mobile application for ${var.environment}"
+  app_type    = "native"
+
+  callbacks = var.android_callback_urls
+
+  grant_types = [
+    "authorization_code",
+    "refresh_token",
+  ]
+
+  jwt_configuration {
+    alg = "RS256"
+  }
+
+  oidc_conformant = true
+}
+
+# ============================================================================
+# CLIENT GRANTS (M2M Authorizations)
+# ============================================================================
+
+# Grant M2M client access to API
+resource "auth0_client_grant" "m2m_to_api" {
+  client_id = auth0_client.m2m_api.id
+  audience  = auth0_resource_server.api.identifier
+
+  scopes = [
+    "read:users",
+    "write:users",
+    "read:trigs",
+    "write:trigs",
+    "read:photos",
+    "write:photos",
+  ]
+}
+
+# Grant M2M client access to Management API (for user provisioning sync)
+resource "auth0_client_grant" "m2m_to_mgmt_api" {
+  client_id = auth0_client.m2m_api.id
+  audience  = "https://${data.auth0_tenant.current.domain}/api/v2/"
+
+  scopes = [
+    "read:users",
+    "update:users",
+    "create:users",
+  ]
+}
+
+# ============================================================================
+# ROLES
+# ============================================================================
+
+resource "auth0_role" "admin" {
+  name        = var.admin_role_name
+  description = var.admin_role_description
+}
+
+# Assign permissions to admin role
+resource "auth0_role_permissions" "admin_perms" {
+  role_id = auth0_role.admin.id
+
+  dynamic "permissions" {
+    for_each = ["read:users", "write:users", "read:trigs", "write:trigs", "read:photos", "write:photos", "admin"]
+    content {
+      resource_server_identifier = auth0_resource_server.api.identifier
+      name                       = permissions.value
+    }
+  }
+}
+
+# ============================================================================
+# POST USER REGISTRATION ACTION
+# ============================================================================
+
+resource "auth0_action" "post_user_registration" {
+  count = var.enable_post_registration_action ? 1 : 0
+
+  name    = "${var.environment}-post-user-registration"
+  runtime = "node18"
+  deploy  = true
+
+  supported_triggers {
+    id      = "post-user-registration"
+    version = "v3"
+  }
+
+  code = templatefile("${path.module}/actions/post-user-registration.js.tpl", {
+    environment = var.environment
+  })
+
+  dependencies {
+    name    = "axios"
+    version = "latest"
+  }
+
+  secrets {
+    name  = "FASTAPI_URL"
+    value = var.fastapi_url
+  }
+
+  secrets {
+    name  = "M2M_TOKEN"
+    value = var.m2m_token
+  }
+}
+
+# Bind Action to trigger
+resource "auth0_trigger_actions" "post_user_registration" {
+  count = var.enable_post_registration_action ? 1 : 0
+
+  trigger = "post-user-registration"
+
+  actions {
+    id           = auth0_action.post_user_registration[0].id
+    display_name = auth0_action.post_user_registration[0].name
+  }
+}
+
+# ============================================================================
+# DATA SOURCES
+# ============================================================================
+
+data "auth0_tenant" "current" {}
+
+# Get M2M client credentials (includes secret)
+data "auth0_client" "m2m_api" {
+  client_id = auth0_client.m2m_api.id
+}
