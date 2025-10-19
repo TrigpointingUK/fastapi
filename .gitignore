@@ -147,6 +147,11 @@ terraform.tfvars
 
 # CloudFlare certificates (keep private)
 *cert*.tfvars
+!*cert*.example.tfvars
+
+# Auth0 secrets (keep private)
+*auth0*.tfvars
+!*auth0*.example.tfvars
 
 
 # Secrets

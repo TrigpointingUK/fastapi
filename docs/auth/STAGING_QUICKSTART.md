@@ -47,36 +47,33 @@ This guide walks you through setting up Auth0 for staging from scratch using the
 
 6. Note the **Client ID** and **Client Secret**
 
-## Step 2: Configure Terraform Variables
+## Step 2: Set Auth0 Provider Credentials (Environment Variables)
 
-Create `terraform/staging/terraform.tfvars` from the example:
-
-```bash
-cd terraform/staging
-cp terraform.tfvars.example terraform.tfvars
-```
-
-Edit `terraform.tfvars` and fill in:
-
-```hcl
-# Auth0 Configuration
-auth0_domain = "trigpointing-staging.eu.auth0.com"
-auth0_client_id = "YOUR_TERRAFORM_CLIENT_ID"  # From Step 1
-auth0_client_secret = "YOUR_TERRAFORM_CLIENT_SECRET"  # From Step 1
-
-# Temporary token for initial setup (we'll update this later)
-auth0_m2m_token = "temporary"
-
-# ... fill in other AWS/container configuration ...
-```
-
-## Step 3: Set Environment Variables
+Set the Auth0 provider credentials via environment variables (recommended for personal auth tokens):
 
 ```bash
 export AUTH0_DOMAIN="trigpointing-staging.eu.auth0.com"
-export AUTH0_CLIENT_ID="YOUR_TERRAFORM_CLIENT_ID"
-export AUTH0_CLIENT_SECRET="YOUR_TERRAFORM_CLIENT_SECRET"
+export AUTH0_CLIENT_ID="YOUR_TERRAFORM_CLIENT_ID"  # From Step 1
+export AUTH0_CLIENT_SECRET="YOUR_TERRAFORM_CLIENT_SECRET"  # From Step 1
 ```
+
+## Step 3: Configure Auth0 M2M Token
+
+Create `terraform/staging/auth0.auto.tfvars` from the example:
+
+```bash
+cd terraform/staging
+cp auth0.example.tfvars auth0.auto.tfvars
+```
+
+Edit `auth0.auto.tfvars` and set a temporary token:
+
+```hcl
+# Temporary token for initial setup (we'll update this later)
+auth0_m2m_token = "temporary"
+```
+
+**Note**: The `auth0.auto.tfvars` file is gitignored and will not be committed.
 
 ## Step 4: Initialise Terraform
 
@@ -139,16 +136,16 @@ curl -X POST https://trigpointing-staging.eu.auth0.com/oauth/token \
   -d "{
     \"client_id\": \"$M2M_CLIENT_ID\",
     \"client_secret\": \"$M2M_CLIENT_SECRET\",
-    \"audience\": \"https://api-staging.trigpointing.uk/api/v1/\",
+    \"audience\": \"https://api.trigpointing.me/api/v1/\",
     \"grant_type\": \"client_credentials\"
   }" | jq -r '.access_token'
 ```
 
 Copy the token from the output.
 
-### Update terraform.tfvars
+### Update auth0.auto.tfvars
 
-Edit `terraform/staging/terraform.tfvars` and replace:
+Edit `terraform/staging/auth0.auto.tfvars` and replace:
 
 ```hcl
 auth0_m2m_token = "temporary"
@@ -191,8 +188,8 @@ aws secretsmanager put-secret-value \
     "AUTH0_DOMAIN": "trigpointing-staging.eu.auth0.com",
     "AUTH0_M2M_CLIENT_ID": "...",
     "AUTH0_M2M_CLIENT_SECRET": "...",
-    "AUTH0_API_IDENTIFIER": "https://api-staging.trigpointing.uk/api/v1/",
-    "AUTH0_WEBHOOK_M2M_AUDIENCE": "https://api-staging.trigpointing.uk/api/v1/",
+    "AUTH0_API_IDENTIFIER": "https://api.trigpointing.me/api/v1/",
+    "AUTH0_WEBHOOK_M2M_AUDIENCE": "https://api.trigpointing.me/api/v1/",
     "AUTH0_SWAGGER_CLIENT_ID": "...",
     "AWS_S3_BUCKET": "your-s3-bucket",
     "AWS_S3_REGION": "eu-west-1"
@@ -216,14 +213,14 @@ cd ../../
 ### Test 1: Check API Health
 
 ```bash
-curl https://api-staging.trigpointing.uk/health
+curl https://api.trigpointing.me/health
 ```
 
 Should return `{"status": "healthy"}`.
 
 ### Test 2: Test Swagger OAuth
 
-1. Visit https://api-staging.trigpointing.uk/docs
+1. Visit https://api.trigpointing.me/docs
 2. Click **Authorize**
 3. You should be redirected to Auth0 login
 4. Try creating a test account

@@ -83,7 +83,7 @@ curl -X POST https://your-tenant.eu.auth0.com/oauth/token \
   -d '{
     "client_id": "YOUR_M2M_CLIENT_ID",
     "client_secret": "YOUR_M2M_CLIENT_SECRET",
-    "audience": "https://api-staging.trigpointing.uk/api/v1/",
+    "audience": "https://api.trigpointing.me/api/v1/",
     "grant_type": "client_credentials"
   }'
 ```
@@ -101,23 +101,27 @@ export AUTH0_CLIENT_ID="your_terraform_client_id"
 export AUTH0_CLIENT_SECRET="your_terraform_client_secret"
 ```
 
-### Step 2: Create Terraform Variables File
+### Step 2: Create Auth0 Secrets File
 
-Create `terraform/staging/terraform.tfvars` (DO NOT COMMIT):
+Create `terraform/staging/auth0.auto.tfvars` from the example:
+
+```bash
+cd terraform/staging
+cp auth0.example.tfvars auth0.auto.tfvars
+```
+
+Edit `auth0.auto.tfvars`:
 
 ```hcl
-# Auth0 Configuration
-auth0_domain        = "trigpointing-staging.eu.auth0.com"
-auth0_client_id     = "your_terraform_client_id"
-auth0_client_secret = "your_terraform_client_secret"
-auth0_m2m_token     = "temporary_token_for_initial_setup"  # See note below
-
-# ... other staging variables ...
+# Auth0 M2M Token for Post-Registration Action
+auth0_m2m_token = "temporary"  # Use temporary value for initial setup
 ```
+
+**Note**: The `auth0.auto.tfvars` file is gitignored. Auth0 provider credentials come from environment variables (Step 1).
 
 **Note on `auth0_m2m_token`**: For the initial `terraform apply`, use a temporary token. After the first apply, Terraform will create the M2M client. Then:
 1. Get a proper token using the created M2M client
-2. Update `auth0_m2m_token` in your variables
+2. Update `auth0_m2m_token` in `auth0.auto.tfvars`
 3. Run `terraform apply` again to update the Action with the real token
 
 ### Step 3: Initialise and Plan
@@ -155,7 +159,7 @@ After the initial apply:
 
 2. Generate a proper M2M token (see Option B above)
 
-3. Update `terraform.tfvars` with the new token
+3. Update `auth0.auto.tfvars` with the new token
 
 4. Apply again:
    ```bash
@@ -173,8 +177,8 @@ aws secretsmanager put-secret-value \
     "AUTH0_DOMAIN": "trigpointing-staging.eu.auth0.com",
     "AUTH0_M2M_CLIENT_ID": "...",  # From terraform output
     "AUTH0_M2M_CLIENT_SECRET": "...",
-    "AUTH0_API_IDENTIFIER": "https://api-staging.trigpointing.uk/api/v1/",
-    "AUTH0_WEBHOOK_M2M_AUDIENCE": "https://api-staging.trigpointing.uk/api/v1/",
+    "AUTH0_API_IDENTIFIER": "https://api.trigpointing.me/api/v1/",
+    "AUTH0_WEBHOOK_M2M_AUDIENCE": "https://api.trigpointing.me/api/v1/",
     "AUTH0_SWAGGER_CLIENT_ID": "..."  # From terraform output
   }'
 ```
