@@ -21,7 +21,7 @@ cloudflare_origin_cert = "-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE
 cloudflare_origin_key = "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----"
 
 # Domain
-domain_name = "api-staging.trigpointing.uk"
+domain_name = "api.trigpointing.me"
 
 # Auth0 Configuration
 # These credentials are for the Terraform provider M2M application
@@ -35,7 +35,7 @@ auth0_m2m_token = "YOUR_M2M_TOKEN_FOR_WEBHOOK"
 
 # Application Configuration
 log_level = "DEBUG"
-cors_origins = ["https://staging.trigpointing.uk", "http://localhost:3000"]
+cors_origins = ["https://www.trigpointing.me", "http://localhost:3000"]
 db_pool_size = 10
 db_pool_recycle = 300
 profiling_enabled = true
