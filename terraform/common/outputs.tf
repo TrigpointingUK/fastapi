@@ -249,3 +249,5 @@ output "phpbb_smtp_password" {
   value       = module.smtp_phpbb.smtp_password
   sensitive   = true
 }
+
+# Note: Auth0 SMTP credentials are output from the auth0 module per environment

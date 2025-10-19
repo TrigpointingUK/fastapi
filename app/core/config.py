@@ -58,6 +58,16 @@ class Settings(BaseSettings):
     AUTH0_MANAGEMENT_API_AUDIENCE: Optional[str] = None
     AUTH0_API_AUDIENCE: Optional[str] = None  # e.g., "https://api.trigpointing.me/v1/"
 
+    # Auth0 Webhook Configuration
+    # - WEBHOOK_M2M_AUDIENCE: For validating M2M tokens from Auth0 Actions
+    # - API_IDENTIFIER: Your API identifier (same as API_AUDIENCE typically)
+    AUTH0_WEBHOOK_M2M_AUDIENCE: Optional[str] = (
+        None  # e.g., "https://api.trigpointing.me/v1/"
+    )
+    AUTH0_API_IDENTIFIER: Optional[str] = (
+        None  # e.g., "https://api.trigpointing.me/v1/"
+    )
+
     # Logging Configuration
     LOG_LEVEL: str = "INFO"
 

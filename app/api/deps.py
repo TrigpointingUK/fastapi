@@ -262,3 +262,53 @@ def require_scopes(*required_scopes: str):
         return user
 
     return _dep
+
+
+def verify_m2m_token(
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
+) -> dict:
+    """
+    Verify M2M (Machine-to-Machine) token for Auth0 webhook endpoints.
+
+    This dependency validates tokens from Auth0 Actions calling the webhook endpoint.
+    Uses the Management API audience for validation.
+
+    Returns:
+        dict: Token payload
+
+    Raises:
+        HTTPException: If token is missing or invalid
+    """
+    from app.core.logging import get_logger
+
+    logger = get_logger(__name__)
+
+    if credentials is None:
+        logger.warning("M2M token validation failed: no credentials provided")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing authorization header",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Validate token using auth0_validator with Management API audience
+    # The validator will check against AUTH0_WEBHOOK_M2M_AUDIENCE
+    token_payload = auth0_validator.validate_m2m_token(credentials.credentials)
+
+    if not token_payload:
+        logger.warning("M2M token validation failed: invalid token")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid M2M token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    logger.info(
+        "M2M token validated successfully",
+        extra={
+            "audience": token_payload.get("aud"),
+            "client_id": token_payload.get("azp", token_payload.get("client_id")),
+        },
+    )
+
+    return token_payload

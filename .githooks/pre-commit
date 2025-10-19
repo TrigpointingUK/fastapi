@@ -1,13 +1,46 @@
 #!/bin/bash
-# Pre-commit hook to run CI checks
+# Pre-commit hook to run CI checks based on changed files
 # To install: cp .githooks/pre-commit .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
 
 set -e
 
 echo "🔍 Running pre-commit CI checks..."
 
-# Check if virtual environment is activated
-if [[ "$VIRTUAL_ENV" == "" ]]; then
+# Detect staged files
+staged_files=$(git diff --cached --name-only)
+
+if [[ -z "$staged_files" ]]; then
+    echo "⚠️  No staged files detected"
+    exit 0
+fi
+
+# Categorise changes
+run_fastapi_checks=false
+run_terraform_checks=false
+docs_only=true
+
+while IFS= read -r file; do
+    if [[ "$file" =~ ^(app/|res/|tests/|\.github/) ]]; then
+        run_fastapi_checks=true
+        docs_only=false
+    elif [[ "$file" =~ ^terraform/ ]]; then
+        run_terraform_checks=true
+        docs_only=false
+    elif [[ ! "$file" =~ ^docs/ ]]; then
+        # Non-docs, non-categorised file - run FastAPI checks to be safe
+        run_fastapi_checks=true
+        docs_only=false
+    fi
+done <<< "$staged_files"
+
+# If only docs changed, allow commit
+if [[ "$docs_only" == true ]]; then
+    echo "ℹ️  Only documentation files changed. Skipping CI checks."
+    exit 0
+fi
+
+# Check if virtual environment is activated (only if we need to run checks)
+if [[ "$run_fastapi_checks" == true ]] && [[ "$VIRTUAL_ENV" == "" ]]; then
     echo "⚠️  Virtual environment not activated. Activating..."
     if [[ -f "venv/bin/activate" ]]; then
         source venv/bin/activate
@@ -17,12 +50,33 @@ if [[ "$VIRTUAL_ENV" == "" ]]; then
     fi
 fi
 
-# Run the full CI suite
-echo "🧪 Running CI checks (this may take a moment)..."
-if make ci; then
-    echo "✅ All CI checks passed! Proceeding with commit..."
-else
-    echo "❌ CI checks failed! Please fix the issues before committing."
-    echo "💡 Run 'make ci' to see detailed error messages."
-    exit 1
+# Run FastAPI checks
+if [[ "$run_fastapi_checks" == true ]]; then
+    echo "🧪 Running FastAPI CI checks (app/res/tests changed)..."
+    if make ci; then
+        echo "✅ FastAPI CI checks passed!"
+    else
+        echo "❌ FastAPI CI checks failed! Please fix the issues before committing."
+        echo "💡 Run 'make ci' to see detailed error messages."
+        exit 1
+    fi
 fi
+
+# Run Terraform checks
+if [[ "$run_terraform_checks" == true ]]; then
+    echo "🔧 Checking Terraform formatting..."
+    if ! command -v terraform >/dev/null 2>&1; then
+        echo "❌ terraform not installed. Please install Terraform."
+        exit 1
+    fi
+    
+    if terraform fmt -write=false -check -recursive terraform/ >/dev/null 2>&1; then
+        echo "✅ Terraform formatting is correct!"
+    else
+        echo "❌ Terraform files need formatting!"
+        echo "💡 Run: make format"
+        exit 1
+    fi
+fi
+
+echo "✅ All checks passed! Proceeding with commit..."

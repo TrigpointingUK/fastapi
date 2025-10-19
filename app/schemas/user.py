@@ -58,10 +58,30 @@ class UserPrefs(BaseModel):
 class UserUpdate(BaseModel):
     """Schema for updating user preferences and profile information."""
 
+    # Profile fields that sync to Auth0
+    name: Optional[str] = Field(
+        None,
+        min_length=1,
+        max_length=30,
+        description="Username/nickname (syncs to Auth0)",
+    )
+    email: Optional[str] = Field(
+        None, max_length=255, description="Email address (syncs to Auth0)"
+    )
+
+    # Profile fields (database only)
+    firstname: Optional[str] = Field(
+        None, max_length=30, description="First name (database only)"
+    )
+    surname: Optional[str] = Field(
+        None, max_length=30, description="Surname (database only)"
+    )
     homepage: Optional[str] = Field(
         None, max_length=255, description="User homepage URL"
     )
     about: Optional[str] = Field(None, description="About/description text")
+
+    # Preference fields
     status_max: Optional[int] = Field(None, description="Status preference")
     distance_ind: Optional[str] = Field(
         None, pattern="^[KM]$", description="Distance units (K=km, M=miles)"
@@ -115,3 +135,29 @@ class Auth0UserInfo(BaseModel):
         None, description="Database username if found"
     )
     database_email: Optional[str] = Field(None, description="Database email if found")
+
+
+class UserCreate(BaseModel):
+    """Schema for creating a new user from Auth0 webhook."""
+
+    username: str = Field(
+        ..., min_length=1, max_length=30, description="Username/nickname from Auth0"
+    )
+    email: str = Field(
+        ..., min_length=1, max_length=255, description="Email address from Auth0"
+    )
+    auth0_user_id: str = Field(
+        ..., min_length=1, max_length=50, description="Auth0 user ID"
+    )
+
+
+class UserCreateResponse(BaseModel):
+    """Response schema for created user."""
+
+    id: int = Field(..., description="Database user ID")
+    name: str = Field(..., description="Username")
+    email: str = Field(..., description="Email address")
+    auth0_user_id: str = Field(..., description="Auth0 user ID")
+
+    class Config:
+        from_attributes = True

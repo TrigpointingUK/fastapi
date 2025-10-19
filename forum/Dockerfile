@@ -1,4 +1,5 @@
 # Build phpBB container image
+# Includes custom TUK branding (logo, green theme) and Auth0 SSO integration
 FROM php:8.2-apache
 ARG PHPBB_VERSION=3.3.15
 
@@ -28,9 +29,15 @@ chown -R www-data:www-data /var/www/html
 COPY ext/ /var/www/html/ext/
 COPY apache/phpbb-auth0.conf /etc/apache2/conf-available/phpbb-auth0.conf
 
+# Copy custom branding and styling (logo and green theme CSS)
+COPY assets/tuk_logo.png /var/www/html/styles/prosilver/imageset/site_logo.png
+COPY assets/colours_green.css /var/www/html/styles/prosilver/theme/colours_green.css
+
 RUN a2enmod rewrite \
 && a2enconf phpbb-auth0 \
-&& chown -R www-data:www-data /var/www/html/ext
+&& chown -R www-data:www-data /var/www/html/ext \
+&& chown www-data:www-data /var/www/html/styles/prosilver/imageset/site_logo.png \
+&& chown www-data:www-data /var/www/html/styles/prosilver/theme/colours_green.css
 
 
 COPY ext_diag.php /var/www/html/ext_diag.php

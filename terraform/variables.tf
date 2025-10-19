@@ -91,6 +91,34 @@ variable "domain_name" {
 
 # Auth0 Configuration (always enabled)
 
+variable "auth0_tenant_domain" {
+  description = "Auth0 tenant domain for Management API (e.g., myapp-staging.eu.auth0.com)"
+  type        = string
+}
+
+variable "auth0_custom_domain" {
+  description = "Auth0 custom domain for user-facing authentication (e.g., auth.trigpointing.me)"
+  type        = string
+}
+
+variable "auth0_client_id" {
+  description = "Auth0 Terraform provider client ID"
+  type        = string
+  sensitive   = true
+}
+
+variable "auth0_client_secret" {
+  description = "Auth0 Terraform provider client secret"
+  type        = string
+  sensitive   = true
+}
+
+variable "auth0_m2m_token" {
+  description = "M2M token for post-registration webhook authentication"
+  type        = string
+  sensitive   = true
+}
+
 variable "log_level" {
   description = "Application log level (DEBUG, INFO, WARNING, ERROR)"
   type        = string

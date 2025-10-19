@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import (
     get_current_user,
     get_db,
+    verify_m2m_token,
 )
 from app.api.lifecycle import openapi_lifecycle
 from app.crud import tlog as tlog_crud
@@ -27,6 +28,8 @@ from app.schemas.tlog import TLogResponse
 from app.schemas.tphoto import TPhotoResponse
 from app.schemas.user import (
     UserBreakdown,
+    UserCreate,
+    UserCreateResponse,
     UserPrefs,
     UserResponse,
     UserStats,
@@ -46,6 +49,121 @@ from fastapi.security import HTTPBearer
 
 router = APIRouter()
 security = HTTPBearer(auto_error=False)
+
+
+@router.post(
+    "",
+    response_model=UserCreateResponse,
+    status_code=201,
+    openapi_extra=openapi_lifecycle(
+        "beta",
+        note="Create a new user from Auth0 webhook. Requires M2M token authentication.",
+    ),
+)
+def create_user_from_auth0(
+    user_data: UserCreate,
+    token_payload: dict = Depends(verify_m2m_token),
+    db: Session = Depends(get_db),
+) -> UserCreateResponse:
+    """
+    Create a new user in the legacy database.
+
+    This endpoint is called by Auth0 Post User Registration Action.
+    Requires M2M authentication with Management API token.
+
+    Receives:
+    - username (nickname from Auth0)
+    - email (from Auth0)
+    - auth0_user_id
+
+    Firstname and surname remain empty until user updates profile.
+    Sets cryptpw to random string for legacy cookie compatibility.
+
+    Returns:
+        UserCreateResponse: Created user with id, name, email, auth0_user_id
+    """
+    from app.core.logging import get_logger
+
+    logger = get_logger(__name__)
+
+    logger.info(
+        "User creation request from Auth0",
+        extra={
+            "username": user_data.username,
+            "email": user_data.email,
+            "auth0_user_id": user_data.auth0_user_id,
+        },
+    )
+
+    try:
+        # Create user using CRUD function
+        new_user = user_crud.create_user(
+            db=db,
+            username=user_data.username,
+            email=user_data.email,
+            auth0_user_id=user_data.auth0_user_id,
+        )
+
+        logger.info(
+            "User created successfully",
+            extra={
+                "user_id": new_user.id,
+                "username": new_user.name,
+                "email": new_user.email,
+            },
+        )
+
+        return UserCreateResponse(
+            id=int(new_user.id),
+            name=str(new_user.name),
+            email=str(new_user.email),
+            auth0_user_id=str(new_user.auth0_user_id),
+        )
+
+    except ValueError as e:
+        # Handle uniqueness violations
+        error_msg = str(e)
+        logger.warning(
+            "User creation failed - uniqueness violation",
+            extra={
+                "error": error_msg,
+                "username": user_data.username,
+                "email": user_data.email,
+            },
+        )
+
+        if "username" in error_msg.lower():
+            raise HTTPException(
+                status_code=409,
+                detail=f"Username '{user_data.username}' already exists",
+            )
+        elif "email" in error_msg.lower():
+            raise HTTPException(
+                status_code=409,
+                detail=f"Email '{user_data.email}' already exists",
+            )
+        elif "auth0" in error_msg.lower():
+            raise HTTPException(
+                status_code=409,
+                detail=f"Auth0 user ID '{user_data.auth0_user_id}' already exists",
+            )
+        else:
+            raise HTTPException(status_code=409, detail=error_msg)
+
+    except Exception as e:
+        logger.error(
+            "User creation failed - unexpected error",
+            extra={
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "username": user_data.username,
+                "email": user_data.email,
+            },
+        )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to create user: {str(e)}",
+        )
 
 
 @router.get(
@@ -187,7 +305,7 @@ def get_current_user_profile(
     response_model=UserWithIncludes,
     openapi_extra=openapi_lifecycle(
         "beta",
-        note="Update the current authenticated user's profile and preferences",
+        note="Update the current authenticated user's profile and preferences. Name and email changes sync to Auth0.",
     ),
 )
 def update_current_user_profile(
@@ -199,24 +317,150 @@ def update_current_user_profile(
     Update the current authenticated user's profile and preferences.
 
     All fields are optional - only provided fields will be updated.
+
+    Special handling for Auth0 sync:
+    - name (username/nickname): Syncs to Auth0 nickname field
+    - email: Syncs to Auth0 email field (marked as verified)
+    - firstname, surname: Database only (not in Auth0)
+
+    Auth0 sync failures are logged but don't fail the database update.
     """
-    # Update only the fields that were provided
+    from datetime import datetime
+
+    from app.core.logging import get_logger
+    from app.services.auth0_service import auth0_service
+
+    logger = get_logger(__name__)
+
+    # Get update data
     update_data = user_updates.model_dump(exclude_unset=True)
 
+    if not update_data:
+        # No updates provided, return current user
+        user_response = UserResponse.model_validate(current_user)
+        user_response.member_since = current_user.crt_date  # type: ignore
+        result = UserWithIncludes(**user_response.model_dump())
+        result.prefs = UserPrefs(
+            status_max=int(current_user.status_max),
+            distance_ind=str(current_user.distance_ind),
+            public_ind=str(current_user.public_ind),
+            online_map_type=str(current_user.online_map_type),
+            online_map_type2=str(current_user.online_map_type2),
+        )
+        return result
+
+    # Check for fields that need Auth0 sync
+    name_changed = "name" in update_data and update_data["name"] != current_user.name
+    email_changed = (
+        "email" in update_data and update_data["email"] != current_user.email
+    )
+
+    # Validate uniqueness for name and email changes
+    if name_changed:
+        new_name = update_data["name"]
+        existing_user = user_crud.get_user_by_name(db, new_name)
+        if existing_user and existing_user.id != current_user.id:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Username '{new_name}' is already taken",
+            )
+
+    if email_changed:
+        new_email = update_data["email"]
+        existing_user = user_crud.get_user_by_email(db, new_email)
+        if existing_user and existing_user.id != current_user.id:
+            raise HTTPException(
+                status_code=409,
+                detail=f"Email '{new_email}' is already in use",
+            )
+
+    # Update database fields
     for field, value in update_data.items():
         setattr(current_user, field, value)
-
-    # Update the timestamp
-    from datetime import datetime
 
     current_user.upd_timestamp = datetime.now()  # type: ignore
 
     try:
         db.commit()
         db.refresh(current_user)
+        logger.info(
+            "User profile updated in database",
+            extra={
+                "user_id": current_user.id,
+                "updated_fields": list(update_data.keys()),
+            },
+        )
     except Exception as e:
         db.rollback()
+        logger.error(
+            "Database update failed",
+            extra={"user_id": current_user.id, "error": str(e)},
+        )
         raise HTTPException(status_code=500, detail=f"Failed to update user: {str(e)}")
+
+    # Sync to Auth0 if needed (only if user has auth0_user_id)
+    if current_user.auth0_user_id:
+        try:
+            if name_changed:
+                logger.info(
+                    "Syncing username change to Auth0",
+                    extra={
+                        "user_id": current_user.id,
+                        "auth0_user_id": current_user.auth0_user_id,
+                        "new_name": current_user.name,
+                    },
+                )
+                success = auth0_service.update_user_profile(
+                    user_id=str(current_user.auth0_user_id),
+                    nickname=str(current_user.name),
+                )
+                if not success:
+                    logger.warning(
+                        "Auth0 username sync failed (database updated)",
+                        extra={
+                            "user_id": current_user.id,
+                            "auth0_user_id": current_user.auth0_user_id,
+                        },
+                    )
+
+            if email_changed:
+                logger.info(
+                    "Syncing email change to Auth0",
+                    extra={
+                        "user_id": current_user.id,
+                        "auth0_user_id": current_user.auth0_user_id,
+                        "new_email": current_user.email,
+                    },
+                )
+                success = auth0_service.update_user_email(
+                    user_id=str(current_user.auth0_user_id),
+                    email=str(current_user.email),
+                )
+                if not success:
+                    logger.warning(
+                        "Auth0 email sync failed (database updated)",
+                        extra={
+                            "user_id": current_user.id,
+                            "auth0_user_id": current_user.auth0_user_id,
+                        },
+                    )
+
+        except Exception as e:
+            # Log Auth0 sync failure but don't fail the request
+            logger.error(
+                "Auth0 sync failed (database updated successfully)",
+                extra={
+                    "user_id": current_user.id,
+                    "auth0_user_id": current_user.auth0_user_id,
+                    "error": str(e),
+                },
+            )
+    else:
+        if name_changed or email_changed:
+            logger.info(
+                "Skipping Auth0 sync - user has no auth0_user_id",
+                extra={"user_id": current_user.id},
+            )
 
     # Return updated user data with prefs
     user_response = UserResponse.model_validate(current_user)

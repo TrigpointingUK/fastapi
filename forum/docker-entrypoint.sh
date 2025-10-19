@@ -56,6 +56,15 @@ cat /var/www/html/config.php
 
 find /mnt/phpbb -type d -print
 
+# Apply custom green theme by appending import to colours.css
+if [ -f /var/www/html/styles/prosilver/theme/colours.css ]; then
+    echo "Applying custom green theme..."
+    # Check if import already exists to avoid duplicates
+    if ! grep -q "colours_green.css" /var/www/html/styles/prosilver/theme/colours.css; then
+        echo '@import url("colours_green.css");' >> /var/www/html/styles/prosilver/theme/colours.css
+    fi
+fi
+
 # Remove installer if present to prevent install wizard
 if [ -d /var/www/html/install ]; then
     rm -rf /var/www/html/install

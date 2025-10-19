@@ -288,6 +288,160 @@ class Auth0TokenValidator:
             logger.error(json.dumps(log_data))
             return None
 
+    def validate_m2m_token(self, token: str) -> Optional[Dict[str, Any]]:
+        """
+        Validate an M2M (Machine-to-Machine) token from Auth0.
+
+        Used for webhook endpoints that receive calls from Auth0 Actions.
+        Validates against the Management API audience.
+
+        Args:
+            token: JWT token string
+
+        Returns:
+            Dictionary containing token payload or None if invalid
+        """
+        if not self.domain:
+            log_data = {
+                "event": "m2m_token_validation_failed",
+                "reason": "no_auth0_domain_configured",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
+            return None
+
+        try:
+            # Get M2M audience for validation (Management API audience)
+            from app.core.config import settings
+
+            m2m_audience = settings.AUTH0_WEBHOOK_M2M_AUDIENCE
+            if not m2m_audience:
+                log_data = {
+                    "event": "m2m_token_validation_failed",
+                    "reason": "no_m2m_audience_configured",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
+                return None
+
+            # Get JWKS for token validation
+            jwks = self._get_jwks()
+            if not jwks:
+                log_data = {
+                    "event": "m2m_token_validation_failed",
+                    "reason": "jwks_retrieval_failed",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
+                return None
+
+            # Decode the token header to get the key ID
+            try:
+                unverified_header = jwt.get_unverified_header(token)
+                kid = unverified_header.get("kid")
+            except Exception as e:
+                log_data = {
+                    "event": "m2m_token_validation_failed",
+                    "reason": "invalid_token_header",
+                    "error": str(e),
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
+                return None
+
+            if not kid:
+                log_data = {
+                    "event": "m2m_token_validation_failed",
+                    "reason": "no_kid_in_header",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
+                return None
+
+            # Find the correct key from JWKS
+            jwk = None
+            for key in jwks.get("keys", []):
+                if key.get("kid") == kid:
+                    jwk = key
+                    break
+
+            if not jwk:
+                log_data = {
+                    "event": "m2m_token_validation_failed",
+                    "reason": "key_not_found",
+                    "kid": kid,
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
+                return None
+
+            # Convert JWK to public key for PyJWT
+            public_key = self._jwk_to_public_key(jwk)
+            if not public_key:
+                log_data = {
+                    "event": "m2m_token_validation_failed",
+                    "reason": "jwk_conversion_failed",
+                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                }
+                logger.error(json.dumps(log_data))
+                return None
+
+            # Validate token using PyJWT
+            payload = jwt.decode(
+                token,
+                public_key,
+                algorithms=["RS256"],
+                audience=m2m_audience,
+                issuer=f"https://{self.domain}/",
+            )
+
+            log_data = {
+                "event": "m2m_token_validated",
+                "aud": payload.get("aud", ""),
+                "client_id": payload.get("azp", payload.get("client_id", "")),
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.debug(json.dumps(log_data))
+
+            return payload
+
+        except jwt.ExpiredSignatureError:
+            log_data = {
+                "event": "m2m_token_validation_failed",
+                "reason": "expired_signature",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.warning(json.dumps(log_data))
+            return None
+        except jwt.InvalidAudienceError as e:
+            log_data = {
+                "event": "m2m_token_validation_failed",
+                "reason": "invalid_audience",
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.warning(json.dumps(log_data))
+            return None
+        except jwt.InvalidTokenError as e:
+            log_data = {
+                "event": "m2m_token_validation_failed",
+                "reason": "invalid_token",
+                "error": str(e),
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.warning(json.dumps(log_data))
+            return None
+        except Exception as e:
+            log_data = {
+                "event": "m2m_token_validation_failed",
+                "reason": "unexpected_error",
+                "error": str(e),
+                "error_type": type(e).__name__,
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.error(json.dumps(log_data))
+            return None
+
 
 # Global Auth0 validator instance
 auth0_validator = Auth0TokenValidator()

@@ -180,6 +180,7 @@ lint: ## Run linting
 format: ## Format code
 	black app tests
 	isort app tests
+	terraform fmt -recursive terraform/
 
 format-check: ## Check code formatting
 	black --check app tests

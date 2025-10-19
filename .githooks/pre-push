@@ -11,13 +11,54 @@ remote_url="$2"
 
 echo "🔍 Pre-push validation for branch: $current_branch"
 
+# Detect changed files compared to remote
+# Try upstream first, fallback to origin/main
+if git rev-parse @{upstream} >/dev/null 2>&1; then
+    changed_files=$(git diff --name-only @{upstream}..HEAD)
+else
+    echo "⚠️  No upstream tracking branch, comparing against origin/main"
+    git fetch -q origin main 2>/dev/null || true
+    changed_files=$(git diff --name-only origin/main..HEAD 2>/dev/null || git diff --name-only HEAD)
+fi
+
+if [[ -z "$changed_files" ]]; then
+    echo "ℹ️  No changed files detected"
+    exit 0
+fi
+
+# Categorise changes
+run_fastapi_checks=false
+run_terraform_checks=false
+docs_only=true
+
+while IFS= read -r file; do
+    if [[ "$file" =~ ^(app/|res/|tests/|\.github/) ]]; then
+        run_fastapi_checks=true
+        docs_only=false
+    elif [[ "$file" =~ ^terraform/ ]]; then
+        run_terraform_checks=true
+        docs_only=false
+    elif [[ ! "$file" =~ ^docs/ ]]; then
+        # Non-docs, non-categorised file - run FastAPI checks to be safe
+        run_fastapi_checks=true
+        docs_only=false
+    fi
+done <<< "$changed_files"
+
+# If only docs changed, allow push
+if [[ "$docs_only" == true ]]; then
+    echo "ℹ️  Only documentation files changed. Skipping CI checks."
+    echo "🚀 Pre-push validation complete"
+    exit 0
+fi
+
 # Check if pushing to protected branches
 if [[ "$current_branch" == "main" || "$current_branch" == "develop" ]]; then
     echo "🚨 CRITICAL: Pushing to protected branch '$current_branch'"
     echo "📋 Running mandatory CI validation..."
 
-    # Check if virtual environment is activated
-    if [[ "$VIRTUAL_ENV" == "" ]]; then
+    # Check if virtual environment is activated (only if we need to run FastAPI checks)
+    if [[ "$run_fastapi_checks" == true ]] && [[ "$VIRTUAL_ENV" == "" ]]; then
         echo "⚠️  Virtual environment not activated. Activating..."
         if [[ -f "venv/bin/activate" ]]; then
             source venv/bin/activate
@@ -27,53 +68,114 @@ if [[ "$current_branch" == "main" || "$current_branch" == "develop" ]]; then
         fi
     fi
 
-    # Enforce strict CI validation
-    echo "🧪 Running complete CI suite (required for $current_branch)..."
-    if make ci; then
-        echo "✅ All CI checks passed! Push approved for $current_branch"
+    # Run FastAPI checks if needed
+    if [[ "$run_fastapi_checks" == true ]]; then
+        echo "🧪 Running complete CI suite (required for $current_branch with app/res/tests changes)..."
+        if make ci; then
+            echo "✅ All CI checks passed! Push approved for $current_branch"
 
-        # Ensure we have the latest base branch reference
-        echo "⬇️  Fetching latest origin/main for diff coverage comparison..."
-        git fetch -q origin main || true
+            # Ensure we have the latest base branch reference
+            echo "⬇️  Fetching latest origin/main for diff coverage comparison..."
+            git fetch -q origin main || true
 
-        # Enforce diff coverage threshold
-        echo "📈 Checking diff coverage (>= 90% required)..."
-        if make diff-cov; then
-            echo "✅ Diff coverage meets threshold"
-        else
-            echo "❌ Diff coverage check failed (threshold 90%)"
-            echo "   Tip: Run 'make diff-cov' locally to see details and improve tests."
-            exit 1
-        fi
-
-        # Additional check for main branch
-        if [[ "$current_branch" == "main" ]]; then
-            echo "⚠️  WARNING: Direct push to main branch detected!"
-            echo "📋 Best practice: Use develop → main via pull request"
-            echo "⏸️  Continue anyway? (y/N): "
-            read -r response
-            if [[ ! "$response" =~ ^[Yy]$ ]]; then
-                echo "🛑 Push cancelled. Consider using: git checkout develop && git push"
+            # Enforce diff coverage threshold
+            echo "📈 Checking diff coverage (>= 90% required)..."
+            if make diff-cov; then
+                echo "✅ Diff coverage meets threshold"
+            else
+                echo "❌ Diff coverage check failed (threshold 90%)"
+                echo "   Tip: Run 'make diff-cov' locally to see details and improve tests."
                 exit 1
             fi
+        else
+            echo "❌ CI validation FAILED for protected branch '$current_branch'"
+            echo ""
+            echo "🔧 Required fixes before push:"
+            echo "  1. Run: make ci"
+            echo "  2. Fix all reported issues"
+            echo "  3. Auto-fix formatting: make format"
+            echo "  4. Manual fix: flake8, mypy, test failures"
+            echo "  5. Re-run: make ci (must pass completely)"
+            echo ""
+            echo "🚫 PUSH BLOCKED until all CI checks pass"
+            exit 1
         fi
+    fi
 
-    else
-        echo "❌ CI validation FAILED for protected branch '$current_branch'"
-        echo ""
-        echo "🔧 Required fixes before push:"
-        echo "  1. Run: make ci"
-        echo "  2. Fix all reported issues"
-        echo "  3. Auto-fix formatting: black app tests && isort app tests"
-        echo "  4. Manual fix: flake8, mypy, test failures"
-        echo "  5. Re-run: make ci (must pass completely)"
-        echo ""
-        echo "🚫 PUSH BLOCKED until all CI checks pass"
-        exit 1
+    # Run Terraform checks if needed
+    if [[ "$run_terraform_checks" == true ]]; then
+        echo "🔧 Checking Terraform formatting..."
+        if ! command -v terraform >/dev/null 2>&1; then
+            echo "❌ terraform not installed. Please install Terraform."
+            exit 1
+        fi
+        
+        if terraform fmt -write=false -check -recursive terraform/ >/dev/null 2>&1; then
+            echo "✅ Terraform formatting is correct!"
+        else
+            echo "❌ Terraform files need formatting!"
+            echo "💡 Run: make format"
+            echo "🚫 PUSH BLOCKED until Terraform formatting is fixed"
+            exit 1
+        fi
+    fi
+
+    # Additional check for main branch
+    if [[ "$current_branch" == "main" ]]; then
+        echo "⚠️  WARNING: Direct push to main branch detected!"
+        echo "📋 Best practice: Use develop → main via pull request"
+        echo "⏸️  Continue anyway? (y/N): "
+        read -r response
+        if [[ ! "$response" =~ ^[Yy]$ ]]; then
+            echo "🛑 Push cancelled. Consider using: git checkout develop && git push"
+            exit 1
+        fi
     fi
 
 else
-    echo "ℹ️  Feature branch push detected. Skipping strict validation."
+    # Feature branch - run checks but without strict enforcement
+    echo "ℹ️  Feature branch push detected."
+
+    # Check if virtual environment is activated (only if we need to run FastAPI checks)
+    if [[ "$run_fastapi_checks" == true ]] && [[ "$VIRTUAL_ENV" == "" ]]; then
+        echo "⚠️  Virtual environment not activated. Activating..."
+        if [[ -f "venv/bin/activate" ]]; then
+            source venv/bin/activate
+        else
+            echo "❌ Virtual environment not found. Please run: python3 -m venv venv && source venv/bin/activate && make install-dev"
+            exit 1
+        fi
+    fi
+
+    # Run FastAPI checks if needed
+    if [[ "$run_fastapi_checks" == true ]]; then
+        echo "🧪 Running FastAPI CI checks..."
+        if make ci; then
+            echo "✅ FastAPI CI checks passed!"
+        else
+            echo "❌ FastAPI CI checks failed!"
+            echo "💡 Run 'make ci' to see detailed error messages."
+            exit 1
+        fi
+    fi
+
+    # Run Terraform checks if needed
+    if [[ "$run_terraform_checks" == true ]]; then
+        echo "🔧 Checking Terraform formatting..."
+        if ! command -v terraform >/dev/null 2>&1; then
+            echo "❌ terraform not installed. Please install Terraform."
+            exit 1
+        fi
+        
+        if terraform fmt -write=false -check -recursive terraform/ >/dev/null 2>&1; then
+            echo "✅ Terraform formatting is correct!"
+        else
+            echo "❌ Terraform files need formatting!"
+            echo "💡 Run: make format"
+            exit 1
+        fi
+    fi
+
     echo "💡 Reminder: Run 'make ci' before merging to develop/main"
 fi
 

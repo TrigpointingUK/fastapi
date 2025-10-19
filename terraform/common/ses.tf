@@ -1,9 +1,7 @@
-# SES Email Identity Verification
+# SES Email Identity Verification for Common Services
 # These email addresses need to be verified before they can send emails
-
-resource "aws_ses_email_identity" "noreply" {
-  email = "noreply@trigpointing.uk"
-}
+# Note: Environment-specific email identities (noreply@trigpointing.me,
+# noreply@trigpointing.uk) are managed in their respective environment configs
 
 resource "aws_ses_email_identity" "admin" {
   email = "admin@trigpointing.uk"
@@ -30,3 +28,6 @@ module "smtp_phpbb" {
     "forum@trigpointing.uk"
   ]
 }
+
+# Note: Auth0 SMTP users are created per-environment in the auth0 module
+# for better security isolation and credential management
