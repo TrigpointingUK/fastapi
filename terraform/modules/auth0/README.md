@@ -13,6 +13,8 @@ This Terraform module manages a complete Auth0 tenant setup for the TrigPointing
   - Native Android client
 - **RBAC**: Admin role with permissions
 - **Post User Registration Action**: Automated user provisioning webhook to FastAPI
+- **Custom Email Provider**: AWS SES SMTP integration with per-environment IAM users
+- **Custom Domain**: Auth0 custom domain with automatic SSL certificate management
 
 ## Architecture
 
@@ -22,6 +24,19 @@ Each environment (staging/production) gets:
 - Environment-specific API identifiers
 - Separate callback URLs
 - Independent post-registration Actions
+- **Dedicated SES SMTP IAM user** for credential isolation and security
+
+### Email Provider Architecture
+
+This module creates a dedicated AWS IAM user per environment for SES SMTP access. This provides:
+
+- **Security Isolation**: Staging credentials are completely separate from production
+- **Independent Credential Rotation**: Rotate staging without affecting production
+- **Granular IAM Policies**: Each IAM user is restricted to send from only its environment's email address
+- **Cost Attribution**: Separate CloudWatch metrics and AWS Cost Explorer tracking
+- **Environment Independence**: Each environment can be torn down without affecting others
+
+The email identities (`noreply@trigpointing.uk`, `noreply@trigpointing.me`) remain in common infrastructure as they're shared AWS resources that need verification.
 
 ## Usage
 

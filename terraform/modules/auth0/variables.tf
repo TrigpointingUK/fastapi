@@ -127,18 +127,6 @@ variable "smtp_port" {
   default     = 587
 }
 
-variable "smtp_username" {
-  description = "SMTP username (AWS Access Key ID for SES)"
-  type        = string
-  sensitive   = true
-}
-
-variable "smtp_password" {
-  description = "SMTP password (AWS SES SMTP password)"
-  type        = string
-  sensitive   = true
-}
-
 variable "from_email" {
   description = "From email address for Auth0 emails"
   type        = string

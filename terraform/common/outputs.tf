@@ -250,15 +250,4 @@ output "phpbb_smtp_password" {
   sensitive   = true
 }
 
-# SES SMTP Outputs for Auth0
-output "auth0_smtp_username" {
-  description = "SMTP username for Auth0 (AWS Access Key ID)"
-  value       = module.smtp_auth0.smtp_username
-  sensitive   = true
-}
-
-output "auth0_smtp_password" {
-  description = "SMTP password for Auth0"
-  value       = module.smtp_auth0.smtp_password
-  sensitive   = true
-}
+# Note: Auth0 SMTP credentials are output from the auth0 module per environment

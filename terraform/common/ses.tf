@@ -35,13 +35,5 @@ module "smtp_phpbb" {
   ]
 }
 
-# SMTP User for Auth0
-module "smtp_auth0" {
-  source       = "../modules/ses-smtp-user"
-  user_name    = "smtp-auth0"
-  project_name = var.project_name
-  allowed_from_addresses = [
-    "noreply@trigpointing.uk",
-    "noreply@trigpointing.me"
-  ]
-}
+# Note: Auth0 SMTP users are created per-environment in the auth0 module
+# for better security isolation and credential management

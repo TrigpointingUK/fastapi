@@ -63,13 +63,11 @@ module "auth0" {
   admin_role_name        = "production-admin"
   admin_role_description = "Production Environment Administrators"
 
-  # Email Provider (SES)
-  smtp_host     = "email-smtp.eu-west-1.amazonaws.com"
-  smtp_port     = 587
-  smtp_username = data.terraform_remote_state.common.outputs.auth0_smtp_username
-  smtp_password = data.terraform_remote_state.common.outputs.auth0_smtp_password
-  from_email    = "noreply@trigpointing.uk"
-  from_name     = "Trigpointing UK"
+  # Email Provider (SES) - SMTP user created per environment
+  smtp_host  = "email-smtp.eu-west-1.amazonaws.com"
+  smtp_port  = 587
+  from_email = "noreply@trigpointing.uk"
+  from_name  = "Trigpointing UK"
 
   # Enable post-registration Action
   enable_post_registration_action = true
@@ -121,5 +119,22 @@ output "auth0_m2m_client_id" {
 output "auth0_tenant_domain" {
   description = "Auth0 tenant domain"
   value       = module.auth0.tenant_domain
+}
+
+output "auth0_smtp_user_name" {
+  description = "IAM username for Auth0 SMTP"
+  value       = module.auth0.smtp_user_name
+}
+
+output "auth0_smtp_username" {
+  description = "Auth0 SMTP username (AWS Access Key ID)"
+  value       = module.auth0.smtp_username
+  sensitive   = true
+}
+
+output "auth0_smtp_password" {
+  description = "Auth0 SMTP password"
+  value       = module.auth0.smtp_password
+  sensitive   = true
 }
 

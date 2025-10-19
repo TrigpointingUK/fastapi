@@ -20,6 +20,10 @@ terraform {
       source  = "cloudflare/cloudflare"
       version = "~> 4.0"
     }
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
   }
 }
 
@@ -410,6 +414,51 @@ resource "cloudflare_record" "auth0_custom_domain" {
 }
 
 # ============================================================================
+# SES SMTP USER (per environment)
+# ============================================================================
+
+# IAM user for SES SMTP access (dedicated per environment)
+resource "aws_iam_user" "smtp_auth0" {
+  name = "${var.name_prefix}-smtp-auth0"
+
+  tags = {
+    Name        = "${var.name_prefix}-smtp-auth0"
+    Environment = var.environment
+    Purpose     = "Auth0 SES SMTP access"
+  }
+}
+
+# IAM policy to allow SES sending
+resource "aws_iam_user_policy" "smtp_auth0_policy" {
+  name = "${var.name_prefix}-smtp-auth0-ses-policy"
+  user = aws_iam_user.smtp_auth0.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ses:SendEmail",
+          "ses:SendRawEmail"
+        ]
+        Resource = "*"
+        Condition = {
+          StringEquals = {
+            "ses:FromAddress" = var.from_email
+          }
+        }
+      }
+    ]
+  })
+}
+
+# Generate SMTP credentials
+resource "aws_iam_access_key" "smtp_auth0_credentials" {
+  user = aws_iam_user.smtp_auth0.name
+}
+
+# ============================================================================
 # EMAIL PROVIDER
 # ============================================================================
 
@@ -422,13 +471,7 @@ resource "auth0_email_provider" "ses" {
   credentials {
     smtp_host = var.smtp_host
     smtp_port = var.smtp_port
-    smtp_user = var.smtp_username
-    smtp_pass = var.smtp_password
-  }
-
-  settings {
-    headers {
-      x_mc_view_content_link = ""
-    }
+    smtp_user = aws_iam_access_key.smtp_auth0_credentials.id
+    smtp_pass = aws_iam_access_key.smtp_auth0_credentials.ses_smtp_password_v4
   }
 }

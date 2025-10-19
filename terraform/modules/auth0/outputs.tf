@@ -96,3 +96,21 @@ output "custom_domain_verification" {
   value       = auth0_custom_domain.main.verification
 }
 
+# SES SMTP User Outputs
+output "smtp_user_name" {
+  description = "IAM username for Auth0 SMTP access"
+  value       = aws_iam_user.smtp_auth0.name
+}
+
+output "smtp_username" {
+  description = "SMTP username (AWS Access Key ID)"
+  value       = aws_iam_access_key.smtp_auth0_credentials.id
+  sensitive   = true
+}
+
+output "smtp_password" {
+  description = "SMTP password (AWS SES SMTP password)"
+  value       = aws_iam_access_key.smtp_auth0_credentials.ses_smtp_password_v4
+  sensitive   = true
+}
+
