@@ -70,7 +70,7 @@ module "auth0" {
 
   # API Configuration
   api_name       = "tuk-api"
-  api_identifier = "https://api.trigpointing.uk/api/v1/"
+  api_identifier = "https://api.trigpointing.uk/"
 
   # FastAPI Configuration
   fastapi_url = "https://api.trigpointing.uk"

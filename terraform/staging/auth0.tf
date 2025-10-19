@@ -70,7 +70,7 @@ module "auth0" {
 
   # API Configuration
   api_name       = "tme-api"
-  api_identifier = "https://api.trigpointing.me/api/v1/"
+  api_identifier = "https://api.trigpointing.me/"
 
   # FastAPI Configuration
   fastapi_url = "https://api.trigpointing.me"
