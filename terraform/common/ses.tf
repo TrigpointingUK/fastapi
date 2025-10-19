@@ -9,6 +9,10 @@ resource "aws_ses_email_identity" "admin" {
   email = "admin@trigpointing.uk"
 }
 
+resource "aws_ses_email_identity" "noreply_staging" {
+  email = "noreply@trigpointing.me"
+}
+
 # SMTP User for MediaWiki
 module "smtp_mediawiki" {
   source       = "../modules/ses-smtp-user"
@@ -28,5 +32,16 @@ module "smtp_phpbb" {
   allowed_from_addresses = [
     "noreply@trigpointing.uk",
     "forum@trigpointing.uk"
+  ]
+}
+
+# SMTP User for Auth0
+module "smtp_auth0" {
+  source       = "../modules/ses-smtp-user"
+  user_name    = "smtp-auth0"
+  project_name = var.project_name
+  allowed_from_addresses = [
+    "noreply@trigpointing.uk",
+    "noreply@trigpointing.me"
   ]
 }

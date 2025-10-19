@@ -63,6 +63,14 @@ module "auth0" {
   admin_role_name        = "production-admin"
   admin_role_description = "Production Environment Administrators"
 
+  # Email Provider (SES)
+  smtp_host     = "email-smtp.eu-west-1.amazonaws.com"
+  smtp_port     = 587
+  smtp_username = data.terraform_remote_state.common.outputs.auth0_smtp_username
+  smtp_password = data.terraform_remote_state.common.outputs.auth0_smtp_password
+  from_email    = "noreply@trigpointing.uk"
+  from_name     = "Trigpointing UK"
+
   # Enable post-registration Action
   enable_post_registration_action = true
 }

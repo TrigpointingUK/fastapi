@@ -115,3 +115,38 @@ variable "admin_role_description" {
   default     = "Administrator"
 }
 
+# Email Provider Configuration
+variable "smtp_host" {
+  description = "SMTP server hostname (e.g., email-smtp.eu-west-1.amazonaws.com)"
+  type        = string
+}
+
+variable "smtp_port" {
+  description = "SMTP server port (587 for TLS)"
+  type        = number
+  default     = 587
+}
+
+variable "smtp_username" {
+  description = "SMTP username (AWS Access Key ID for SES)"
+  type        = string
+  sensitive   = true
+}
+
+variable "smtp_password" {
+  description = "SMTP password (AWS SES SMTP password)"
+  type        = string
+  sensitive   = true
+}
+
+variable "from_email" {
+  description = "From email address for Auth0 emails"
+  type        = string
+}
+
+variable "from_name" {
+  description = "From name for Auth0 emails"
+  type        = string
+  default     = "Trigpointing UK"
+}
+

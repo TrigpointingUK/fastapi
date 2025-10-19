@@ -408,3 +408,27 @@ resource "cloudflare_record" "auth0_custom_domain" {
 
   comment = "Auth0 custom domain for ${var.environment} - managed by Terraform"
 }
+
+# ============================================================================
+# EMAIL PROVIDER
+# ============================================================================
+
+# Configure custom SMTP email provider (AWS SES)
+resource "auth0_email_provider" "ses" {
+  name                 = "smtp"
+  enabled              = true
+  default_from_address = var.from_email
+
+  credentials {
+    smtp_host = var.smtp_host
+    smtp_port = var.smtp_port
+    smtp_user = var.smtp_username
+    smtp_pass = var.smtp_password
+  }
+
+  settings {
+    headers {
+      x_mc_view_content_link = ""
+    }
+  }
+}
