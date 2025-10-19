@@ -62,8 +62,20 @@ variable "swagger_allowed_origins" {
   default     = []
 }
 
-variable "web_app_callback_urls" {
-  description = "List of web application callback URLs"
+variable "website_callback_urls" {
+  description = "List of website callback URLs"
+  type        = list(string)
+  default     = []
+}
+
+variable "forum_callback_urls" {
+  description = "List of forum callback URLs"
+  type        = list(string)
+  default     = []
+}
+
+variable "wiki_callback_urls" {
+  description = "List of wiki callback URLs"
   type        = list(string)
   default     = []
 }
@@ -72,6 +84,18 @@ variable "android_callback_urls" {
   description = "List of Android app callback URLs"
   type        = list(string)
   default     = []
+}
+
+variable "enable_forum" {
+  description = "Whether to create the forum application"
+  type        = bool
+  default     = false
+}
+
+variable "enable_wiki" {
+  description = "Whether to create the wiki application"
+  type        = bool
+  default     = false
 }
 
 variable "enable_post_registration_action" {

@@ -62,12 +62,16 @@ resource "auth0_connection" "database" {
 resource "auth0_connection_clients" "database_clients" {
   connection_id = auth0_connection.database.id
 
-  enabled_clients = [
-    auth0_client.m2m_api.id,
-    auth0_client.swagger_ui.id,
-    auth0_client.web_app.id,
-    auth0_client.android.id,
-  ]
+  enabled_clients = concat(
+    [
+      auth0_client.m2m_api.id,
+      auth0_client.swagger.id,
+      auth0_client.website.id,
+      auth0_client.android.id,
+    ],
+    var.enable_forum ? [auth0_client.forum[0].id] : [],
+    var.enable_wiki ? [auth0_client.wiki[0].id] : [],
+  )
 }
 
 # ============================================================================
@@ -141,9 +145,9 @@ resource "auth0_client" "m2m_api" {
   }
 }
 
-# Single Page Application (Swagger UI)
-resource "auth0_client" "swagger_ui" {
-  name        = "${var.name_prefix}-swagger-ui"
+# Single Page Application (Swagger)
+resource "auth0_client" "swagger" {
+  name        = "${var.name_prefix}-swagger"
   description = "SPA for Swagger/OpenAPI documentation OAuth2 authentication"
   app_type    = "spa"
 
@@ -164,13 +168,57 @@ resource "auth0_client" "swagger_ui" {
   oidc_conformant = true
 }
 
-# Regular Web Application
-resource "auth0_client" "web_app" {
-  name        = "${var.name_prefix}-web-app"
-  description = "Main web application for ${var.environment}"
+# Regular Web Application (Website)
+resource "auth0_client" "website" {
+  name        = "${var.name_prefix}-website"
+  description = "Main website for ${var.environment}"
   app_type    = "regular_web"
 
-  callbacks = var.web_app_callback_urls
+  callbacks = var.website_callback_urls
+
+  grant_types = [
+    "authorization_code",
+    "refresh_token",
+  ]
+
+  jwt_configuration {
+    alg = "RS256"
+  }
+
+  oidc_conformant = true
+}
+
+# Regular Web Application (Forum) - Optional
+resource "auth0_client" "forum" {
+  count = var.enable_forum ? 1 : 0
+
+  name        = "${var.name_prefix}-forum"
+  description = "Forum (phpBB) for ${var.environment}"
+  app_type    = "regular_web"
+
+  callbacks = var.forum_callback_urls
+
+  grant_types = [
+    "authorization_code",
+    "refresh_token",
+  ]
+
+  jwt_configuration {
+    alg = "RS256"
+  }
+
+  oidc_conformant = true
+}
+
+# Regular Web Application (Wiki) - Optional
+resource "auth0_client" "wiki" {
+  count = var.enable_wiki ? 1 : 0
+
+  name        = "${var.name_prefix}-wiki"
+  description = "Wiki (MediaWiki) for ${var.environment}"
+  app_type    = "regular_web"
+
+  callbacks = var.wiki_callback_urls
 
   grant_types = [
     "authorization_code",

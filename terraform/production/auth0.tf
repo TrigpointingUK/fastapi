@@ -35,16 +35,29 @@ module "auth0" {
     "https://api.trigpointing.uk",
   ]
 
-  # Web App Callbacks
-  web_app_callback_urls = [
+  # Website Callbacks
+  website_callback_urls = [
     "https://www.trigpointing.uk/auth/callback",
-    "https://www.trigpointing.uk/forum/ucp.php?mode=login", # Legacy phpBB
+  ]
+
+  # Forum Callbacks
+  forum_callback_urls = [
+    "https://www.trigpointing.uk/forum/ucp.php?mode=login",
+  ]
+
+  # Wiki Callbacks
+  wiki_callback_urls = [
+    "https://www.trigpointing.uk/wiki/index.php?title=Special:OAuth2Client/callback",
   ]
 
   # Android Callbacks
   android_callback_urls = [
     "uk.trigpointing.android://callback",
   ]
+
+  # Optional Apps (enabled for production)
+  enable_forum = true
+  enable_wiki  = true
 
   # Role Configuration
   admin_role_name        = "production-admin"
@@ -69,8 +82,26 @@ output "auth0_api_identifier" {
 }
 
 output "auth0_swagger_client_id" {
-  description = "Swagger UI OAuth2 client ID"
+  description = "Swagger OAuth2 client ID"
   value       = module.auth0.swagger_client_id
+}
+
+output "auth0_website_client_id" {
+  description = "Website client ID"
+  value       = module.auth0.website_client_id
+  sensitive   = true
+}
+
+output "auth0_forum_client_id" {
+  description = "Forum client ID"
+  value       = module.auth0.forum_client_id
+  sensitive   = true
+}
+
+output "auth0_wiki_client_id" {
+  description = "Wiki client ID"
+  value       = module.auth0.wiki_client_id
+  sensitive   = true
 }
 
 output "auth0_m2m_client_id" {

@@ -37,17 +37,20 @@ module "auth0" {
     "http://localhost:8000",
   ]
 
-  # Web App Callbacks
-  web_app_callback_urls = [
+  # Website Callbacks
+  website_callback_urls = [
     "https://www.trigpointing.me/auth/callback",
-    "https://www.trigpointing.me/forum/ucp.php?mode=login", # Legacy phpBB
-    "http://localhost:3000/auth/callback",                  # Local development
+    "http://localhost:3000/auth/callback", # Local development
   ]
 
   # Android Callbacks
   android_callback_urls = [
     "me.trigpointing.android://callback",
   ]
+
+  # Optional Apps (disabled for staging)
+  enable_forum = false
+  enable_wiki  = false
 
   # Role Configuration
   admin_role_name        = "staging-admin"
@@ -72,8 +75,14 @@ output "auth0_api_identifier" {
 }
 
 output "auth0_swagger_client_id" {
-  description = "Swagger UI OAuth2 client ID"
+  description = "Swagger OAuth2 client ID"
   value       = module.auth0.swagger_client_id
+}
+
+output "auth0_website_client_id" {
+  description = "Website client ID"
+  value       = module.auth0.website_client_id
+  sensitive   = true
 }
 
 output "auth0_m2m_client_id" {

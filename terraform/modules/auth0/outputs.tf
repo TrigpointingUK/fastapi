@@ -33,13 +33,25 @@ output "m2m_client_secret" {
 }
 
 output "swagger_client_id" {
-  description = "Swagger UI client ID"
-  value       = auth0_client.swagger_ui.id
+  description = "Swagger client ID"
+  value       = auth0_client.swagger.id
 }
 
-output "web_app_client_id" {
-  description = "Web application client ID"
-  value       = auth0_client.web_app.id
+output "website_client_id" {
+  description = "Website client ID"
+  value       = auth0_client.website.id
+  sensitive   = true
+}
+
+output "forum_client_id" {
+  description = "Forum client ID"
+  value       = var.enable_forum ? auth0_client.forum[0].id : null
+  sensitive   = true
+}
+
+output "wiki_client_id" {
+  description = "Wiki client ID"
+  value       = var.enable_wiki ? auth0_client.wiki[0].id : null
   sensitive   = true
 }
 
