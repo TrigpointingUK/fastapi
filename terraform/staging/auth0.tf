@@ -7,6 +7,7 @@ module "auth0" {
   source = "../modules/auth0"
 
   environment = "staging"
+  name_prefix = "tme"
 
   # Auth0 Domains
   auth0_custom_domain = var.auth0_custom_domain

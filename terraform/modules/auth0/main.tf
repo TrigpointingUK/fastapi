@@ -128,7 +128,7 @@ resource "auth0_resource_server_scopes" "api_scopes" {
 
 # M2M Application for API access
 resource "auth0_client" "m2m_api" {
-  name        = "${var.environment}-api-m2m"
+  name        = "${var.name_prefix}-api-m2m"
   description = "Machine to Machine application for ${var.environment} API"
   app_type    = "non_interactive"
 
@@ -143,7 +143,7 @@ resource "auth0_client" "m2m_api" {
 
 # Single Page Application (Swagger UI)
 resource "auth0_client" "swagger_ui" {
-  name        = "${var.environment}-swagger-ui"
+  name        = "${var.name_prefix}-swagger-ui"
   description = "SPA for Swagger/OpenAPI documentation OAuth2 authentication"
   app_type    = "spa"
 
@@ -166,7 +166,7 @@ resource "auth0_client" "swagger_ui" {
 
 # Regular Web Application
 resource "auth0_client" "web_app" {
-  name        = "${var.environment}-web-app"
+  name        = "${var.name_prefix}-web-app"
   description = "Main web application for ${var.environment}"
   app_type    = "regular_web"
 
@@ -186,7 +186,7 @@ resource "auth0_client" "web_app" {
 
 # Native Application (Android)
 resource "auth0_client" "android" {
-  name        = "${var.environment}-android"
+  name        = "${var.name_prefix}-android"
   description = "Android mobile application for ${var.environment}"
   app_type    = "native"
 
@@ -264,7 +264,7 @@ resource "auth0_role_permissions" "admin_perms" {
 resource "auth0_action" "post_user_registration" {
   count = var.enable_post_registration_action ? 1 : 0
 
-  name    = "${var.environment}-post-user-registration"
+  name    = "${var.name_prefix}-post-user-registration"
   runtime = "node18"
   deploy  = true
 

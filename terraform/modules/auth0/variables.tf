@@ -9,6 +9,11 @@ variable "environment" {
   }
 }
 
+variable "name_prefix" {
+  description = "Prefix for Auth0 resource names (e.g., tme, tuk)"
+  type        = string
+}
+
 variable "auth0_custom_domain" {
   description = "Auth0 custom domain for user-facing authentication (e.g., auth.trigpointing.me)"
   type        = string

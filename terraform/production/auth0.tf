@@ -7,6 +7,7 @@ module "auth0" {
   source = "../modules/auth0"
 
   environment = "production"
+  name_prefix = "tuk"
 
   # Auth0 Domains
   auth0_custom_domain = var.auth0_custom_domain
