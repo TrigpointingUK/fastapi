@@ -149,7 +149,7 @@ resource "auth0_resource_server_scopes" "api_scopes" {
 
 # M2M Application for API access
 resource "auth0_client" "m2m_api" {
-  name        = "${var.name_prefix}-api-m2m"
+  name        = "${var.name_prefix}-api"
   description = "Machine to Machine application for ${var.environment} API"
   app_type    = "non_interactive"
 
