@@ -3,6 +3,19 @@
 # This uses the auth0 module to create a complete Auth0 setup
 # for the production environment with its own tenant.
 
+# ============================================================================
+# SES EMAIL IDENTITY
+# ============================================================================
+
+# Verify ownership of the production domain email address
+resource "aws_ses_email_identity" "noreply" {
+  email = "noreply@trigpointing.uk"
+}
+
+# ============================================================================
+# AUTH0 MODULE
+# ============================================================================
+
 module "auth0" {
   source = "../modules/auth0"
 

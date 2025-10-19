@@ -1,16 +1,10 @@
-# SES Email Identity Verification
+# SES Email Identity Verification for Common Services
 # These email addresses need to be verified before they can send emails
-
-resource "aws_ses_email_identity" "noreply" {
-  email = "noreply@trigpointing.uk"
-}
+# Note: Environment-specific email identities (noreply@trigpointing.me,
+# noreply@trigpointing.uk) are managed in their respective environment configs
 
 resource "aws_ses_email_identity" "admin" {
   email = "admin@trigpointing.uk"
-}
-
-resource "aws_ses_email_identity" "noreply_staging" {
-  email = "noreply@trigpointing.me"
 }
 
 # SMTP User for MediaWiki

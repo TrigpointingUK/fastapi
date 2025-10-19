@@ -3,6 +3,19 @@
 # This uses the auth0 module to create a complete Auth0 setup
 # for the staging environment with its own tenant.
 
+# ============================================================================
+# SES EMAIL IDENTITY
+# ============================================================================
+
+# Verify ownership of the staging domain email address
+resource "aws_ses_email_identity" "noreply" {
+  email = "noreply@trigpointing.me"
+}
+
+# ============================================================================
+# AUTH0 MODULE
+# ============================================================================
+
 module "auth0" {
   source = "../modules/auth0"
 
