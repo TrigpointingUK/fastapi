@@ -138,3 +138,21 @@ variable "from_name" {
   default     = "Trigpointing UK"
 }
 
+# Branding Configuration
+variable "logo_url" {
+  description = "URL to the company logo for Auth0 branding (must be HTTPS)"
+  type        = string
+}
+
+variable "primary_color" {
+  description = "Primary color for Auth0 branding (hex format)"
+  type        = string
+  default     = "#005f00"
+}
+
+variable "page_background_color" {
+  description = "Page background color for Auth0 branding (hex format)"
+  type        = string
+  default     = "#ffffff"
+}
+

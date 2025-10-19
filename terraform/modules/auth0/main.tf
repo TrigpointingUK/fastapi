@@ -475,3 +475,17 @@ resource "auth0_email_provider" "ses" {
     smtp_pass = aws_iam_access_key.smtp_auth0_credentials.ses_smtp_password_v4
   }
 }
+
+# ============================================================================
+# BRANDING
+# ============================================================================
+
+# Configure Auth0 Universal Login branding
+resource "auth0_branding" "main" {
+  logo_url = var.logo_url
+
+  colors {
+    primary         = var.primary_color
+    page_background = var.page_background_color
+  }
+}

@@ -84,6 +84,11 @@ module "auth0" {
   from_email = "noreply@trigpointing.uk"
   from_name  = "Trigpointing UK"
 
+  # Branding
+  logo_url              = "https://trigpointing.uk/pics/tuk_logo.gif"
+  primary_color         = "#005f00"
+  page_background_color = "#ffffff"
+
   # Enable post-registration Action
   enable_post_registration_action = true
 }
