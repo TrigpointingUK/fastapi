@@ -279,7 +279,7 @@ resource "auth0_action" "post_user_registration" {
 
   dependencies {
     name    = "axios"
-    version = "latest"
+    version = "1.7.9"
   }
 
   secrets {
@@ -340,7 +340,7 @@ resource "auth0_custom_domain" "main" {
 resource "cloudflare_record" "auth0_custom_domain" {
   zone_id = data.cloudflare_zones.domain.zones[0].id
   name    = split(".", var.auth0_custom_domain)[0] # Extract subdomain (e.g., "auth" from "auth.trigpointing.me")
-  content = auth0_custom_domain.main.verification[0].methods[0].name
+  content = auth0_custom_domain.main.verification[0].methods[0].record
   type    = "CNAME"
   proxied = false # MUST be false for Auth0 custom domains
   ttl     = 1     # Auto TTL
