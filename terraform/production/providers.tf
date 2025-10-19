@@ -29,7 +29,7 @@ provider "aws" {
 }
 
 provider "auth0" {
-  domain        = var.auth0_domain
+  domain        = var.auth0_tenant_domain
   client_id     = var.auth0_client_id
   client_secret = var.auth0_client_secret
   # Credentials can also be set via environment variables:

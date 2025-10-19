@@ -8,6 +8,9 @@ module "auth0" {
 
   environment = "staging"
 
+  # Auth0 Domains
+  auth0_custom_domain = var.auth0_custom_domain
+
   # Database Connection
   database_connection_name = "staging-users"
 

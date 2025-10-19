@@ -91,8 +91,13 @@ variable "domain_name" {
 
 # Auth0 Configuration (always enabled)
 
-variable "auth0_domain" {
-  description = "Auth0 tenant domain (e.g., myapp-staging.eu.auth0.com)"
+variable "auth0_tenant_domain" {
+  description = "Auth0 tenant domain for Management API (e.g., myapp-staging.eu.auth0.com)"
+  type        = string
+}
+
+variable "auth0_custom_domain" {
+  description = "Auth0 custom domain for user-facing authentication (e.g., auth.trigpointing.me)"
   type        = string
 }
 

@@ -64,3 +64,8 @@ output "tenant_domain" {
   value       = data.auth0_tenant.current.domain
 }
 
+output "custom_domain" {
+  description = "Auth0 custom domain for user-facing authentication"
+  value       = var.auth0_custom_domain
+}
+

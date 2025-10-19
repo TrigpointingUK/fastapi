@@ -9,6 +9,11 @@ variable "environment" {
   }
 }
 
+variable "auth0_custom_domain" {
+  description = "Auth0 custom domain for user-facing authentication (e.g., auth.trigpointing.me)"
+  type        = string
+}
+
 variable "database_connection_name" {
   description = "Name of the Auth0 database connection"
   type        = string
