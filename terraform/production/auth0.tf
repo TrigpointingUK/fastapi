@@ -19,7 +19,7 @@ module "auth0" {
   database_connection_name = "production-users"
 
   # API Configuration
-  api_name       = "fastapi-production"
+  api_name       = "tuk-api"
   api_identifier = "https://api.trigpointing.uk/api/v1/"
 
   # FastAPI Configuration

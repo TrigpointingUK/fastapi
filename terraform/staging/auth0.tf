@@ -19,7 +19,7 @@ module "auth0" {
   database_connection_name = "staging-users"
 
   # API Configuration
-  api_name       = "fastapi-staging"
+  api_name       = "tme-api"
   api_identifier = "https://api.trigpointing.me/api/v1/"
 
   # FastAPI Configuration

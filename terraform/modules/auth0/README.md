@@ -37,33 +37,33 @@ module "auth0" {
   database_connection_name = "staging-users"
 
   # API Configuration
-  api_name       = "fastapi-staging"
-  api_identifier = "https://api-staging.trigpointing.uk/api/v1/"
+  api_name       = "tme-api"
+  api_identifier = "https://api.trigpointing.me/api/v1/"
 
   # FastAPI Configuration
-  fastapi_url = "https://api-staging.trigpointing.uk"
+  fastapi_url = "https://api.trigpointing.me"
   m2m_token   = var.auth0_m2m_token
 
   # Swagger UI Callbacks
   swagger_callback_urls = [
-    "https://api-staging.trigpointing.uk/docs/oauth2-redirect",
+    "https://api.trigpointing.me/docs/oauth2-redirect",
     "http://localhost:8000/docs/oauth2-redirect",
   ]
 
   swagger_allowed_origins = [
-    "https://api-staging.trigpointing.uk",
+    "https://api.trigpointing.me",
     "http://localhost:8000",
   ]
 
   # Web App Callbacks
   web_app_callback_urls = [
-    "https://staging.trigpointing.uk/auth/callback",
+    "https://www.trigpointing.me/auth/callback",
     "http://localhost:3000/auth/callback",
   ]
 
   # Android Callbacks
   android_callback_urls = [
-    "uk.trigpointing.android.staging://callback",
+    "me.trigpointing.android://callback",
   ]
 
   # Role Configuration
@@ -207,15 +207,15 @@ auth0_m2m_token     = "..."
 Store sensitive values in AWS Secrets Manager:
 
 ```bash
-# Add to fastapi-staging-app-secrets
+# Add to tme-app-secrets
 aws secretsmanager put-secret-value \
-  --secret-id fastapi-staging-app-secrets \
+  --secret-id tme-app-secrets \
   --secret-string '{
     "AUTH0_DOMAIN": "myapp-staging.eu.auth0.com",
     "AUTH0_M2M_CLIENT_ID": "...",
     "AUTH0_M2M_CLIENT_SECRET": "...",
-    "AUTH0_API_IDENTIFIER": "https://api-staging.trigpointing.uk/api/v1/",
-    "AUTH0_WEBHOOK_M2M_AUDIENCE": "https://api-staging.trigpointing.uk/api/v1/"
+    "AUTH0_API_IDENTIFIER": "https://api.trigpointing.me/api/v1/",
+    "AUTH0_WEBHOOK_M2M_AUDIENCE": "https://api.trigpointing.me/api/v1/"
   }'
 ```
 
