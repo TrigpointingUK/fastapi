@@ -23,5 +23,5 @@ auth0_client_secret = "YOUR_TERRAFORM_M2M_CLIENT_SECRET"
 
 # Auth0 M2M Token for Post-Registration Action
 # This token is used by the Auth0 Action to authenticate to your FastAPI webhook
-# Generate this after first terraform apply using the created M2M client
-auth0_m2m_token = "YOUR_M2M_TOKEN_HERE"
+# Note: M2M authentication is now handled automatically using client credentials
+# The Auth0 Action will dynamically obtain tokens as needed - no manual token generation required

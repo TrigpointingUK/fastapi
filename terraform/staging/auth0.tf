@@ -74,7 +74,6 @@ module "auth0" {
 
   # FastAPI Configuration
   fastapi_url = "https://api.trigpointing.me"
-  m2m_token   = var.auth0_m2m_token
 
   # Swagger UI Callbacks
   swagger_callback_urls = [

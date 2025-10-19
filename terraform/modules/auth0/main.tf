@@ -353,8 +353,23 @@ resource "auth0_action" "post_user_registration" {
   }
 
   secrets {
-    name  = "M2M_TOKEN"
-    value = var.m2m_token
+    name  = "M2M_CLIENT_ID"
+    value = auth0_client.m2m_api.client_id
+  }
+
+  secrets {
+    name  = "M2M_CLIENT_SECRET"
+    value = data.auth0_client.m2m_api.client_secret
+  }
+
+  secrets {
+    name  = "AUTH0_DOMAIN"
+    value = data.auth0_tenant.current.domain
+  }
+
+  secrets {
+    name  = "API_AUDIENCE"
+    value = auth0_resource_server.api.identifier
   }
 }
 

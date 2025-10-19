@@ -44,12 +44,6 @@ variable "fastapi_url" {
   type        = string
 }
 
-variable "m2m_token" {
-  description = "M2M token for post-registration Action webhook authentication"
-  type        = string
-  sensitive   = true
-}
-
 variable "swagger_callback_urls" {
   description = "List of Swagger OAuth2 callback URLs"
   type        = list(string)
