@@ -330,7 +330,7 @@ resource "auth0_action" "post_user_registration" {
   count = var.enable_post_registration_action ? 1 : 0
 
   name    = "${var.name_prefix}-post-user-registration"
-  runtime = "node18"
+  runtime = "node22"
   deploy  = true
 
   supported_triggers {
@@ -375,7 +375,7 @@ resource "auth0_action" "post_login" {
   count = var.enable_post_login_action ? 1 : 0
 
   name    = "${var.name_prefix}-post-login"
-  runtime = "node18"
+  runtime = "node22"
   deploy  = true
 
   supported_triggers {
