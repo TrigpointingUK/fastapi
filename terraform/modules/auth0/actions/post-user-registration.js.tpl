@@ -5,7 +5,7 @@
  * It provisions the user in the FastAPI/MySQL database via webhook.
  * 
  * Flow:
- * 1. Obtain M2M token using client credentials
+ * 1. Obtain M2M token using client credentials (OAuth2 client_credentials flow)
  * 2. Generate nickname from email prefix
  * 3. Try to create user via POST /v1/users
  * 4. On username collision (409), retry with random 6-digit suffix
