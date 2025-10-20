@@ -26,26 +26,23 @@ class Auth0Service:
 
     def __init__(self):
         """Initialize the Auth0 service."""
-        self.domain = settings.AUTH0_DOMAIN
+        self.tenant_domain = settings.AUTH0_TENANT_DOMAIN
+        self.custom_domain = settings.AUTH0_CUSTOM_DOMAIN
         self.connection = settings.AUTH0_CONNECTION
-        self.management_api_audience = settings.AUTH0_MANAGEMENT_API_AUDIENCE
         self._access_token = None
         self._token_expires_at = None
 
-        if not self.domain:
-            logger.error("AUTH0_DOMAIN is required but not configured")
-            raise ValueError("AUTH0_DOMAIN is required but not configured")
+        if not self.tenant_domain:
+            logger.error("AUTH0_TENANT_DOMAIN is required but not configured")
+            raise ValueError("AUTH0_TENANT_DOMAIN is required but not configured")
 
         if not self.connection:
             logger.error("AUTH0_CONNECTION is required but not configured")
             raise ValueError("AUTH0_CONNECTION is required but not configured")
 
-        if not self.management_api_audience:
-            # Construct Management API audience from domain
-            self.management_api_audience = f"https://{self.domain}/api/v2/"
-            logger.info(
-                f"Using constructed Management API audience: {self.management_api_audience}"
-            )
+        # Construct Management API audience from tenant domain
+        self.management_api_audience = f"https://{self.tenant_domain}/api/v2/"
+        logger.debug(f"Management API audience: {self.management_api_audience}")
 
     def _get_auth0_credentials(self) -> Optional[Dict[str, str]]:
         """
@@ -57,11 +54,9 @@ class Auth0Service:
 
         try:
             # Get credentials for Management API (M2M)
-            client_id = settings.AUTH0_M2M_CLIENT_ID or settings.AUTH0_CLIENT_ID
-            client_secret = (
-                settings.AUTH0_M2M_CLIENT_SECRET or settings.AUTH0_CLIENT_SECRET
-            )
-            domain = settings.AUTH0_DOMAIN
+            client_id = settings.AUTH0_M2M_CLIENT_ID
+            client_secret = settings.AUTH0_M2M_CLIENT_SECRET
+            domain = settings.AUTH0_TENANT_DOMAIN
 
             if not client_id or not client_secret:
                 log_data = {
@@ -120,8 +115,8 @@ class Auth0Service:
             return None
 
         try:
-            # Request access token
-            token_url = f"https://{self.domain}/oauth/token"
+            # Request access token from tenant domain (not custom domain)
+            token_url = f"https://{self.tenant_domain}/oauth/token"
             payload = {
                 "client_id": credentials["client_id"],
                 "client_secret": credentials["client_secret"],
@@ -143,7 +138,7 @@ class Auth0Service:
 
             log_data = {
                 "event": "auth0_access_token_obtained",
-                "domain": self.domain,
+                "tenant_domain": self.tenant_domain,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.debug(json.dumps(log_data))
@@ -167,8 +162,8 @@ class Auth0Service:
                 "event": "auth0_access_token_failed",
                 "error_type": "RequestException",
                 "error_message": str(e),
-                "domain": self.domain,
-                "token_url": f"https://{self.domain}/oauth/token",
+                "tenant_domain": self.tenant_domain,
+                "token_url": f"https://{self.tenant_domain}/oauth/token",
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 **response_details,
             }
@@ -179,7 +174,7 @@ class Auth0Service:
                 "event": "auth0_access_token_failed",
                 "error_type": "UnexpectedError",
                 "error_message": str(e),
-                "domain": self.domain,
+                "tenant_domain": self.tenant_domain,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
@@ -205,7 +200,8 @@ class Auth0Service:
             return None
 
         try:
-            url = f"https://{self.domain}/api/v2/{endpoint}"
+            # Use tenant domain for Management API calls, not custom domain
+            url = f"https://{self.tenant_domain}/api/v2/{endpoint}"
             headers = {
                 "Authorization": f"Bearer {access_token}",
                 "Content-Type": "application/json",

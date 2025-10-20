@@ -101,14 +101,20 @@ variable "auth0_custom_domain" {
   type        = string
 }
 
-variable "auth0_client_id" {
-  description = "Auth0 Terraform provider client ID"
+variable "auth0_terraform_client_id" {
+  description = "Auth0 Terraform provider client ID (terraform-provider application)"
   type        = string
   sensitive   = true
 }
 
-variable "auth0_client_secret" {
-  description = "Auth0 Terraform provider client secret"
+variable "auth0_terraform_client_secret" {
+  description = "Auth0 Terraform provider client secret (terraform-provider application)"
+  type        = string
+  sensitive   = true
+}
+
+variable "auth0_m2m_client_secret" {
+  description = "M2M client secret for Auth0 Actions (tme-api application)"
   type        = string
   sensitive   = true
 }

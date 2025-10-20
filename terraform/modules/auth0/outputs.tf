@@ -26,12 +26,6 @@ output "m2m_client_id" {
   sensitive   = true
 }
 
-output "m2m_client_secret" {
-  description = "M2M client secret"
-  value       = data.auth0_client.m2m_api.client_secret
-  sensitive   = true
-}
-
 output "swagger_client_id" {
   description = "Swagger client ID"
   value       = auth0_client.swagger.id

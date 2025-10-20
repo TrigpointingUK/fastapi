@@ -292,7 +292,7 @@ def verify_m2m_token(
         )
 
     # Validate token using auth0_validator with Management API audience
-    # The validator will check against AUTH0_WEBHOOK_M2M_AUDIENCE
+    # The validator will check against AUTH0_API_AUDIENCE
     token_payload = auth0_validator.validate_m2m_token(credentials.credentials)
 
     if not token_payload:

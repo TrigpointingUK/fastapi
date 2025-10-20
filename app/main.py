@@ -29,7 +29,7 @@ app = FastAPI(
     debug=settings.DEBUG,
     swagger_ui_oauth2_redirect_url="/docs/oauth2-redirect",
     swagger_ui_init_oauth={
-        "clientId": (settings.AUTH0_SPA_CLIENT_ID or settings.AUTH0_CLIENT_ID or ""),
+        "clientId": settings.AUTH0_SPA_CLIENT_ID or "",
         "appName": settings.PROJECT_NAME,
         # PKCE is recommended for SPA/Swagger flows
         "usePkceWithAuthorizationCodeGrant": True,
@@ -281,20 +281,20 @@ def logout():
     3. Navigate to /logout in browser to clear session
     4. Return to Swagger and authorize with a different user
     """
-    if not settings.AUTH0_DOMAIN:
+    if not settings.AUTH0_CUSTOM_DOMAIN:
         raise HTTPException(
             status_code=status.HTTP_501_NOT_IMPLEMENTED,
-            detail="AUTH0_DOMAIN not configured",
+            detail="AUTH0_CUSTOM_DOMAIN not configured",
         )
 
     # Get the base URL for returnTo (must match Allowed Logout URLs in Auth0)
     return_to = f"{settings.FASTAPI_URL}/docs"
 
-    # Auth0 logout endpoint
+    # Auth0 logout endpoint (use custom domain for user-facing URLs)
     # https://auth0.com/docs/api/authentication#logout
-    client_id = settings.AUTH0_SPA_CLIENT_ID or settings.AUTH0_CLIENT_ID or ""
+    client_id = settings.AUTH0_SPA_CLIENT_ID or ""
     logout_url = (
-        f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
+        f"https://{settings.AUTH0_CUSTOM_DOMAIN}/v2/logout?"
         f"client_id={client_id}&"
         f"returnTo={return_to}"
     )

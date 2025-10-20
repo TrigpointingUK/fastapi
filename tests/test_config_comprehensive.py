@@ -32,7 +32,7 @@ class TestConfigComprehensive:
         assert model_fields["DB_PASSWORD"].default == "pass"
         assert model_fields["DB_NAME"].default == "db"
         assert model_fields["BACKEND_CORS_ORIGINS"].default == []
-        assert model_fields["AUTH0_DOMAIN"].default is None
+        assert model_fields["AUTH0_CUSTOM_DOMAIN"].default is None
         assert model_fields["AUTH0_SECRET_NAME"].default is None
         assert model_fields["AUTH0_CONNECTION"].default is None
         # AUTH0_ENABLED field removed - Auth0 is now always enabled
@@ -97,12 +97,12 @@ class TestConfigComprehensive:
     def test_auth0_configuration(self):
         """Test Auth0 configuration settings."""
         settings = Settings(
-            AUTH0_DOMAIN="test.auth0.com",
+            AUTH0_CUSTOM_DOMAIN="test.auth0.com",
             AUTH0_SECRET_NAME="test-secret",
             AUTH0_CONNECTION="custom-connection",
         )
 
-        assert settings.AUTH0_DOMAIN == "test.auth0.com"
+        assert settings.AUTH0_CUSTOM_DOMAIN == "test.auth0.com"
         assert settings.AUTH0_SECRET_NAME == "test-secret"
         assert settings.AUTH0_CONNECTION == "custom-connection"
         # AUTH0_ENABLED field removed - Auth0 is now always enabled
@@ -128,7 +128,7 @@ class TestConfigComprehensive:
         os.environ["DB_USER"] = "env-user"
         os.environ["DB_PASSWORD"] = "env-pass"
         os.environ["DB_NAME"] = "env-db"
-        os.environ["AUTH0_DOMAIN"] = "env.auth0.com"
+        os.environ["AUTH0_CUSTOM_DOMAIN"] = "env.auth0.com"
 
         try:
             settings = Settings()
@@ -143,7 +143,7 @@ class TestConfigComprehensive:
                 settings.DATABASE_URL
                 == "mysql+pymysql://env-user:env-pass@env-host:5432/env-db"
             )
-            assert settings.AUTH0_DOMAIN == "env.auth0.com"
+            assert settings.AUTH0_CUSTOM_DOMAIN == "env.auth0.com"
 
             # These should still be defaults
             assert settings.API_V1_STR == "/v1"
@@ -158,7 +158,7 @@ class TestConfigComprehensive:
                 "DB_USER",
                 "DB_PASSWORD",
                 "DB_NAME",
-                "AUTH0_DOMAIN",
+                "AUTH0_CUSTOM_DOMAIN",
             ]:
                 os.environ.pop(var, None)
 
@@ -178,7 +178,7 @@ class TestConfigComprehensive:
         assert hasattr(settings, "DB_NAME")
         assert hasattr(settings, "DATABASE_URL")
         assert hasattr(settings, "BACKEND_CORS_ORIGINS")
-        assert hasattr(settings, "AUTH0_DOMAIN")
+        assert hasattr(settings, "AUTH0_CUSTOM_DOMAIN")
         assert hasattr(settings, "AUTH0_SECRET_NAME")
         assert hasattr(settings, "AUTH0_CONNECTION")
         # AUTH0_ENABLED field removed - Auth0 is now always enabled

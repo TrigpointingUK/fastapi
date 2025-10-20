@@ -120,6 +120,9 @@ module "auth0" {
   enable_post_registration_action = true
   enable_post_login_action        = true
   custom_claims_namespace         = "https://trigpointing.uk/"
+
+  # M2M Client Secret for Auth0 Actions
+  auth0_m2m_client_secret = var.auth0_m2m_client_secret
 }
 
 # ============================================================================

@@ -14,6 +14,12 @@ variable "name_prefix" {
   type        = string
 }
 
+variable "auth0_m2m_client_secret" {
+  description = "M2M client secret for Auth0 Actions (sensitive - rotate manually in Auth0 if needed)"
+  type        = string
+  sensitive   = true
+}
+
 variable "auth0_custom_domain" {
   description = "Auth0 custom domain for user-facing authentication (e.g., auth.trigpointing.me)"
   type        = string

@@ -17,10 +17,9 @@ def test_logout_redirects_to_auth0(client, monkeypatch):
     # Mock Auth0 domain
     from app.core import config
 
-    monkeypatch.setattr(config.settings, "AUTH0_DOMAIN", "test-domain.auth0.com")
+    monkeypatch.setattr(config.settings, "AUTH0_CUSTOM_DOMAIN", "test-domain.auth0.com")
     monkeypatch.setattr(config.settings, "FASTAPI_URL", "https://api.test.com")
-    monkeypatch.setattr(config.settings, "AUTH0_SPA_CLIENT_ID", None)
-    monkeypatch.setattr(config.settings, "AUTH0_CLIENT_ID", "test-client-id")
+    monkeypatch.setattr(config.settings, "AUTH0_SPA_CLIENT_ID", "test-client-id")
 
     response = client.get("/logout", follow_redirects=False)
 
@@ -31,31 +30,29 @@ def test_logout_redirects_to_auth0(client, monkeypatch):
 
 
 def test_logout_uses_spa_client_id_when_available(client, monkeypatch):
-    """Test that logout endpoint prefers SPA client ID over regular client ID."""
+    """Test that logout endpoint uses SPA client ID."""
     from app.core import config
 
-    monkeypatch.setattr(config.settings, "AUTH0_DOMAIN", "test-domain.auth0.com")
+    monkeypatch.setattr(config.settings, "AUTH0_CUSTOM_DOMAIN", "test-domain.auth0.com")
     monkeypatch.setattr(config.settings, "FASTAPI_URL", "https://api.test.com")
     monkeypatch.setattr(config.settings, "AUTH0_SPA_CLIENT_ID", "spa-client-id")
-    monkeypatch.setattr(config.settings, "AUTH0_CLIENT_ID", "m2m-client-id")
 
     response = client.get("/logout", follow_redirects=False)
 
     assert response.status_code == 307
     assert "client_id=spa-client-id" in response.headers["location"]
-    assert "client_id=m2m-client-id" not in response.headers["location"]
 
 
 def test_logout_fails_when_auth0_domain_not_configured(client, monkeypatch):
-    """Test that logout endpoint returns 501 when AUTH0_DOMAIN is not configured."""
+    """Test that logout endpoint returns 501 when AUTH0_CUSTOM_DOMAIN is not configured."""
     from app.core import config
 
-    monkeypatch.setattr(config.settings, "AUTH0_DOMAIN", None)
+    monkeypatch.setattr(config.settings, "AUTH0_CUSTOM_DOMAIN", None)
 
     response = client.get("/logout")
 
     assert response.status_code == 501
-    assert "AUTH0_DOMAIN not configured" in response.json()["detail"]
+    assert "AUTH0_CUSTOM_DOMAIN not configured" in response.json()["detail"]
 
 
 def test_logout_not_in_openapi_schema(client):

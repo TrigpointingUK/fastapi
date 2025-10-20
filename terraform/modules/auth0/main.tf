@@ -162,6 +162,9 @@ resource "auth0_client" "m2m_api" {
   }
 }
 
+# Note: Client secret must be rotated manually in Auth0 dashboard if needed
+# then provided via var.auth0_m2m_client_secret
+
 # Single Page Application (Swagger)
 resource "auth0_client" "swagger" {
   name        = "${var.name_prefix}-swagger"
@@ -359,7 +362,7 @@ resource "auth0_action" "post_user_registration" {
 
   secrets {
     name  = "M2M_CLIENT_SECRET"
-    value = data.auth0_client.m2m_api.client_secret
+    value = var.auth0_m2m_client_secret
   }
 
   secrets {
@@ -420,11 +423,6 @@ resource "auth0_trigger_actions" "post_login" {
 # ============================================================================
 
 data "auth0_tenant" "current" {}
-
-# Get M2M client credentials (includes secret)
-data "auth0_client" "m2m_api" {
-  client_id = auth0_client.m2m_api.id
-}
 
 # Get Cloudflare zone information
 data "cloudflare_zones" "domain" {
