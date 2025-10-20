@@ -6,13 +6,14 @@ import logging
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.profiling import ProfilingMiddleware, should_enable_profiling
 from app.db.database import get_db
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer
@@ -165,6 +166,28 @@ def custom_openapi():
 
 app.openapi = custom_openapi  # type: ignore
 
+
+class HealthCheckLoggingFilter(BaseHTTPMiddleware):
+    """Middleware to suppress logging for health check endpoints."""
+
+    async def dispatch(self, request: Request, call_next):
+        # Suppress logging context for health check requests
+        if request.url.path == "/health":
+            # Temporarily disable logging for this request
+            logging.disable(logging.CRITICAL)
+            try:
+                response = await call_next(request)
+                return response
+            finally:
+                # Re-enable logging
+                logging.disable(logging.NOTSET)
+        else:
+            return await call_next(request)
+
+
+# Add health check logging filter first
+app.add_middleware(HealthCheckLoggingFilter)
+
 # Set up CORS
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
@@ -212,14 +235,13 @@ def health_check(db: Session = Depends(get_db)):
         # Query trig table to verify database connectivity
         # Use a simple count query that doesn't depend on specific data existing
         result = db.execute(text("SELECT COUNT(*) FROM trig LIMIT 1"))
-        count = result.scalar()
+        result.scalar()  # Execute the query but don't store result
         db_status = "connected"
-        logger.debug(
-            f"Database health check passed (trig count query returned: {count})"
-        )
+        # Don't log successful health checks - they happen every few seconds
     except Exception as e:
         db_status = "error"
         db_error = str(e)
+        # Only log failures - this is important
         logger.error(f"Database health check failed: {e}")
 
     # Return unhealthy status if database is not connected
