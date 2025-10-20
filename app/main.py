@@ -14,6 +14,7 @@ from app.core.profiling import ProfilingMiddleware, should_enable_profiling
 from app.db.database import get_db
 from fastapi import Depends, FastAPI, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer
 
 logger = logging.getLogger(__name__)
@@ -242,6 +243,41 @@ def health_check(db: Session = Depends(get_db)):
         "build_time": version_info["build_time"],
         "database": db_status,
     }
+
+
+@app.get("/logout", include_in_schema=False)
+def logout():
+    """
+    Logout endpoint for Swagger UI testing.
+
+    Redirects to Auth0's logout endpoint to clear the Auth0 session,
+    then returns to Swagger docs. This allows easy user switching during testing.
+
+    Usage in Swagger:
+    1. Click 'Authorize' and log in
+    2. Test your endpoints
+    3. Navigate to /logout in browser to clear session
+    4. Return to Swagger and authorize with a different user
+    """
+    if not settings.AUTH0_DOMAIN:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="AUTH0_DOMAIN not configured",
+        )
+
+    # Get the base URL for returnTo (must match Allowed Logout URLs in Auth0)
+    return_to = f"{settings.FASTAPI_URL}/docs"
+
+    # Auth0 logout endpoint
+    # https://auth0.com/docs/api/authentication#logout
+    client_id = settings.AUTH0_SPA_CLIENT_ID or settings.AUTH0_CLIENT_ID or ""
+    logout_url = (
+        f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
+        f"client_id={client_id}&"
+        f"returnTo={return_to}"
+    )
+
+    return RedirectResponse(url=logout_url)
 
 
 if __name__ == "__main__":

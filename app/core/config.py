@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"  # staging, production, development
     DEBUG: bool = False
 
+    # Base URL for the API (used for logout redirects, etc.)
+    FASTAPI_URL: str = "http://localhost:8000"
+
     # Database - constructed from individual components
     DB_HOST: str = "localhost"
     DB_PORT: int = 3306
