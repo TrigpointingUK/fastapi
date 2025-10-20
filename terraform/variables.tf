@@ -113,12 +113,6 @@ variable "auth0_client_secret" {
   sensitive   = true
 }
 
-variable "auth0_m2m_token" {
-  description = "M2M token for post-registration webhook authentication"
-  type        = string
-  sensitive   = true
-}
-
 variable "log_level" {
   description = "Application log level (DEBUG, INFO, WARNING, ERROR)"
   type        = string

@@ -57,7 +57,7 @@ module "auth0" {
 
   # FastAPI Configuration
   fastapi_url = "https://api.trigpointing.me"
-  m2m_token   = var.auth0_m2m_token
+  # M2M authentication uses client credentials (automatically configured)
 
   # Swagger UI Callbacks
   swagger_callback_urls = [
@@ -214,8 +214,9 @@ Use `.tfvars` files for local testing (never commit sensitive data):
 auth0_domain        = "myapp-staging.eu.auth0.com"
 auth0_client_id     = "..."
 auth0_client_secret = "..."
-auth0_m2m_token     = "..."
 ```
+
+**Note:** The `auth0_m2m_token` variable has been removed. M2M authentication now uses dynamic client credentials flow automatically.
 
 ### Production/Staging Deployment
 
