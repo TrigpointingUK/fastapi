@@ -1,6 +1,6 @@
 fastapi==0.116.1
 uvicorn[standard]==0.35.0
-sqlalchemy==2.0.43
+sqlalchemy==2.0.44
 pymysql==1.1.2
 cryptography==45.0.7
 PyJWT==2.10.1
