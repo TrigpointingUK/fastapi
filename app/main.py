@@ -66,8 +66,8 @@ def custom_openapi():
     # OAuth2 Authorization Code (PKCE) for Auth0 login via Swagger UI
     # Always include OAuth2 scheme for docs/tests even if domain is not configured
     auth_domain = (
-        f"https://{settings.AUTH0_DOMAIN}"
-        if getattr(settings, "AUTH0_DOMAIN", None)
+        f"https://{settings.AUTH0_CUSTOM_DOMAIN}"
+        if getattr(settings, "AUTH0_CUSTOM_DOMAIN", None)
         else "https://example.com"
     )
     openapi_schema["components"]["securitySchemes"]["OAuth2"] = {
