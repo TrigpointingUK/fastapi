@@ -48,6 +48,9 @@ resource "auth0_connection" "database" {
   name     = var.database_connection_name
   strategy = "auth0"
 
+  # Ensure Identifier First is enabled before passkeys
+  depends_on = [auth0_prompt.identifier_first]
+
   options {
     password_policy = "good"
     password_history {
@@ -72,6 +75,16 @@ resource "auth0_connection" "database" {
     # Validation
     import_mode          = false
     non_persistent_attrs = []
+
+    # Passkey/WebAuthn configuration
+    authentication_methods {
+      password {
+        enabled = true
+      }
+      passkey {
+        enabled = true
+      }
+    }
   }
 }
 
@@ -454,6 +467,15 @@ resource "cloudflare_record" "auth0_custom_domain" {
   ttl     = 1     # Auto TTL
 
   comment = "Auth0 custom domain for ${var.environment} - managed by Terraform"
+}
+
+# ============================================================================
+# PROMPT CONFIGURATION (for Identifier First flow required by passkeys)
+# ============================================================================
+
+resource "auth0_prompt" "identifier_first" {
+  identifier_first               = true  # Enable Identifier First flow (required for passkeys)
+  webauthn_platform_first_factor = false # Use standard passkey flow, not enterprise biometrics
 }
 
 # ============================================================================
