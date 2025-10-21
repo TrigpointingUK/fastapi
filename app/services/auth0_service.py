@@ -826,7 +826,7 @@ class Auth0Service:
 
     def update_user_email(self, user_id: str, email: str) -> bool:
         """
-        Update a user's email address in Auth0.
+        Update a user's email address in Auth0 and trigger verification email.
 
         Args:
             user_id: Auth0 user ID
@@ -836,20 +836,12 @@ class Auth0Service:
             True if successful, False otherwise
         """
 
-        user_data = {"email": email, "email_verified": True}
+        # Step 1: Update email and mark as unverified
+        user_data = {"email": email, "email_verified": False}
 
         response = self._make_auth0_request("PATCH", f"users/{user_id}", user_data)
 
-        if response:
-            log_data = {
-                "event": "auth0_user_email_updated",
-                "user_id": user_id,
-                "email": email,
-                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-            }
-            logger.info(json.dumps(log_data))
-            return True
-        else:
+        if not response:
             log_data = {
                 "event": "auth0_user_email_update_failed",
                 "user_id": user_id,
@@ -858,6 +850,43 @@ class Auth0Service:
             }
             logger.error(json.dumps(log_data))
             return False
+
+        log_data = {
+            "event": "auth0_user_email_updated",
+            "user_id": user_id,
+            "email": email,
+            "email_verified": "false",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        }
+        logger.info(json.dumps(log_data))
+
+        # Step 2: Trigger verification email
+        # Auth0 Management API: POST /api/v2/jobs/verification-email
+        verification_data = {"user_id": user_id}
+        verification_response = self._make_auth0_request(
+            "POST", "jobs/verification-email", verification_data
+        )
+
+        if verification_response:
+            log_data = {
+                "event": "auth0_verification_email_sent",
+                "user_id": user_id,
+                "email": email,
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
+        else:
+            log_data = {
+                "event": "auth0_verification_email_failed",
+                "user_id": user_id,
+                "email": email,
+                "warning": "Email updated but verification email not sent",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.warning(json.dumps(log_data))
+            # Don't fail the whole operation - email was updated successfully
+
+        return True
 
     def update_user_profile(
         self,

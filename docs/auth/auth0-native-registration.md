@@ -74,7 +74,7 @@ User ← Auth0 Login ← Auth0 Token ← FastAPI API ← Database User ← Creat
 
 **Synced to Auth0**:
 - `name` → nickname
-- `email` → email (marked as verified)
+- `email` → email (marked unverified, verification email sent automatically)
 
 **Database Only**:
 - `firstname`
