@@ -243,13 +243,14 @@ class Auth0TokenValidator:
                 return None
 
             # Validate token using PyJWT
-            # Note: Auth0 always issues tokens with the tenant domain, not custom domain
+            # Note: Auth0 issues tokens with whichever domain the user authenticated against
+            # Since users authenticate via the custom domain, tokens have custom domain as issuer
             payload = jwt.decode(
                 token,
                 public_key,
                 algorithms=["RS256"],
                 audience=audience,
-                issuer=f"https://{self.tenant_domain}/",
+                issuer=f"https://{self.custom_domain}/",
             )
 
             log_data = {
