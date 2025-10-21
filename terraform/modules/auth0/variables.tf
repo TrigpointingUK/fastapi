@@ -35,6 +35,12 @@ variable "database_connection_name" {
   type        = string
 }
 
+variable "disable_signup" {
+  description = "Whether to disable public signup on the database connection"
+  type        = bool
+  default     = false
+}
+
 variable "api_name" {
   description = "Name of the API resource server"
   type        = string

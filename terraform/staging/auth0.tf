@@ -67,6 +67,7 @@ module "auth0" {
 
   # Database Connection
   database_connection_name = "tme-users"
+  disable_signup           = false # Allow public signup in staging for testing
 
   # API Configuration
   api_name       = "tme-api"

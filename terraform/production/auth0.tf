@@ -20,11 +20,12 @@ resource "aws_ses_domain_dkim" "trigpointing_uk" {
 
 # Add DNS records to Cloudflare for domain verification
 resource "cloudflare_record" "ses_verification" {
-  zone_id = data.cloudflare_zones.production.zones[0].id
-  name    = "_amazonses.trigpointing.uk"
-  content = aws_ses_domain_identity.trigpointing_uk.verification_token
-  type    = "TXT"
-  ttl     = 600
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "_amazonses.trigpointing.uk"
+  content         = "\"${aws_ses_domain_identity.trigpointing_uk.verification_token}\""
+  type            = "TXT"
+  ttl             = 600
+  allow_overwrite = true # Allow Terraform to replace incorrectly formatted record
 
   comment = "SES domain verification for trigpointing.uk"
 }
@@ -33,11 +34,12 @@ resource "cloudflare_record" "ses_verification" {
 resource "cloudflare_record" "ses_dkim" {
   count = 3
 
-  zone_id = data.cloudflare_zones.production.zones[0].id
-  name    = "${aws_ses_domain_dkim.trigpointing_uk.dkim_tokens[count.index]}._domainkey.trigpointing.uk"
-  content = "${aws_ses_domain_dkim.trigpointing_uk.dkim_tokens[count.index]}.dkim.amazonses.com"
-  type    = "CNAME"
-  ttl     = 600
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "${aws_ses_domain_dkim.trigpointing_uk.dkim_tokens[count.index]}._domainkey.trigpointing.uk"
+  content         = "${aws_ses_domain_dkim.trigpointing_uk.dkim_tokens[count.index]}.dkim.amazonses.com"
+  type            = "CNAME"
+  ttl             = 600
+  allow_overwrite = true # Allow Terraform to recreate if needed
 
   comment = "SES DKIM record ${count.index + 1} for trigpointing.uk"
 }
@@ -62,11 +64,15 @@ module "auth0" {
   # Auth0 Domains
   auth0_custom_domain = var.auth0_custom_domain
 
+  # M2M Client Secret (for Actions)
+  auth0_m2m_client_secret = var.auth0_m2m_client_secret
+
   # Cloudflare Configuration
   cloudflare_zone_name = "trigpointing.uk"
 
   # Database Connection
   database_connection_name = "tuk-users"
+  disable_signup           = var.disable_signup
 
   # API Configuration
   api_name       = "tuk-api"

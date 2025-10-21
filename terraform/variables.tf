@@ -119,6 +119,12 @@ variable "auth0_m2m_client_secret" {
   sensitive   = true
 }
 
+variable "disable_signup" {
+  description = "Whether to disable public signup on the Auth0 database connection"
+  type        = bool
+  default     = false
+}
+
 variable "log_level" {
   description = "Application log level (DEBUG, INFO, WARNING, ERROR)"
   type        = string

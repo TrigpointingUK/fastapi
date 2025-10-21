@@ -69,7 +69,7 @@ resource "auth0_connection" "database" {
     brute_force_protection = true
 
     # Configuration settings
-    disable_signup    = false
+    disable_signup    = var.disable_signup
     requires_username = false # Use nickname instead (allows spaces, special chars)
 
     # Validation
@@ -459,12 +459,13 @@ resource "auth0_custom_domain" "main" {
 # Create CNAME record in Cloudflare pointing to Auth0
 # This is DNS-only (not proxied) as required by Auth0
 resource "cloudflare_record" "auth0_custom_domain" {
-  zone_id = data.cloudflare_zones.domain.zones[0].id
-  name    = split(".", var.auth0_custom_domain)[0] # Extract subdomain (e.g., "auth" from "auth.trigpointing.me")
-  content = auth0_custom_domain.main.verification[0].methods[0].record
-  type    = "CNAME"
-  proxied = false # MUST be false for Auth0 custom domains
-  ttl     = 1     # Auto TTL
+  zone_id         = data.cloudflare_zones.domain.zones[0].id
+  name            = split(".", var.auth0_custom_domain)[0] # Extract subdomain (e.g., "auth" from "auth.trigpointing.me")
+  content         = auth0_custom_domain.main.verification[0].methods[0].record
+  type            = "CNAME"
+  proxied         = false # MUST be false for Auth0 custom domains
+  ttl             = 1     # Auto TTL
+  allow_overwrite = true  # Allow Terraform to manage existing records
 
   comment = "Auth0 custom domain for ${var.environment} - managed by Terraform"
 }
@@ -546,14 +547,18 @@ resource "auth0_email_provider" "ses" {
 # ============================================================================
 
 # Configure Auth0 Universal Login branding
-resource "auth0_branding" "main" {
-  logo_url = var.logo_url
-
-  colors {
-    primary         = var.primary_color
-    page_background = var.page_background_color
-  }
-}
+# NOTE: Branding is a PAID Auth0 feature. Free/developer plans cannot manage
+# branding via API (even read operations fail). Configure branding manually
+# in the Auth0 dashboard for free tier tenants.
+#
+# resource "auth0_branding" "main" {
+#   logo_url = var.logo_url
+#
+#   colors {
+#     primary         = var.primary_color
+#     page_background = var.page_background_color
+#   }
+# }
 
 # ============================================================================
 # TENANT CONFIGURATION
