@@ -56,7 +56,8 @@ class TestLazyDatabaseConnection:
             # Check keyword arguments
             assert call_args[1]["pool_pre_ping"] is True
             assert call_args[1]["pool_recycle"] == 300
-            assert call_args[1]["echo"] == settings.DEBUG
+            # echo should always be False - we control logging via logging configuration
+            assert call_args[1]["echo"] is False
 
     def test_get_session_local_creates_sessionmaker_lazily(self):
         """Test that get_session_local creates sessionmaker only when first called."""
@@ -166,7 +167,8 @@ class TestLazyDatabaseConnection:
             kwargs = call_args[1]
             assert kwargs["pool_pre_ping"] is True
             assert kwargs["pool_recycle"] == 300
-            assert kwargs["echo"] == settings.DEBUG
+            # echo should always be False - we control logging via logging configuration
+            assert kwargs["echo"] is False
 
             # Verify the engine is returned
             assert engine == mock_engine
