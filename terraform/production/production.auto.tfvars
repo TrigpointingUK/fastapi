@@ -22,3 +22,6 @@ db_pool_size             = 10
 db_pool_recycle          = 300
 profiling_enabled        = false
 profiling_default_format = "html"
+
+# Auth0 Configuration
+disable_signup = true

@@ -6,14 +6,16 @@ import logging
 
 from sqlalchemy import text
 from sqlalchemy.orm import Session
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.api.v1.api import api_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.core.profiling import ProfilingMiddleware, should_enable_profiling
 from app.db.database import get_db
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
 from fastapi.security import HTTPBearer
 
 logger = logging.getLogger(__name__)
@@ -27,7 +29,7 @@ app = FastAPI(
     debug=settings.DEBUG,
     swagger_ui_oauth2_redirect_url="/docs/oauth2-redirect",
     swagger_ui_init_oauth={
-        "clientId": (settings.AUTH0_SPA_CLIENT_ID or settings.AUTH0_CLIENT_ID or ""),
+        "clientId": settings.AUTH0_SPA_CLIENT_ID or "",
         "appName": settings.PROJECT_NAME,
         # PKCE is recommended for SPA/Swagger flows
         "usePkceWithAuthorizationCodeGrant": True,
@@ -64,8 +66,8 @@ def custom_openapi():
     # OAuth2 Authorization Code (PKCE) for Auth0 login via Swagger UI
     # Always include OAuth2 scheme for docs/tests even if domain is not configured
     auth_domain = (
-        f"https://{settings.AUTH0_DOMAIN}"
-        if getattr(settings, "AUTH0_DOMAIN", None)
+        f"https://{settings.AUTH0_CUSTOM_DOMAIN}"
+        if getattr(settings, "AUTH0_CUSTOM_DOMAIN", None)
         else "https://example.com"
     )
     openapi_schema["components"]["securitySchemes"]["OAuth2"] = {
@@ -164,6 +166,28 @@ def custom_openapi():
 
 app.openapi = custom_openapi  # type: ignore
 
+
+class HealthCheckLoggingFilter(BaseHTTPMiddleware):
+    """Middleware to suppress logging for health check endpoints."""
+
+    async def dispatch(self, request: Request, call_next):
+        # Suppress logging context for health check requests
+        if request.url.path == "/health":
+            # Temporarily disable logging for this request
+            logging.disable(logging.CRITICAL)
+            try:
+                response = await call_next(request)
+                return response
+            finally:
+                # Re-enable logging
+                logging.disable(logging.NOTSET)
+        else:
+            return await call_next(request)
+
+
+# Add health check logging filter first
+app.add_middleware(HealthCheckLoggingFilter)
+
 # Set up CORS
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
@@ -211,14 +235,13 @@ def health_check(db: Session = Depends(get_db)):
         # Query trig table to verify database connectivity
         # Use a simple count query that doesn't depend on specific data existing
         result = db.execute(text("SELECT COUNT(*) FROM trig LIMIT 1"))
-        count = result.scalar()
+        result.scalar()  # Execute the query but don't store result
         db_status = "connected"
-        logger.debug(
-            f"Database health check passed (trig count query returned: {count})"
-        )
+        # Don't log successful health checks - they happen every few seconds
     except Exception as e:
         db_status = "error"
         db_error = str(e)
+        # Only log failures - this is important
         logger.error(f"Database health check failed: {e}")
 
     # Return unhealthy status if database is not connected
@@ -242,6 +265,41 @@ def health_check(db: Session = Depends(get_db)):
         "build_time": version_info["build_time"],
         "database": db_status,
     }
+
+
+@app.get("/logout", include_in_schema=False)
+def logout():
+    """
+    Logout endpoint for Swagger UI testing.
+
+    Redirects to Auth0's logout endpoint to clear the Auth0 session,
+    then returns to Swagger docs. This allows easy user switching during testing.
+
+    Usage in Swagger:
+    1. Click 'Authorize' and log in
+    2. Test your endpoints
+    3. Navigate to /logout in browser to clear session
+    4. Return to Swagger and authorize with a different user
+    """
+    if not settings.AUTH0_CUSTOM_DOMAIN:
+        raise HTTPException(
+            status_code=status.HTTP_501_NOT_IMPLEMENTED,
+            detail="AUTH0_CUSTOM_DOMAIN not configured",
+        )
+
+    # Get the base URL for returnTo (must match Allowed Logout URLs in Auth0)
+    return_to = f"{settings.FASTAPI_URL}/docs"
+
+    # Auth0 logout endpoint (use custom domain for user-facing URLs)
+    # https://auth0.com/docs/api/authentication#logout
+    client_id = settings.AUTH0_SPA_CLIENT_ID or ""
+    logout_url = (
+        f"https://{settings.AUTH0_CUSTOM_DOMAIN}/v2/logout?"
+        f"client_id={client_id}&"
+        f"returnTo={return_to}"
+    )
+
+    return RedirectResponse(url=logout_url)
 
 
 if __name__ == "__main__":

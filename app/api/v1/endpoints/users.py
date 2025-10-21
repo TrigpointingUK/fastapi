@@ -295,6 +295,8 @@ def get_current_user_profile(
                 public_ind=str(current_user.public_ind),
                 online_map_type=str(current_user.online_map_type),
                 online_map_type2=str(current_user.online_map_type2),
+                email=str(current_user.email),
+                email_valid=str(current_user.email_valid),
             )
 
     return result
@@ -325,7 +327,7 @@ def update_current_user_profile(
 
     Auth0 sync failures are logged but don't fail the database update.
     """
-    from datetime import datetime
+    from datetime import datetime, timezone
 
     from app.core.logging import get_logger
     from app.services.auth0_service import auth0_service
@@ -346,6 +348,8 @@ def update_current_user_profile(
             public_ind=str(current_user.public_ind),
             online_map_type=str(current_user.online_map_type),
             online_map_type2=str(current_user.online_map_type2),
+            email=str(current_user.email),
+            email_valid=str(current_user.email_valid),
         )
         return result
 
@@ -377,6 +381,10 @@ def update_current_user_profile(
     # Update database fields
     for field, value in update_data.items():
         setattr(current_user, field, value)
+
+    # If email is changing, mark as unvalidated until Auth0 sync succeeds
+    if email_changed:
+        current_user.email_valid = "N"  # type: ignore
 
     current_user.upd_timestamp = datetime.now()  # type: ignore
 
@@ -415,12 +423,18 @@ def update_current_user_profile(
                     nickname=str(current_user.name),
                 )
                 if not success:
-                    logger.warning(
-                        "Auth0 username sync failed (database updated)",
-                        extra={
-                            "user_id": current_user.id,
-                            "auth0_user_id": current_user.auth0_user_id,
-                        },
+                    logger.error(
+                        json.dumps(
+                            {
+                                "event": "auth0_username_sync_failed",
+                                "user_id": current_user.id,
+                                "auth0_user_id": current_user.auth0_user_id,
+                                "new_username": current_user.name,
+                                "timestamp": datetime.now(timezone.utc).isoformat()
+                                + "Z",
+                                "action_required": "admin_review",
+                            }
+                        )
                     )
 
             if email_changed:
@@ -436,13 +450,32 @@ def update_current_user_profile(
                     user_id=str(current_user.auth0_user_id),
                     email=str(current_user.email),
                 )
-                if not success:
-                    logger.warning(
-                        "Auth0 email sync failed (database updated)",
+                if success:
+                    # Update email_valid to 'Y' on successful sync
+                    current_user.email_valid = "Y"  # type: ignore
+                    db.commit()
+                    db.refresh(current_user)
+                    logger.info(
+                        "Auth0 email sync successful",
                         extra={
                             "user_id": current_user.id,
                             "auth0_user_id": current_user.auth0_user_id,
                         },
+                    )
+                else:
+                    # Email stays as 'N' - batch job can retry later
+                    logger.error(
+                        json.dumps(
+                            {
+                                "event": "auth0_email_sync_failed",
+                                "user_id": current_user.id,
+                                "auth0_user_id": current_user.auth0_user_id,
+                                "email": current_user.email,
+                                "timestamp": datetime.now(timezone.utc).isoformat()
+                                + "Z",
+                                "action_required": "batch_retry_or_manual_sync",
+                            }
+                        )
                     )
 
         except Exception as e:
@@ -474,6 +507,8 @@ def update_current_user_profile(
         public_ind=str(current_user.public_ind),
         online_map_type=str(current_user.online_map_type),
         online_map_type2=str(current_user.online_map_type2),
+        email=str(current_user.email),
+        email_valid=str(current_user.email_valid),
     )
 
     return result

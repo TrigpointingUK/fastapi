@@ -101,22 +101,28 @@ variable "auth0_custom_domain" {
   type        = string
 }
 
-variable "auth0_client_id" {
-  description = "Auth0 Terraform provider client ID"
+variable "auth0_terraform_client_id" {
+  description = "Auth0 Terraform provider client ID (terraform-provider application)"
   type        = string
   sensitive   = true
 }
 
-variable "auth0_client_secret" {
-  description = "Auth0 Terraform provider client secret"
+variable "auth0_terraform_client_secret" {
+  description = "Auth0 Terraform provider client secret (terraform-provider application)"
   type        = string
   sensitive   = true
 }
 
-variable "auth0_m2m_token" {
-  description = "M2M token for post-registration webhook authentication"
+variable "auth0_m2m_client_secret" {
+  description = "M2M client secret for Auth0 Actions (tme-api application)"
   type        = string
   sensitive   = true
+}
+
+variable "disable_signup" {
+  description = "Whether to disable public signup on the Auth0 database connection"
+  type        = bool
+  default     = false
 }
 
 variable "log_level" {

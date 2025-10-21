@@ -5,26 +5,53 @@
  * It provisions the user in the FastAPI/MySQL database via webhook.
  * 
  * Flow:
- * 1. Generate nickname from email prefix
- * 2. Try to create user via POST /v1/users
- * 3. On username collision (409), retry with random 6-digit suffix
- * 4. Up to 10 retries with different random suffixes
- * 5. Set final nickname in Auth0 user metadata
+ * 1. Obtain M2M token using client credentials (OAuth2 client_credentials flow)
+ * 2. Generate nickname from email prefix
+ * 3. Try to create user via POST /v1/users
+ * 4. On username collision (409), retry with random 6-digit suffix
+ * 5. Up to 10 retries with different random suffixes
+ * 6. Set final nickname in Auth0 user metadata
  * 
  * Environment Variables (from Secrets):
- * - FASTAPI_URL: Base URL of FastAPI
- * - M2M_TOKEN: Machine-to-Machine token for webhook authentication
+ * - FASTAPI_URL: Base URL of FastAPI (e.g., https://api.trigpointing.me)
+ * - M2M_CLIENT_ID: Auth0 M2M client ID
+ * - M2M_CLIENT_SECRET: Auth0 M2M client secret
+ * - AUTH0_DOMAIN: Auth0 tenant domain (e.g., trigpointing-me.eu.auth0.com)
+ * - API_AUDIENCE: FastAPI API audience (e.g., https://api.trigpointing.me/)
  */
 
 exports.onExecutePostUserRegistration = async (event, api) => {
   const axios = require('axios');
   
-  // Generate base nickname from email prefix
+  // Step 1: Obtain M2M token using client credentials
+  let m2mToken;
+  try {
+    const tokenResponse = await axios.post(
+      `https://$${event.secrets.AUTH0_DOMAIN}/oauth/token`,
+      {
+        grant_type: 'client_credentials',
+        client_id: event.secrets.M2M_CLIENT_ID,
+        client_secret: event.secrets.M2M_CLIENT_SECRET,
+        audience: event.secrets.API_AUDIENCE
+      },
+      {
+        headers: { 'Content-Type': 'application/json' },
+        timeout: 5000
+      }
+    );
+    m2mToken = tokenResponse.data.access_token;
+  } catch (error) {
+    console.error('[${environment}] Failed to obtain M2M token:', error.response?.data || error.message);
+    console.error('[${environment}] User registered in Auth0 but not in database. M2M authentication failed.');
+    return;
+  }
+  
+  // Step 2: Generate base nickname from email prefix
   // Auth0 signup only collects email/password by default
   // Nickname allows spaces and special characters (unlike username)
   const baseNickname = event.user.nickname || event.user.email.split('@')[0];
   
-  // Try to create user, handling username collisions with random suffixes
+  // Step 3-5: Try to create user, handling username collisions with random suffixes
   let nickname = baseNickname;
   let attempt = 0;
   const maxAttempts = 10;
@@ -42,7 +69,7 @@ exports.onExecutePostUserRegistration = async (event, api) => {
         payload,
         {
           headers: {
-            'Authorization': `Bearer $${event.secrets.M2M_TOKEN}`,
+            'Authorization': `Bearer $${m2mToken}`,
             'Content-Type': 'application/json'
           },
           timeout: 5000
@@ -51,8 +78,40 @@ exports.onExecutePostUserRegistration = async (event, api) => {
       
       console.log('[${environment}] User provisioned successfully:', event.user.user_id, 'with nickname:', nickname);
       
-      // Set the final nickname in Auth0 user metadata
-      api.user.setUserMetadata('nickname', nickname);
+      // Step 6: Update Auth0 user profile with nickname and name
+      // Use Management API to set both nickname and name fields
+      try {
+        const mgmtTokenResponse = await axios.post(
+          `https://$${event.secrets.AUTH0_DOMAIN}/oauth/token`,
+          {
+            grant_type: 'client_credentials',
+            client_id: event.secrets.M2M_CLIENT_ID,
+            client_secret: event.secrets.M2M_CLIENT_SECRET,
+            audience: `https://$${event.secrets.AUTH0_DOMAIN}/api/v2/`
+          },
+          { headers: { 'Content-Type': 'application/json' }, timeout: 5000 }
+        );
+        
+        await axios.patch(
+          `https://$${event.secrets.AUTH0_DOMAIN}/api/v2/users/$${encodeURIComponent(event.user.user_id)}`,
+          {
+            nickname: nickname,
+            name: nickname  // Set name to match nickname for consistency
+          },
+          {
+            headers: {
+              'Authorization': `Bearer $${mgmtTokenResponse.data.access_token}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 5000
+          }
+        );
+        console.log('[${environment}] Updated Auth0 profile with nickname and name:', nickname);
+      } catch (error) {
+        console.error('[${environment}] Failed to update Auth0 profile:', error.response?.data || error.message);
+        // Don't fail registration - user can update later
+      }
+      
       return; // Success!
       
     } catch (error) {

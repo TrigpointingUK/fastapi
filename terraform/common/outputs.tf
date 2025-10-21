@@ -224,6 +224,11 @@ output "elasticache_valkey_port" {
   value       = aws_elasticache_serverless_cache.valkey.endpoint[0].port
 }
 
+output "elasticache_security_group_id" {
+  description = "Security group ID for ElastiCache"
+  value       = aws_security_group.elasticache.id
+}
+
 # SES SMTP Outputs for MediaWiki
 output "mediawiki_smtp_username" {
   description = "SMTP username for MediaWiki (AWS Access Key ID)"

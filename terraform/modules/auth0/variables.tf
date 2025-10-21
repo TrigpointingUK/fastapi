@@ -14,6 +14,12 @@ variable "name_prefix" {
   type        = string
 }
 
+variable "auth0_m2m_client_secret" {
+  description = "M2M client secret for Auth0 Actions (sensitive - rotate manually in Auth0 if needed)"
+  type        = string
+  sensitive   = true
+}
+
 variable "auth0_custom_domain" {
   description = "Auth0 custom domain for user-facing authentication (e.g., auth.trigpointing.me)"
   type        = string
@@ -29,6 +35,12 @@ variable "database_connection_name" {
   type        = string
 }
 
+variable "disable_signup" {
+  description = "Whether to disable public signup on the database connection"
+  type        = bool
+  default     = false
+}
+
 variable "api_name" {
   description = "Name of the API resource server"
   type        = string
@@ -42,12 +54,6 @@ variable "api_identifier" {
 variable "fastapi_url" {
   description = "FastAPI base URL for webhook"
   type        = string
-}
-
-variable "m2m_token" {
-  description = "M2M token for post-registration Action webhook authentication"
-  type        = string
-  sensitive   = true
 }
 
 variable "swagger_callback_urls" {

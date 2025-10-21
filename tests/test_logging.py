@@ -2,11 +2,12 @@
 Tests for logging configuration to improve coverage.
 """
 
+import json
 import logging
 import sys
 from unittest.mock import MagicMock, patch
 
-from app.core.logging import get_logger, setup_logging
+from app.core.logging import JSONFormatter, get_logger, setup_logging
 
 
 class TestLoggingConfiguration:
@@ -118,8 +119,12 @@ class TestLoggingConfiguration:
         # Check that noisy libraries have appropriate levels
         assert logging.getLogger("uvicorn.access").level == logging.WARNING
         assert logging.getLogger("uvicorn.error").level == logging.INFO
-        assert logging.getLogger("sqlalchemy.engine").level == logging.WARNING
-        assert logging.getLogger("sqlalchemy.pool").level == logging.WARNING
+        # SQLAlchemy should be silenced unless there's an error
+        assert logging.getLogger("sqlalchemy").level == logging.ERROR
+        assert logging.getLogger("sqlalchemy.engine").level == logging.ERROR
+        assert logging.getLogger("sqlalchemy.pool").level == logging.ERROR
+        assert logging.getLogger("sqlalchemy.dialects").level == logging.ERROR
+        assert logging.getLogger("sqlalchemy.orm").level == logging.ERROR
         assert logging.getLogger("botocore").level == logging.WARNING
         assert logging.getLogger("boto3").level == logging.WARNING
         assert logging.getLogger("urllib3").level == logging.WARNING
@@ -169,3 +174,90 @@ class TestLoggingConfiguration:
         assert handler.stream == sys.stdout
         assert handler.level == logging.WARNING
         assert isinstance(handler.formatter, logging.Formatter)
+
+    def test_json_formatter_basic_message(self):
+        """Test JSONFormatter formats basic log messages correctly."""
+        formatter = JSONFormatter(datefmt="%Y-%m-%d %H:%M:%S")
+        record = logging.LogRecord(
+            name="test.logger",
+            level=logging.INFO,
+            pathname="test.py",
+            lineno=42,
+            msg="Test message",
+            args=(),
+            exc_info=None,
+        )
+
+        formatted = formatter.format(record)
+        parsed = json.loads(formatted)
+
+        assert parsed["level"] == "INFO"
+        assert parsed["logger"] == "test.logger"
+        assert parsed["message"] == "Test message"
+        assert "timestamp" in parsed
+
+    def test_json_formatter_with_exception(self):
+        """Test JSONFormatter includes exception information."""
+        formatter = JSONFormatter(datefmt="%Y-%m-%d %H:%M:%S")
+
+        try:
+            raise ValueError("Test error")
+        except ValueError:
+            record = logging.LogRecord(
+                name="test.logger",
+                level=logging.ERROR,
+                pathname="test.py",
+                lineno=42,
+                msg="Error occurred",
+                args=(),
+                exc_info=sys.exc_info(),
+            )
+
+        formatted = formatter.format(record)
+        parsed = json.loads(formatted)
+
+        assert parsed["level"] == "ERROR"
+        assert parsed["logger"] == "test.logger"
+        assert parsed["message"] == "Error occurred"
+        assert "exception" in parsed
+        assert "ValueError: Test error" in parsed["exception"]
+        assert "Traceback" in parsed["exception"]
+
+    def test_setup_logging_uses_json_formatter_in_production(self):
+        """Test that setup_logging uses JSON formatter when DEBUG=False."""
+        # Clear existing handlers
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers[:]:
+            root_logger.removeHandler(handler)
+
+        mock_settings = MagicMock()
+        mock_settings.DEBUG = False
+        mock_settings.LOG_LEVEL = "INFO"
+
+        with patch("app.core.logging.settings", mock_settings):
+            setup_logging()
+
+        # Check that the handler uses JSONFormatter
+        assert len(root_logger.handlers) == 1
+        handler = root_logger.handlers[0]
+        assert isinstance(handler.formatter, JSONFormatter)
+
+    def test_setup_logging_uses_text_formatter_in_development(self):
+        """Test that setup_logging uses text formatter when DEBUG=True."""
+        # Clear existing handlers
+        root_logger = logging.getLogger()
+        for handler in root_logger.handlers[:]:
+            root_logger.removeHandler(handler)
+
+        mock_settings = MagicMock()
+        mock_settings.DEBUG = True
+        mock_settings.LOG_LEVEL = "DEBUG"
+
+        with patch("app.core.logging.settings", mock_settings):
+            setup_logging()
+
+        # Check that the handler uses standard Formatter, not JSONFormatter
+        assert len(root_logger.handlers) == 1
+        handler = root_logger.handlers[0]
+        assert isinstance(handler.formatter, logging.Formatter)
+        assert not isinstance(handler.formatter, JSONFormatter)

@@ -48,6 +48,9 @@ resource "auth0_connection" "database" {
   name     = var.database_connection_name
   strategy = "auth0"
 
+  # Ensure Identifier First is enabled before passkeys
+  depends_on = [auth0_prompt.identifier_first]
+
   options {
     password_policy = "good"
     password_history {
@@ -66,12 +69,22 @@ resource "auth0_connection" "database" {
     brute_force_protection = true
 
     # Configuration settings
-    disable_signup    = false
+    disable_signup    = var.disable_signup
     requires_username = false # Use nickname instead (allows spaces, special chars)
 
     # Validation
     import_mode          = false
     non_persistent_attrs = []
+
+    # Passkey/WebAuthn configuration
+    authentication_methods {
+      password {
+        enabled = true
+      }
+      passkey {
+        enabled = true
+      }
+    }
   }
 }
 
@@ -161,6 +174,9 @@ resource "auth0_client" "m2m_api" {
     alg = "RS256"
   }
 }
+
+# Note: Client secret must be rotated manually in Auth0 dashboard if needed
+# then provided via var.auth0_m2m_client_secret
 
 # Single Page Application (Swagger)
 resource "auth0_client" "swagger" {
@@ -353,8 +369,23 @@ resource "auth0_action" "post_user_registration" {
   }
 
   secrets {
-    name  = "M2M_TOKEN"
-    value = var.m2m_token
+    name  = "M2M_CLIENT_ID"
+    value = auth0_client.m2m_api.client_id
+  }
+
+  secrets {
+    name  = "M2M_CLIENT_SECRET"
+    value = var.auth0_m2m_client_secret
+  }
+
+  secrets {
+    name  = "AUTH0_DOMAIN"
+    value = data.auth0_tenant.current.domain
+  }
+
+  secrets {
+    name  = "API_AUDIENCE"
+    value = auth0_resource_server.api.identifier
   }
 }
 
@@ -406,11 +437,6 @@ resource "auth0_trigger_actions" "post_login" {
 
 data "auth0_tenant" "current" {}
 
-# Get M2M client credentials (includes secret)
-data "auth0_client" "m2m_api" {
-  client_id = auth0_client.m2m_api.id
-}
-
 # Get Cloudflare zone information
 data "cloudflare_zones" "domain" {
   filter {
@@ -433,14 +459,24 @@ resource "auth0_custom_domain" "main" {
 # Create CNAME record in Cloudflare pointing to Auth0
 # This is DNS-only (not proxied) as required by Auth0
 resource "cloudflare_record" "auth0_custom_domain" {
-  zone_id = data.cloudflare_zones.domain.zones[0].id
-  name    = split(".", var.auth0_custom_domain)[0] # Extract subdomain (e.g., "auth" from "auth.trigpointing.me")
-  content = auth0_custom_domain.main.verification[0].methods[0].record
-  type    = "CNAME"
-  proxied = false # MUST be false for Auth0 custom domains
-  ttl     = 1     # Auto TTL
+  zone_id         = data.cloudflare_zones.domain.zones[0].id
+  name            = split(".", var.auth0_custom_domain)[0] # Extract subdomain (e.g., "auth" from "auth.trigpointing.me")
+  content         = auth0_custom_domain.main.verification[0].methods[0].record
+  type            = "CNAME"
+  proxied         = false # MUST be false for Auth0 custom domains
+  ttl             = 1     # Auto TTL
+  allow_overwrite = true  # Allow Terraform to manage existing records
 
   comment = "Auth0 custom domain for ${var.environment} - managed by Terraform"
+}
+
+# ============================================================================
+# PROMPT CONFIGURATION (for Identifier First flow required by passkeys)
+# ============================================================================
+
+resource "auth0_prompt" "identifier_first" {
+  identifier_first               = true  # Enable Identifier First flow (required for passkeys)
+  webauthn_platform_first_factor = false # Use standard passkey flow, not enterprise biometrics
 }
 
 # ============================================================================
@@ -511,14 +547,18 @@ resource "auth0_email_provider" "ses" {
 # ============================================================================
 
 # Configure Auth0 Universal Login branding
-resource "auth0_branding" "main" {
-  logo_url = var.logo_url
-
-  colors {
-    primary         = var.primary_color
-    page_background = var.page_background_color
-  }
-}
+# NOTE: Branding is a PAID Auth0 feature. Free/developer plans cannot manage
+# branding via API (even read operations fail). Configure branding manually
+# in the Auth0 dashboard for free tier tenants.
+#
+# resource "auth0_branding" "main" {
+#   logo_url = var.logo_url
+#
+#   colors {
+#     primary         = var.primary_color
+#     page_background = var.page_background_color
+#   }
+# }
 
 # ============================================================================
 # TENANT CONFIGURATION

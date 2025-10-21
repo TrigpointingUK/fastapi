@@ -67,6 +67,12 @@ resource "aws_ecs_task_definition" "app" {
             value = jsonencode(var.cors_origins)
           }
         ] : [],
+        var.redis_url != "" ? [
+          {
+            name  = "REDIS_URL"
+            value = var.redis_url
+          }
+        ] : [],
       )
 
       # Secrets from AWS Secrets Manager
@@ -104,12 +110,12 @@ resource "aws_ecs_task_definition" "app" {
             valueFrom = "${var.secrets_arn}:auth0_connection::"
           },
           {
-            name      = "AUTH0_DOMAIN"
-            valueFrom = "${var.secrets_arn}:auth0_domain::"
+            name      = "AUTH0_CUSTOM_DOMAIN"
+            valueFrom = "${var.secrets_arn}:auth0_custom_domain::"
           },
           {
-            name      = "AUTH0_MANAGEMENT_API_AUDIENCE"
-            valueFrom = "${var.secrets_arn}:auth0_management_api_audience::"
+            name      = "AUTH0_TENANT_DOMAIN"
+            valueFrom = "${var.secrets_arn}:auth0_tenant_domain::"
           },
           {
             name      = "AUTH0_M2M_CLIENT_ID"

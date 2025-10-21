@@ -5,11 +5,35 @@ This module sets up structured logging with appropriate levels and formats
 for both development and production environments.
 """
 
+import json
 import logging
 import sys
 from typing import Optional
 
 from app.core.config import settings
+
+
+class JSONFormatter(logging.Formatter):
+    """Custom JSON formatter for structured logging in production."""
+
+    def format(self, record: logging.LogRecord) -> str:
+        """Format log record as JSON."""
+        log_data = {
+            "timestamp": self.formatTime(record, self.datefmt),
+            "level": record.levelname,
+            "logger": record.name,
+            "message": record.getMessage(),
+        }
+
+        # Add exception info if present
+        if record.exc_info:
+            log_data["exception"] = self.formatException(record.exc_info)
+
+        # Add extra fields if present
+        if hasattr(record, "extra"):
+            log_data.update(record.extra)
+
+        return json.dumps(log_data)
 
 
 def setup_logging(log_level: Optional[str] = None) -> None:
@@ -31,11 +55,16 @@ def setup_logging(log_level: Optional[str] = None) -> None:
     # Convert string to logging constant
     numeric_level = getattr(logging, log_level.upper(), logging.INFO)
 
-    # Create formatter for structured logging
-    formatter = logging.Formatter(
-        fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
+    # Choose formatter based on environment
+    if settings.DEBUG:
+        # Use human-readable format for development
+        formatter = logging.Formatter(
+            fmt="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+    else:
+        # Use JSON format for production/staging
+        formatter = JSONFormatter(datefmt="%Y-%m-%d %H:%M:%S")
 
     # Configure root logger
     root_logger = logging.getLogger()
@@ -52,10 +81,14 @@ def setup_logging(log_level: Optional[str] = None) -> None:
     root_logger.addHandler(console_handler)
 
     # Set specific logger levels for noisy libraries
+    # Completely silence SQLAlchemy unless there's an error
     logging.getLogger("uvicorn.access").setLevel(logging.WARNING)
     logging.getLogger("uvicorn.error").setLevel(logging.INFO)
-    logging.getLogger("sqlalchemy.engine").setLevel(logging.WARNING)
-    logging.getLogger("sqlalchemy.pool").setLevel(logging.WARNING)
+    logging.getLogger("sqlalchemy").setLevel(logging.ERROR)
+    logging.getLogger("sqlalchemy.engine").setLevel(logging.ERROR)
+    logging.getLogger("sqlalchemy.pool").setLevel(logging.ERROR)
+    logging.getLogger("sqlalchemy.dialects").setLevel(logging.ERROR)
+    logging.getLogger("sqlalchemy.orm").setLevel(logging.ERROR)
     logging.getLogger("botocore").setLevel(logging.WARNING)
     logging.getLogger("boto3").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)

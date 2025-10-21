@@ -2,10 +2,11 @@
 Pydantic schemas for user endpoints with permission-based field filtering.
 """
 
+import re
 from datetime import date  # noqa: F401
 from typing import Dict, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class UserResponse(BaseModel):
@@ -53,6 +54,10 @@ class UserPrefs(BaseModel):
     public_ind: str
     online_map_type: str
     online_map_type2: str
+    email: str
+    email_valid: str = Field(
+        ..., description="Email validation status (Y/N) - read-only"
+    )
 
 
 class UserUpdate(BaseModel):
@@ -95,6 +100,38 @@ class UserUpdate(BaseModel):
     online_map_type2: Optional[str] = Field(
         None, max_length=10, description="Secondary map type preference"
     )
+
+    @field_validator("name")
+    @classmethod
+    def validate_name(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+
+        # Ban leading whitespace
+        if v != v.lstrip():
+            raise ValueError("Username cannot begin with whitespace")
+
+        # Blacklist characters: @ and * (prevent SQL injection-like garbage)
+        forbidden_chars = ["@", "*"]
+        for char in forbidden_chars:
+            if char in v:
+                raise ValueError(f"Username cannot contain '{char}' character")
+
+        return v
+
+    @field_validator("email")
+    @classmethod
+    def validate_email(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return v
+
+        # Basic email format validation
+        # Pattern: local@domain with reasonable restrictions
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        if not re.match(email_pattern, v):
+            raise ValueError("Invalid email address format")
+
+        return v
 
 
 class UserWithIncludes(UserResponse):

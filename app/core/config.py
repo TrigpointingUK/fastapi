@@ -19,6 +19,9 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"  # staging, production, development
     DEBUG: bool = False
 
+    # Base URL for the API (used for logout redirects, etc.)
+    FASTAPI_URL: str = "http://localhost:8000"
+
     # Database - constructed from individual components
     DB_HOST: str = "localhost"
     DB_PORT: int = 3306
@@ -39,34 +42,27 @@ class Settings(BaseSettings):
     BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
     # Auth0 Configuration
-    AUTH0_DOMAIN: Optional[str] = None
+    AUTH0_CUSTOM_DOMAIN: Optional[str] = (
+        None  # User-facing domain (e.g., auth.trigpointing.me)
+    )
+    AUTH0_TENANT_DOMAIN: Optional[str] = (
+        None  # Tenant domain for Management API (e.g., trigpointing-me.eu.auth0.com)
+    )
     AUTH0_SECRET_NAME: Optional[str] = None
     AUTH0_CONNECTION: Optional[str] = None
-    # SPA client for Swagger OAuth2 (PKCE)
-    AUTH0_SPA_CLIENT_ID: Optional[str] = None
-    # M2M client for Management API
-    AUTH0_M2M_CLIENT_ID: Optional[str] = None
+
+    # Auth0 Client IDs
+    AUTH0_SPA_CLIENT_ID: Optional[str] = None  # SPA client for Swagger OAuth2 (PKCE)
+    AUTH0_M2M_CLIENT_ID: Optional[str] = (
+        None  # M2M client for Management API and webhooks
+    )
     AUTH0_M2M_CLIENT_SECRET: Optional[str] = None
-    # Backwards compatibility (deprecated): if new vars missing, fall back to these
-    AUTH0_CLIENT_ID: Optional[str] = None
-    AUTH0_CLIENT_SECRET: Optional[str] = None
 
-    # Auth0 Audience Configuration
-    # These are separate audiences for different purposes:
-    # - MANAGEMENT_API_AUDIENCE: For accessing Auth0 Management API (user sync, etc.)
-    # - API_AUDIENCE: For validating tokens from your API clients
-    AUTH0_MANAGEMENT_API_AUDIENCE: Optional[str] = None
-    AUTH0_API_AUDIENCE: Optional[str] = None  # e.g., "https://api.trigpointing.me/v1/"
-
-    # Auth0 Webhook Configuration
-    # - WEBHOOK_M2M_AUDIENCE: For validating M2M tokens from Auth0 Actions
-    # - API_IDENTIFIER: Your API identifier (same as API_AUDIENCE typically)
-    AUTH0_WEBHOOK_M2M_AUDIENCE: Optional[str] = (
-        None  # e.g., "https://api.trigpointing.me/v1/"
-    )
-    AUTH0_API_IDENTIFIER: Optional[str] = (
-        None  # e.g., "https://api.trigpointing.me/v1/"
-    )
+    # Auth0 API Audience
+    # This is your API identifier - used for both:
+    # - Validating tokens from your API clients (users)
+    # - Validating M2M tokens from Auth0 Actions (webhooks)
+    AUTH0_API_AUDIENCE: Optional[str] = None  # e.g., "https://api.trigpointing.me/"
 
     # Logging Configuration
     LOG_LEVEL: str = "INFO"
@@ -86,6 +82,9 @@ class Settings(BaseSettings):
     MAX_IMAGE_SIZE: int = 20 * 1024 * 1024  # 20MB
     MAX_IMAGE_DIMENSION: int = 4000
     THUMBNAIL_SIZE: int = 120
+
+    # Redis/ElastiCache Configuration
+    REDIS_URL: Optional[str] = None  # e.g., redis://host:6379
 
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod

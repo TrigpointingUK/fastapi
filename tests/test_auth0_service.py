@@ -38,10 +38,10 @@ class TestAuth0Service:
     def test_init_disabled(self, mock_settings):
         """Test service initialization when Auth0 is disabled."""
         # Auth0 is now always enabled and will raise exception if not configured
-        mock_settings.AUTH0_DOMAIN = None
+        mock_settings.AUTH0_TENANT_DOMAIN = None
 
         with pytest.raises(
-            ValueError, match="AUTH0_DOMAIN is required but not configured"
+            ValueError, match="AUTH0_TENANT_DOMAIN is required but not configured"
         ):
             Auth0Service()
 
@@ -49,26 +49,23 @@ class TestAuth0Service:
     def test_init_enabled(self, mock_settings):
         """Test service initialization when Auth0 is enabled."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_CONNECTION = "tme-users"
-        mock_settings.AUTH0_MANAGEMENT_API_AUDIENCE = (
-            "https://test-domain.auth0.com/api/v2/"
-        )
 
         service = Auth0Service()
         # Auth0 is now always enabled - no enabled attribute
-        assert service.domain == "test-domain.auth0.com"
+        assert service.tenant_domain == "test-domain.auth0.com"
         assert service.connection == "tme-users"
 
     @patch("app.services.auth0_service.settings")
     def test_init_missing_config(self, mock_settings):
         """Test service initialization with missing configuration."""
         # Auth0 is now always enabled and will raise exception if not configured
-        mock_settings.AUTH0_DOMAIN = None
+        mock_settings.AUTH0_TENANT_DOMAIN = None
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         with pytest.raises(
-            ValueError, match="AUTH0_DOMAIN is required but not configured"
+            ValueError, match="AUTH0_TENANT_DOMAIN is required but not configured"
         ):
             Auth0Service()
 
@@ -76,7 +73,7 @@ class TestAuth0Service:
     def test_get_auth0_credentials_success(self, mock_settings):
         """Test successful retrieval of Auth0 credentials."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_M2M_CLIENT_ID = "test-client-id"
         mock_settings.AUTH0_M2M_CLIENT_SECRET = "test-client-secret"
 
@@ -94,12 +91,12 @@ class TestAuth0Service:
     def test_get_auth0_credentials_missing_credentials(self, mock_settings):
         """Test handling of missing credentials."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_M2M_CLIENT_ID = None  # Missing client ID
         mock_settings.AUTH0_M2M_CLIENT_SECRET = "test-client-secret"
         # Ensure deprecated fallbacks are not used
-        mock_settings.AUTH0_CLIENT_ID = None
-        mock_settings.AUTH0_CLIENT_SECRET = None
+        mock_settings.AUTH0_M2M_CLIENT_ID = None
+        mock_settings.AUTH0_M2M_CLIENT_SECRET = None
 
         service = Auth0Service()
         result = service._get_auth0_credentials()
@@ -122,7 +119,7 @@ class TestAuth0Service:
     def test_get_access_token_success(self, mock_settings, mock_get_creds, mock_post):
         """Test successful access token retrieval."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         mock_get_creds.return_value = self.mock_credentials
@@ -149,7 +146,7 @@ class TestAuth0Service:
     ):
         """Test handling of request errors during token retrieval."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         mock_get_creds.return_value = self.mock_credentials
@@ -168,7 +165,7 @@ class TestAuth0Service:
     ):
         """Test successful Auth0 API request."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         mock_get_token.return_value = "test-token"
@@ -191,7 +188,7 @@ class TestAuth0Service:
     ):
         """Test handling of failed Auth0 API request."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         mock_get_token.return_value = "test-token"
@@ -210,7 +207,7 @@ class TestAuth0Service:
     def test_find_user_by_username_success(self, mock_settings, mock_request):
         """Test successful user search by username."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "Username-Password-Authentication"
 
@@ -229,7 +226,7 @@ class TestAuth0Service:
     def test_find_user_by_username_not_found(self, mock_settings, mock_request):
         """Test user search when user not found."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         mock_request.return_value = {"users": []}
@@ -244,7 +241,7 @@ class TestAuth0Service:
     def test_find_user_by_email_success(self, mock_settings, mock_request):
         """Test successful user search by email."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "Username-Password-Authentication"
 
@@ -263,7 +260,7 @@ class TestAuth0Service:
     def test_create_user_success(self, mock_settings, mock_request):
         """Test successful user creation."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "Username-Password-Authentication"
 
@@ -300,7 +297,7 @@ class TestAuth0Service:
     def test_create_user_without_email(self, mock_settings, mock_request):
         """Test user creation without email."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "Username-Password-Authentication"
 
@@ -322,7 +319,7 @@ class TestAuth0Service:
     def test_create_user_with_custom_connection(self, mock_settings, mock_request):
         """Test user creation with custom connection."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
         mock_settings.AUTH0_CONNECTION = "tme-users"
 
@@ -356,9 +353,9 @@ class TestAuth0Service:
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
     @patch("app.services.auth0_service.settings")
     def test_update_user_email_success(self, mock_settings, mock_request):
-        """Test successful email update."""
+        """Test successful email update and verification email trigger."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         mock_request.return_value = {"success": True}
@@ -367,10 +364,17 @@ class TestAuth0Service:
         result = service.update_user_email("auth0|123456789", "new@example.com")
 
         assert result is True
-        mock_request.assert_called_once_with(
+        # Should make two calls: update email + send verification
+        assert mock_request.call_count == 2
+        mock_request.assert_any_call(
             "PATCH",
             "users/auth0|123456789",
-            {"email": "new@example.com", "email_verified": True},
+            {"email": "new@example.com", "email_verified": False},
+        )
+        mock_request.assert_any_call(
+            "POST",
+            "jobs/verification-email",
+            {"user_id": "auth0|123456789"},
         )
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
@@ -378,7 +382,7 @@ class TestAuth0Service:
     def test_update_user_email_failure(self, mock_settings, mock_request):
         """Test email update failure."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         mock_request.return_value = None
@@ -396,7 +400,7 @@ class TestAuth0Service:
     ):
         """Test sync when user exists and email needs updating."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         existing_user = {
@@ -425,7 +429,7 @@ class TestAuth0Service:
     ):
         """Test sync when user doesn't exist and needs to be created."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         mock_find_user.return_value = None
@@ -449,7 +453,7 @@ class TestAuth0Service:
     ):
         """Test sync when user exists and email doesn't need updating."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         existing_user = {
@@ -485,7 +489,7 @@ class TestAuth0Service:
     def test_sync_user_to_auth0_exception_handling(self, mock_settings, mock_find_user):
         """Test sync exception handling."""
         # Auth0 is now always enabled
-        mock_settings.AUTH0_DOMAIN = "test-domain.auth0.com"
+        mock_settings.AUTH0_TENANT_DOMAIN = "test-domain.auth0.com"
         mock_settings.AUTH0_SECRET_NAME = "test-secret"
 
         mock_find_user.side_effect = Exception("Auth0 API Error")

@@ -19,12 +19,5 @@ variable "ecs_task_execution_role_name" {
   type        = string
 }
 
-# Auth0 Configuration
-variable "auth0_domain" {
-  description = "Auth0 domain (e.g., your-tenant.auth0.com)"
-  type        = string
-  default     = null
-}
-
-# Note: SPA and M2M client IDs are stored in this module's secret
-# The M2M client secret should be stored as a separate key in the same secret
+# Note: All Auth0 configuration is stored in the secret and managed manually
+# The secret includes: custom_domain, tenant_domain, SPA client ID, M2M client ID/secret, etc.

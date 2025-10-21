@@ -23,7 +23,9 @@ def get_engine():
             pool_size=settings.DATABASE_POOL_SIZE,
             pool_pre_ping=True,
             pool_recycle=settings.DATABASE_POOL_RECYCLE,
-            echo=settings.DEBUG,
+            # Never use echo - it bypasses logging configuration and outputs directly to stdout
+            # Use logging levels instead via app/core/logging.py configuration
+            echo=False,
         )
     return _engine
 

@@ -9,6 +9,10 @@ terraform {
       source  = "auth0/auth0"
       version = "~> 1.0"
     }
+    cloudflare = {
+      source  = "cloudflare/cloudflare"
+      version = "~> 4.0"
+    }
   }
 
   backend "s3" {
@@ -30,8 +34,8 @@ provider "aws" {
 
 provider "auth0" {
   domain        = var.auth0_tenant_domain
-  client_id     = var.auth0_client_id
-  client_secret = var.auth0_client_secret
+  client_id     = var.auth0_terraform_client_id
+  client_secret = var.auth0_terraform_client_secret
   # Credentials can also be set via environment variables:
   # AUTH0_DOMAIN, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET
 }

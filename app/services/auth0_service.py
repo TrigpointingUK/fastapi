@@ -12,7 +12,9 @@ import json
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
+import redis
 import requests
+from redis.exceptions import RedisError
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -26,26 +28,55 @@ class Auth0Service:
 
     def __init__(self):
         """Initialize the Auth0 service."""
-        self.domain = settings.AUTH0_DOMAIN
+        self.tenant_domain = settings.AUTH0_TENANT_DOMAIN
+        self.custom_domain = settings.AUTH0_CUSTOM_DOMAIN
         self.connection = settings.AUTH0_CONNECTION
-        self.management_api_audience = settings.AUTH0_MANAGEMENT_API_AUDIENCE
         self._access_token = None
         self._token_expires_at = None
 
-        if not self.domain:
-            logger.error("AUTH0_DOMAIN is required but not configured")
-            raise ValueError("AUTH0_DOMAIN is required but not configured")
+        if not self.tenant_domain:
+            logger.error("AUTH0_TENANT_DOMAIN is required but not configured")
+            raise ValueError("AUTH0_TENANT_DOMAIN is required but not configured")
 
         if not self.connection:
             logger.error("AUTH0_CONNECTION is required but not configured")
             raise ValueError("AUTH0_CONNECTION is required but not configured")
 
-        if not self.management_api_audience:
-            # Construct Management API audience from domain
-            self.management_api_audience = f"https://{self.domain}/api/v2/"
-            logger.info(
-                f"Using constructed Management API audience: {self.management_api_audience}"
-            )
+        # Construct Management API audience from tenant domain
+        self.management_api_audience = f"https://{self.tenant_domain}/api/v2/"
+        logger.debug(f"Management API audience: {self.management_api_audience}")
+
+        # ElastiCache/Redis connection for token caching
+        self._redis_client = None
+        if settings.REDIS_URL:
+            try:
+                # ElastiCache Serverless requires TLS
+                # Convert redis:// to rediss:// for serverless endpoints
+                redis_url = settings.REDIS_URL
+                if "serverless" in redis_url and redis_url.startswith("redis://"):
+                    redis_url = redis_url.replace("redis://", "rediss://", 1)
+
+                self._redis_client = redis.from_url(
+                    redis_url,
+                    decode_responses=True,
+                    socket_connect_timeout=10,
+                    socket_timeout=10,
+                    retry_on_timeout=True,
+                    ssl_cert_reqs=None,  # Don't verify cert for AWS self-signed certs
+                )
+                # Test connection
+                self._redis_client.ping()
+                logger.info("Connected to ElastiCache for token caching")
+            except Exception as e:
+                logger.warning(
+                    f"Failed to connect to ElastiCache: {e}. "
+                    "Token caching disabled, using in-memory cache only."
+                )
+                self._redis_client = None
+        else:
+            logger.debug("REDIS_URL not configured, using in-memory token cache only")
+
+        self.token_cache_key = f"auth0:mgmt_token:{self.tenant_domain}"
 
     def _get_auth0_credentials(self) -> Optional[Dict[str, str]]:
         """
@@ -57,11 +88,9 @@ class Auth0Service:
 
         try:
             # Get credentials for Management API (M2M)
-            client_id = settings.AUTH0_M2M_CLIENT_ID or settings.AUTH0_CLIENT_ID
-            client_secret = (
-                settings.AUTH0_M2M_CLIENT_SECRET or settings.AUTH0_CLIENT_SECRET
-            )
-            domain = settings.AUTH0_DOMAIN
+            client_id = settings.AUTH0_M2M_CLIENT_ID
+            client_secret = settings.AUTH0_M2M_CLIENT_SECRET
+            domain = settings.AUTH0_TENANT_DOMAIN
 
             if not client_id or not client_secret:
                 log_data = {
@@ -102,26 +131,43 @@ class Auth0Service:
         """
         Get a valid Auth0 Management API access token.
 
+        Checks ElastiCache first (shared across all ECS tasks),
+        then in-memory cache, then requests new token.
+
         Returns:
             Access token string or None if failed
         """
 
-        # Check if we have a valid cached token
+        # Try ElastiCache first (shared across all tasks)
+        if self._redis_client:
+            try:
+                cached_data = self._redis_client.get(self.token_cache_key)
+                if cached_data:
+                    token_data = json.loads(cached_data)
+                    expires_at = datetime.fromisoformat(token_data["expires_at"])
+                    if datetime.now(timezone.utc) < expires_at:
+                        logger.debug("Using Auth0 token from ElastiCache")
+                        return token_data["token"]
+            except (RedisError, json.JSONDecodeError, KeyError) as e:
+                logger.warning(f"Failed to read token from ElastiCache: {e}")
+
+        # Fall back to in-memory cache
         if (
             self._access_token
             and self._token_expires_at
             and datetime.now(timezone.utc) < self._token_expires_at
         ):
+            logger.debug("Using Auth0 token from memory")
             return self._access_token
 
-        # Get credentials
+        # Request new token
         credentials = self._get_auth0_credentials()
         if not credentials:
             return None
 
         try:
-            # Request access token
-            token_url = f"https://{self.domain}/oauth/token"
+            # Request access token from tenant domain (not custom domain)
+            token_url = f"https://{self.tenant_domain}/oauth/token"
             payload = {
                 "client_id": credentials["client_id"],
                 "client_secret": credentials["client_secret"],
@@ -141,12 +187,41 @@ class Auth0Service:
                 seconds=expires_in - 300
             )
 
+            # Cache in ElastiCache (shared across all ECS tasks)
+            if self._redis_client:
+                try:
+                    cache_data = {
+                        "token": self._access_token,
+                        "expires_at": self._token_expires_at.isoformat(),
+                    }
+                    ttl = int(
+                        (
+                            self._token_expires_at - datetime.now(timezone.utc)
+                        ).total_seconds()
+                    )
+                    self._redis_client.setex(
+                        self.token_cache_key, ttl, json.dumps(cache_data)
+                    )
+                    logger.info(
+                        json.dumps(
+                            {
+                                "event": "auth0_token_cached_in_elasticache",
+                                "expires_in_seconds": ttl,
+                                "timestamp": datetime.now(timezone.utc).isoformat()
+                                + "Z",
+                            }
+                        )
+                    )
+                except RedisError as e:
+                    logger.warning(f"Failed to cache token in ElastiCache: {e}")
+
             log_data = {
                 "event": "auth0_access_token_obtained",
-                "domain": self.domain,
+                "tenant_domain": self.tenant_domain,
+                "expires_in_seconds": expires_in,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.debug(json.dumps(log_data))
+            logger.info(json.dumps(log_data))
             return self._access_token
 
         except requests.exceptions.RequestException as e:
@@ -167,8 +242,8 @@ class Auth0Service:
                 "event": "auth0_access_token_failed",
                 "error_type": "RequestException",
                 "error_message": str(e),
-                "domain": self.domain,
-                "token_url": f"https://{self.domain}/oauth/token",
+                "tenant_domain": self.tenant_domain,
+                "token_url": f"https://{self.tenant_domain}/oauth/token",
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 **response_details,
             }
@@ -179,7 +254,7 @@ class Auth0Service:
                 "event": "auth0_access_token_failed",
                 "error_type": "UnexpectedError",
                 "error_message": str(e),
-                "domain": self.domain,
+                "tenant_domain": self.tenant_domain,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
@@ -205,7 +280,8 @@ class Auth0Service:
             return None
 
         try:
-            url = f"https://{self.domain}/api/v2/{endpoint}"
+            # Use tenant domain for Management API calls, not custom domain
+            url = f"https://{self.tenant_domain}/api/v2/{endpoint}"
             headers = {
                 "Authorization": f"Bearer {access_token}",
                 "Content-Type": "application/json",
@@ -750,7 +826,7 @@ class Auth0Service:
 
     def update_user_email(self, user_id: str, email: str) -> bool:
         """
-        Update a user's email address in Auth0.
+        Update a user's email address in Auth0 and trigger verification email.
 
         Args:
             user_id: Auth0 user ID
@@ -760,20 +836,12 @@ class Auth0Service:
             True if successful, False otherwise
         """
 
-        user_data = {"email": email, "email_verified": True}
+        # Step 1: Update email and mark as unverified
+        user_data = {"email": email, "email_verified": False}
 
         response = self._make_auth0_request("PATCH", f"users/{user_id}", user_data)
 
-        if response:
-            log_data = {
-                "event": "auth0_user_email_updated",
-                "user_id": user_id,
-                "email": email,
-                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-            }
-            logger.info(json.dumps(log_data))
-            return True
-        else:
+        if not response:
             log_data = {
                 "event": "auth0_user_email_update_failed",
                 "user_id": user_id,
@@ -782,6 +850,43 @@ class Auth0Service:
             }
             logger.error(json.dumps(log_data))
             return False
+
+        log_data = {
+            "event": "auth0_user_email_updated",
+            "user_id": user_id,
+            "email": email,
+            "email_verified": "false",
+            "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+        }
+        logger.info(json.dumps(log_data))
+
+        # Step 2: Trigger verification email
+        # Auth0 Management API: POST /api/v2/jobs/verification-email
+        verification_data = {"user_id": user_id}
+        verification_response = self._make_auth0_request(
+            "POST", "jobs/verification-email", verification_data
+        )
+
+        if verification_response:
+            log_data = {
+                "event": "auth0_verification_email_sent",
+                "user_id": user_id,
+                "email": email,
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.info(json.dumps(log_data))
+        else:
+            log_data = {
+                "event": "auth0_verification_email_failed",
+                "user_id": user_id,
+                "email": email,
+                "warning": "Email updated but verification email not sent",
+                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+            }
+            logger.warning(json.dumps(log_data))
+            # Don't fail the whole operation - email was updated successfully
+
+        return True
 
     def update_user_profile(
         self,

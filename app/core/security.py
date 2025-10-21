@@ -54,10 +54,18 @@ class Auth0TokenValidator:
     """Validates Auth0 access tokens and extracts user information."""
 
     def __init__(self):
-        self.domain = settings.AUTH0_DOMAIN
-        self.api_audience = settings.AUTH0_API_AUDIENCE  # Use configured API audience
+        # Custom domain for JWKS (user-facing domain)
+        self.custom_domain = settings.AUTH0_CUSTOM_DOMAIN
+        # Tenant domain for Management API calls
+        self.tenant_domain = settings.AUTH0_TENANT_DOMAIN
+        # API audience for token validation
+        self.api_audience = settings.AUTH0_API_AUDIENCE
+
+        # JWKS endpoint uses custom domain for user tokens
         self.jwks_url = (
-            f"https://{self.domain}/.well-known/jwks.json" if self.domain else None
+            f"https://{self.custom_domain}/.well-known/jwks.json"
+            if self.custom_domain
+            else None
         )
         self._jwks_cache = None
         self._jwks_cache_expires = None
@@ -118,7 +126,7 @@ class Auth0TokenValidator:
 
             log_data = {
                 "event": "auth0_jwks_retrieved",
-                "domain": self.domain,
+                "custom_domain": self.custom_domain,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.debug(json.dumps(log_data))
@@ -129,7 +137,7 @@ class Auth0TokenValidator:
             log_data = {
                 "event": "auth0_jwks_retrieval_failed",
                 "error": str(e),
-                "domain": self.domain,
+                "custom_domain": self.custom_domain,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
@@ -145,15 +153,15 @@ class Auth0TokenValidator:
         Returns:
             Dictionary containing user information or None if invalid
         """
-        if not self.domain:
+        if not self.custom_domain:
             log_data = {
                 "event": "auth0_token_validation_failed",
-                "reason": "no_auth0_domain_configured",
-                "domain": self.domain,
+                "reason": "no_auth0_custom_domain_configured",
+                "custom_domain": self.custom_domain,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
-            raise ValueError("AUTH0_DOMAIN is required but not configured")
+            raise ValueError("AUTH0_CUSTOM_DOMAIN is required but not configured")
 
         try:
             # Get audience for validation
@@ -173,7 +181,7 @@ class Auth0TokenValidator:
                 log_data = {
                     "event": "auth0_token_validation_failed",
                     "reason": "jwks_retrieval_failed",
-                    "domain": self.domain,
+                    "custom_domain": self.custom_domain,
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.error(json.dumps(log_data))
@@ -235,12 +243,14 @@ class Auth0TokenValidator:
                 return None
 
             # Validate token using PyJWT
+            # Note: Auth0 issues tokens with whichever domain the user authenticated against
+            # Since users authenticate via the custom domain, tokens have custom domain as issuer
             payload = jwt.decode(
                 token,
                 public_key,
                 algorithms=["RS256"],
                 audience=audience,
-                issuer=f"https://{self.domain}/",
+                issuer=f"https://{self.custom_domain}/",
             )
 
             log_data = {
@@ -301,24 +311,24 @@ class Auth0TokenValidator:
         Returns:
             Dictionary containing token payload or None if invalid
         """
-        if not self.domain:
+        if not self.custom_domain:
             log_data = {
                 "event": "m2m_token_validation_failed",
-                "reason": "no_auth0_domain_configured",
+                "reason": "no_auth0_custom_domain_configured",
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
             logger.error(json.dumps(log_data))
             return None
 
         try:
-            # Get M2M audience for validation (Management API audience)
+            # Get API audience for M2M token validation
             from app.core.config import settings
 
-            m2m_audience = settings.AUTH0_WEBHOOK_M2M_AUDIENCE
+            m2m_audience = settings.AUTH0_API_AUDIENCE
             if not m2m_audience:
                 log_data = {
                     "event": "m2m_token_validation_failed",
-                    "reason": "no_m2m_audience_configured",
+                    "reason": "no_api_audience_configured",
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.error(json.dumps(log_data))
@@ -387,12 +397,13 @@ class Auth0TokenValidator:
                 return None
 
             # Validate token using PyJWT
+            # Note: Auth0 always issues tokens with the tenant domain, not custom domain
             payload = jwt.decode(
                 token,
                 public_key,
                 algorithms=["RS256"],
                 audience=m2m_audience,
-                issuer=f"https://{self.domain}/",
+                issuer=f"https://{self.tenant_domain}/",
             )
 
             log_data = {

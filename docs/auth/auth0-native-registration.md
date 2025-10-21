@@ -15,6 +15,7 @@ User ← Auth0 Login ← Auth0 Token ← FastAPI API ← Database User ← Creat
 ## Key Features
 
 - **Native Auth0 Registration**: Users register via Auth0 Universal Login (email + password)
+- **Passkeys/WebAuthn**: Passwordless authentication with biometrics or security keys (see [PASSKEYS.md](./PASSKEYS.md))
 - **Automatic Provisioning**: Post-registration Action calls FastAPI webhook
 - **Nickname-Based Display Names**: Uses Auth0 `nickname` (not `username`) to allow spaces and special characters
 - **Profile Management**: Users can update name/email which syncs back to Auth0
@@ -74,7 +75,7 @@ User ← Auth0 Login ← Auth0 Token ← FastAPI API ← Database User ← Creat
 
 **Synced to Auth0**:
 - `name` → nickname
-- `email` → email (marked as verified)
+- `email` → email (marked unverified, verification email sent automatically)
 
 **Database Only**:
 - `firstname`
