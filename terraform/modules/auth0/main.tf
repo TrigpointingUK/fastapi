@@ -207,7 +207,9 @@ resource "auth0_client" "website" {
   description = "Main website for ${var.environment}"
   app_type    = "regular_web"
 
-  callbacks = var.website_callback_urls
+  callbacks           = var.website_callback_urls
+  allowed_logout_urls = [] # Empty - forum and wiki have their own clients now
+  web_origins         = [] # Empty - website doesn't need CORS
 
   grant_types = [
     "authorization_code",
@@ -229,7 +231,8 @@ resource "auth0_client" "forum" {
   description = "Forum (phpBB) for ${var.environment}"
   app_type    = "regular_web"
 
-  callbacks = var.forum_callback_urls
+  callbacks           = var.forum_callback_urls
+  allowed_logout_urls = var.forum_logout_urls
 
   grant_types = [
     "authorization_code",
@@ -251,7 +254,8 @@ resource "auth0_client" "wiki" {
   description = "Wiki (MediaWiki) for ${var.environment}"
   app_type    = "regular_web"
 
-  callbacks = var.wiki_callback_urls
+  callbacks           = var.wiki_callback_urls
+  allowed_logout_urls = var.wiki_logout_urls
 
   grant_types = [
     "authorization_code",
@@ -271,7 +275,9 @@ resource "auth0_client" "android" {
   description = "Android mobile application for ${var.environment}"
   app_type    = "native"
 
-  callbacks = var.android_callback_urls
+  callbacks           = var.android_callback_urls
+  allowed_logout_urls = var.android_logout_urls
+  web_origins         = var.android_web_origins
 
   grant_types = [
     "authorization_code",

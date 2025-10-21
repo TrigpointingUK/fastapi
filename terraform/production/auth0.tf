@@ -97,17 +97,33 @@ module "auth0" {
 
   # Forum Callbacks
   forum_callback_urls = [
-    "https://www.trigpointing.uk/forum/ucp.php?mode=login",
+    "https://forum.trigpointing.uk/ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0",
+  ]
+  forum_logout_urls = [
+    "https://forum.trigpointing.uk/*",
   ]
 
   # Wiki Callbacks
   wiki_callback_urls = [
-    "https://www.trigpointing.uk/wiki/index.php?title=Special:OAuth2Client/callback",
+    "https://wiki.trigpointing.uk/Special:PluggableAuthLogin",
+  ]
+  wiki_logout_urls = [
+    "https://wiki.trigpointing.uk",
+    "https://wiki.trigpointing.uk/TrigpointingUK",
+    "https://wiki.trigpointing.uk/*",
   ]
 
   # Android Callbacks
   android_callback_urls = [
     "uk.trigpointing.android://callback",
+  ]
+  android_logout_urls = [
+    "uk.trigpointing.android://trigpointing.eu.auth0.com/android/uk.trigpointing.android/callback",
+    "uk.trigpointing.android.debug://trigpointing.eu.auth0.com/android/uk.trigpointing.android.debug/callback",
+  ]
+  android_web_origins = [
+    "https://fastapi.trigpointing.uk",
+    "https://api.trigpointing.uk",
   ]
 
   # Optional Apps (enabled for production)

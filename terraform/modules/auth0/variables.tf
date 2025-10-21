@@ -80,14 +80,38 @@ variable "forum_callback_urls" {
   default     = []
 }
 
+variable "forum_logout_urls" {
+  description = "List of forum logout URLs"
+  type        = list(string)
+  default     = []
+}
+
 variable "wiki_callback_urls" {
   description = "List of wiki callback URLs"
   type        = list(string)
   default     = []
 }
 
+variable "wiki_logout_urls" {
+  description = "List of wiki logout URLs"
+  type        = list(string)
+  default     = []
+}
+
 variable "android_callback_urls" {
   description = "List of Android app callback URLs"
+  type        = list(string)
+  default     = []
+}
+
+variable "android_logout_urls" {
+  description = "List of Android app logout URLs"
+  type        = list(string)
+  default     = []
+}
+
+variable "android_web_origins" {
+  description = "List of Android app web origins"
   type        = list(string)
   default     = []
 }
