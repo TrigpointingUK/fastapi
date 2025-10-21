@@ -512,7 +512,7 @@ class TestAuth0ServiceComprehensive:
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
     def test_update_user_email_success(self, mock_request):
-        """Test update_user_email success."""
+        """Test update_user_email success with verification email."""
         mock_settings = MagicMock()
         # Auth0 is now always enabled
         mock_settings.AUTH0_TENANT_DOMAIN = "test.auth0.com"
@@ -530,10 +530,17 @@ class TestAuth0ServiceComprehensive:
 
             result = service.update_user_email("auth0|123", "new@example.com")
             assert result is True
-            mock_request.assert_called_once_with(
+            # Should make two calls: update email + send verification
+            assert mock_request.call_count == 2
+            mock_request.assert_any_call(
                 "PATCH",
                 "users/auth0|123",
-                {"email": "new@example.com", "email_verified": True},
+                {"email": "new@example.com", "email_verified": False},
+            )
+            mock_request.assert_any_call(
+                "POST",
+                "jobs/verification-email",
+                {"user_id": "auth0|123"},
             )
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
