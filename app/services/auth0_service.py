@@ -50,12 +50,23 @@ class Auth0Service:
         self._redis_client = None
         if settings.REDIS_URL:
             try:
+                # ElastiCache Serverless requires TLS
+                # Use rediss:// for TLS or redis:// for non-TLS
+                connection_kwargs = {
+                    "decode_responses": True,
+                    "socket_connect_timeout": 10,
+                    "socket_timeout": 10,
+                    "retry_on_timeout": True,
+                }
+                
+                # Enable SSL/TLS for ElastiCache Serverless
+                if "serverless" in settings.REDIS_URL or settings.REDIS_URL.startswith("rediss://"):
+                    connection_kwargs["ssl"] = True
+                    connection_kwargs["ssl_cert_reqs"] = None  # Don't verify cert for AWS
+                
                 self._redis_client = redis.from_url(
                     settings.REDIS_URL,
-                    decode_responses=True,
-                    socket_connect_timeout=2,
-                    socket_timeout=2,
-                    retry_on_timeout=True,
+                    **connection_kwargs
                 )
                 # Test connection
                 self._redis_client.ping()
