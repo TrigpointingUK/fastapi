@@ -55,6 +55,9 @@ class UserPrefs(BaseModel):
     online_map_type: str
     online_map_type2: str
     email: str
+    email_valid: str = Field(
+        ..., description="Email validation status (Y/N) - read-only"
+    )
 
 
 class UserUpdate(BaseModel):

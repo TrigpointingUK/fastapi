@@ -78,8 +78,40 @@ exports.onExecutePostUserRegistration = async (event, api) => {
       
       console.log('[${environment}] User provisioned successfully:', event.user.user_id, 'with nickname:', nickname);
       
-      // Step 6: Set the final nickname in Auth0 user metadata
-      api.user.setUserMetadata('nickname', nickname);
+      // Step 6: Update Auth0 user profile with nickname and name
+      // Use Management API to set both nickname and name fields
+      try {
+        const mgmtTokenResponse = await axios.post(
+          `https://$${event.secrets.AUTH0_DOMAIN}/oauth/token`,
+          {
+            grant_type: 'client_credentials',
+            client_id: event.secrets.M2M_CLIENT_ID,
+            client_secret: event.secrets.M2M_CLIENT_SECRET,
+            audience: `https://$${event.secrets.AUTH0_DOMAIN}/api/v2/`
+          },
+          { headers: { 'Content-Type': 'application/json' }, timeout: 5000 }
+        );
+        
+        await axios.patch(
+          `https://$${event.secrets.AUTH0_DOMAIN}/api/v2/users/$${encodeURIComponent(event.user.user_id)}`,
+          {
+            nickname: nickname,
+            name: nickname  // Set name to match nickname for consistency
+          },
+          {
+            headers: {
+              'Authorization': `Bearer $${mgmtTokenResponse.data.access_token}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 5000
+          }
+        );
+        console.log('[${environment}] Updated Auth0 profile with nickname and name:', nickname);
+      } catch (error) {
+        console.error('[${environment}] Failed to update Auth0 profile:', error.response?.data || error.message);
+        // Don't fail registration - user can update later
+      }
+      
       return; // Success!
       
     } catch (error) {
