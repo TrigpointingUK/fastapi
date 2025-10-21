@@ -12,7 +12,9 @@ import json
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 
+import redis
 import requests
+from redis.exceptions import RedisError
 
 from app.core.config import settings
 from app.core.logging import get_logger
@@ -43,6 +45,31 @@ class Auth0Service:
         # Construct Management API audience from tenant domain
         self.management_api_audience = f"https://{self.tenant_domain}/api/v2/"
         logger.debug(f"Management API audience: {self.management_api_audience}")
+
+        # ElastiCache/Redis connection for token caching
+        self._redis_client = None
+        if settings.REDIS_URL:
+            try:
+                self._redis_client = redis.from_url(
+                    settings.REDIS_URL,
+                    decode_responses=True,
+                    socket_connect_timeout=2,
+                    socket_timeout=2,
+                    retry_on_timeout=True,
+                )
+                # Test connection
+                self._redis_client.ping()
+                logger.info("Connected to ElastiCache for token caching")
+            except Exception as e:
+                logger.warning(
+                    f"Failed to connect to ElastiCache: {e}. "
+                    "Token caching disabled, using in-memory cache only."
+                )
+                self._redis_client = None
+        else:
+            logger.debug("REDIS_URL not configured, using in-memory token cache only")
+
+        self.token_cache_key = f"auth0:mgmt_token:{self.tenant_domain}"
 
     def _get_auth0_credentials(self) -> Optional[Dict[str, str]]:
         """
@@ -97,19 +124,36 @@ class Auth0Service:
         """
         Get a valid Auth0 Management API access token.
 
+        Checks ElastiCache first (shared across all ECS tasks),
+        then in-memory cache, then requests new token.
+
         Returns:
             Access token string or None if failed
         """
 
-        # Check if we have a valid cached token
+        # Try ElastiCache first (shared across all tasks)
+        if self._redis_client:
+            try:
+                cached_data = self._redis_client.get(self.token_cache_key)
+                if cached_data:
+                    token_data = json.loads(cached_data)
+                    expires_at = datetime.fromisoformat(token_data["expires_at"])
+                    if datetime.now(timezone.utc) < expires_at:
+                        logger.debug("Using Auth0 token from ElastiCache")
+                        return token_data["token"]
+            except (RedisError, json.JSONDecodeError, KeyError) as e:
+                logger.warning(f"Failed to read token from ElastiCache: {e}")
+
+        # Fall back to in-memory cache
         if (
             self._access_token
             and self._token_expires_at
             and datetime.now(timezone.utc) < self._token_expires_at
         ):
+            logger.debug("Using Auth0 token from memory")
             return self._access_token
 
-        # Get credentials
+        # Request new token
         credentials = self._get_auth0_credentials()
         if not credentials:
             return None
@@ -136,12 +180,41 @@ class Auth0Service:
                 seconds=expires_in - 300
             )
 
+            # Cache in ElastiCache (shared across all ECS tasks)
+            if self._redis_client:
+                try:
+                    cache_data = {
+                        "token": self._access_token,
+                        "expires_at": self._token_expires_at.isoformat(),
+                    }
+                    ttl = int(
+                        (
+                            self._token_expires_at - datetime.now(timezone.utc)
+                        ).total_seconds()
+                    )
+                    self._redis_client.setex(
+                        self.token_cache_key, ttl, json.dumps(cache_data)
+                    )
+                    logger.info(
+                        json.dumps(
+                            {
+                                "event": "auth0_token_cached_in_elasticache",
+                                "expires_in_seconds": ttl,
+                                "timestamp": datetime.now(timezone.utc).isoformat()
+                                + "Z",
+                            }
+                        )
+                    )
+                except RedisError as e:
+                    logger.warning(f"Failed to cache token in ElastiCache: {e}")
+
             log_data = {
                 "event": "auth0_access_token_obtained",
                 "tenant_domain": self.tenant_domain,
+                "expires_in_seconds": expires_in,
                 "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
             }
-            logger.debug(json.dumps(log_data))
+            logger.info(json.dumps(log_data))
             return self._access_token
 
         except requests.exceptions.RequestException as e:

@@ -67,6 +67,12 @@ resource "aws_ecs_task_definition" "app" {
             value = jsonencode(var.cors_origins)
           }
         ] : [],
+        var.redis_url != "" ? [
+          {
+            name  = "REDIS_URL"
+            value = var.redis_url
+          }
+        ] : [],
       )
 
       # Secrets from AWS Secrets Manager

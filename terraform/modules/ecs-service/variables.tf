@@ -173,3 +173,9 @@ variable "profiling_default_format" {
   type        = string
   default     = "html"
 }
+
+variable "redis_url" {
+  description = "Redis/Valkey connection URL for Auth0 token caching"
+  type        = string
+  default     = ""
+}

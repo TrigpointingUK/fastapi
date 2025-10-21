@@ -83,6 +83,9 @@ class Settings(BaseSettings):
     MAX_IMAGE_DIMENSION: int = 4000
     THUMBNAIL_SIZE: int = 120
 
+    # Redis/ElastiCache Configuration
+    REDIS_URL: Optional[str] = None  # e.g., redis://host:6379
+
     @field_validator("BACKEND_CORS_ORIGINS", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:

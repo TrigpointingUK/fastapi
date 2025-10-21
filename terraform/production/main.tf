@@ -17,6 +17,17 @@ module "cloudflare" {
   alb_security_group_id = data.terraform_remote_state.common.outputs.alb_security_group_id
 }
 
+# Allow FastAPI ECS tasks to access ElastiCache
+resource "aws_security_group_rule" "fastapi_to_elasticache" {
+  type                     = "ingress"
+  from_port                = 6379
+  to_port                  = 6379
+  protocol                 = "tcp"
+  source_security_group_id = module.cloudflare.ecs_security_group_id
+  security_group_id        = data.terraform_remote_state.common.outputs.elasticache_security_group_id
+  description              = "Valkey from FastAPI ${var.environment} ECS tasks"
+}
+
 module "target_group" {
   source = "../modules/target-group"
 
@@ -86,6 +97,7 @@ module "ecs_service" {
   db_pool_recycle              = var.db_pool_recycle
   profiling_enabled            = var.profiling_enabled
   profiling_default_format     = var.profiling_default_format
+  redis_url                    = "redis://${data.terraform_remote_state.common.outputs.elasticache_valkey_endpoint}:${data.terraform_remote_state.common.outputs.elasticache_valkey_port}"
 }
 
 module "monitoring" {
