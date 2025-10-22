@@ -9,7 +9,7 @@ $wgLogo                 = "https://trigpointing.uk/pics/tuk_logo.gif";
 $wgLanguageCode         = "en-GB";
 $wgLocaltimezone        = "Europe/London";
 $wgForceHTTPS           = true;
-$wgMainPageIsDomainRoot = true;  // Make / redirect to main page cleanly
+// $wgMainPageIsDomainRoot = true;  // Make / redirect to main page cleanly
 $wgMainPage             = "TrigpointingUK";  // Define which page is the main page
 
 # Debug settings (remove after fixing)
