@@ -6,6 +6,7 @@ $wgScriptPath           = "";  // adjust if you deploy under /w
 $wgArticlePath          = '/$1';     // emit /PageTitle links instead of /wiki/PageTitle
 $wgUsePathInfo          = true;      // (usually true by default)
 $wgLogo                 = "https://trigpointing.uk/pics/tuk_logo.gif";
+$wgFavicon              = "https://trigpointing.uk/favicon.ico";
 $wgLanguageCode         = "en-GB";
 $wgLocaltimezone        = "Europe/London";
 $wgForceHTTPS           = true;
