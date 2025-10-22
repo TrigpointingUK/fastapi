@@ -117,7 +117,7 @@ $redirectURI   = getenv('OIDC_REDIRECT_URI') ?: ($wgServer . '/wiki/Special:Plug
 $wgOpenIDConnect_ForceReauth                  = true;   // Reauthenticate users with auth0 every time
 $wgOpenIDConnect_SingleLogout                 = false;  // Log out of all Auth0 applications
 $wgOpenIDConnect_MigrateUsersByEmail          = true;
-$wgOpenIDConnect_MigrateUsersByUsername       = false;
+$wgOpenIDConnect_MigrateUsersByUsername       = true;
 
 $wgGroupPermissions['*']['autocreateaccount'] = true;
 $wgGroupPermissions['*']['createaccount']     = false;  // Hide "Create account" link
