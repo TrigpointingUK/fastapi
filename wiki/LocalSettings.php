@@ -171,7 +171,11 @@ $wgGroupPermissions['user']['createpage'] = true;   // Logged-in users can creat
 $wgGroupPermissions['user']['createtalk'] = true;   // Logged-in users can create talk
 
 # -- Extensions --
+wfLoadExtension( 'CategoryTree' );
 wfLoadExtension( 'Cite' );
+wfLoadExtension( 'SyntaxHighlight_GeSHi' );
+wfLoadExtension( 'VisualEditor' );
+wfLoadExtension( 'WikiEditor' );
 
 
 # -- Styles --
