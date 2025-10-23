@@ -38,6 +38,18 @@ resource "cloudflare_record" "api_production" {
   comment = "API endpoint for production environment - managed by Terraform"
 }
 
+# CNAME record for cache management interface
+resource "cloudflare_record" "cache" {
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "cache"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
+
+  comment = "Redis Commander cache management interface - managed by Terraform"
+}
+
 # CNAME record for bastion
 resource "cloudflare_record" "bastion" {
   zone_id         = data.cloudflare_zones.production.zones[0].id

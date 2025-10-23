@@ -174,13 +174,13 @@ module "mediawiki" {
   target_group_arn             = aws_lb_target_group.mediawiki.arn
   cloudwatch_log_group_name    = "/aws/ecs/${var.project_name}-mediawiki-common"
   image_uri                    = "ghcr.io/trigpointinguk/fastapi/mediawiki:main"
-  cache_host                   = aws_elasticache_serverless_cache.valkey.endpoint[0].address
-  cache_port                   = aws_elasticache_serverless_cache.valkey.endpoint[0].port
+  cache_host                   = module.valkey.valkey_endpoint
+  cache_port                   = module.valkey.valkey_port
   mediawiki_db_credentials_arn = var.mediawiki_db_credentials_arn
   mediawiki_app_secrets_arn    = aws_secretsmanager_secret.mediawiki_app_secrets.arn
   efs_file_system_id           = aws_efs_file_system.mediawiki.id
   efs_access_point_id          = aws_efs_access_point.mediawiki.id
   efs_access_point_arn         = aws_efs_access_point.mediawiki.arn
 
-  depends_on = [aws_lb_listener_rule.mediawiki, aws_elasticache_serverless_cache.valkey]
+  depends_on = [aws_lb_listener_rule.mediawiki, module.valkey]
 }
