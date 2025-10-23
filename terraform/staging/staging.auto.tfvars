@@ -1,5 +1,8 @@
 environment = "staging"
 
+# Use ECS Valkey instead of ElastiCache Serverless
+use_ecs_valkey = true
+
 # Container image (built by GitHub Actions CI/CD)
 container_image = "ghcr.io/trigpointinguk/fastapi:develop"
 

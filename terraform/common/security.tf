@@ -81,7 +81,62 @@ resource "aws_security_group" "rds" {
 #     cidr_blocks = ["0.0.0.0/0"]
 #   }
 
-#   tags = {
-#     Name = "${var.project_name}-vpc-endpoints-sg"
-#   }
-# }
+# Security group for Valkey ECS service
+resource "aws_security_group" "valkey_ecs" {
+  name        = "${var.project_name}-valkey-ecs-sg"
+  description = "Security group for Valkey ECS service"
+  vpc_id      = aws_vpc.main.id
+
+  # Valkey port from ECS tasks
+  ingress {
+    description     = "Valkey from MediaWiki ECS tasks"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.mediawiki_ecs.id]
+  }
+
+  ingress {
+    description = "Valkey from FastAPI ECS tasks"
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr] # Will be restricted by environment-specific rules
+  }
+
+  ingress {
+    description     = "Valkey from phpBB ECS tasks"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.phpbb_ecs.id]
+  }
+
+  ingress {
+    description     = "Valkey from bastion (for maintenance)"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.bastion.id]
+  }
+
+  # Redis Commander port from ALB
+  ingress {
+    description     = "Redis Commander from ALB"
+    from_port       = 8081
+    to_port         = 8081
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "${var.project_name}-valkey-ecs-sg"
+  }
+}

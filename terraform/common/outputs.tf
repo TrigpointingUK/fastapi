@@ -212,22 +212,22 @@ output "phpbb_app_secrets_arn" {
   value       = aws_secretsmanager_secret.phpbb_app_secrets.arn
 }
 
-# ElastiCache Outputs
-output "elasticache_valkey_endpoint" {
-  description = "ElastiCache Valkey serverless endpoint"
-  value       = aws_elasticache_serverless_cache.valkey.endpoint[0].address
-  sensitive   = true
-}
+# ElastiCache Outputs (COMMENTED OUT - replaced with ECS Valkey)
+# output "elasticache_valkey_endpoint" {
+#   description = "ElastiCache Valkey serverless endpoint"
+#   value       = aws_elasticache_serverless_cache.valkey.endpoint[0].address
+#   sensitive   = true
+# }
 
-output "elasticache_valkey_port" {
-  description = "ElastiCache Valkey serverless port"
-  value       = aws_elasticache_serverless_cache.valkey.endpoint[0].port
-}
+# output "elasticache_valkey_port" {
+#   description = "ElastiCache Valkey serverless port"
+#   value       = aws_elasticache_serverless_cache.valkey.endpoint[0].port
+# }
 
-output "elasticache_security_group_id" {
-  description = "Security group ID for ElastiCache"
-  value       = aws_security_group.elasticache.id
-}
+# output "elasticache_security_group_id" {
+#   description = "Security group ID for ElastiCache"
+#   value       = aws_security_group.elasticache.id
+# }
 
 # SES SMTP Outputs for MediaWiki
 output "mediawiki_smtp_username" {
@@ -253,6 +253,37 @@ output "phpbb_smtp_password" {
   description = "SMTP password for phpBB"
   value       = module.smtp_phpbb.smtp_password
   sensitive   = true
+}
+
+output "valkey_security_group_id" {
+  description = "Security group ID for Valkey ECS service"
+  value       = aws_security_group.valkey_ecs.id
+}
+
+# Service Discovery Outputs
+output "service_discovery_namespace_id" {
+  description = "Service discovery namespace ID"
+  value       = aws_service_discovery_private_dns_namespace.main.id
+}
+
+output "valkey_service_discovery_arn" {
+  description = "Service discovery service ARN for Valkey"
+  value       = aws_service_discovery_service.valkey.arn
+}
+
+output "valkey_endpoint" {
+  description = "Valkey endpoint for service discovery"
+  value       = module.valkey.valkey_endpoint
+}
+
+output "valkey_port" {
+  description = "Valkey port"
+  value       = module.valkey.valkey_port
+}
+
+output "valkey_commander_target_group_arn" {
+  description = "Target group ARN for Redis Commander"
+  value       = module.valkey.valkey_commander_target_group_arn
 }
 
 # Note: Auth0 SMTP credentials are output from the auth0 module per environment

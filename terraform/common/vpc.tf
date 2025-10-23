@@ -85,6 +85,39 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.private[count.index].id
 }
 
+# Service Discovery for ECS services
+resource "aws_service_discovery_private_dns_namespace" "main" {
+  name        = "trigpointing.local"
+  description = "Private DNS namespace for ECS services"
+  vpc         = aws_vpc.main.id
+
+  tags = {
+    Name = "${var.project_name}-service-discovery"
+  }
+}
+
+# Service Discovery Service for Valkey
+resource "aws_service_discovery_service" "valkey" {
+  name = "valkey"
+
+  dns_config {
+    namespace_id = aws_service_discovery_private_dns_namespace.main.id
+
+    dns_records {
+      ttl  = 10
+      type = "A"
+    }
+  }
+
+  health_check_custom_config {
+    failure_threshold = 1
+  }
+
+  tags = {
+    Name = "${var.project_name}-valkey-discovery"
+  }
+}
+
 # # Interface VPC Endpoints for ECS Exec (SSM)
 # resource "aws_vpc_endpoint" "ssm" {
 #   vpc_id              = aws_vpc.main.id

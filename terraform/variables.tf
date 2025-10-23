@@ -155,6 +155,12 @@ variable "profiling_enabled" {
   default     = false
 }
 
+variable "use_ecs_valkey" {
+  description = "Use ECS Valkey instead of ElastiCache Serverless"
+  type        = bool
+  default     = false
+}
+
 variable "profiling_default_format" {
   description = "Default profiling output format (html or speedscope)"
   type        = string
