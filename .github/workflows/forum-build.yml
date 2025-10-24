@@ -64,3 +64,28 @@ jobs:
         build-args: |
           GIT_SHA=${{ steps.build_meta.outputs.sha7 }}
           BUILD_TIME=${{ steps.build_meta.outputs.utc }}
+
+  deploy-production:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-1
+
+    - name: Deploy phpBB to AWS Fargate (Production)
+      run: |
+        # Update ECS service with new image
+        aws ecs update-service \
+          --cluster trigpointing-cluster \
+          --service trigpointing-phpbb-common \
+          --force-new-deployment
