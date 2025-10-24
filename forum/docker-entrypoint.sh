@@ -3,29 +3,30 @@ set -e
 # let official script init PHP ext, etc.
 [ -x /usr/local/bin/docker-php-entrypoint ] && docker-php-entrypoint php-fpm >/dev/null 2>&1 || true
 
-# Replace phpBB directories with symlinks to EFS
-if [ -d /mnt/phpbb/phpbb ]; then
-    echo "Setting up EFS symlinks..."
+# Replace phpBB directories with symlinks to EFS (support two layouts)
+link_dir() {
+    target_name="$1"    # e.g. files | store | images/avatars/upload
+    dest="/var/www/html/${target_name}"
+    src_a="/mnt/phpbb/phpbb/${target_name}"
+    src_b="/mnt/phpbb/${target_name}"
 
-    # Remove existing directories and replace with symlinks
-    if [ -d /mnt/phpbb/phpbb/files ]; then
-        echo "Removing existing files directory..."
-        rm -rf /var/www/html/files
-        ln -sf /mnt/phpbb/phpbb/files /var/www/html/files
+    if [ -d "$src_a" ]; then
+        echo "Linking ${dest} -> ${src_a}"
+        rm -rf "$dest"
+        ln -sf "$src_a" "$dest"
+    elif [ -d "$src_b" ]; then
+        echo "Linking ${dest} -> ${src_b}"
+        rm -rf "$dest"
+        ln -sf "$src_b" "$dest"
+    else
+        echo "EFS path not found for ${target_name} (checked ${src_a} and ${src_b})"
     fi
+}
 
-    if [ -d /mnt/phpbb/phpbb/store ]; then
-        echo "Removing existing store directory..."
-        rm -rf /var/www/html/store
-        ln -sf /mnt/phpbb/phpbb/store /var/www/html/store
-    fi
-
-    if [ -d /mnt/phpbb/phpbb/images/avatars/upload ]; then
-        echo "Removing existing avatars directory..."
-        rm -rf /var/www/html/images/avatars/upload
-        ln -sf /mnt/phpbb/phpbb/images/avatars/upload /var/www/html/images/avatars/upload
-    fi
-fi
+echo "Setting up EFS symlinks (files, store, avatars)..."
+link_dir files
+link_dir store
+link_dir images/avatars/upload
 
 #if [ ! -f /var/www/html/config.php ]; then
 cat > /var/www/html/config.php <<PHP
