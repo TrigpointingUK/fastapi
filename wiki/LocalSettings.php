@@ -174,6 +174,8 @@ $wgGroupPermissions['user']['createtalk'] = true;   // Logged-in users can creat
 
 # -- Extensions --
 wfLoadExtension( 'ChangeAuthor' );
+$wgGroupPermissions['sysop']['changeauthor'] = true;
+
 wfLoadExtension( 'Cite' );
 wfLoadExtension( 'SyntaxHighlight_GeSHi' );
 wfLoadExtension( 'VisualEditor' );
