@@ -28,6 +28,78 @@ link_dir files
 link_dir store
 link_dir images/avatars/upload
 
+# Attempt to create compatibility symlinks for legacy avatar filenames
+if [ -n "${PHPBB_DB_HOST}" ] && [ -n "${PHPBB_DB_NAME}" ] && [ -n "${PHPBB_DB_USER}" ]; then
+    echo "Reconciling legacy avatar filenames with uploaded files..."
+    cat > /tmp/fix_avatars.php <<'PHP'
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
+$host = getenv('PHPBB_DB_HOST');
+$db = getenv('PHPBB_DB_NAME');
+$user = getenv('PHPBB_DB_USER');
+$pass = getenv('PHPBB_DB_PASS');
+$prefix = getenv('PHPBB_TABLE_PREFIX') ?: 'phpbb_';
+$uploadDir = '/var/www/html/images/avatars/upload';
+
+$mysqli = @new mysqli($host, $user, $pass, $db);
+if ($mysqli->connect_errno) {
+    fwrite(STDERR, "DB connect failed: {$mysqli->connect_error}\n");
+    exit(0);
+}
+
+$sql = "SELECT user_id, user_avatar FROM `{$prefix}users` WHERE user_avatar IS NOT NULL AND user_avatar != ''";
+$res = $mysqli->query($sql);
+if (!$res) { exit(0); }
+
+function pick_best_candidate(array $files, int $userId, ?string $wantExt): ?string {
+    if (empty($files)) return null;
+    $scored = [];
+    foreach ($files as $path) {
+        $base = basename($path);
+        // prefer desired extension
+        $ext = strtolower(pathinfo($base, PATHINFO_EXTENSION));
+        $extScore = ($wantExt && $ext === strtolower($wantExt)) ? 10 : 0;
+        // prefer largest size number before extension like *_200.jpg or *_448.jpg
+        $sizeScore = 0;
+        if (preg_match('/_(\\d+)\\.[^.]+$/', $base, $m)) {
+            $sizeScore = (int)$m[1];
+        }
+        $scored[] = [$extScore + $sizeScore, $path];
+    }
+    usort($scored, function($a, $b) { return $b[0] <=> $a[0]; });
+    return $scored[0][1] ?? null;
+}
+
+while ($row = $res->fetch_assoc()) {
+    $userId = (int)$row['user_id'];
+    $avatar = $row['user_avatar'];
+    if (!$userId || !$avatar) continue;
+
+    $expected = $uploadDir . '/' . $avatar;
+    if (file_exists($expected)) continue;
+
+    $wantExt = pathinfo($avatar, PATHINFO_EXTENSION);
+    $pattern = $uploadDir . '/*_' . $userId . '.*';
+    $candidates = glob($pattern) ?: [];
+    if (empty($candidates)) continue;
+
+    $best = pick_best_candidate($candidates, $userId, $wantExt);
+    if ($best) {
+        $target = basename($best);
+        // create symlink with expected legacy name pointing to actual file
+        @symlink($target, $expected);
+        echo "Linked {$avatar} -> {$target}\n";
+    }
+}
+
+$res->free();
+$mysqli->close();
+PHP
+    php /tmp/fix_avatars.php || true
+fi
+
 #if [ ! -f /var/www/html/config.php ]; then
 cat > /var/www/html/config.php <<PHP
 <?php
