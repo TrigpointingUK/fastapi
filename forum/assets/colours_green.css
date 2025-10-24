@@ -166,6 +166,9 @@ a.logo {
 img.site_logo {
     display: none !important;
 }
+#logo img {
+    display: none !important;
+}
 
 /* Ensure theme default logo background is disabled to avoid duplication */
 .site_logo {
@@ -183,6 +186,10 @@ img.site_logo {
 .dropdown-contents li > a,
 .navbar .dropdown-contents a,
 .dropdown-contents a,
+.navbar .dropdown-contents a:link,
+.navbar .dropdown-contents a:visited,
+.dropdown-contents a:link,
+.dropdown-contents a:visited,
 .navbar .dropdown-contents a span,
 .dropdown-contents a span,
 .dropdown a,

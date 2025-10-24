@@ -61,7 +61,11 @@ if [ -f /var/www/html/styles/prosilver/theme/colours.css ]; then
     echo "Applying custom green theme..."
     # Check if import already exists to avoid duplicates
     if ! grep -q "colours_green.css" /var/www/html/styles/prosilver/theme/colours.css; then
-        echo '@import url("colours_green.css");' >> /var/www/html/styles/prosilver/theme/colours.css
+        if [ -n "${ASSET_VERSION}" ]; then
+            echo "@import url(\"colours_green.css?v=${ASSET_VERSION}\");" >> /var/www/html/styles/prosilver/theme/colours.css
+        else
+            echo '@import url("colours_green.css");' >> /var/www/html/styles/prosilver/theme/colours.css
+        fi
     fi
 fi
 

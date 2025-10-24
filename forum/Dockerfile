@@ -31,6 +31,7 @@ COPY apache/phpbb-auth0.conf /etc/apache2/conf-available/phpbb-auth0.conf
 
 # Copy custom branding and styling (PNG logo, favicon, and green theme CSS)
 COPY assets/tuk_logo.png /var/www/html/styles/prosilver/theme/images/site_logo.png
+COPY assets/tuk_logo.png /var/www/html/styles/prosilver/imageset/site_logo.png
 COPY assets/colours_green.css /var/www/html/styles/prosilver/theme/colours_green.css
 COPY assets/favicon.ico /var/www/html/favicon.ico
 
@@ -38,6 +39,7 @@ RUN a2enmod rewrite \
 && a2enconf phpbb-auth0 \
 && chown -R www-data:www-data /var/www/html/ext \
 && chown www-data:www-data /var/www/html/styles/prosilver/theme/images/site_logo.png \
+&& chown www-data:www-data /var/www/html/styles/prosilver/imageset/site_logo.png \
 && chown www-data:www-data /var/www/html/styles/prosilver/theme/colours_green.css \
 && chown www-data:www-data /var/www/html/favicon.ico
 
