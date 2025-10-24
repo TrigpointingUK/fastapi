@@ -129,6 +129,22 @@ a:hover {
     background-color: #e8f5e9;
 }
 
+/* Alternating green-tinted backgrounds for posts */
+.post.bg1 {
+    background-color: #f7fbf6; /* very light green */
+}
+.post.bg2 {
+    background-color: #f0f7ee; /* slightly less light green */
+}
+
+/* Fallback if bg1/bg2 not present: alternate by order */
+.post:nth-of-type(odd) {
+    background-color: #f7fbf6;
+}
+.post:nth-of-type(even) {
+    background-color: #f0f7ee;
+}
+
 /* Search box and inputs */
 #search-box input.button2,
 input[type="submit"] {
