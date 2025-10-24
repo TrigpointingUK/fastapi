@@ -167,6 +167,11 @@ img.site_logo {
     display: none !important;
 }
 
+/* Ensure theme default logo background is disabled to avoid duplication */
+.site_logo {
+    background-image: none !important;
+}
+
 /* Dropdown menus: ensure readable text on white dropdown background */
 .navbar .dropdown-contents,
 .dropdown-contents {
@@ -179,14 +184,19 @@ img.site_logo {
 .navbar .dropdown-contents a,
 .dropdown-contents a,
 .navbar .dropdown-contents a span,
-.dropdown-contents a span {
+.dropdown-contents a span,
+.dropdown a,
+.dropdown li,
+.dropdown-contents li,
+.dropdown-contents p {
     color: #4A7729 !important;
 }
 
 .navbar .dropdown-contents li > a:hover,
 .dropdown-contents li > a:hover,
 .navbar .dropdown-contents a:hover,
-.dropdown-contents a:hover {
+.dropdown-contents a:hover,
+.dropdown a:hover {
     background-color: #e8f5e9 !important;
     color: #4A7729 !important;
 }
