@@ -13,13 +13,18 @@ $wgForceHTTPS           = true;
 $wgMainPageIsDomainRoot = true;  // Make / redirect to main page cleanly
 $wgMainPage             = "TrigpointingUK";  // Define which page is the main page
 
-# Debug settings (remove after fixing)
+# Error handling - suppress display, log to stderr (captured by ECS)
+error_reporting( -1 );
+ini_set( 'display_errors', 0 );
+$wgShowExceptionDetails = false;
+$wgShowDBErrorBacktrace = false;
+$wgDebugLogFile = 'php://stderr';  // Send debug output to stderr for CloudWatch
+
+# Optional debug settings for troubleshooting (uncomment if needed)
 // $wgDebugToolbar = true;
 // $wgShowExceptionDetails = true;
-// $wgShowDBErrorBacktrace = true;
-// $wgDebugLogGroups['PluggableAuth'] = '/tmp/pluggable-auth-debug.log';
-// $wgDebugLogGroups['OpenIDConnect'] = '/tmp/openid-connect-debug.log';
-// $wgShowExceptionDetails = true;
+// $wgDebugLogGroups['PluggableAuth'] = 'php://stderr';
+// $wgDebugLogGroups['OpenIDConnect'] = 'php://stderr';
 
 # -- Rights --
 $wgRightsText = "Creative Commons Attribution-ShareAlike";
