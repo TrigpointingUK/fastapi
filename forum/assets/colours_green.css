@@ -151,3 +151,15 @@ input[type="submit"] {
     color: #5D9732;
 }
 
+/* Force PNG logo and sizing */
+#logo, .logo, .site_logo, a.logo, a.site_logo {
+    background-image: url("./images/site_logo.png") !important;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+/* In case the theme relies on height for the anchor */
+#logo, .logo, .site_logo, a.logo, a.site_logo {
+    display: inline-block;
+}
+
