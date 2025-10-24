@@ -87,47 +87,8 @@ resource "aws_security_group" "valkey_ecs" {
   description = "Security group for Valkey ECS service"
   vpc_id      = aws_vpc.main.id
 
-  # Valkey port from ECS tasks
-  ingress {
-    description     = "Valkey from MediaWiki ECS tasks"
-    from_port       = 6379
-    to_port         = 6379
-    protocol        = "tcp"
-    security_groups = [aws_security_group.mediawiki_ecs.id]
-  }
-
-  ingress {
-    description = "Valkey from FastAPI ECS tasks"
-    from_port   = 6379
-    to_port     = 6379
-    protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr] # Will be restricted by environment-specific rules
-  }
-
-  ingress {
-    description     = "Valkey from phpBB ECS tasks"
-    from_port       = 6379
-    to_port         = 6379
-    protocol        = "tcp"
-    security_groups = [aws_security_group.phpbb_ecs.id]
-  }
-
-  ingress {
-    description     = "Valkey from bastion (for maintenance)"
-    from_port       = 6379
-    to_port         = 6379
-    protocol        = "tcp"
-    security_groups = [aws_security_group.bastion.id]
-  }
-
-  # Redis Commander port from ALB
-  ingress {
-    description     = "Redis Commander from ALB"
-    from_port       = 8081
-    to_port         = 8081
-    protocol        = "tcp"
-    security_groups = [aws_security_group.alb.id]
-  }
+  # All ingress rules managed via aws_security_group_rule resources below
+  # to allow environment-specific rules to be added without conflicts
 
   egress {
     from_port   = 0
@@ -139,4 +100,50 @@ resource "aws_security_group" "valkey_ecs" {
   tags = {
     Name = "${var.project_name}-valkey-ecs-sg"
   }
+
+  lifecycle {
+    # Ignore changes to ingress rules as they're managed separately
+    ignore_changes = [ingress]
+  }
+}
+
+# Valkey ingress rules - managed separately to allow environment-specific additions
+resource "aws_security_group_rule" "valkey_from_mediawiki" {
+  type                     = "ingress"
+  from_port                = 6379
+  to_port                  = 6379
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.mediawiki_ecs.id
+  security_group_id        = aws_security_group.valkey_ecs.id
+  description              = "Valkey from MediaWiki ECS tasks"
+}
+
+resource "aws_security_group_rule" "valkey_from_phpbb" {
+  type                     = "ingress"
+  from_port                = 6379
+  to_port                  = 6379
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.phpbb_ecs.id
+  security_group_id        = aws_security_group.valkey_ecs.id
+  description              = "Valkey from phpBB ECS tasks"
+}
+
+resource "aws_security_group_rule" "valkey_from_bastion" {
+  type                     = "ingress"
+  from_port                = 6379
+  to_port                  = 6379
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.bastion.id
+  security_group_id        = aws_security_group.valkey_ecs.id
+  description              = "Valkey from bastion (for maintenance)"
+}
+
+resource "aws_security_group_rule" "redis_commander_from_alb" {
+  type                     = "ingress"
+  from_port                = 8081
+  to_port                  = 8081
+  protocol                 = "tcp"
+  source_security_group_id = aws_security_group.alb.id
+  security_group_id        = aws_security_group.valkey_ecs.id
+  description              = "Redis Commander from ALB"
 }

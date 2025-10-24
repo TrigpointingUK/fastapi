@@ -34,6 +34,7 @@ def mock_auth0_token(test_user_with_auth0):
             "token_type": "auth0",
             "auth0_user_id": test_user_with_auth0.auth0_user_id,
             "sub": test_user_with_auth0.auth0_user_id,
+            "scope": "api:write api:read-pii",
         }
         yield mock
 
@@ -244,9 +245,6 @@ def test_update_no_auth0_id_skips_sync(db: Session, mock_auth0_token):
         online_map_type2="lla",
     )
 
-    from app.db.database import get_db
-
-    db = next(get_db())
     db.add(user)
     db.commit()
     db.refresh(user)

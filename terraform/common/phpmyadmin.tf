@@ -77,13 +77,35 @@ resource "aws_lb_target_group" "phpmyadmin" {
   }
 }
 
-# Listener rule for phpMyAdmin
+# Listener rule for phpMyAdmin with OIDC Authentication
 resource "aws_lb_listener_rule" "phpmyadmin" {
   listener_arn = aws_lb_listener.app_https[0].arn
   priority     = 125
 
+  # Action 1: Authenticate users via OIDC (Auth0)
+  action {
+    type  = "authenticate-oidc"
+    order = 1
+
+    authenticate_oidc {
+      issuer                              = local.alb_oidc_config.issuer
+      authorization_endpoint              = local.alb_oidc_config.authorization_endpoint
+      token_endpoint                      = local.alb_oidc_config.token_endpoint
+      user_info_endpoint                  = local.alb_oidc_config.user_info_endpoint
+      client_id                           = local.alb_oidc_config.client_id
+      client_secret                       = local.alb_oidc_config.client_secret
+      session_cookie_name                 = "AWSELBAuthSessionCookie"
+      session_timeout                     = 3600
+      scope                               = "openid profile email"
+      on_unauthenticated_request          = "authenticate"
+      authentication_request_extra_params = {}
+    }
+  }
+
+  # Action 2: Forward to target group
   action {
     type             = "forward"
+    order            = 2
     target_group_arn = aws_lb_target_group.phpmyadmin.arn
   }
 
@@ -96,4 +118,6 @@ resource "aws_lb_listener_rule" "phpmyadmin" {
   tags = {
     Name = "${var.project_name}-phpmyadmin-listener-rule"
   }
+
+  depends_on = [aws_secretsmanager_secret_version.alb_oidc]
 }

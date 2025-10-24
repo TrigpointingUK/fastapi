@@ -218,9 +218,9 @@ def update_log_endpoint(
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
-            if "trig:admin" not in scopes:
+            if "api:admin" not in scopes:
                 raise HTTPException(
-                    status_code=403, detail="Missing required scope: trig:admin"
+                    status_code=403, detail="Missing required scope: api:admin"
                 )
         # Legacy tokens not supported - Auth0 only
 
@@ -260,9 +260,9 @@ def delete_log_endpoint(
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
-            if "trig:admin" not in scopes:
+            if "api:admin" not in scopes:
                 raise HTTPException(
-                    status_code=403, detail="Missing required scope: trig:admin"
+                    status_code=403, detail="Missing required scope: api:admin"
                 )
         # Legacy tokens not supported - Auth0 only
 

@@ -159,9 +159,9 @@ def create_photo(
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
-            if "trig:admin" not in scopes:
+            if "api:admin" not in scopes:
                 raise HTTPException(
-                    status_code=403, detail="Missing required scope: trig:admin"
+                    status_code=403, detail="Missing required scope: api:admin"
                 )
         # Legacy tokens not supported - Auth0 only
 
@@ -365,7 +365,7 @@ def update_photo(
     if not existing:
         raise HTTPException(status_code=404, detail="Photo not found")
 
-    # Authorisation: owner or trig:admin
+    # Authorisation: owner or api:admin
     tlog: TLog | None = db.query(TLog).filter(TLog.id == existing.tlog_id).first()
     if not tlog:
         raise HTTPException(status_code=404, detail="TLog not found for photo")
@@ -383,9 +383,9 @@ def update_photo(
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
-            if "trig:admin" not in scopes:
+            if "api:admin" not in scopes:
                 raise HTTPException(
-                    status_code=403, detail="Missing required scope: trig:admin"
+                    status_code=403, detail="Missing required scope: api:admin"
                 )
         # Legacy tokens not supported - Auth0 only
 
@@ -462,9 +462,9 @@ def delete_photo(
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
-            if "trig:admin" not in scopes:
+            if "api:admin" not in scopes:
                 raise HTTPException(
-                    status_code=403, detail="Missing required scope: trig:admin"
+                    status_code=403, detail="Missing required scope: api:admin"
                 )
         # Legacy tokens not supported - Auth0 only
 
@@ -661,9 +661,9 @@ def rotate_photo(
 
         if token_payload.get("token_type") == "auth0":
             scopes = extract_scopes(token_payload)
-            if "trig:admin" not in scopes:
+            if "api:admin" not in scopes:
                 raise HTTPException(
-                    status_code=403, detail="Missing required scope: trig:admin"
+                    status_code=403, detail="Missing required scope: api:admin"
                 )
         # Legacy tokens not supported - Auth0 only
 

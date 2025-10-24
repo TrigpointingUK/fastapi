@@ -63,7 +63,7 @@ The post-registration Action needs an M2M token to call your FastAPI webhook. Fo
 **Option A: Generate Token via Auth0 (Manual)**
 
 1. Create another M2M application (e.g., `post-registration-webhook`)
-2. Authorise for your API with scope `write:users`
+2. Authorise for your API with scopes `api:admin`, `api:write`, `api:read-pii`
 3. Get a token from the Test tab
 4. **Note**: Tokens expire, so this is only for initial testing
 

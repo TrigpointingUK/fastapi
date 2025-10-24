@@ -42,7 +42,7 @@ $wgUpgradeKey     = getenv('MW_UPGRADE_KEY') ?: 'CHANGE-ME';
 
 
 # --- Redis / Valkey (ElastiCache) ---
-$redisHost        = getenv('CACHE_HOST') ?: '';
+$redisHost        = getenv('CACHE_HOST') ?: 'valkey.trigpointing.local';
 $redisPort        = (int)(getenv('CACHE_PORT') ?: 6379);
 $useTls           = (getenv('CACHE_TLS') ?: 'true') === 'true';
 
@@ -145,7 +145,7 @@ $wgPluggableAuth_Config = [[
     [
       'type' => 'mapped',
       'map' => [
-        'sysop' => ['https://trigpointing.uk/roles' => ['tuk-admin']],
+        'sysop' => ['https://trigpointing.uk/roles' => ['wiki-admin', 'api-admin']],
         // 'bureaucrat' => ['https://trigpointing.uk/roles' => ['tuk-bureaucrat']],
       ],
     ],
@@ -173,6 +173,7 @@ $wgGroupPermissions['user']['createpage'] = true;   // Logged-in users can creat
 $wgGroupPermissions['user']['createtalk'] = true;   // Logged-in users can create talk
 
 # -- Extensions --
+wfLoadExtension( 'ChangeAuthor' );
 wfLoadExtension( 'Cite' );
 wfLoadExtension( 'SyntaxHighlight_GeSHi' );
 wfLoadExtension( 'VisualEditor' );

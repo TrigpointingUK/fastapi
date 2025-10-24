@@ -55,9 +55,24 @@ output "android_client_id" {
   sensitive   = true
 }
 
-output "admin_role_id" {
-  description = "Admin role ID"
-  value       = auth0_role.admin.id
+output "alb_client_id" {
+  description = "AWS ALB OIDC client ID (retrieve secret from Auth0 dashboard)"
+  value       = auth0_client.alb.client_id
+}
+
+output "api_admin_role_id" {
+  description = "API Admin role ID"
+  value       = auth0_role.api_admin.id
+}
+
+output "wiki_admin_role_id" {
+  description = "Wiki Admin role ID"
+  value       = auth0_role.wiki_admin.id
+}
+
+output "forum_admin_role_id" {
+  description = "Forum Admin role ID"
+  value       = auth0_role.forum_admin.id
 }
 
 output "action_id" {
@@ -68,6 +83,11 @@ output "action_id" {
 output "post_login_action_id" {
   description = "Post Login Action ID"
   value       = var.enable_post_login_action ? auth0_action.post_login[0].id : null
+}
+
+output "alb_admin_only_action_id" {
+  description = "ALB Admin Only Action ID"
+  value       = var.enable_alb_admin_only_action ? auth0_action.alb_admin_only[0].id : null
 }
 
 output "tenant_domain" {

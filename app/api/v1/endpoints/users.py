@@ -337,6 +337,21 @@ def update_current_user_profile(
     # Get update data
     update_data = user_updates.model_dump(exclude_unset=True)
 
+    # Verify api:read-pii scope for PII updates
+    if any(field in update_data for field in ["email", "firstname", "surname"]):
+        token_payload = getattr(current_user, "_token_payload", None)
+        if not token_payload:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        from app.core.security import extract_scopes
+
+        scopes = extract_scopes(token_payload)
+        if "api:read-pii" not in scopes:
+            raise HTTPException(
+                status_code=403,
+                detail="Missing required scope: api:read-pii for PII updates",
+            )
+
     if not update_data:
         # No updates provided, return current user
         user_response = UserResponse.model_validate(current_user)

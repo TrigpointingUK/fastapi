@@ -142,14 +142,3 @@ resource "cloudflare_record" "wiki" {
 
   comment = "Wiki subdomain for TrigpointingUK - managed by Terraform"
 }
-
-resource "cloudflare_record" "auth" {
-  zone_id         = data.cloudflare_zones.production.zones[0].id
-  name            = "auth"
-  content         = "trigpointing-cd-7upjl47sjenr2gbr.edge.tenants.eu.auth0.com"
-  type            = "CNAME"
-  proxied         = false # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true  # Allow overwriting existing records
-
-  comment = "Auth0 subdomain for TrigpointingUK - managed by Terraform"
-}

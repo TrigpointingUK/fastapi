@@ -81,9 +81,10 @@ module "auth0" {
     "me.trigpointing.android://callback",
   ]
 
-  # Role Configuration
-  admin_role_name        = "staging-admin"
-  admin_role_description = "Staging Environment Administrators"
+  # Role Configuration - uses module defaults:
+  # - api-admin: Full FastAPI administrative access
+  # - wiki-admin: MediaWiki sysop access
+  # - forum-admin: phpBB administrator access
 
   # Enable post-registration Action
   enable_post_registration_action = true
@@ -105,8 +106,9 @@ module "auth0" {
 | `web_app_callback_urls` | List of web application callback URLs | `list(string)` | No | `[]` |
 | `android_callback_urls` | List of Android app callback URLs | `list(string)` | No | `[]` |
 | `enable_post_registration_action` | Enable post-registration Action | `bool` | No | `true` |
-| `admin_role_name` | Name of the admin role | `string` | Yes | - |
-| `admin_role_description` | Description of the admin role | `string` | No | `"Administrator"` |
+| `api_admin_role_name` | Name of the API admin role | `string` | No | `"api-admin"` |
+| `wiki_admin_role_name` | Name of the wiki admin role | `string` | No | `"wiki-admin"` |
+| `forum_admin_role_name` | Name of the forum admin role | `string` | No | `"forum-admin"` |
 
 ## Outputs
 

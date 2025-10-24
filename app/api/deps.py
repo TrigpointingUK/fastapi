@@ -264,6 +264,54 @@ def require_scopes(*required_scopes: str):
     return _dep
 
 
+def has_scope(token_payload: dict, scope: str) -> bool:
+    """Check if token has specific scope."""
+    scopes = extract_scopes(token_payload)
+    return scope in scopes
+
+
+def require_admin():
+    """Require api:admin scope."""
+
+    def _dep(
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+        token_payload = getattr(current_user, "_token_payload", None)
+        if not token_payload:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        if not has_scope(token_payload, "api:admin"):
+            raise HTTPException(
+                status_code=403, detail="Missing required scope: api:admin"
+            )
+        return current_user
+
+    return _dep
+
+
+def require_owner_or_admin(resource_user_id: int):
+    """Require ownership of resource OR api:admin scope."""
+
+    def _dep(
+        current_user: User = Depends(get_current_user),
+    ) -> User:
+        if int(current_user.id) == int(resource_user_id):
+            return current_user
+
+        token_payload = getattr(current_user, "_token_payload", None)
+        if not token_payload:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+        if not has_scope(token_payload, "api:admin"):
+            raise HTTPException(
+                status_code=403,
+                detail="Must be resource owner or have api:admin scope",
+            )
+        return current_user
+
+    return _dep
+
+
 def verify_m2m_token(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
 ) -> dict:

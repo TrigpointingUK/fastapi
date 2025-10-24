@@ -22,3 +22,8 @@ output "secrets_arn" {
   description = "ARN of the secrets manager secret"
   value       = module.secrets.secrets_arn
 }
+
+output "auth0_alb_client_id" {
+  description = "Auth0 AWS ALB OIDC client ID (retrieve secret from Auth0 dashboard)"
+  value       = module.auth0.alb_client_id
+}

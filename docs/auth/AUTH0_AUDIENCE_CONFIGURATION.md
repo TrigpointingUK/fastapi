@@ -62,7 +62,7 @@ AUTH0_API_AUDIENCE=https://api.trigpointing.uk/api/v1/
 - **Purpose**: Your API that clients will access
 - **Audience**: `https://api.trigpointing.me/api/v1/` (staging) or `https://api.trigpointing.uk/api/v1/` (production)
 - **Grant Types**: Authorization Code, Client Credentials
-- **Scopes**: Custom scopes for your API
+- **Scopes**: `api:admin`, `api:write`, `api:read-pii`
 
 ## How It Works
 

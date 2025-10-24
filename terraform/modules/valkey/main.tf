@@ -38,7 +38,10 @@ resource "aws_ecs_task_definition" "valkey" {
         "valkey-server",
         "--maxmemory", "${var.valkey_max_memory}",
         "--maxmemory-policy", "allkeys-lru",
-        "--save", "" # Disable RDB snapshots (no persistence)
+        "--save", "",            # Disable RDB snapshots (no persistence)
+        "--oom-score-adj", "no", # Disable OOM killer adjustments
+        "--tcp-keepalive", "60", # Keep connections alive
+        "--timeout", "0"         # Disable client timeout
       ]
       logConfiguration = {
         logDriver = "awslogs"
@@ -53,7 +56,7 @@ resource "aws_ecs_task_definition" "valkey" {
         interval    = 30
         timeout     = 10
         retries     = 3
-        startPeriod = 30
+        startPeriod = 60
       }
       essential = true
     },
@@ -68,6 +71,12 @@ resource "aws_ecs_task_definition" "valkey" {
           protocol      = "tcp"
         }
       ]
+      command = [
+        "node", "./bin/redis-commander",
+        "--redis-host", "localhost",
+        "--redis-port", "6379",
+        "--no-http-auth"
+      ]
       environment = [
         {
           name  = "REDIS_HOST"
@@ -78,14 +87,22 @@ resource "aws_ecs_task_definition" "valkey" {
           value = "6379"
         },
         {
-          name  = "HTTP_USER"
-          value = "" # Auth via Auth0 at ALB
+          name  = "REDIS_COMMANDER_HOST"
+          value = "0.0.0.0"
         },
         {
-          name  = "HTTP_PASSWORD"
-          value = ""
+          name  = "REDIS_COMMANDER_PORT"
+          value = "8081"
         }
       ]
+      # Health check for Redis Commander - use netcat to check if port is open
+      healthCheck = {
+        command     = ["CMD-SHELL", "nc -z localhost 8081 || exit 1"]
+        interval    = 30
+        timeout     = 10
+        retries     = 3
+        startPeriod = 60
+      }
       logConfiguration = {
         logDriver = "awslogs"
         options = {
@@ -93,13 +110,6 @@ resource "aws_ecs_task_definition" "valkey" {
           awslogs-region        = var.aws_region
           awslogs-stream-prefix = "commander"
         }
-      }
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:8081/ || exit 1"]
-        interval    = 30
-        timeout     = 10
-        retries     = 3
-        startPeriod = 60
       }
       essential = true
     }
@@ -128,6 +138,12 @@ resource "aws_ecs_service" "valkey" {
 
   service_registries {
     registry_arn = var.service_discovery_service_arn
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.valkey_commander.arn
+    container_name   = "redis-commander"
+    container_port   = 8081
   }
 
   tags = {

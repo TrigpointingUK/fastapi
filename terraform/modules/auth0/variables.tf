@@ -146,15 +146,28 @@ variable "custom_claims_namespace" {
   default     = "https://trigpointing.uk/"
 }
 
-variable "admin_role_name" {
-  description = "Name of the admin role"
-  type        = string
+variable "enable_alb_admin_only_action" {
+  description = "Whether to enable the post-login Action to block non-admin users from ALB OIDC application"
+  type        = bool
+  default     = true
 }
 
-variable "admin_role_description" {
-  description = "Description of the admin role"
+variable "api_admin_role_name" {
+  description = "Name of the API admin role"
   type        = string
-  default     = "Administrator"
+  default     = "api-admin"
+}
+
+variable "wiki_admin_role_name" {
+  description = "Name of the wiki admin role"
+  type        = string
+  default     = "wiki-admin"
+}
+
+variable "forum_admin_role_name" {
+  description = "Name of the forum admin role"
+  type        = string
+  default     = "forum-admin"
 }
 
 # Email Provider Configuration

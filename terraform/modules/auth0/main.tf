@@ -98,6 +98,8 @@ resource "auth0_connection_clients" "database_clients" {
       auth0_client.swagger.id,
       auth0_client.website.id,
       auth0_client.android.id,
+      auth0_client.alb.id,
+      auth0_client.legacy.id,
     ],
     var.enable_forum ? [auth0_client.forum[0].id] : [],
     var.enable_wiki ? [auth0_client.wiki[0].id] : [],
@@ -127,32 +129,16 @@ resource "auth0_resource_server_scopes" "api_scopes" {
   resource_server_identifier = auth0_resource_server.api.identifier
 
   scopes {
-    name        = "read:users"
-    description = "Read user data"
+    name        = "api:admin"
+    description = "Full administrative access to API"
   }
   scopes {
-    name        = "write:users"
-    description = "Write user data"
+    name        = "api:write"
+    description = "Create and update own logs, photos, trigs"
   }
   scopes {
-    name        = "read:trigs"
-    description = "Read trig data"
-  }
-  scopes {
-    name        = "write:trigs"
-    description = "Write trig data"
-  }
-  scopes {
-    name        = "read:photos"
-    description = "Read photo data"
-  }
-  scopes {
-    name        = "write:photos"
-    description = "Write photo data"
-  }
-  scopes {
-    name        = "admin"
-    description = "Administrator access"
+    name        = "api:read-pii"
+    description = "Read and write user PII (email, realName) for self"
   }
 }
 
@@ -291,6 +277,86 @@ resource "auth0_client" "android" {
   oidc_conformant = true
 }
 
+# Regular Web Application (AWS ALB OIDC)
+# Used for ALB OIDC authentication to admin tools (cache, phpmyadmin)
+resource "auth0_client" "alb" {
+  name        = "${var.name_prefix}-aws-alb"
+  description = "AWS ALB OIDC authentication for admin tools (${var.environment})"
+  app_type    = "regular_web"
+
+  callbacks = [
+    "https://cache.${var.environment == "production" ? "trigpointing.uk" : "trigpointing.me"}/oauth2/idpresponse",
+    "https://phpmyadmin.${var.environment == "production" ? "trigpointing.uk" : "trigpointing.me"}/oauth2/idpresponse",
+  ]
+
+  allowed_logout_urls = [
+    "https://cache.${var.environment == "production" ? "trigpointing.uk" : "trigpointing.me"}",
+    "https://phpmyadmin.${var.environment == "production" ? "trigpointing.uk" : "trigpointing.me"}",
+  ]
+
+  grant_types = [
+    "authorization_code",
+    "refresh_token",
+  ]
+
+  jwt_configuration {
+    alg = "RS256"
+  }
+
+  oidc_conformant = true
+}
+
+# Legacy Application (manually created, imported into Terraform)
+# This application was created before Terraform and needs to remain connected to the database
+resource "auth0_client" "legacy" {
+  name        = "legacy"
+  description = "Legacy application (${var.environment})"
+  app_type    = "regular_web"
+
+  callbacks = [
+    "https://trigpointing.uk/auth0/callback.php",
+  ]
+
+  allowed_logout_urls = [
+    "https://trigpointing.uk/",
+    "https://trigpointing.uk/logout.php",
+  ]
+
+  web_origins = [
+    "https://login.trigpointing.uk",
+    "https://trigpointing.uk",
+  ]
+
+  initiate_login_uri = "https://trigpointing.uk/auth0/login.php"
+
+  grant_types = [
+    "authorization_code",
+    "implicit",
+    "refresh_token",
+  ]
+
+  jwt_configuration {
+    alg = "RS256"
+  }
+
+  oidc_conformant = true
+
+  # Lifecycle: This is an imported resource - prevent accidental changes
+  lifecycle {
+    # Prevent accidental destruction
+    prevent_destroy = false # Set to true in production if needed
+
+    # Ignore changes to these fields - they're managed manually or by the legacy app
+    ignore_changes = [
+      callbacks,
+      allowed_logout_urls,
+      web_origins,
+      initiate_login_uri,
+      grant_types,
+    ]
+  }
+}
+
 # ============================================================================
 # CLIENT GRANTS (M2M Authorizations)
 # ============================================================================
@@ -301,12 +367,9 @@ resource "auth0_client_grant" "m2m_to_api" {
   audience  = auth0_resource_server.api.identifier
 
   scopes = [
-    "read:users",
-    "write:users",
-    "read:trigs",
-    "write:trigs",
-    "read:photos",
-    "write:photos",
+    "api:admin",
+    "api:write",
+    "api:read-pii",
   ]
 }
 
@@ -326,23 +389,40 @@ resource "auth0_client_grant" "m2m_to_mgmt_api" {
 # ROLES
 # ============================================================================
 
-resource "auth0_role" "admin" {
-  name        = var.admin_role_name
-  description = var.admin_role_description
+# API Admin Role - Full FastAPI administrative access
+resource "auth0_role" "api_admin" {
+  name        = var.api_admin_role_name
+  description = "Full administrative access to FastAPI"
 }
 
-# Assign permissions to admin role
-resource "auth0_role_permissions" "admin_perms" {
-  role_id = auth0_role.admin.id
+# Assign permissions to API admin role
+resource "auth0_role_permissions" "api_admin_perms" {
+  role_id = auth0_role.api_admin.id
 
   dynamic "permissions" {
-    for_each = ["read:users", "write:users", "read:trigs", "write:trigs", "read:photos", "write:photos", "admin"]
+    for_each = ["api:admin", "api:write", "api:read-pii"]
     content {
       resource_server_identifier = auth0_resource_server.api.identifier
       name                       = permissions.value
     }
   }
 }
+
+# Wiki Admin Role - MediaWiki sysop access
+resource "auth0_role" "wiki_admin" {
+  name        = var.wiki_admin_role_name
+  description = "MediaWiki sysop (administrator) access"
+}
+
+# Wiki admins don't need API permissions - role is for wiki access only
+
+# Forum Admin Role - phpBB administrator access
+resource "auth0_role" "forum_admin" {
+  name        = var.forum_admin_role_name
+  description = "phpBB forum administrator access"
+}
+
+# Forum admins don't need API permissions - role is for forum access only
 
 # ============================================================================
 # POST USER REGISTRATION ACTION
@@ -425,15 +505,47 @@ resource "auth0_action" "post_login" {
   })
 }
 
-# Bind Post-Login Action to trigger
+# Post-Login Action: Block Non-Admin Users from ALB OIDC Application
+resource "auth0_action" "alb_admin_only" {
+  count = var.enable_alb_admin_only_action ? 1 : 0
+
+  name    = "${var.name_prefix}-alb-admin-only"
+  runtime = "node22"
+  deploy  = true
+
+  supported_triggers {
+    id      = "post-login"
+    version = "v3"
+  }
+
+  code = templatefile("${path.module}/actions/alb-admin-only.js.tpl", {
+    namespace     = var.custom_claims_namespace
+    alb_client_id = auth0_client.alb.client_id
+  })
+
+  depends_on = [auth0_client.alb]
+}
+
+# Bind Post-Login Actions to trigger
+# This includes both the role assignment action and the ALB admin-only action
 resource "auth0_trigger_actions" "post_login" {
   count = var.enable_post_login_action ? 1 : 0
 
   trigger = "post-login"
 
+  # Action 1: Add roles to tokens (must run first)
   actions {
     id           = auth0_action.post_login[0].id
     display_name = auth0_action.post_login[0].name
+  }
+
+  # Action 2: Block non-admin users from ALB application (runs after roles are set)
+  dynamic "actions" {
+    for_each = var.enable_alb_admin_only_action ? [1] : []
+    content {
+      id           = auth0_action.alb_admin_only[0].id
+      display_name = auth0_action.alb_admin_only[0].name
+    }
   }
 }
 

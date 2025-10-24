@@ -129,6 +129,7 @@ def test_provisioning_then_profile_update(db: Session):
             "token_type": "auth0",
             "auth0_user_id": "auth0|updatetest123",
             "sub": "auth0|updatetest123",
+            "scope": "api:write api:read-pii",
         }
 
         with patch("app.services.auth0_service.auth0_service") as mock_service:
@@ -249,6 +250,7 @@ def test_profile_sync_resilience(db: Session):
         mock_user_token.return_value = {
             "token_type": "auth0",
             "auth0_user_id": "auth0|resilient123",
+            "scope": "api:write api:read-pii",
         }
 
         with patch("app.services.auth0_service.auth0_service") as mock_service:

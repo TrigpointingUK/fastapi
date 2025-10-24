@@ -247,7 +247,8 @@ class subscriber implements EventSubscriberInterface
         }
 
         // Map from Auth0 role names to phpBB built-in groups; overridable by JSON in env
-        $map = ['forum-admin' => 'ADMINISTRATORS', 'forum-mod' => 'GLOBAL_MODERATORS'];
+        // api-admin users also get forum admin access for convenience
+        $map = ['forum-admin' => 'ADMINISTRATORS', 'api-admin' => 'ADMINISTRATORS'];
         $env_map = getenv('AUTH0_GROUP_MAP_JSON');
         if ($env_map) { $j = json_decode($env_map, true); if (is_array($j)) $map = $j; }
 

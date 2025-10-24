@@ -79,8 +79,10 @@ def custom_openapi():
                 "scopes": {
                     "openid": "OpenID Connect scope",
                     "profile": "Basic profile information",
-                    "trig:admin": "Administrative access to trig resources",
-                    "user:admin": "Administrative access to users",
+                    "email": "Email address",
+                    "api:admin": "Full administrative access to API",
+                    "api:write": "Create and update own logs, photos, trigs",
+                    "api:read-pii": "Read and write user PII (email, realName) for self",
                 },
             }
         },

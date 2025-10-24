@@ -102,9 +102,7 @@ module "auth0" {
   enable_forum = false
   enable_wiki  = false
 
-  # Role Configuration
-  admin_role_name        = "staging-admin"
-  admin_role_description = "Staging Environment Administrators"
+  # Role Configuration - uses module defaults: api-admin, wiki-admin, forum-admin
 
   # Email Provider (SES) - SMTP user created per environment
   smtp_host  = "email-smtp.eu-west-1.amazonaws.com"
@@ -120,6 +118,7 @@ module "auth0" {
   # Actions
   enable_post_registration_action = true
   enable_post_login_action        = true
+  enable_alb_admin_only_action    = true
   custom_claims_namespace         = "https://trigpointing.uk/"
 
   # M2M Client Secret for Auth0 Actions

@@ -11,7 +11,7 @@ def _build_app():
     app = FastAPI()
     r = APIRouter()
 
-    @r.get("/scoped", dependencies=[Depends(require_scopes("user:admin"))])
+    @r.get("/scoped", dependencies=[Depends(require_scopes("api:admin"))])
     def scoped():
         return {"ok": True}
 
@@ -23,7 +23,7 @@ def test_require_scopes_auth0_missing_scope(monkeypatch):
     app = _build_app()
     c = TestClient(app)
 
-    payload = {"token_type": "auth0", "permissions": ["trig:admin"], "sub": "auth0|u"}
+    payload = {"token_type": "auth0", "permissions": ["api:write"], "sub": "auth0|u"}
     # Patch where the dependency resolves the symbol
     monkeypatch.setattr(
         "app.core.security.auth0_validator.validate_auth0_token", lambda t: payload
