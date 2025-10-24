@@ -163,3 +163,20 @@ input[type="submit"] {
     display: inline-block;
 }
 
+/* Dropdown menus: ensure readable text on white dropdown background */
+.navbar .dropdown-contents {
+    background-color: #ffffff;
+    border: 1px solid #5D9732;
+}
+
+.navbar .dropdown-contents a,
+.dropdown-contents a {
+    color: #4A7729;
+}
+
+.navbar .dropdown-contents a:hover,
+.dropdown-contents a:hover {
+    background-color: #e8f5e9;
+    color: #4A7729;
+}
+
