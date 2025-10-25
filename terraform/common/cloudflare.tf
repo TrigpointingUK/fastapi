@@ -184,23 +184,4 @@ resource "cloudflare_list_item" "wiki_redirect_wiki" {
 }
 
 # Activate the list via an account-level redirect ruleset
-resource "cloudflare_ruleset" "wiki_bulk_redirects" {
-  account_id  = var.cloudflare_account_id
-  name        = "wiki_bulk_redirects"
-  description = "Activate wiki redirects list"
-  kind        = "root"
-  phase       = "http_request_redirect"
-
-  rules {
-    enabled     = true
-    description = "Apply wiki redirects from list"
-    action      = "redirect"
-    action_parameters {
-      from_list {
-        name = cloudflare_list.wiki_redirects.name
-        key  = "http.request.full_uri"
-      }
-    }
-    expression = "true"
-  }
-}
+## Activation of the list is done via Cloudflare Dashboard (existing account Redirect ruleset)
