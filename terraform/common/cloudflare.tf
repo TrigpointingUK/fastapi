@@ -142,3 +142,44 @@ resource "cloudflare_record" "wiki" {
 
   comment = "Wiki subdomain for TrigpointingUK - managed by Terraform"
 }
+
+# Redirect wiki URLs on apex to wiki subdomain
+resource "cloudflare_ruleset" "prod_redirect_wiki" {
+  zone_id     = data.cloudflare_zones.production.zones[0].id
+  name        = "Redirect wiki paths to wiki.trigpointing.uk"
+  description = "Forward /w/* and /wiki* on apex to wiki subdomain, preserving path and query"
+  kind        = "zone"
+  phase       = "http_request_dynamic_redirect"
+
+  # https://trigpointing.uk/w/* -> https://wiki.trigpointing.uk/w/* (preserve path + query)
+  rules {
+    enabled     = true
+    description = "apex:/w/* -> wiki"
+    expression  = "(http.host eq \"trigpointing.uk\" or http.host eq \"www.trigpointing.uk\") and starts_with(http.request.uri.path, \"/w/\")"
+    action      = "redirect"
+    action_parameters {
+      from_value {
+        status_code = 301
+        target_url {
+          expression = "concat(\"https://wiki.trigpointing.uk\", http.request.uri.path, if(len(http.request.uri.query) > 0, concat(\"?\", http.request.uri.query), \"\"))"
+        }
+      }
+    }
+  }
+
+  # https://trigpointing.uk/wiki* -> https://wiki.trigpointing.uk/wiki* (preserve path + query)
+  rules {
+    enabled     = true
+    description = "apex:/wiki* -> wiki"
+    expression  = "(http.host eq \"trigpointing.uk\" or http.host eq \"www.trigpointing.uk\") and starts_with(http.request.uri.path, \"/wiki\")"
+    action      = "redirect"
+    action_parameters {
+      from_value {
+        status_code = 301
+        target_url {
+          expression = "concat(\"https://wiki.trigpointing.uk\", http.request.uri.path, if(len(http.request.uri.query) > 0, concat(\"?\", http.request.uri.query), \"\"))"
+        }
+      }
+    }
+  }
+}
