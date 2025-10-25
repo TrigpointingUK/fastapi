@@ -9,6 +9,7 @@ This service handles:
 """
 
 import json
+import ssl
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
@@ -81,14 +82,30 @@ class Auth0Service:
                         )
                     )
 
-                self._redis_client = redis.from_url(
-                    redis_url,
-                    decode_responses=True,
-                    socket_connect_timeout=10,
-                    socket_timeout=10,
-                    retry_on_timeout=True,
-                    ssl_cert_reqs=None,  # Don't verify cert for AWS self-signed certs
-                )
+                # Build connection with or without TLS depending on scheme
+                if parsed.scheme == "rediss":
+                    # Create permissive SSL context to avoid verification issues on AWS serverless
+                    ssl_context = ssl.create_default_context()
+                    ssl_context.check_hostname = False
+                    ssl_context.verify_mode = ssl.CERT_NONE
+
+                    self._redis_client = redis.from_url(
+                        redis_url,
+                        decode_responses=True,
+                        socket_connect_timeout=10,
+                        socket_timeout=10,
+                        retry_on_timeout=True,
+                        ssl=True,
+                        ssl_context=ssl_context,
+                    )
+                else:
+                    self._redis_client = redis.from_url(
+                        redis_url,
+                        decode_responses=True,
+                        socket_connect_timeout=10,
+                        socket_timeout=10,
+                        retry_on_timeout=True,
+                    )
                 # Test connection
                 pong = self._redis_client.ping()
                 logger.info(
