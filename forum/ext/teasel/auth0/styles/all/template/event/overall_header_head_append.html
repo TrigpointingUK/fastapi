@@ -39,6 +39,7 @@ a[href*="mode=sendpassword"] { display: none !important; }
         if (isLocalLogin) {
             preserveLocalParam();
         }
+        enforceAuth0OnProtectedPages();
     }
 
     function preserveLocalParam() {
@@ -72,6 +73,21 @@ a[href*="mode=sendpassword"] { display: none !important; }
 
             link.setAttribute("href", newHref);
         });
+    }
+
+    function enforceAuth0OnProtectedPages() {
+        if (isLocalLogin) return; // allow break-glass
+
+        // If a protected page shows a login form, auto-redirect to Auth0 preserving destination
+        var loginForm = document.querySelector('form[action*="mode=login"], form#login, .login-form form');
+        var protectedNotice = document.body && (document.body.textContent || '').indexOf('requires you to be registered and logged in') !== -1;
+        if (!loginForm && !protectedNotice) return;
+
+        // Compute redirect back to current path
+        var path = window.location.pathname + (window.location.search || '');
+        var redirect = encodeURIComponent(path.replace(/^\//, ''));
+        var auth0Url = "ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0&redirect=" + redirect;
+        window.location.replace(auth0Url);
     }
 })();
 </script>
