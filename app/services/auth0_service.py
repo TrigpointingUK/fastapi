@@ -11,6 +11,7 @@ This service handles:
 import json
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional
+from urllib.parse import urlparse
 
 import redis
 import requests
@@ -56,6 +57,30 @@ class Auth0Service:
                 if "serverless" in redis_url and redis_url.startswith("redis://"):
                     redis_url = redis_url.replace("redis://", "rediss://", 1)
 
+                # Log parsed endpoint (without credentials)
+                try:
+                    parsed = urlparse(redis_url)
+                    logger.info(
+                        json.dumps(
+                            {
+                                "event": "auth0_token_cache_initialised",
+                                "redis_scheme": parsed.scheme,
+                                "redis_host": parsed.hostname,
+                                "redis_port": parsed.port,
+                                "redis_db": parsed.path.lstrip("/") or "0",
+                            }
+                        )
+                    )
+                except Exception as e:
+                    logger.debug(
+                        json.dumps(
+                            {
+                                "event": "auth0_token_cache_initialise_parse_failed",
+                                "error": str(e),
+                            }
+                        )
+                    )
+
                 self._redis_client = redis.from_url(
                     redis_url,
                     decode_responses=True,
@@ -65,16 +90,43 @@ class Auth0Service:
                     ssl_cert_reqs=None,  # Don't verify cert for AWS self-signed certs
                 )
                 # Test connection
-                self._redis_client.ping()
-                logger.info("Connected to ElastiCache for token caching")
+                pong = self._redis_client.ping()
+                logger.info(
+                    json.dumps(
+                        {
+                            "event": "auth0_redis_ping",
+                            "pong": bool(pong),
+                        }
+                    )
+                )
+                logger.info(
+                    json.dumps(
+                        {
+                            "event": "auth0_redis_connected",
+                            "connected": True,
+                        }
+                    )
+                )
             except Exception as e:
                 logger.warning(
-                    f"Failed to connect to ElastiCache: {e}. "
-                    "Token caching disabled, using in-memory cache only."
+                    json.dumps(
+                        {
+                            "event": "auth0_redis_connect_failed",
+                            "error": str(e),
+                            "note": "Token caching disabled, using in-memory cache only.",
+                        }
+                    )
                 )
                 self._redis_client = None
         else:
-            logger.debug("REDIS_URL not configured, using in-memory token cache only")
+            logger.info(
+                json.dumps(
+                    {
+                        "event": "auth0_token_cache_disabled",
+                        "reason": "REDIS_URL not configured",
+                    }
+                )
+            )
 
         self.token_cache_key = f"auth0:mgmt_token:{self.tenant_domain}"
 
