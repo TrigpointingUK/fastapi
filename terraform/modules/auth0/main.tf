@@ -87,6 +87,14 @@ resource "auth0_connection" "database" {
       }
     }
   }
+
+  # Workaround for provider/API drift: Auth0 may return password_policy as null,
+  # which causes perpetual diffs. Ignore just this attribute.
+  lifecycle {
+    ignore_changes = [
+      options[0].password_policy
+    ]
+  }
 }
 
 # Enable connection for all our clients
