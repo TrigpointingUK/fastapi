@@ -37,6 +37,7 @@ a[href*="mode=sendpassword"] { display: none !important; }
     function init() {
         rewriteLoginLinks();
         rewriteProfileLinks();
+        rewriteLogoLink();
         if (isLocalLogin) {
             preserveLocalParam();
         }
@@ -120,6 +121,15 @@ a[href*="mode=sendpassword"] { display: none !important; }
         var redirect = encodeURIComponent(path.replace(/^\//, ''));
         var auth0Url = "ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0&redirect=" + redirect;
         window.location.replace(auth0Url);
+    }
+
+    function rewriteLogoLink() {
+        try {
+            var logo = document.querySelector('#logo, a.logo');
+            if (logo && logo.setAttribute) {
+                logo.setAttribute('href', 'https://forum.trigpointing.uk/');
+            }
+        } catch (e) { /* no-op */ }
     }
 })();
 </script>
