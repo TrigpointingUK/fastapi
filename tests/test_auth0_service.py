@@ -274,23 +274,19 @@ class TestAuth0Service:
         assert result == self.mock_user_data
         mock_request.assert_called_once()
         call_args = mock_request.call_args
-        assert call_args[0] == (
-            "POST",
-            "users",
-            {
-                "connection": "Username-Password-Authentication",
-                "nickname": "testuser",
-                "name": "testuser",
-                "password": "password123",
-                "email_verified": True,
-                "verify_email": False,
-                "app_metadata": {
-                    "database_user_id": 123,
-                    "original_username": "testuser",
-                },
-                "email": "test@example.com",
-            },
-        )
+        assert call_args[0][0] == "POST"
+        assert call_args[0][1] == "users"
+        sent = call_args[0][2]
+        assert sent["connection"] == "Username-Password-Authentication"
+        assert sent["nickname"] == "testuser"
+        assert sent["name"] == "testuser"
+        assert sent["password"] == "password123"
+        assert sent["email_verified"] is True
+        assert sent["verify_email"] is False
+        assert sent["email"] == "test@example.com"
+        assert sent["app_metadata"]["database_user_id"] == 123
+        assert sent["app_metadata"]["original_username"] == "testuser"
+        assert "legacy_sync" in sent["app_metadata"]
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
     @patch("app.services.auth0_service.settings")
@@ -332,23 +328,19 @@ class TestAuth0Service:
 
         assert result == self.mock_user_data
         call_args = mock_request.call_args
-        assert call_args[0] == (
-            "POST",
-            "users",
-            {
-                "connection": "tme-users",
-                "nickname": "testuser",
-                "name": "testuser",
-                "password": "password123",
-                "email_verified": True,
-                "verify_email": False,
-                "app_metadata": {
-                    "database_user_id": 123,
-                    "original_username": "testuser",
-                },
-                "email": "test@example.com",
-            },
-        )
+        assert call_args[0][0] == "POST"
+        assert call_args[0][1] == "users"
+        sent = call_args[0][2]
+        assert sent["connection"] == "tme-users"
+        assert sent["nickname"] == "testuser"
+        assert sent["name"] == "testuser"
+        assert sent["password"] == "password123"
+        assert sent["email_verified"] is True
+        assert sent["verify_email"] is False
+        assert sent["email"] == "test@example.com"
+        assert sent["app_metadata"]["database_user_id"] == 123
+        assert sent["app_metadata"]["original_username"] == "testuser"
+        assert "legacy_sync" in sent["app_metadata"]
 
     @patch("app.services.auth0_service.Auth0Service._make_auth0_request")
     @patch("app.services.auth0_service.settings")
