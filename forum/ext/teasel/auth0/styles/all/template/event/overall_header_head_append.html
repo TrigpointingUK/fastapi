@@ -36,6 +36,7 @@ a[href*="mode=sendpassword"] { display: none !important; }
 
     function init() {
         rewriteLoginLinks();
+        rewriteProfileLinks();
         if (isLocalLogin) {
             preserveLocalParam();
         }
@@ -50,6 +51,37 @@ a[href*="mode=sendpassword"] { display: none !important; }
                 var separator = action.indexOf("?") !== -1 ? "&" : "?";
                 form.action = action + separator + "local=1";
             }
+        });
+    }
+
+    function isLoggedIn() {
+        return !!document.querySelector('a[href*="mode=logout"], a.logout');
+    }
+
+    function toRedirectTarget(originalHref) {
+        try {
+            // Handle absolute and relative hrefs
+            var url = new URL(originalHref, window.location.origin);
+            var pathAndQuery = url.pathname.replace(/^\//, '') + (url.search || '');
+            return encodeURIComponent(pathAndQuery);
+        } catch (e) {
+            return encodeURIComponent(String(originalHref || ''));
+        }
+    }
+
+    function rewriteProfileLinks() {
+        if (isLocalLogin) return; // allow break-glass
+        if (isLoggedIn()) return; // logged-in users go directly
+
+        document.querySelectorAll('a[href*="memberlist.php?mode=viewprofile&u="]').forEach(function(link) {
+            var href = link.getAttribute('href');
+            if (!href) return;
+            // Skip if already pointing to external login
+            if (href.indexOf('login=external') !== -1) return;
+
+            var redirect = toRedirectTarget(href);
+            var newHref = 'ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0&redirect=' + redirect;
+            link.setAttribute('href', newHref);
         });
     }
 
