@@ -139,6 +139,15 @@ class Auth0Service:
         """
 
         # Try ElastiCache first (shared across all tasks)
+        logger.info(
+            json.dumps(
+                {
+                    "event": "auth0_token_cache_check",
+                    "source": "redis",
+                    "cache_key": self.token_cache_key,
+                }
+            )
+        )
         if self._redis_client:
             try:
                 cached_data = self._redis_client.get(self.token_cache_key)
@@ -146,8 +155,19 @@ class Auth0Service:
                     token_data = json.loads(cached_data)
                     expires_at = datetime.fromisoformat(token_data["expires_at"])
                     if datetime.now(timezone.utc) < expires_at:
-                        logger.debug("Using Auth0 token from ElastiCache")
+                        logger.info(
+                            json.dumps(
+                                {
+                                    "event": "auth0_token_cache_hit",
+                                    "source": "redis",
+                                    "expires_at": expires_at.isoformat() + "Z",
+                                }
+                            )
+                        )
                         return token_data["token"]
+                logger.info(
+                    json.dumps({"event": "auth0_token_cache_miss", "source": "redis"})
+                )
             except (RedisError, json.JSONDecodeError, KeyError) as e:
                 logger.warning(f"Failed to read token from ElastiCache: {e}")
 
@@ -157,7 +177,15 @@ class Auth0Service:
             and self._token_expires_at
             and datetime.now(timezone.utc) < self._token_expires_at
         ):
-            logger.debug("Using Auth0 token from memory")
+            logger.info(
+                json.dumps(
+                    {
+                        "event": "auth0_token_cache_hit",
+                        "source": "memory",
+                        "expires_at": self._token_expires_at.isoformat() + "Z",
+                    }
+                )
+            )
             return self._access_token
 
         # Request new token
@@ -166,6 +194,7 @@ class Auth0Service:
             return None
 
         try:
+            logger.info(json.dumps({"event": "auth0_access_token_requested"}))
             # Request access token from tenant domain (not custom domain)
             token_url = f"https://{self.tenant_domain}/oauth/token"
             payload = {
@@ -206,9 +235,8 @@ class Auth0Service:
                         json.dumps(
                             {
                                 "event": "auth0_token_cached_in_elasticache",
+                                "cache_key": self.token_cache_key,
                                 "expires_in_seconds": ttl,
-                                "timestamp": datetime.now(timezone.utc).isoformat()
-                                + "Z",
                             }
                         )
                     )
@@ -216,10 +244,10 @@ class Auth0Service:
                     logger.warning(f"Failed to cache token in ElastiCache: {e}")
 
             log_data = {
-                "event": "auth0_access_token_obtained",
+                "event": "auth0_access_token_refreshed",
                 "tenant_domain": self.tenant_domain,
                 "expires_in_seconds": expires_in,
-                "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
+                "expires_at": self._token_expires_at.isoformat() + "Z",
             }
             logger.info(json.dumps(log_data))
             return self._access_token
@@ -287,6 +315,18 @@ class Auth0Service:
                 "Content-Type": "application/json",
             }
 
+            # Log API call start
+            logger.info(
+                json.dumps(
+                    {
+                        "event": "auth0_api_request_started",
+                        "method": method,
+                        "endpoint": endpoint,
+                        "url": url,
+                    }
+                )
+            )
+
             response = requests.request(
                 method=method, url=url, headers=headers, json=data, timeout=10
             )
@@ -299,9 +339,8 @@ class Auth0Service:
                     "endpoint": endpoint,
                     "status_code": response.status_code,
                     "url": url,
-                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
-                logger.debug(json.dumps(log_data))
+                logger.info(json.dumps(log_data))
                 return response.json()
             else:
                 # Log failed requests with detailed error information
@@ -318,7 +357,6 @@ class Auth0Service:
                     "url": url,
                     "error_response": error_response,
                     "response_headers": dict(response.headers),
-                    "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.error(json.dumps(log_data))
                 return None
@@ -747,6 +785,7 @@ class Auth0Service:
             "app_metadata": {
                 "database_user_id": user_id,
                 "original_username": username,
+                "legacy_sync": datetime.now(timezone.utc).isoformat() + "Z",
             },
         }
 
@@ -888,6 +927,81 @@ class Auth0Service:
 
         return True
 
+    def update_user_password(self, user_id: str, password: str) -> bool:
+        """
+        Update a user's password in Auth0.
+
+        Args:
+            user_id: Auth0 user ID
+            password: New password
+
+        Returns:
+            True if successful, False otherwise
+        """
+
+        response = self._make_auth0_request(
+            "PATCH", f"users/{user_id}", {"password": password}
+        )
+
+        if response:
+            logger.info(
+                json.dumps(
+                    {
+                        "event": "auth0_user_password_updated",
+                        "user_id": user_id,
+                    }
+                )
+            )
+            return True
+        else:
+            logger.error(
+                json.dumps(
+                    {
+                        "event": "auth0_user_password_update_failed",
+                        "user_id": user_id,
+                    }
+                )
+            )
+            return False
+
+    def update_user_app_metadata(self, user_id: str, metadata: Dict[str, Any]) -> bool:
+        """
+        Merge update to app_metadata for a user in Auth0.
+
+        Args:
+            user_id: Auth0 user ID
+            metadata: Key-value pairs to set under app_metadata
+
+        Returns:
+            True if successful, False otherwise
+        """
+
+        body = {"app_metadata": metadata}
+        response = self._make_auth0_request("PATCH", f"users/{user_id}", body)
+
+        if response:
+            logger.info(
+                json.dumps(
+                    {
+                        "event": "auth0_user_app_metadata_updated",
+                        "user_id": user_id,
+                        "keys": list(metadata.keys()),
+                    }
+                )
+            )
+            return True
+        else:
+            logger.error(
+                json.dumps(
+                    {
+                        "event": "auth0_user_app_metadata_update_failed",
+                        "user_id": user_id,
+                        "keys": list(metadata.keys()),
+                    }
+                )
+            )
+            return False
+
     def update_user_profile(
         self,
         user_id: str,
@@ -1015,7 +1129,7 @@ class Auth0Service:
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))
-                # User exists, check if email or profile needs updating
+                # User exists, always push profile and password; check email change
                 current_email = auth0_user.get("email")
                 if email and current_email != email:
                     log_data = {
@@ -1029,42 +1143,39 @@ class Auth0Service:
                     self.update_user_email(auth0_user["user_id"], email)
                     auth0_user["email"] = email
 
-                # Check if profile fields need updating
-                current_given_name = auth0_user.get("given_name")
-                current_family_name = auth0_user.get("family_name")
-                current_nickname = auth0_user.get("nickname")
-
-                profile_updated = False
-                if (
-                    (firstname and current_given_name != firstname)
-                    or (surname and current_family_name != surname)
-                    or (username and current_nickname != username)
-                ):
-                    log_data = {
-                        "event": "auth0_user_profile_update_started",
-                        "username": username,
-                        "old_given_name": current_given_name or "",
-                        "new_given_name": firstname or "",
-                        "old_family_name": current_family_name or "",
-                        "new_family_name": surname or "",
-                        "old_nickname": current_nickname or "",
-                        "new_nickname": username or "",
-                        "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
-                    }
-                    logger.debug(json.dumps(log_data))
-                    self.update_user_profile(
-                        auth0_user["user_id"],
-                        firstname=firstname,
-                        surname=surname,
-                        nickname=username,
+                # Always push display name (nickname/name)
+                logger.info(
+                    json.dumps(
+                        {
+                            "event": "auth0_user_profile_update_started",
+                            "username": username,
+                            "auth0_user_id": auth0_user["user_id"],
+                        }
                     )
-                    profile_updated = True
+                )
+                self.update_user_profile(auth0_user["user_id"], nickname=username)
+
+                # Always push password
+                logger.info(
+                    json.dumps(
+                        {
+                            "event": "auth0_user_password_update_started",
+                            "auth0_user_id": auth0_user["user_id"],
+                        }
+                    )
+                )
+                self.update_user_password(auth0_user["user_id"], password)
+
+                # Update legacy_sync metadata timestamp
+                self.update_user_app_metadata(
+                    auth0_user["user_id"],
+                    {"legacy_sync": datetime.now(timezone.utc).isoformat() + "Z"},
+                )
 
                 log_data = {
                     "event": "auth0_user_sync_completed_updated",
                     "username": username,
                     "auth0_user_id": auth0_user["user_id"],
-                    "profile_updated": str(profile_updated),
                     "timestamp": datetime.now(timezone.utc).isoformat() + "Z",
                 }
                 logger.info(json.dumps(log_data))

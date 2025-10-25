@@ -276,7 +276,7 @@ class TestAuth0IntegrationInCRUD:
     def test_authenticate_user_flexible_user_already_has_auth0_id(
         self, mock_get_user, mock_verify_password, mock_auth0_service
     ):
-        """Test authentication with user that already has auth0_user_id (should skip sync)."""
+        """Test authentication with user that already has auth0_user_id (now still syncs)."""
         # Setup mocks - user already has Auth0 ID
         user_with_auth0 = User(
             id=1,
@@ -294,5 +294,13 @@ class TestAuth0IntegrationInCRUD:
 
         # Assertions
         assert result == user_with_auth0
-        # Auth0 sync should NOT be called for users who already have an Auth0 ID
-        mock_auth0_service.sync_user_to_auth0.assert_not_called()
+        # Auth0 sync should be called even if user already has an Auth0 ID
+        mock_auth0_service.sync_user_to_auth0.assert_called_once_with(
+            username="testuser",
+            email="test@example.com",
+            name="testuser",
+            password="password",
+            user_id=1,
+            firstname=None,
+            surname=None,
+        )
