@@ -144,42 +144,63 @@ resource "cloudflare_record" "wiki" {
 }
 
 # Redirect wiki URLs on apex to wiki subdomain
-resource "cloudflare_ruleset" "prod_redirect_wiki" {
-  zone_id     = data.cloudflare_zones.production.zones[0].id
-  name        = "Redirect wiki paths to wiki.trigpointing.uk"
-  description = "Forward /w/* and /wiki* on apex to wiki subdomain, preserving path and query"
-  kind        = "zone"
-  phase       = "http_request_dynamic_redirect"
+## Bulk Redirects for wiki paths (account-level)
+# List holding the redirects
+resource "cloudflare_list" "wiki_redirects" {
+  account_id  = var.cloudflare_account_id
+  name        = "wiki-redirects"
+  description = "Redirect /w/* and /wiki* on trigpointing.uk to wiki.trigpointing.uk"
+  kind        = "redirect"
+}
 
-  # https://trigpointing.uk/w/* -> https://wiki.trigpointing.uk/w/* (preserve path + query)
-  rules {
-    enabled     = true
-    description = "apex:/w/* -> wiki"
-    expression  = "(http.host eq \"trigpointing.uk\" or http.host eq \"www.trigpointing.uk\") and starts_with(http.request.uri.path, \"/w/\")"
-    action      = "redirect"
-    action_parameters {
-      from_value {
-        status_code = 301
-        target_url {
-          expression = "concat(\"https://wiki.trigpointing.uk\", http.request.uri.path, if(len(http.request.uri.query) > 0, concat(\"?\", http.request.uri.query), \"\"))"
-        }
-      }
-    }
+# Redirect: https://trigpointing.uk/w -> https://wiki.trigpointing.uk/w (preserve subpath + query)
+resource "cloudflare_list_item" "wiki_redirect_w" {
+  account_id = var.cloudflare_account_id
+  list_id    = cloudflare_list.wiki_redirects.id
+
+  redirect {
+    source_url            = "https://trigpointing.uk/w"
+    target_url            = "https://wiki.trigpointing.uk/w"
+    status_code           = 301
+    include_subdomains    = true # covers www.trigpointing.uk
+    subpath_matching      = true # preserve path after /w
+    preserve_query_string = true # preserve ?query
   }
+}
 
-  # https://trigpointing.uk/wiki* -> https://wiki.trigpointing.uk/wiki* (preserve path + query)
+# Redirect: https://trigpointing.uk/wiki -> https://wiki.trigpointing.uk/wiki (preserve subpath + query)
+resource "cloudflare_list_item" "wiki_redirect_wiki" {
+  account_id = var.cloudflare_account_id
+  list_id    = cloudflare_list.wiki_redirects.id
+
+  redirect {
+    source_url            = "https://trigpointing.uk/wiki"
+    target_url            = "https://wiki.trigpointing.uk/wiki"
+    status_code           = 301
+    include_subdomains    = true # covers www.trigpointing.uk
+    subpath_matching      = true
+    preserve_query_string = true
+  }
+}
+
+# Activate the list via an account-level redirect ruleset
+resource "cloudflare_ruleset" "wiki_bulk_redirects" {
+  account_id  = var.cloudflare_account_id
+  name        = "wiki-bulk-redirects"
+  description = "Activate wiki redirects list"
+  kind        = "root"
+  phase       = "http_request_redirect"
+
   rules {
     enabled     = true
-    description = "apex:/wiki* -> wiki"
-    expression  = "(http.host eq \"trigpointing.uk\" or http.host eq \"www.trigpointing.uk\") and starts_with(http.request.uri.path, \"/wiki\")"
+    description = "Apply wiki redirects from list"
     action      = "redirect"
     action_parameters {
-      from_value {
-        status_code = 301
-        target_url {
-          expression = "concat(\"https://wiki.trigpointing.uk\", http.request.uri.path, if(len(http.request.uri.query) > 0, concat(\"?\", http.request.uri.query), \"\"))"
-        }
+      from_list {
+        name = cloudflare_list.wiki_redirects.name
+        key  = "http.request.full_uri"
       }
     }
+    expression = "true"
   }
 }

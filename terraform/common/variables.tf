@@ -1,3 +1,8 @@
+variable "cloudflare_account_id" {
+  description = "Cloudflare account ID for account-level resources (Bulk Redirects, Lists)"
+  type        = string
+}
+
 variable "aws_region" {
   description = "AWS region"
   type        = string
