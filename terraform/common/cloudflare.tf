@@ -148,7 +148,7 @@ resource "cloudflare_record" "wiki" {
 # List holding the redirects
 resource "cloudflare_list" "wiki_redirects" {
   account_id  = var.cloudflare_account_id
-  name        = "wiki-redirects"
+  name        = "wiki_redirects"
   description = "Redirect /w/* and /wiki* on trigpointing.uk to wiki.trigpointing.uk"
   kind        = "redirect"
 }
@@ -186,7 +186,7 @@ resource "cloudflare_list_item" "wiki_redirect_wiki" {
 # Activate the list via an account-level redirect ruleset
 resource "cloudflare_ruleset" "wiki_bulk_redirects" {
   account_id  = var.cloudflare_account_id
-  name        = "wiki-bulk-redirects"
+  name        = "wiki_bulk_redirects"
   description = "Activate wiki redirects list"
   kind        = "root"
   phase       = "http_request_redirect"
