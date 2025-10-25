@@ -52,19 +52,20 @@ resource "auth0_connection" "database" {
   depends_on = [auth0_prompt.identifier_first]
 
   options {
-    password_policy = "good"
+    # Relax password requirements to allow weak and previously used passwords
+    password_policy = "none"
     password_history {
-      enable = true
-      size   = 5
+      enable = false
+      size   = 0
     }
     password_no_personal_info {
-      enable = true
+      enable = false
     }
     password_dictionary {
-      enable = true
+      enable = false
     }
     password_complexity_options {
-      min_length = 8
+      min_length = 1
     }
     brute_force_protection = true
 
