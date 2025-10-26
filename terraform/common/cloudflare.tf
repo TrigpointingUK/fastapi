@@ -62,19 +62,6 @@ resource "cloudflare_record" "bastion" {
   comment = "Bastion host for TrigpointingUK - managed by Terraform"
 }
 
-
-# CNAME record for bastion
-resource "cloudflare_record" "webserver" {
-  zone_id         = data.cloudflare_zones.production.zones[0].id
-  name            = "webserver"
-  content         = aws_instance.webserver.private_ip
-  type            = "A"
-  proxied         = false # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true  # Allow overwriting existing records
-
-  comment = "Webserver host for TrigpointingUK - managed by Terraform"
-}
-
 # Test CNAMEs for ALB testing
 resource "cloudflare_record" "test1" {
   zone_id         = data.cloudflare_zones.staging.zones[0].id
@@ -143,6 +130,30 @@ resource "cloudflare_record" "wiki" {
   comment = "Wiki subdomain for TrigpointingUK - managed by Terraform"
 }
 
+# Root domain (apex) - points to ALB for nginx proxy to legacy server
+resource "cloudflare_record" "root_domain" {
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "@" # Root domain
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing A record
+
+  comment = "Root domain pointing to ALB via nginx proxy - managed by Terraform"
+}
+
+# WWW subdomain
+resource "cloudflare_record" "www" {
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "www"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
+
+  comment = "WWW subdomain pointing to ALB via nginx proxy - managed by Terraform"
+}
+
 # Redirect wiki URLs on apex to wiki subdomain
 ## Bulk Redirects for wiki paths (account-level)
 # List holding the redirects
@@ -185,3 +196,28 @@ resource "cloudflare_list_item" "wiki_redirect_wiki" {
 
 # Activate the list via an account-level redirect ruleset
 ## Activation of the list is done via Cloudflare Dashboard (existing account Redirect ruleset)
+
+# Bulk Redirects for forum path (account-level)
+# Redirect: https://trigpointing.uk/forum/* -> https://forum.trigpointing.uk/* (preserve subpath + query)
+resource "cloudflare_list" "forum_redirects" {
+  account_id  = var.cloudflare_account_id
+  name        = "forum_redirects"
+  description = "Redirect /forum/* on trigpointing.uk to forum.trigpointing.uk"
+  kind        = "redirect"
+}
+
+resource "cloudflare_list_item" "forum_redirect_forum" {
+  account_id = var.cloudflare_account_id
+  list_id    = cloudflare_list.forum_redirects.id
+
+  redirect {
+    source_url            = "https://trigpointing.uk/forum"
+    target_url            = "https://forum.trigpointing.uk"
+    status_code           = 301
+    include_subdomains    = true
+    subpath_matching      = true
+    preserve_query_string = true
+  }
+}
+
+# Activation of the list is handled by the existing account-level Redirect ruleset in Cloudflare

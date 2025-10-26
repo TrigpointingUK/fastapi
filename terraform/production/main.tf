@@ -119,3 +119,31 @@ module "monitoring" {
   aws_region         = var.aws_region
   log_retention_days = 14
 }
+
+# Test rule: route /health on main domain to FastAPI
+# This allows testing FastAPI under the production domain before full DNS cutover
+resource "aws_lb_listener_rule" "test_health" {
+  listener_arn = data.terraform_remote_state.common.outputs.https_listener_arn
+  priority     = 300
+
+  action {
+    type             = "forward"
+    target_group_arn = module.target_group.target_group_arn
+  }
+
+  condition {
+    host_header {
+      values = ["trigpointing.uk"]
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = ["/health"]
+    }
+  }
+
+  tags = {
+    Name = "${var.project_name}-${var.environment}-test-health-rule"
+  }
+}

@@ -1,3 +1,0 @@
-ansible_host: webserver.trigpointing.uk
-
-host_descr: "Trigpointing Webserver"

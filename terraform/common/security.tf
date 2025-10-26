@@ -22,15 +22,6 @@ resource "aws_security_group" "rds" {
     security_groups = [aws_security_group.bastion.id]
   }
 
-  # MySQL access from webserver
-  ingress {
-    description     = "MySQL from webserver"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.webserver.id]
-  }
-
   # MySQL access from phpMyAdmin ECS tasks
   ingress {
     description     = "MySQL from phpMyAdmin ECS tasks"
@@ -146,4 +137,31 @@ resource "aws_security_group_rule" "redis_commander_from_alb" {
   source_security_group_id = aws_security_group.alb.id
   security_group_id        = aws_security_group.valkey_ecs.id
   description              = "Redis Commander from ALB"
+}
+
+# Security group for nginx proxy ECS service
+resource "aws_security_group" "nginx_proxy_ecs" {
+  name        = "${var.project_name}-nginx-proxy-ecs-sg"
+  description = "Security group for nginx reverse proxy ECS service"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description     = "HTTP from ALB"
+    from_port       = 80
+    to_port         = 80
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic (needed to reach legacy server)"
+  }
+
+  tags = {
+    Name = "${var.project_name}-nginx-proxy-ecs-sg"
+  }
 }
