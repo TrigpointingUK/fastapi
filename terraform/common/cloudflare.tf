@@ -130,6 +130,30 @@ resource "cloudflare_record" "wiki" {
   comment = "Wiki subdomain for TrigpointingUK - managed by Terraform"
 }
 
+# Root domain (apex) - points to ALB for nginx proxy to legacy server
+resource "cloudflare_record" "root_domain" {
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "@" # Root domain
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing A record
+
+  comment = "Root domain pointing to ALB via nginx proxy - managed by Terraform"
+}
+
+# WWW subdomain
+resource "cloudflare_record" "www" {
+  zone_id         = data.cloudflare_zones.production.zones[0].id
+  name            = "www"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
+
+  comment = "WWW subdomain pointing to ALB via nginx proxy - managed by Terraform"
+}
+
 # Redirect wiki URLs on apex to wiki subdomain
 ## Bulk Redirects for wiki paths (account-level)
 # List holding the redirects
