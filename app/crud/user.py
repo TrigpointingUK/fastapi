@@ -626,3 +626,42 @@ def get_user_auth0_id(db: Session, user_id: int) -> Optional[str]:
     if not user:
         return None
     return user.auth0_user_id  # type: ignore
+
+
+def update_user_email(db: Session, user_id: int, email: str) -> bool:
+    """
+    Update user's email address in the database and set email_valid to 'Y'.
+
+    Args:
+        db: Database session
+        user_id: Database user ID
+        email: New email address
+
+    Returns:
+        True if successful, False otherwise
+    """
+    user = get_user_by_id(db, user_id=user_id)
+    if not user:
+        return False
+
+    try:
+        user.email = email  # type: ignore
+        user.email_valid = "Y"  # type: ignore
+        db.commit()
+        db.refresh(user)
+        logger.info(
+            "User email updated in database",
+            extra={
+                "user_id": user_id,
+                "email": email,
+                "email_valid": "Y",
+            },
+        )
+        return True
+    except Exception as e:
+        db.rollback()
+        logger.error(
+            "Failed to update user email",
+            extra={"user_id": user_id, "email": email, "error": str(e)},
+        )
+        return False

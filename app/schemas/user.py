@@ -139,6 +139,9 @@ class UserWithIncludes(UserResponse):
     breakdown: Optional[UserBreakdown] = None
     prefs: Optional[UserPrefs] = None
 
+    class Config:
+        from_attributes = True
+
 
 class Auth0UserInfo(BaseModel):
     """Auth0 user information from token without database lookup."""
@@ -198,3 +201,59 @@ class UserCreateResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class LegacyLoginRequest(BaseModel):
+    """Request schema for legacy login endpoint (bridge to Auth0)."""
+
+    username: str = Field(
+        ..., min_length=1, max_length=30, description="Username for login"
+    )
+    password: str = Field(..., min_length=1, description="Password for authentication")
+    email: str = Field(
+        ..., min_length=1, max_length=255, description="Email address for Auth0 sync"
+    )
+    include: Optional[str] = Field(
+        None,
+        description="Comma-separated list of includes: stats,breakdown,prefs",
+    )
+
+    @field_validator("username")
+    @classmethod
+    def validate_username_required(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Username is required")
+        return v.strip()
+
+    @field_validator("password")
+    @classmethod
+    def validate_password_required(cls, v: str) -> str:
+        if not v:
+            raise ValueError("Password is required")
+        return v
+
+    @field_validator("email")
+    @classmethod
+    def validate_email_required(cls, v: str) -> str:
+        if not v or not v.strip():
+            raise ValueError("Email address is required")
+
+        # Basic email format validation
+        email_pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+        if not re.match(email_pattern, v.strip()):
+            raise ValueError("Invalid email address format")
+
+        return v.strip()
+
+
+class LegacyLoginResponse(UserWithIncludes):
+    """
+    Response schema for legacy login endpoint.
+
+    This endpoint serves as a bridge between the legacy login system
+    and the new Auth0 system, synchronising user email addresses and
+    triggering verification emails when needed.
+    """
+
+    email: str = Field(..., description="User email address")
+    email_valid: str = Field(..., description="Email validation status (Y/N)")

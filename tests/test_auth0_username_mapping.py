@@ -37,7 +37,11 @@ def test_login_persists_auth0_user_id(
     db: Session,
     monkeypatch,
 ):
-    # Arrange
+    """
+    Test that legacy login endpoint authenticates and syncs with Auth0.
+    This test verifies that password and email are synced to Auth0.
+    """
+    # Arrange: User with existing Auth0 ID
     user = _make_user(
         db,
         user_id=4201,
@@ -45,30 +49,42 @@ def test_login_persists_auth0_user_id(
         email="login@example.com",
         password="pw123456",
     )
-    assert user.auth0_user_id is None
+    # Set an existing Auth0 ID
+    user.auth0_user_id = "auth0|abc123"  # type: ignore
+    db.commit()
 
-    # Mock Auth0 sync to return user id
+    # Mock Auth0 services
     from unittest.mock import MagicMock
 
     mock_auth0_service = MagicMock()
-    mock_auth0_service.sync_user_to_auth0.return_value = {
-        "user_id": "auth0|abc123",
-    }
-    monkeypatch.setattr("app.crud.user.auth0_service", mock_auth0_service)
+    mock_auth0_service.update_user_password.return_value = True
+    mock_auth0_service.update_user_email.return_value = True
+    monkeypatch.setattr("app.api.v1.endpoints.legacy.auth0_service", mock_auth0_service)
 
-    # Act
+    # Act: Call legacy login with different email
     response = client.post(
         f"{settings.API_V1_STR}/legacy/login",
-        data={"username": "login@example.com", "password": "pw123456"},
+        json={
+            "username": "login_user",
+            "password": "pw123456",
+            "email": "new.email@example.com",
+        },
     )
 
     # Assert
     assert response.status_code == 200
-    # Sync is now handled in authenticate_user_flexible
-    mock_auth0_service.sync_user_to_auth0.assert_called_once()
-    # Verify the user now has an auth0_user_id in the database
+    # Password should be updated
+    mock_auth0_service.update_user_password.assert_called_once_with(
+        user_id="auth0|abc123", password="pw123456"
+    )
+    # Email update should be called since email changed
+    mock_auth0_service.update_user_email.assert_called_once_with(
+        user_id="auth0|abc123", email="new.email@example.com"
+    )
+    # Verify the user's email was updated in database and email_valid set to Y
     db.refresh(user)
-    assert user.auth0_user_id == "auth0|abc123"
+    assert user.email == "new.email@example.com"
+    assert user.email_valid == "Y"
 
 
 @patch("app.api.deps.update_user_auth0_mapping")
