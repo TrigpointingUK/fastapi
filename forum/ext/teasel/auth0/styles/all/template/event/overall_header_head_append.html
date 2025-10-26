@@ -81,7 +81,7 @@ a[href*="mode=sendpassword"] { display: none !important; }
             if (href.indexOf('login=external') !== -1) return;
 
             var redirect = toRedirectTarget(href);
-            var newHref = 'ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0&redirect=' + redirect;
+            var newHref = '/ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0&redirect=' + redirect;
             link.setAttribute('href', newHref);
         });
     }
@@ -99,7 +99,12 @@ a[href*="mode=sendpassword"] { display: none !important; }
             var redirectMatch = href.match(/[?&]redirect=([^&]*)/);
             var redirect = redirectMatch ? redirectMatch[1] : "";
 
-            var newHref = "ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0";
+            // Do not rewrite ACP re-auth flows; let them remain local
+            if (/[?&]redirect=(adm\/|adm%2F)/i.test(href)) {
+                return;
+            }
+
+            var newHref = "/ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0";
             if (redirect) {
                 newHref += "&redirect=" + redirect;
             }
@@ -110,6 +115,8 @@ a[href*="mode=sendpassword"] { display: none !important; }
 
     function enforceAuth0OnProtectedPages() {
         if (isLocalLogin) return; // allow break-glass
+        // Do not enforce SSO on ACP pages
+        if ((window.location.pathname || '').indexOf('/adm/') === 0) return;
 
         // If a protected page shows a login form, auto-redirect to Auth0 preserving destination
         var loginForm = document.querySelector('form[action*="mode=login"], form#login, .login-form form');
@@ -119,7 +126,7 @@ a[href*="mode=sendpassword"] { display: none !important; }
         // Compute redirect back to current path
         var path = window.location.pathname + (window.location.search || '');
         var redirect = encodeURIComponent(path.replace(/^\//, ''));
-        var auth0Url = "ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0&redirect=" + redirect;
+        var auth0Url = "/ucp.php?mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0&redirect=" + redirect;
         window.location.replace(auth0Url);
     }
 

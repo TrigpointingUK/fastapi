@@ -293,6 +293,19 @@ class subscriber implements EventSubscriberInterface
         // Check if local=1 is present (break-glass admin login)
         $local_login = isset($_GET['local']) && $_GET['local'] === '1';
 
+        // Treat ACP re-authentication as local login to allow username/password form
+        $redirect_param = isset($_GET['redirect']) ? (string)$_GET['redirect'] : '';
+        $decoded_redirect = $redirect_param !== '' ? urldecode($redirect_param) : '';
+        $is_acp_redirect = $decoded_redirect !== '' && (
+            strpos($decoded_redirect, 'adm/') === 0 ||
+            strpos($decoded_redirect, '/adm/') === 0
+        );
+        $in_acp = (defined('IN_ADMIN') && IN_ADMIN) || (isset($_SERVER['REQUEST_URI']) && strpos($_SERVER['REQUEST_URI'], '/adm/') === 0);
+
+        if ($is_acp_redirect || $in_acp) {
+            $local_login = true;
+        }
+
         if ($is_login_page && !$local_login && !isset($_GET['login'])) {
             // Auto-redirect to Auth0 OAuth login
             $this->flog('[auth0] Auto-redirecting login page to Auth0 OAuth');
@@ -312,7 +325,7 @@ class subscriber implements EventSubscriberInterface
         $template->assign_vars([
             'AUTH0_LOCAL_LOGIN' => $local_login,
             'S_HIDE_LOCAL_LOGIN' => !$local_login,
-            'U_AUTH0_LOGIN' => append_sid($phpbb_root_path . 'ucp.' . $phpEx,
+            'U_AUTH0_LOGIN' => append_sid('/ucp.' . $phpEx,
                 'mode=login&login=external&oauth_service=auth.provider.oauth.service.auth0'),
         ]);
     }
