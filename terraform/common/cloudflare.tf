@@ -185,3 +185,28 @@ resource "cloudflare_list_item" "wiki_redirect_wiki" {
 
 # Activate the list via an account-level redirect ruleset
 ## Activation of the list is done via Cloudflare Dashboard (existing account Redirect ruleset)
+
+# Bulk Redirects for forum path (account-level)
+# Redirect: https://trigpointing.uk/forum/* -> https://forum.trigpointing.uk/* (preserve subpath + query)
+resource "cloudflare_list" "forum_redirects" {
+  account_id  = var.cloudflare_account_id
+  name        = "forum_redirects"
+  description = "Redirect /forum/* on trigpointing.uk to forum.trigpointing.uk"
+  kind        = "redirect"
+}
+
+resource "cloudflare_list_item" "forum_redirect_forum" {
+  account_id = var.cloudflare_account_id
+  list_id    = cloudflare_list.forum_redirects.id
+
+  redirect {
+    source_url            = "https://trigpointing.uk/forum"
+    target_url            = "https://forum.trigpointing.uk"
+    status_code           = 301
+    include_subdomains    = true
+    subpath_matching      = true
+    preserve_query_string = true
+  }
+}
+
+# Activation of the list is handled by the existing account-level Redirect ruleset in Cloudflare
