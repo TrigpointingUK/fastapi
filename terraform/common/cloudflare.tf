@@ -162,22 +162,22 @@ resource "cloudflare_list_item" "wiki_redirect_w" {
     source_url            = "https://trigpointing.uk/w"
     target_url            = "https://wiki.trigpointing.uk"
     status_code           = 301
-    include_subdomains    = true # covers www.trigpointing.uk
-    subpath_matching      = true # preserve path after /w
-    preserve_query_string = true # preserve ?query
+    include_subdomains    = true
+    subpath_matching      = true
+    preserve_query_string = true
   }
 }
 
-# Redirect: https://trigpointing.uk/wiki -> https://www.trigpointing.uk (drop /wiki, preserve subpath + query)
+# Redirect: https://trigpointing.uk/wiki -> https://wiki.trigpointing.uk (drop /wiki, preserve subpath + query)
 resource "cloudflare_list_item" "wiki_redirect_wiki" {
   account_id = var.cloudflare_account_id
   list_id    = cloudflare_list.wiki_redirects.id
 
   redirect {
     source_url            = "https://trigpointing.uk/wiki"
-    target_url            = "https://www.trigpointing.uk"
+    target_url            = "https://wiki.trigpointing.uk"
     status_code           = 301
-    include_subdomains    = true # covers www.trigpointing.uk
+    include_subdomains    = true
     subpath_matching      = true
     preserve_query_string = true
   }
