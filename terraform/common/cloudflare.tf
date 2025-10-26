@@ -62,19 +62,6 @@ resource "cloudflare_record" "bastion" {
   comment = "Bastion host for TrigpointingUK - managed by Terraform"
 }
 
-
-# CNAME record for bastion
-resource "cloudflare_record" "webserver" {
-  zone_id         = data.cloudflare_zones.production.zones[0].id
-  name            = "webserver"
-  content         = aws_instance.webserver.private_ip
-  type            = "A"
-  proxied         = false # Enable CloudFlare proxy (orange cloud)
-  allow_overwrite = true  # Allow overwriting existing records
-
-  comment = "Webserver host for TrigpointingUK - managed by Terraform"
-}
-
 # Test CNAMEs for ALB testing
 resource "cloudflare_record" "test1" {
   zone_id         = data.cloudflare_zones.staging.zones[0].id

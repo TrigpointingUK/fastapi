@@ -4,10 +4,8 @@ This document provides comprehensive instructions for managing the FastAPI infra
 
 ## Overview
 
-The Ansible setup is configured to manage three instance groups:
-- **fastapi**: Both bastion and webserver instances
-- **bastions**: Bastion host only (public subnet)
-- **webservers**: Webserver instance only (private subnet, accessed via bastion)
+The Ansible setup is configured to manage infrastructure instances:
+- **bastions**: Bastion host (public subnet)
 
 ## Prerequisites
 
@@ -43,22 +41,22 @@ Ansible/
 ├── ansible.cfg              # Ansible configuration
 ├── inventory.yml            # Host inventory
 ├── group_vars/              # Group-specific variables
-│   ├── fastapi.yml
-│   ├── bastions.yml
-│   └── webservers.yml
+│   ├── all
+│   └── bastions.yml
 ├── host_vars/               # Host-specific variables (if needed)
-└── playbooks/               # Ansible playbooks
-    ├── main.yml
-    └── update-db-script.yml
+│   └── bastion
+├── main.yaml                # Main playbook
+└── roles/                   # Ansible roles
+    ├── common/
+    └── bastion/
 ```
 
 ## Inventory Configuration
 
 The inventory is configured with:
 - **Bastion**: Direct SSH access via public IP
-- **Webserver**: SSH access via bastion proxy
-- **SSH Key**: Uses `~/.ssh/trigpointing-bastion.pem` for all connections
-- **User**: `ec2-user` for all instances
+- **SSH Key**: Uses `~/.ssh/trigpointing-bastion.pem` for connections
+- **User**: `ec2-user` for instances
 
 ## Basic Ansible Commands
 
@@ -68,25 +66,18 @@ The inventory is configured with:
 # Test connection to all hosts
 ansible all -m ping
 
-# Test connection to specific groups
-ansible fastapi -m ping
+# Test connection to bastions
 ansible bastions -m ping
-ansible webservers -m ping
 ```
 
 ### Run Playbooks
 
 ```bash
-# Run main playbook on all hosts
-ansible-playbook playbooks/main.yml
+# Run main playbook
+ansible-playbook main.yaml
 
-# Run main playbook on specific groups
-ansible-playbook playbooks/main.yml --limit fastapi
-ansible-playbook playbooks/main.yml --limit bastions
-ansible-playbook playbooks/main.yml --limit webservers
-
-# Run specific playbook
-ansible-playbook playbooks/update-db-script.yml
+# Run main playbook on specific hosts
+ansible-playbook main.yaml --limit bastion
 ```
 
 ### Ad-hoc Commands
@@ -141,14 +132,8 @@ This will:
 To install additional packages on specific groups:
 
 ```bash
-# Install packages on bastion only
+# Install packages on bastion
 ansible bastions -m yum -a "name=tree state=present" --become
-
-# Install packages on webserver only
-ansible webservers -m yum -a "name=nginx state=present" --become
-
-# Install packages on all FastAPI instances
-ansible fastapi -m yum -a "name=git state=present" --become
 ```
 
 ### 4. Database Management
@@ -206,10 +191,7 @@ ansible all -m systemd -a "name=nginx state=restarted" --become
 2. **Test SSH Connection**:
    ```bash
    # Test bastion connection
-   ssh -i ~/.ssh/trigpointing-bastion.pem ec2-user@3.9.71.10
-
-   # Test webserver connection via bastion
-   ssh -i ~/.ssh/trigpointing-bastion.pem ec2-user@10.0.10.132
+   ssh -i ~/.ssh/trigpointing-bastion.pem ec2-user@<BASTION_IP>
    ```
 
 3. **Check Ansible Configuration**:
@@ -221,7 +203,6 @@ ansible all -m systemd -a "name=nginx state=restarted" --become
 
 1. **Python Interpreter**: Ensure Python 3 is available on target hosts
 2. **Sudo Access**: Use `--become` flag for tasks requiring root privileges
-3. **Network Connectivity**: Ensure bastion can reach webserver via private network
 
 ### Debugging
 

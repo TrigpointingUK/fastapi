@@ -22,15 +22,6 @@ resource "aws_security_group" "rds" {
     security_groups = [aws_security_group.bastion.id]
   }
 
-  # MySQL access from webserver
-  ingress {
-    description     = "MySQL from webserver"
-    from_port       = 3306
-    to_port         = 3306
-    protocol        = "tcp"
-    security_groups = [aws_security_group.webserver.id]
-  }
-
   # MySQL access from phpMyAdmin ECS tasks
   ingress {
     description     = "MySQL from phpMyAdmin ECS tasks"

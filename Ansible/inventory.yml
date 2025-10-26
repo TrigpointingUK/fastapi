@@ -4,6 +4,3 @@ all:
     bastions:
       hosts:
         bastion:
-    webservers:
-      hosts:
-        webserver:

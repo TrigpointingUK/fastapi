@@ -9,8 +9,3 @@
     - bastion
     - diodonfrost.terraform
   tags: bastion
-
-- hosts: webservers
-  roles:
-    - webserver
-  tags: webserver

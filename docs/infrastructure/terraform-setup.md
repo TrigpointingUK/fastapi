@@ -6,7 +6,7 @@ This directory contains the consolidated Terraform infrastructure for the FastAP
 
 The infrastructure is organized into four main directories:
 
-- **`common/`** - Shared infrastructure (VPC, ECS cluster, RDS, bastion, webserver)
+- **`common/`** - Shared infrastructure (VPC, ECS cluster, RDS, bastion)
 - **`modules/`** - Reusable Terraform modules
 - **`staging/`** - Staging environment configuration
 - **`production/`** - Production environment configuration
@@ -29,7 +29,6 @@ terraform/
 │   ├── ecs.tf             # ECS cluster and IAM roles
 │   ├── rds.tf             # RDS instance and parameter groups
 │   ├── bastion.tf         # Bastion host for database access
-│   ├── webserver.tf       # Web server in private subnet
 │   ├── security.tf        # Security groups
 │   ├── outputs.tf         # Outputs for remote state
 │   └── backend.conf       # S3 backend configuration

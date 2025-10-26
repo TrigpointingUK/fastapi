@@ -102,17 +102,6 @@ output "bastion_security_group_id" {
   value       = aws_security_group.bastion.id
 }
 
-# Web Server Outputs
-output "webserver_private_ip" {
-  description = "Private IP of the web server"
-  value       = aws_instance.webserver.private_ip
-}
-
-output "webserver_security_group_id" {
-  description = "ID of the web server security group"
-  value       = aws_security_group.webserver.id
-}
-
 # ALB Outputs
 output "alb_arn" {
   description = "ARN of the Application Load Balancer"
