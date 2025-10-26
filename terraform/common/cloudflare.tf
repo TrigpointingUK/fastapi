@@ -142,3 +142,46 @@ resource "cloudflare_record" "wiki" {
 
   comment = "Wiki subdomain for TrigpointingUK - managed by Terraform"
 }
+
+# Redirect wiki URLs on apex to wiki subdomain
+## Bulk Redirects for wiki paths (account-level)
+# List holding the redirects
+resource "cloudflare_list" "wiki_redirects" {
+  account_id  = var.cloudflare_account_id
+  name        = "wiki_redirects"
+  description = "Redirect /w/* and /wiki* on trigpointing.uk to wiki.trigpointing.uk"
+  kind        = "redirect"
+}
+
+# Redirect: https://trigpointing.uk/w -> https://wiki.trigpointing.uk (drop /w, preserve subpath + query)
+resource "cloudflare_list_item" "wiki_redirect_w" {
+  account_id = var.cloudflare_account_id
+  list_id    = cloudflare_list.wiki_redirects.id
+
+  redirect {
+    source_url            = "https://trigpointing.uk/w"
+    target_url            = "https://wiki.trigpointing.uk"
+    status_code           = 301
+    include_subdomains    = true
+    subpath_matching      = true
+    preserve_query_string = true
+  }
+}
+
+# Redirect: https://trigpointing.uk/wiki -> https://wiki.trigpointing.uk (drop /wiki, preserve subpath + query)
+resource "cloudflare_list_item" "wiki_redirect_wiki" {
+  account_id = var.cloudflare_account_id
+  list_id    = cloudflare_list.wiki_redirects.id
+
+  redirect {
+    source_url            = "https://trigpointing.uk/wiki"
+    target_url            = "https://wiki.trigpointing.uk"
+    status_code           = 301
+    include_subdomains    = true
+    subpath_matching      = true
+    preserve_query_string = true
+  }
+}
+
+# Activate the list via an account-level redirect ruleset
+## Activation of the list is done via Cloudflare Dashboard (existing account Redirect ruleset)
