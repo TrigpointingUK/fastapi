@@ -6,7 +6,7 @@ from datetime import date, time
 
 from sqlalchemy.orm import Session
 
-from app.crud.tlog import (
+from api.crud.tlog import (
     create_log,
     delete_log_hard,
     get_log_by_id,
@@ -14,14 +14,14 @@ from app.crud.tlog import (
     soft_delete_photos_for_log,
     update_log,
 )
-from app.crud.trig import (
+from api.crud.trig import (
     get_trig_by_id,
     get_trig_by_waypoint,
     get_trigs_by_county,
     get_trigs_count,
     search_trigs_by_name,
 )
-from app.crud.user import (
+from api.crud.user import (
     authenticate_user,
     get_user_by_auth0_id,
     get_user_by_email,
@@ -29,8 +29,8 @@ from app.crud.user import (
     get_user_by_name,
     is_admin,
 )
-from app.models.trig import Trig
-from app.models.user import TLog, User
+from api.models.trig import Trig
+from api.models.user import TLog, User
 
 
 class TestTLogCRUD:
@@ -158,7 +158,7 @@ class TestTLogCRUD:
 
     def test_soft_delete_photos_for_log(self, db: Session):
         """Test soft deleting photos for a log."""
-        from app.models.tphoto import TPhoto
+        from api.models.tphoto import TPhoto
 
         # Create log and photos
         log = TLog(id=2010, user_id=1001, trig_id=1, date=date.today())

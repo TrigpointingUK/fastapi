@@ -20,8 +20,8 @@ sys.path.insert(0, "/home/ianh/dev/fastapi")
 
 import jwt  # noqa: E402
 
-from app.core.config import settings  # noqa: E402
-from app.core.security import auth0_validator  # noqa: E402
+from api.core.config import settings  # noqa: E402
+from api.core.security import auth0_validator  # noqa: E402
 
 
 def debug_auth0_token(token: str):

@@ -34,12 +34,12 @@ repos:
       - id: mypy
         additional_dependencies: [types-requests, types-PyMySQL]
         args: [--ignore-missing-imports]
-        exclude: ^scripts/
+        exclude: ^(api/tests/|scripts/)
 
   - repo: https://github.com/PyCQA/bandit
     rev: 1.8.6
     hooks:
       - id: bandit
-        args: ['-r', 'app']
-        exclude: ^(tests/|scripts/)
+        args: ['-r', 'api']
+        exclude: ^(api/tests/|scripts/)
         additional_dependencies: [pbr]

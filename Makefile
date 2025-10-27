@@ -74,7 +74,7 @@ run-staging: ## Run FastAPI locally against staging DB (requires db-tunnel-stagi
 	ENVIRONMENT=development \
 	DB_HOST=127.0.0.1 DB_PORT=$(LOCAL_DB_TUNNEL_PORT) \
 	DB_USER="$$DB_USER" DB_PASSWORD="$$DB_PASSWORD" DB_NAME="$$DB_NAME" \
-	uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+	uvicorn api.main:app --reload --host 127.0.0.1 --port 8000
 
 # Open a MySQL client to staging via the tunnel
 mysql-staging: ## Open MySQL client against staging via tunnel (requires db-tunnel-staging-start)
@@ -161,12 +161,12 @@ test: ## Run tests
 	pytest
 
 test-cov: ## Run tests with coverage
-	pytest --cov=app --cov-report=term-missing --cov-report=html --cov-report=xml:coverage.xml
+	pytest --cov=api --cov-report=term-missing --cov-report=html --cov-report=xml:coverage.xml
 
 diff-cov: ## Check diff coverage against origin/main (fail if < 90%)
 	@if [ ! -f coverage.xml ]; then \
 		echo "Generating coverage.xml via pytest..."; \
-		pytest --cov=app --cov-report=xml:coverage.xml >/dev/null; \
+		pytest --cov=api --cov-report=xml:coverage.xml >/dev/null; \
 	fi
 	@BASE_REF=$$(git merge-base HEAD origin/main); \
 	echo "Comparing coverage against $$BASE_REF"; \
@@ -174,35 +174,35 @@ diff-cov: ## Check diff coverage against origin/main (fail if < 90%)
 
 # Code quality
 lint: ## Run linting
-	flake8 app tests
-	mypy app --ignore-missing-imports
+	flake8 api
+	mypy api --ignore-missing-imports
 
 format: ## Format code
-	black app tests
-	isort app tests
+	black api
+	isort api
 	terraform fmt -recursive terraform/
 
 format-check: ## Check code formatting
-	black --check app tests
-	isort --check-only app tests
+	black --check api
+	isort --check-only api
 
 type-check: ## Run type checking
-	mypy app --ignore-missing-imports
+	mypy api --ignore-missing-imports
 
 security: ## Run security checks
-	bandit -r app
+	bandit -r api --skip B101 --exclude api/tests
 	-safety check
 
 # Application
 build: ## Build the application
-	docker build -t fastapi-app .
+	docker build -t platform-api .
 
 run: ## Run the application locally
-	uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 
 # Docker commands
 docker-build: ## Build Docker image
-	docker build -t fastapi-app .
+	docker build -t platform-api .
 
 docker-run: ## Run application with Docker Compose
 	docker-compose up -d

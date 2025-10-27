@@ -1,23 +1,22 @@
-name: FastAPI CI/CD Pipeline
+name: API CI/CD Pipeline
 
 on:
   push:
     branches: [ main, develop ]
     paths:
-      - 'app/**'
+      - 'api/**'
       - 'res/**'
-      - 'tests/**'
       - '.github/workflows/ci.yml'
   pull_request:
     branches: [ main ]
     paths:
-      - 'app/**'
+      - 'api/**'
       - 'res/**'
       - '.github/workflows/ci.yml'
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
+  IMAGE_NAME: ${{ github.repository }}/api
 
 jobs:
   test:
@@ -63,31 +62,31 @@ jobs:
 
     - name: Lint with flake8
       run: |
-        flake8 app --count --select=E9,F63,F7,F82 --show-source --statistics
-        flake8 app --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+        flake8 api --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 api --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
     - name: Type check with mypy
       run: |
-        mypy app --ignore-missing-imports
+        mypy api --ignore-missing-imports
 
     - name: Format check with black
       run: |
-        black --check app tests
+        black --check api
 
     - name: Import sort check with isort
       run: |
-        isort --check-only app tests
+        isort --check-only api
 
     - name: Security check with bandit
       run: |
-        bandit -r app -f json -o bandit-report.json
+        bandit -r api -f json -o bandit-report.json
       continue-on-error: true
 
     - name: Run tests
       env:
         DATABASE_URL: mysql+pymysql://test_user:test_password@localhost:3306/test_db
       run: |
-        pytest --cov=app --cov-report=xml --cov-report=html
+        pytest --cov=api --cov-report=xml --cov-report=html
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v5
