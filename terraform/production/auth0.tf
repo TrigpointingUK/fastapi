@@ -44,6 +44,37 @@ resource "cloudflare_record" "ses_dkim" {
   comment = "SES DKIM record ${count.index + 1} for trigpointing.uk"
 }
 
+# Custom MAIL FROM domain for SPF alignment
+# This ensures the envelope sender (Return-Path) uses trigpointing.uk domain
+# which allows SPF to align with DMARC requirements
+resource "aws_ses_domain_mail_from" "trigpointing_uk" {
+  domain           = aws_ses_domain_identity.trigpointing_uk.domain
+  mail_from_domain = "mail.trigpointing.uk"
+}
+
+# MX record for custom MAIL FROM domain (required by SES)
+resource "cloudflare_record" "ses_mail_from_mx" {
+  zone_id  = data.cloudflare_zones.production.zones[0].id
+  name     = "mail"
+  content  = "feedback-smtp.eu-west-1.amazonses.com"
+  type     = "MX"
+  priority = 10
+  ttl      = 600
+
+  comment = "MX record for SES custom MAIL FROM domain"
+}
+
+# SPF record for custom MAIL FROM subdomain
+resource "cloudflare_record" "ses_mail_from_spf" {
+  zone_id = data.cloudflare_zones.production.zones[0].id
+  name    = "mail"
+  content = "v=spf1 include:amazonses.com ~all"
+  type    = "TXT"
+  ttl     = 600
+
+  comment = "SPF record for SES custom MAIL FROM domain"
+}
+
 # Get Cloudflare zone info
 data "cloudflare_zones" "production" {
   filter {
