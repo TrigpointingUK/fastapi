@@ -2,6 +2,6 @@
 
 # Additional development dependencies
 pre-commit==3.6.0
-bandit==1.7.7
+bandit==1.8.6
 safety==2.3.4
 diff-cover==9.2.0
