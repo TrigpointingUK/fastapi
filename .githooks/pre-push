@@ -29,19 +29,22 @@ fi
 # Categorise changes
 run_fastapi_checks=false
 run_terraform_checks=false
+run_web_checks=false
 docs_only=true
 
 while IFS= read -r file; do
-    if [[ "$file" =~ ^(app/|res/|tests/|\.github/) ]]; then
+    if [[ "$file" =~ ^(api/|res/|\.github/workflows/ci\.yml) ]]; then
         run_fastapi_checks=true
         docs_only=false
     elif [[ "$file" =~ ^terraform/ ]]; then
         run_terraform_checks=true
         docs_only=false
-    elif [[ ! "$file" =~ ^docs/ ]]; then
-        # Non-docs, non-categorised file - run FastAPI checks to be safe
-        run_fastapi_checks=true
+    elif [[ "$file" =~ ^web/ ]]; then
+        run_web_checks=true
         docs_only=false
+    elif [[ ! "$file" =~ ^(docs/|forum/|wiki/|\.github/|Makefile|README\.md|.*\.md$) ]]; then
+        # Unknown file type - warn but allow push
+        echo "⚠️  File not categorised: $file"
     fi
 done <<< "$changed_files"
 
@@ -70,7 +73,7 @@ if [[ "$current_branch" == "main" || "$current_branch" == "develop" ]]; then
 
     # Run FastAPI checks if needed
     if [[ "$run_fastapi_checks" == true ]]; then
-        echo "🧪 Running complete CI suite (required for $current_branch with app/res/tests changes)..."
+        echo "🧪 Running complete CI suite (required for $current_branch with api/ or res/ changes)..."
         if make ci; then
             echo "✅ All CI checks passed! Push approved for $current_branch"
 
@@ -109,7 +112,7 @@ if [[ "$current_branch" == "main" || "$current_branch" == "develop" ]]; then
             echo "❌ terraform not installed. Please install Terraform."
             exit 1
         fi
-        
+
         if terraform fmt -write=false -check -recursive terraform/ >/dev/null 2>&1; then
             echo "✅ Terraform formatting is correct!"
         else
@@ -166,7 +169,7 @@ else
             echo "❌ terraform not installed. Please install Terraform."
             exit 1
         fi
-        
+
         if terraform fmt -write=false -check -recursive terraform/ >/dev/null 2>&1; then
             echo "✅ Terraform formatting is correct!"
         else
