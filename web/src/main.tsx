@@ -11,6 +11,12 @@ const domain = import.meta.env.VITE_AUTH0_DOMAIN as string;
 const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID as string;
 const audience = import.meta.env.VITE_AUTH0_AUDIENCE as string;
 
+// Use the same base URL logic as vite.config.ts
+// Local dev and staging: / (root)
+// Production: /app/
+const baseUrl = import.meta.env.BASE_URL || '/';
+const redirectUri = window.location.origin + baseUrl;
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Auth0Provider
@@ -18,7 +24,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       clientId={clientId}
       authorizationParams={{
         audience,
-        redirect_uri: window.location.origin + '/app/',
+        redirect_uri: redirectUri,
       }}
       useRefreshTokens
       cacheLocation="memory"
