@@ -68,6 +68,18 @@ variable "swagger_allowed_origins" {
   default     = []
 }
 
+variable "web_spa_callback_urls" {
+  description = "List of web SPA callback URLs"
+  type        = list(string)
+  default     = []
+}
+
+variable "web_spa_allowed_origins" {
+  description = "List of allowed origins for web SPA"
+  type        = list(string)
+  default     = []
+}
+
 variable "website_callback_urls" {
   description = "List of website callback URLs"
   type        = list(string)

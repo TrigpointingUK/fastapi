@@ -10,6 +10,12 @@ Monorepo containing all infrastructure, applications, and services for Trigpoint
   - Modern Python 3.11+ API with Auth0 integration
   - Comprehensive test coverage, type checking
   - [Detailed API Documentation](docs/README-fastapi.md)
+
+- **web/** - React Single-Page Application
+  - Modern TypeScript SPA with Auth0 PKCE authentication
+  - Vite for fast builds, TanStack Query for state management
+  - Gradual "strangler fig" migration of legacy pages
+  - [Web App Documentation](web/README.md)
   
 - **forum/** - phpBB 3.3 Forum
   - Community discussion forums with Auth0 SSO
@@ -41,11 +47,13 @@ Monorepo containing all infrastructure, applications, and services for Trigpoint
 
 ## Architecture
 
+- **Web SPA**: React + TypeScript (Vite) served by nginx on ECS Fargate
 - **API**: FastAPI (Python 3.11) on ECS Fargate
 - **Forum**: phpBB on ECS Fargate
 - **Wiki**: MediaWiki on ECS Fargate
 - **Database**: RDS MySQL 8.0
 - **Cache**: ElastiCache (Valkey)
+- **Load Balancer**: AWS ALB with path-based routing
 - **CDN**: Cloudflare
 - **Auth**: Auth0 with unified SSO across all services
 
@@ -54,6 +62,7 @@ Monorepo containing all infrastructure, applications, and services for Trigpoint
 ### Prerequisites
 
 - Python 3.11+
+- Node.js 20+ and npm (for web app)
 - Docker & Docker Compose
 - AWS CLI (for deployments)
 - Terraform (for infrastructure)
@@ -70,11 +79,18 @@ source venv/bin/activate
 pip install -r requirements-dev.txt
 make run
 
+# Web App Development
+cd web
+npm ci
+npm run dev
+
 # Run all quality checks
 make ci
 ```
 
-See component-specific documentation for detailed setup.
+See component-specific documentation for detailed setup:
+- [API Setup](docs/README-fastapi.md)
+- [Web App Setup](web/README.md)
 
 ## Documentation
 

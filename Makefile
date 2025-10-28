@@ -5,7 +5,8 @@ orientation-model:
 	@echo "Model exported to res/models/orientation_classifier.onnx"
 .PHONY: help install install-dev test test-cov lint format type-check security build run clean docker-build docker-run docker-down mysql-client diff-cov \
 	run-staging db-tunnel-staging-start db-tunnel-staging-stop mysql-staging \
-	bastion-ssm-shell db-tunnel-staging-ssm-start bastion-allow-my-ip bastion-revoke-my-ip
+	bastion-ssm-shell db-tunnel-staging-ssm-start bastion-allow-my-ip bastion-revoke-my-ip \
+	web-install web-dev web-build web-test web-lint web-type-check
 
 # Default target
 help: ## Show this help message
@@ -301,6 +302,25 @@ pre-commit: ## Run pre-commit hooks
 	pre-commit run --all-files
 
 ci: terraform-format-check format-check lint type-check security test ## Run all CI checks
+
+# Web application targets
+web-install: ## Install web application dependencies
+	cd web && npm ci
+
+web-dev: ## Run web application in development mode
+	cd web && npm run dev
+
+web-build: ## Build web application for production
+	cd web && npm run build
+
+web-test: ## Run web application tests
+	cd web && npm test
+
+web-lint: ## Lint web application code
+	cd web && npm run lint
+
+web-type-check: ## Type check web application
+	cd web && npm run type-check
 
 terraform-format-check: ## Check Terraform formatting; auto-format and fail if mismatches
 	@command -v terraform >/dev/null 2>&1 || { echo "❌ terraform not installed. Please install Terraform to run formatting checks."; exit 1; }

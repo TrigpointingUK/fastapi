@@ -105,6 +105,7 @@ resource "auth0_connection_clients" "database_clients" {
     [
       auth0_client.m2m_api.id,
       auth0_client.swagger.id,
+      auth0_client.web_spa.id,
       auth0_client.website.id,
       auth0_client.android.id,
       auth0_client.alb.id,
@@ -194,6 +195,40 @@ resource "auth0_client" "swagger" {
   }
 
   oidc_conformant = true
+}
+
+# Single Page Application (Web App)
+resource "auth0_client" "web_spa" {
+  name        = "${var.name_prefix}-web"
+  description = "React SPA for Trigpointing UK (${var.environment})"
+  app_type    = "spa"
+
+  callbacks           = var.web_spa_callback_urls
+  allowed_origins     = var.web_spa_allowed_origins
+  web_origins         = var.web_spa_allowed_origins
+  allowed_logout_urls = var.web_spa_callback_urls
+
+  grant_types = [
+    "authorization_code",
+    "refresh_token",
+  ]
+
+  jwt_configuration {
+    alg = "RS256"
+  }
+
+  oidc_conformant = true
+
+  # Token settings for security
+  refresh_token {
+    rotation_type                = "rotating"
+    expiration_type              = "expiring"
+    leeway                       = 0
+    token_lifetime               = 2592000  # 30 days
+    infinite_token_lifetime      = false
+    infinite_idle_token_lifetime = false
+    idle_token_lifetime          = 1296000  # 15 days
+  }
 }
 
 # Regular Web Application (Website)

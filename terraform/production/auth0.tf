@@ -121,6 +121,15 @@ module "auth0" {
     "https://api.trigpointing.uk",
   ]
 
+  # Web SPA Callbacks
+  web_spa_callback_urls = [
+    "https://trigpointing.uk",
+  ]
+
+  web_spa_allowed_origins = [
+    "https://trigpointing.uk",
+  ]
+
   # Website Callbacks
   website_callback_urls = [
     "https://www.trigpointing.uk/auth/callback",
@@ -198,6 +207,11 @@ output "auth0_api_identifier" {
 output "auth0_swagger_client_id" {
   description = "Swagger OAuth2 client ID"
   value       = module.auth0.swagger_client_id
+}
+
+output "auth0_web_spa_client_id" {
+  description = "Web SPA client ID (for React application)"
+  value       = module.auth0.web_spa_client_id
 }
 
 output "auth0_website_client_id" {
