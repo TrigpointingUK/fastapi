@@ -17,6 +17,15 @@ const audience = import.meta.env.VITE_AUTH0_AUDIENCE as string;
 const baseUrl = import.meta.env.BASE_URL || '/';
 const redirectUri = window.location.origin + baseUrl;
 
+// Debug logging for development
+console.log('Auth0 Configuration:', {
+  domain,
+  clientId,
+  audience,
+  redirectUri,
+  baseUrl,
+});
+
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <Auth0Provider
@@ -28,6 +37,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       }}
       useRefreshTokens
       cacheLocation="memory"
+      onRedirectCallback={(appState) => {
+        console.log('Auth0 redirect callback:', appState);
+      }}
     >
       <QueryClientProvider client={queryClient}>
         <AppRouter />
