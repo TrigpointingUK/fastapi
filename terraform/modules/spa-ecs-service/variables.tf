@@ -58,6 +58,11 @@ variable "alb_rule_priority" {
   type        = number
 }
 
+variable "host_headers" {
+  description = "Host headers for ALB routing"
+  type        = list(string)
+}
+
 variable "path_patterns" {
   description = "Path patterns for ALB routing"
   type        = list(string)

@@ -77,7 +77,7 @@ resource "aws_lb_target_group" "spa" {
   }
 }
 
-# ALB Listener Rule for SPA (path-based routing)
+# ALB Listener Rule for SPA (host + path based routing)
 resource "aws_lb_listener_rule" "spa" {
   listener_arn = var.alb_listener_arn
   priority     = var.alb_rule_priority
@@ -85,6 +85,12 @@ resource "aws_lb_listener_rule" "spa" {
   action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.spa.arn
+  }
+
+  condition {
+    host_header {
+      values = var.host_headers
+    }
   }
 
   condition {

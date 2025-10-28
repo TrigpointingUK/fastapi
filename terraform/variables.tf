@@ -26,7 +26,7 @@ variable "container_image" {
 variable "spa_container_image" {
   description = "Docker image for the SPA web application"
   type        = string
-  default     = "ghcr.io/trigpointinguk/web:latest"
+  default     = "ghcr.io/trigpointinguk/platform/web:latest"
 }
 
 variable "cpu" {

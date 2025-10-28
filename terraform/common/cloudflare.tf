@@ -14,6 +14,17 @@ data "cloudflare_zones" "production" {
   }
 }
 
+# Handle resource renames to add environment suffixes
+moved {
+  from = cloudflare_record.root_domain
+  to   = cloudflare_record.root_domain_production
+}
+
+moved {
+  from = cloudflare_record.www
+  to   = cloudflare_record.www_production
+}
+
 # CNAME record for staging domain
 resource "cloudflare_record" "api_staging" {
   zone_id         = data.cloudflare_zones.staging.zones[0].id
@@ -130,8 +141,22 @@ resource "cloudflare_record" "wiki" {
   comment = "Wiki subdomain for TrigpointingUK - managed by Terraform"
 }
 
-# Root domain (apex) - points to ALB for nginx proxy to legacy server
-resource "cloudflare_record" "root_domain" {
+# Root domain (apex) - staging
+# Note: At apex, use CNAME with proxied=true and CloudFlare will flatten it
+# If IPv4 issues persist, the ALB may need dualstack configuration
+resource "cloudflare_record" "root_domain_staging" {
+  zone_id         = data.cloudflare_zones.staging.zones[0].id
+  name            = "@" # Root domain
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing A record
+
+  comment = "Root domain pointing to ALB for staging - managed by Terraform"
+}
+
+# Root domain (apex) - production
+resource "cloudflare_record" "root_domain_production" {
   zone_id         = data.cloudflare_zones.production.zones[0].id
   name            = "@" # Root domain
   content         = aws_lb.main.dns_name
@@ -142,8 +167,20 @@ resource "cloudflare_record" "root_domain" {
   comment = "Root domain pointing to ALB via nginx proxy - managed by Terraform"
 }
 
-# WWW subdomain
-resource "cloudflare_record" "www" {
+# WWW subdomain - staging
+resource "cloudflare_record" "www_staging" {
+  zone_id         = data.cloudflare_zones.staging.zones[0].id
+  name            = "www"
+  content         = aws_lb.main.dns_name
+  type            = "CNAME"
+  proxied         = true # Enable CloudFlare proxy (orange cloud)
+  allow_overwrite = true # Allow overwriting existing records
+
+  comment = "WWW subdomain pointing to ALB for staging - managed by Terraform"
+}
+
+# WWW subdomain - production
+resource "cloudflare_record" "www_production" {
   zone_id         = data.cloudflare_zones.production.zones[0].id
   name            = "www"
   content         = aws_lb.main.dns_name

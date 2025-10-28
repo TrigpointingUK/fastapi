@@ -1,6 +1,17 @@
 # SPA ECS Service for Staging Environment
 # CloudWatch log group is created by the spa-ecs-service module
 
+# Allow ALB to reach SPA on port 80
+resource "aws_security_group_rule" "spa_from_alb" {
+  type                     = "ingress"
+  from_port                = 80
+  to_port                  = 80
+  protocol                 = "tcp"
+  source_security_group_id = data.terraform_remote_state.common.outputs.alb_security_group_id
+  security_group_id        = module.cloudflare.ecs_security_group_id
+  description              = "HTTP from ALB to SPA"
+}
+
 # Deploy SPA ECS Service
 module "spa_ecs_service" {
   source = "../modules/spa-ecs-service"
@@ -23,6 +34,7 @@ module "spa_ecs_service" {
   # ALB Configuration
   alb_listener_arn  = data.terraform_remote_state.common.outputs.https_listener_arn
   alb_rule_priority = 50 # High priority for /app/* testing route
+  host_headers      = ["trigpointing.me"]
   path_patterns     = ["/app/*"]
 
   # Container Configuration

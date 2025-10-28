@@ -21,7 +21,7 @@ enable_cloudflare_ssl = true
 
 log_level                = "INFO"
 cors_origins             = ["https://trigpointing.uk", "https://api.trigpointing.uk"]
-spa_container_image      = "ghcr.io/trigpointinguk/web:main"
+spa_container_image      = "ghcr.io/trigpointinguk/platform/web:main"
 db_pool_size             = 10
 db_pool_recycle          = 300
 profiling_enabled        = false
