@@ -73,8 +73,11 @@ resource "aws_db_instance" "main" {
   auto_minor_version_upgrade  = false
   allow_major_version_upgrade = true
 
-  # Monitoring
-  monitoring_interval = 60
+  # Monitoring (set to 0 to disable Enhanced Monitoring and reduce CloudWatch costs)
+  # Valid values: 0, 1, 5, 10, 15, 30, 60 seconds
+  # 0 = disabled, saves ~$0.50/instance/month
+  # Basic CloudWatch metrics (CPU, connections, etc.) still available at 1-minute intervals
+  monitoring_interval = 0
   monitoring_role_arn = aws_iam_role.rds_enhanced_monitoring.arn
 
   # Security

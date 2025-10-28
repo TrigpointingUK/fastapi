@@ -318,8 +318,8 @@ resource "auth0_client" "alb" {
 # Legacy Application (manually created, imported into Terraform)
 # This application was created before Terraform and needs to remain connected to the database
 resource "auth0_client" "legacy" {
-  name        = "legacy"
-  description = "Legacy application (${var.environment})"
+  name        = "Trigpointing UK"
+  description = "Trigpointing UK application (${var.environment})"
   app_type    = "regular_web"
 
   callbacks = [

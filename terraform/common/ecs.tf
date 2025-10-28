@@ -2,9 +2,11 @@
 resource "aws_ecs_cluster" "main" {
   name = "${var.project_name}-cluster"
 
+  # Container Insights disabled to reduce CloudWatch costs
+  # Basic ECS metrics (CPU, memory) are still available at no extra cost
   setting {
     name  = "containerInsights"
-    value = "enabled"
+    value = "disabled"
   }
 
   tags = {
