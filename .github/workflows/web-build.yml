@@ -52,6 +52,7 @@ jobs:
       run: npm run build
       env:
         # Use placeholder values for build test
+        VITE_ENVIRONMENT: staging
         VITE_AUTH0_DOMAIN: auth.trigpointing.me
         VITE_AUTH0_CLIENT_ID: test-client-id
         VITE_AUTH0_AUDIENCE: https://api.trigpointing.me/
@@ -147,6 +148,7 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         build-args: |
+          VITE_ENVIRONMENT=${{ steps.env.outputs.environment }}
           VITE_AUTH0_DOMAIN=${{ steps.env.outputs.auth0_domain }}
           VITE_AUTH0_CLIENT_ID=${{ steps.auth0.outputs.client_id }}
           VITE_AUTH0_AUDIENCE=${{ steps.env.outputs.auth0_audience }}
