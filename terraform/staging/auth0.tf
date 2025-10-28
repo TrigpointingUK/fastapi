@@ -89,8 +89,8 @@ module "auth0" {
 
   # Web SPA Callbacks
   web_spa_callback_urls = [
-    "https://trigpointing.me",
-    "http://localhost:5173", # Vite dev server
+    "https://trigpointing.me/app/",
+    "http://localhost:5173", # Vite dev server (uses root for local development)
   ]
 
   web_spa_allowed_origins = [
