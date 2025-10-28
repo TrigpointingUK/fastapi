@@ -1,7 +1,10 @@
 server {
     listen 80;
     server_name trigpointing.uk www.trigpointing.uk;
-    
+
+    # Allow large file uploads (photos)
+    client_max_body_size 50m;
+
     # Health check endpoint (for ALB)
     location /nginx-health {
         access_log off;

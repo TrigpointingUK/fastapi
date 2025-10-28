@@ -13,6 +13,7 @@ resource "aws_security_group_rule" "spa_from_alb" {
 }
 
 # Deploy SPA ECS Service
+# Production: serves from /app/* path only (root stays with nginx proxy/legacy)
 module "spa_ecs_service" {
   source = "../modules/spa-ecs-service"
 
@@ -33,9 +34,9 @@ module "spa_ecs_service" {
 
   # ALB Configuration
   alb_listener_arn  = data.terraform_remote_state.common.outputs.https_listener_arn
-  alb_rule_priority = 50 # High priority for /app/* testing route
+  alb_rule_priority = 50 # High priority for /app/* route
   host_headers      = ["trigpointing.uk"]
-  path_patterns     = ["/app/*"]
+  path_patterns     = ["/app/*"] # Only match /app/* paths
 
   # Container Configuration
   image_uri = var.spa_container_image

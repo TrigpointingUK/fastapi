@@ -64,9 +64,9 @@ variable "host_headers" {
 }
 
 variable "path_patterns" {
-  description = "Path patterns for ALB routing"
+  description = "Path patterns for ALB routing. Set to null to match all paths."
   type        = list(string)
-  default     = ["/app/*"]
+  default     = null
 }
 
 variable "image_uri" {

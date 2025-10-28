@@ -13,6 +13,7 @@ resource "aws_security_group_rule" "spa_from_alb" {
 }
 
 # Deploy SPA ECS Service
+# Staging: serves from root (/) - no path pattern restriction
 module "spa_ecs_service" {
   source = "../modules/spa-ecs-service"
 
@@ -33,9 +34,9 @@ module "spa_ecs_service" {
 
   # ALB Configuration
   alb_listener_arn  = data.terraform_remote_state.common.outputs.https_listener_arn
-  alb_rule_priority = 50 # High priority for /app/* testing route
+  alb_rule_priority = 50 # High priority - serves all paths on trigpointing.me
   host_headers      = ["trigpointing.me"]
-  path_patterns     = ["/app/*"]
+  path_patterns     = null # Match all paths (serves from root)
 
   # Container Configuration
   image_uri = var.spa_container_image
@@ -47,7 +48,7 @@ module "spa_ecs_service" {
   # Scaling
   desired_count    = 1
   min_capacity     = 1
-  max_capacity     = 4
+  max_capacity     = 2 # Reduced for staging
   cpu_target_value = 70
 }
 

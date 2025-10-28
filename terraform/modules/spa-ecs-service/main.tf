@@ -77,7 +77,7 @@ resource "aws_lb_target_group" "spa" {
   }
 }
 
-# ALB Listener Rule for SPA (host + path based routing)
+# ALB Listener Rule for SPA (host-based routing, optionally with path patterns)
 resource "aws_lb_listener_rule" "spa" {
   listener_arn = var.alb_listener_arn
   priority     = var.alb_rule_priority
@@ -93,9 +93,13 @@ resource "aws_lb_listener_rule" "spa" {
     }
   }
 
-  condition {
-    path_pattern {
-      values = var.path_patterns
+  # Only add path_pattern condition if path_patterns is not null
+  dynamic "condition" {
+    for_each = var.path_patterns != null ? [1] : []
+    content {
+      path_pattern {
+        values = var.path_patterns
+      }
     }
   }
 

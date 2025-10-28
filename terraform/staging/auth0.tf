@@ -88,9 +88,12 @@ module "auth0" {
   ]
 
   # Web SPA Callbacks
+  # Staging uses root path (/) for the SPA
   web_spa_callback_urls = [
+    "https://trigpointing.me/",
     "https://trigpointing.me/app/",
     "http://localhost:5173", # Vite dev server (uses root for local development)
+    "http://localhost:5173/app/",
   ]
 
   web_spa_allowed_origins = [
