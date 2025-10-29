@@ -2,6 +2,7 @@
 Core configuration settings for the FastAPI application.
 """
 
+import json
 import logging
 from typing import List, Optional, Union
 
@@ -90,9 +91,22 @@ class Settings(BaseSettings):
     @classmethod
     def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
         """Parse CORS origins from environment variable."""
-        if isinstance(v, str) and not v.startswith("["):
-            return [i.strip() for i in v.split(",")]
-        elif isinstance(v, (list, str)):
+        if isinstance(v, str):
+            if not v:
+                return []
+            if v.startswith("["):
+                try:
+                    data = json.loads(v)
+                except json.JSONDecodeError as exc:  # pragma: no cover - guard rail
+                    logger.warning(
+                        "Failed to decode BACKEND_CORS_ORIGINS JSON: %s", exc
+                    )
+                    return []
+                if isinstance(data, list):
+                    return [str(i).strip() for i in data]
+                return data
+            return [i.strip() for i in v.split(",") if i.strip()]
+        if isinstance(v, list):
             return v
         raise ValueError(v)
 

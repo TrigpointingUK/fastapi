@@ -61,11 +61,13 @@ class TestConfigComprehensive:
         """Test CORS origins parsing from string that starts with bracket."""
         # This should be treated as a single string, not parsed as JSON
         # The string should be treated as a single URL
-        with pytest.raises(ValidationError):
-            # This should fail because it's not a valid URL
-            Settings(
-                BACKEND_CORS_ORIGINS='["http://localhost:3000","https://example.com"]'
-            )
+        settings = Settings(
+            BACKEND_CORS_ORIGINS='["http://localhost:3000","https://example.com"]'
+        )
+
+        assert len(settings.BACKEND_CORS_ORIGINS) == 2
+        assert str(settings.BACKEND_CORS_ORIGINS[0]) == "http://localhost:3000/"
+        assert str(settings.BACKEND_CORS_ORIGINS[1]) == "https://example.com/"
 
     def test_cors_origins_invalid_type(self):
         """Test CORS origins with invalid type raises ValidationError."""
@@ -75,8 +77,8 @@ class TestConfigComprehensive:
     def test_cors_origins_empty_string(self):
         """Test CORS origins with empty string."""
         # Empty string should result in empty list
-        with pytest.raises(ValidationError):
-            Settings(BACKEND_CORS_ORIGINS="")
+        settings = Settings(BACKEND_CORS_ORIGINS="")
+        assert settings.BACKEND_CORS_ORIGINS == []
 
     def test_cors_origins_single_url(self):
         """Test CORS origins with single URL."""
@@ -258,7 +260,7 @@ class TestConfigComprehensive:
         result = Settings.assemble_cors_origins(
             '["http://localhost:3000","https://example.com"]'
         )
-        assert result == '["http://localhost:3000","https://example.com"]'
+        assert result == ["http://localhost:3000", "https://example.com"]
 
     def test_cors_origins_field_validator_invalid(self):
         """Test the CORS origins field validator with invalid input."""
