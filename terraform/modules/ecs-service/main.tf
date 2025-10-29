@@ -64,7 +64,7 @@ resource "aws_ecs_task_definition" "app" {
         var.cors_origins != null ? [
           {
             name  = "BACKEND_CORS_ORIGINS"
-            value = join(",", var.cors_origins)
+            value = jsonencode(var.cors_origins)
           }
         ] : [],
         var.redis_url != "" ? [
