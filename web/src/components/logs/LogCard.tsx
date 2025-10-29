@@ -78,26 +78,33 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
           </div>
         </div>
 
-        {/* Comment */}
-        {log.comment && (
-          <p className="text-gray-700 text-sm leading-relaxed">{log.comment}</p>
-        )}
+        {/* Comment and Photos - Side by Side */}
+        {(log.comment || (log.photos && log.photos.length > 0)) && (
+          <div className="flex gap-4">
+            {/* Comment - Left 50% */}
+            <div className="flex-1 min-w-0">
+              {log.comment && (
+                <p className="text-gray-700 text-sm leading-relaxed">{log.comment}</p>
+              )}
+            </div>
 
-        {/* Photos */}
-        {log.photos && log.photos.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {log.photos.slice(0, 6).map((photo) => (
-              <img
-                key={photo.id}
-                src={photo.icon_url}
-                alt={photo.caption}
-                className="h-20 w-20 object-cover rounded border border-gray-200 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
-                title={photo.caption}
-              />
-            ))}
-            {log.photos.length > 6 && (
-              <div className="h-20 w-20 flex items-center justify-center bg-gray-100 rounded border border-gray-200 flex-shrink-0 text-sm text-gray-600">
-                +{log.photos.length - 6}
+            {/* Photos - Right 50% */}
+            {log.photos && log.photos.length > 0 && (
+              <div className="flex-1 flex gap-2 overflow-x-auto pb-2">
+                {log.photos.slice(0, 6).map((photo) => (
+                  <img
+                    key={photo.id}
+                    src={photo.icon_url}
+                    alt={photo.caption}
+                    className="h-20 w-20 object-cover rounded border border-gray-200 flex-shrink-0 cursor-pointer hover:opacity-80 transition-opacity"
+                    title={photo.caption}
+                  />
+                ))}
+                {log.photos.length > 6 && (
+                  <div className="h-20 w-20 flex items-center justify-center bg-gray-100 rounded border border-gray-200 flex-shrink-0 text-sm text-gray-600">
+                    +{log.photos.length - 6}
+                  </div>
+                )}
               </div>
             )}
           </div>
