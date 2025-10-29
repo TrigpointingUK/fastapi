@@ -193,9 +193,16 @@ app.add_middleware(HealthCheckLoggingFilter)
 
 # Set up CORS
 if settings.BACKEND_CORS_ORIGINS:
+    cors_origins = []
+    for origin in settings.BACKEND_CORS_ORIGINS:
+        origin_str = str(origin).strip()
+        if origin_str.endswith("/"):
+            origin_str = origin_str.rstrip("/")
+        cors_origins.append(origin_str)
+
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=[str(origin) for origin in settings.BACKEND_CORS_ORIGINS],
+        allow_origins=cors_origins,
         allow_credentials=False,  # Bearer tokens only, no cookies
         allow_methods=["*"],
         allow_headers=["*"],
