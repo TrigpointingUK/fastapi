@@ -9,7 +9,7 @@ interface PhotoThumbnailProps {
 }
 
 export default function PhotoThumbnail({
-  iconUrl,
+  photoUrl,
   caption,
   onClick,
 }: PhotoThumbnailProps) {
@@ -38,7 +38,7 @@ export default function PhotoThumbnail({
       {/* Image */}
       {!error && (
         <img
-          src={iconUrl}
+          src={photoUrl}
           alt={caption}
           loading="lazy"
           onLoad={() => setLoaded(true)}
