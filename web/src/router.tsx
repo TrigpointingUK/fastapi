@@ -1,62 +1,63 @@
 import { lazy, Suspense } from "react";
-import { createBrowserRouter, RouterProvider, Link, Outlet } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Spinner from "./components/ui/Spinner";
 
 const Home = lazy(() => import("./routes/Home"));
+const PhotoAlbum = lazy(() => import("./routes/PhotoAlbum"));
 const AppDetail = lazy(() => import("./routes/AppDetail"));
 const NotFound = lazy(() => import("./routes/NotFound"));
 
-function Shell() {
-  const { isAuthenticated, loginWithRedirect, logout, user } = useAuth0();
-  
-  const handleLogout = () => {
-    logout({
-      logoutParams: {
-        returnTo: window.location.origin + '/',
-        federated: true, // Full tenant logout, not just application logout
-      },
-    });
-  };
-  
+function LoadingFallback() {
   return (
-    <>
-      <nav className="nav">
-        <Link to="/">Home</Link>
-        {isAuthenticated ? (
-          <>
-            <span>Welcome, {user?.name || user?.email}</span>
-            <button onClick={handleLogout}>
-              Logout
-            </button>
-          </>
-        ) : (
-          <button onClick={() => loginWithRedirect()}>Login</button>
-        )}
-      </nav>
-      <main className="container">
-        <Suspense fallback={<div className="loading">Loading…</div>}>
-          <Outlet />
-        </Suspense>
-      </main>
-    </>
+    <div className="flex items-center justify-center min-h-screen">
+      <div className="text-center">
+        <Spinner size="lg" />
+        <p className="mt-4 text-gray-600">Loading...</p>
+      </div>
+    </div>
   );
 }
 
-const router = createBrowserRouter([
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      element: (
+        <Suspense fallback={<LoadingFallback />}>
+          <Home />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/photos",
+      element: (
+        <Suspense fallback={<LoadingFallback />}>
+          <PhotoAlbum />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/app/:id",
+      element: (
+        <Suspense fallback={<LoadingFallback />}>
+          <AppDetail />
+        </Suspense>
+      ),
+    },
+    {
+      path: "*",
+      element: (
+        <Suspense fallback={<LoadingFallback />}>
+          <NotFound />
+        </Suspense>
+      ),
+    },
+  ],
   {
-    path: "/",
-    element: <Shell />,
-    children: [
-      { index: true, element: <Home /> },
-      { path: "app/:id", element: <AppDetail /> },
-      { path: "*", element: <NotFound /> },
-    ],
-  },
-], {
-  basename: import.meta.env.BASE_URL,
-});
+    basename: import.meta.env.BASE_URL,
+  }
+);
 
 export default function AppRouter() {
   return <RouterProvider router={router} />;
 }
-

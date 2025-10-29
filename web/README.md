@@ -8,9 +8,11 @@ The web application is deployed as an ECS Fargate service running nginx to serve
 
 - **React 18** with TypeScript
 - **Vite** for fast builds and development
+- **Tailwind CSS v4** for styling with custom Trigpointing UK green palette
 - **Auth0** for authentication (PKCE flow with refresh tokens)
-- **TanStack Query** for server state management
+- **TanStack Query** for server state management and caching
 - **React Router** for client-side routing
+- **react-intersection-observer** for infinite scrolling
 - **nginx** for production serving with SPA routing support
 
 ## Local Development
@@ -102,19 +104,40 @@ Terraform configuration:
 
 ```
 web/
-├── public/          # Static assets
+├── public/
+│   ├── TUK-Logo.svg       # Site logo
+│   └── news.json          # Static news items (editable)
 ├── src/
-│   ├── lib/         # Utilities (auth, api client)
-│   ├── routes/      # Route components
-│   ├── components/  # Reusable components
-│   ├── main.tsx     # Application entry point
-│   ├── router.tsx   # Route configuration
-│   └── app.css      # Global styles
-├── tests/           # Test files
-├── Dockerfile       # Multi-stage build (Node + nginx)
-├── nginx.conf       # nginx configuration for SPA
-└── package.json     # Dependencies and scripts
+│   ├── components/
+│   │   ├── layout/        # Header, Footer, Sidebar, Layout
+│   │   ├── ui/            # Button, Card, Badge, StarRating, Spinner
+│   │   ├── logs/          # LogCard, LogList
+│   │   └── photos/        # PhotoThumbnail, PhotoGrid
+│   ├── hooks/             # Custom React Query hooks
+│   │   ├── useSiteStats.ts
+│   │   ├── useRecentLogs.ts
+│   │   ├── useInfinitePhotos.ts
+│   │   └── useNews.ts
+│   ├── lib/               # Utilities (auth, api client)
+│   ├── routes/            # Page components
+│   │   ├── Home.tsx       # Homepage with stats, news, recent logs
+│   │   ├── PhotoAlbum.tsx # Infinite scrolling photo gallery
+│   │   ├── AppDetail.tsx
+│   │   └── NotFound.tsx
+│   ├── main.tsx           # Application entry point
+│   ├── router.tsx         # Route configuration
+│   └── app.css            # Tailwind directives
+├── tests/                 # Test files
+├── tailwind.config.js     # Tailwind configuration with custom colors
+├── postcss.config.js      # PostCSS with Tailwind v4 plugin
+├── Dockerfile             # Multi-stage build (Node + nginx)
+├── nginx.conf             # nginx configuration for SPA
+├── IMPLEMENTATION_SUMMARY.md  # Detailed implementation notes
+├── COMPONENT_GUIDE.md     # Component usage documentation
+└── package.json           # Dependencies and scripts
 ```
+
+See `COMPONENT_GUIDE.md` for detailed component usage and examples.
 
 ## Authentication
 
