@@ -1,5 +1,5 @@
 """
-Main FastAPI application entry point.
+Main FastAPI application entry point
 """
 
 import logging
