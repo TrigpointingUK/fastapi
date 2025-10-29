@@ -9,6 +9,9 @@ lerna-debug.log*
 # Log directories (but not src/components/logs)
 /logs
 
+# Build artifacts
+public/buildInfo.json
+
 node_modules
 dist
 dist-ssr

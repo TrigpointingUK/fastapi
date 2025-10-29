@@ -4,6 +4,7 @@ import Spinner from "./components/ui/Spinner";
 
 const Home = lazy(() => import("./routes/Home"));
 const PhotoAlbum = lazy(() => import("./routes/PhotoAlbum"));
+const About = lazy(() => import("./routes/About"));
 const AppDetail = lazy(() => import("./routes/AppDetail"));
 const NotFound = lazy(() => import("./routes/NotFound"));
 
@@ -33,6 +34,14 @@ const router = createBrowserRouter(
       element: (
         <Suspense fallback={<LoadingFallback />}>
           <PhotoAlbum />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/about",
+      element: (
+        <Suspense fallback={<LoadingFallback />}>
+          <About />
         </Suspense>
       ),
     },

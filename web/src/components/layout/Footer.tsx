@@ -49,6 +49,9 @@ export default function Footer() {
           <div>
             <h3 className="text-white font-bold text-lg mb-3">Legal</h3>
             <nav className="space-y-2 text-sm">
+              <a href="/about" className="block hover:text-white">
+                About
+              </a>
               <a href="/privacy" className="block hover:text-white">
                 Privacy Policy
               </a>

@@ -4,7 +4,7 @@ environment = "staging"
 use_ecs_valkey = true
 
 # Container image (built by GitHub Actions CI/CD)
-container_image = "ghcr.io/trigpointinguk/fastapi:develop"
+container_image = "ghcr.io/trigpointinguk/platform/api:develop"
 
 # Scaling settings
 desired_count = 1
