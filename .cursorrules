@@ -33,3 +33,36 @@
 ## Security
 - AWS origin server must only communicate over HTTPS (disable port 80)
 - HTTP redirects handled at Cloudflare layer
+
+## Frontend / Web Development
+
+### Tailwind CSS v4 (CRITICAL)
+**This project uses Tailwind CSS v4.1+, NOT v3!**
+
+#### When Generating Code:
+- ALWAYS write Tailwind v4 compatible code
+- Use `@import "tailwindcss"` in CSS (not `@tailwind base/components/utilities`)
+- Configuration uses CSS variables and `@theme` directive, not JavaScript config for runtime theme values
+- Use the Vite plugin (`@tailwindcss/vite`) setup pattern
+
+#### When Troubleshooting Styling Issues:
+**FIRST CHECK: Is this a Tailwind v3 vs v4 incompatibility?**
+- Many AI models default to v3 patterns which will NOT work
+- Common v3 patterns that break in v4:
+  - `@tailwind` directives (use `@import "tailwindcss"` instead)
+  - Arbitrary variants with underscores (e.g., `sm:hover:` nesting changed)
+  - Some plugin APIs have changed
+  - Class name generation differences
+  - Configuration structure differences (though v3 JS config still works for basic theme extension)
+
+#### Key v4 Features Available:
+- CSS-first configuration with `@theme` directive
+- Built-in container queries
+- Enhanced arbitrary value syntax
+- Improved performance and smaller builds
+- Vite and PostCSS plugins for optimal integration
+
+#### Reference:
+- Package versions: `tailwindcss@^4.1.16`, `@tailwindcss/vite@^4.1.16`, `@tailwindcss/postcss@^4.1.16`
+- Config location: `/web/tailwind.config.js` (v3-style JS config still supported)
+- Setup: Uses Vite plugin in `/web/vite.config.ts`
