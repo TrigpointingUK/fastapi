@@ -53,30 +53,28 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
               to={`/trig/${log.trig_id}`}
               className="text-lg font-semibold text-trig-green-600 hover:text-trig-green-700 hover:underline"
             >
-              {trigName || `Trig #${log.trig_id}`}
+              {trigName || `TP${log.trig_id}`}
             </Link>
-            <p className="text-sm text-gray-600">
-              by{" "}
-              <Link
-                to={`/user/${log.user_id}`}
-                className="text-trig-green-600 hover:underline"
-              >
-                {userName || `User #${log.user_id}`}
-              </Link>
-            </p>
-          </div>
-          <div className="text-right">
-            <p className="text-sm font-medium text-gray-700">{formattedDate}</p>
-            <p className="text-xs text-gray-500">{log.time}</p>
-          </div>
-        </div>
-
-        {/* Metadata */}
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant={condition.variant}>{condition.label}</Badge>
-          <div className="flex items-center gap-1">
-            <StarRating rating={log.score} size="sm" />
-            <span className="text-sm text-gray-600">({log.score}/5)</span>
+            <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+              <span>
+                by{" "}
+                <Link
+                  to={`/user/${log.user_id}`}
+                  className="text-trig-green-600 hover:underline"
+                >
+                  {userName || `User #${log.user_id}`}
+                </Link>
+              </span>
+              <span className="text-gray-400">·</span>
+              <Badge variant={condition.variant}>{condition.label}</Badge>
+              <div className="flex items-center gap-1">
+                <StarRating rating={log.score} size="sm" />
+                <span className="text-sm text-gray-600">({log.score * 2}/10)</span>
+              </div>
+              <span className="text-gray-400">·</span>
+              <span className="text-gray-700">{formattedDate}</span>
+              <span className="text-gray-500 text-xs">{log.time}</span>
+            </div>
           </div>
         </div>
 
