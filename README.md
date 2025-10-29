@@ -1,4 +1,6 @@
 # FastAPI Legacy Migration Project
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTrigpointingUK%2Fplatform.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FTrigpointingUK%2Fplatform?ref=badge_shield)
+
 
 A modern FastAPI-based API to gradually migrate your 20-year-old PHP/MySQL website to a contemporary architecture. This project provides a secure, scalable foundation with JWT authentication, comprehensive testing, and AWS Fargate deployment.
 
@@ -407,3 +409,6 @@ Comprehensive documentation is available in the [`docs/`](docs/) directory:
 ## 📄 License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FTrigpointingUK%2Fplatform.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FTrigpointingUK%2Fplatform?ref=badge_large)
