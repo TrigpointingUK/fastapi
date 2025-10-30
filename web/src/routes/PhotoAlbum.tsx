@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
+import { useQueryClient } from "@tanstack/react-query";
 import Layout from "../components/layout/Layout";
 import PhotoGrid from "../components/photos/PhotoGrid";
 import Spinner from "../components/ui/Spinner";
@@ -10,6 +11,7 @@ import { clearHistory, getHistoryStats } from "../lib/photoHistory";
 export default function PhotoAlbum() {
   const [viewMode, setViewMode] = useState<PhotoViewMode>('unseen');
   const [historyStats, setHistoryStats] = useState(getHistoryStats());
+  const queryClient = useQueryClient();
 
   const {
     data,
@@ -43,15 +45,13 @@ export default function PhotoAlbum() {
 
   // Flatten all pages into a single array
   const allPhotos = data?.pages.flatMap((page) => page.items) || [];
-  const totalPhotos = data?.pages[0]?.total || 0;
 
   const handleClearHistory = () => {
     if (confirm('Clear your viewing history? This will show all photos again.')) {
       clearHistory();
       setHistoryStats(getHistoryStats());
-      // Force refresh by switching mode and back
-      setViewMode('all');
-      setTimeout(() => setViewMode('unseen'), 100);
+      // Invalidate queries to force refetch with cleared history
+      queryClient.invalidateQueries({ queryKey: ["photos", "infinite"] });
     }
   };
 
@@ -84,8 +84,7 @@ export default function PhotoAlbum() {
                   "Loading photos..."
                 ) : (
                   <>
-                    Showing {allPhotos.length.toLocaleString()} of{" "}
-                    {totalPhotos.toLocaleString()} photos
+                    {allPhotos.length.toLocaleString()} {viewMode === 'unseen' ? 'unseen ' : ''}photo{allPhotos.length !== 1 ? 's' : ''} loaded
                     {viewMode === 'unseen' && historyStats.totalPhotosViewed > 0 && (
                       <span className="text-sm text-gray-500 ml-2">
                         ({historyStats.totalPhotosViewed.toLocaleString()} previously viewed)
@@ -163,8 +162,8 @@ export default function PhotoAlbum() {
               )}
               {!hasNextPage && allPhotos.length > 0 && (
                 <p className="text-gray-500">
-                  You've reached the end! All {allPhotos.length.toLocaleString()}{" "}
-                  {viewMode === 'unseen' ? 'unseen ' : ''}photos loaded.
+                  You've reached the end! {allPhotos.length.toLocaleString()}{" "}
+                  {viewMode === 'unseen' ? 'unseen ' : ''}photo{allPhotos.length !== 1 ? 's' : ''} loaded.
                 </p>
               )}
             </div>

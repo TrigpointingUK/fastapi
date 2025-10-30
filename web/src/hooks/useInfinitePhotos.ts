@@ -28,7 +28,6 @@ interface UseInfinitePhotosOptions {
 
 export function useInfinitePhotos(options: UseInfinitePhotosOptions = {}) {
   const { mode = 'unseen' } = options;
-  const viewedRanges = mode === 'unseen' ? getViewedRanges() : [];
   const lastBatchRef = useRef<{ min: number; max: number } | null>(null);
 
   const query = useInfiniteQuery<PhotosResponse>({
@@ -46,15 +45,18 @@ export function useInfinitePhotos(options: UseInfinitePhotosOptions = {}) {
       let items = data.items || [];
       
       // Filter out viewed photos if in 'unseen' mode
+      // Get fresh ranges each time to account for cleared history
       if (mode === 'unseen') {
+        const viewedRanges = getViewedRanges();
         items = items.filter((photo: Photo) => 
           !isPhotoViewed(photo.id, viewedRanges)
         );
       }
 
-      // Track the range of photos in this batch
-      if (items.length > 0) {
-        const photoIds = items.map((p: Photo) => p.id);
+      // Track the range of photos in this batch (before filtering)
+      const originalItems = data.items || [];
+      if (originalItems.length > 0) {
+        const photoIds = originalItems.map((p: Photo) => p.id);
         const min = Math.min(...photoIds);
         const max = Math.max(...photoIds);
         lastBatchRef.current = { min, max };
@@ -80,12 +82,18 @@ export function useInfinitePhotos(options: UseInfinitePhotosOptions = {}) {
   useEffect(() => {
     if (query.data && lastBatchRef.current && mode === 'unseen') {
       const { min, max } = lastBatchRef.current;
-      // Add the range to history after a short delay (user has seen them)
-      const timeoutId = setTimeout(() => {
-        addViewedRange(min, max);
-      }, 2000); // Mark as viewed after 2 seconds
-      
-      return () => clearTimeout(timeoutId);
+      // Only mark as viewed if the range is reasonable (not marking entire database)
+      const rangeSize = max - min + 1;
+      if (rangeSize > 0 && rangeSize <= 100) {
+        // Add the range to history after a short delay (user has seen them)
+        const timeoutId = setTimeout(() => {
+          addViewedRange(min, max);
+        }, 2000); // Mark as viewed after 2 seconds
+        
+        return () => clearTimeout(timeoutId);
+      } else {
+        console.warn(`Skipping invalid photo range: ${min}-${max} (size: ${rangeSize})`);
+      }
     }
   }, [query.data, mode]);
 

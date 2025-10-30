@@ -21,7 +21,7 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-3">
+          <Link to="/" className="flex items-center gap-3 mr-6">
             <img src="/TUK-Logo.svg" alt="Trigpointing UK" className="h-10 w-10" />
             <span className="text-xl font-bold hidden sm:inline">Trigpointing UK</span>
           </Link>
@@ -63,7 +63,7 @@ export default function Header() {
           </nav>
 
           {/* Search Bar - Desktop */}
-          <div className="hidden lg:flex flex-1 max-w-md mx-4">
+          <div className="hidden md:flex flex-1 max-w-md mx-4">
             <input
               type="search"
               placeholder="Search trig points..."
