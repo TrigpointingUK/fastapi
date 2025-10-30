@@ -123,7 +123,7 @@ export default function UserProfile() {
               <img 
                 src={`${apiBase}/v1/users/${displayUserId}/map`}
                 alt={`${user.name}'s trig map`}
-                className="rounded-lg border border-gray-200 w-full xl:w-32 h-auto"
+                className="rounded-lg border border-gray-200 w-full xl:w-48 h-auto"
                 loading="lazy"
               />
             </div>
@@ -137,6 +137,16 @@ export default function UserProfile() {
               editable={isOwnProfile}
               maxLength={30}
             />
+            {((user.firstname || user.surname) || isOwnProfile) && (
+              <EditableField
+                label="Full Name"
+                value={[user.firstname, user.surname].filter(Boolean).join(" ")}
+                onSave={(value) => handleFieldUpdate("fullname", value)}
+                editable={isOwnProfile}
+                placeholder="First Last"
+                maxLength={61}
+              />
+            )}
             {!userId && (
               <EditableField
                 label="Email"
@@ -156,16 +166,6 @@ export default function UserProfile() {
                 editable={isOwnProfile}
                 placeholder="https://example.com"
                 maxLength={255}
-              />
-            )}
-            {((user.firstname || user.surname) || isOwnProfile) && (
-              <EditableField
-                label="Full Name"
-                value={[user.firstname, user.surname].filter(Boolean).join(" ")}
-                onSave={(value) => handleFieldUpdate("fullname", value)}
-                editable={isOwnProfile}
-                placeholder="First Last"
-                maxLength={61}
               />
             )}
           </div>
