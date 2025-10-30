@@ -83,48 +83,47 @@ export default function UserProfile() {
       <div className="max-w-6xl mx-auto">
         {/* Header Section */}
         <Card className="mb-6">
-          <div className="flex items-start gap-6 flex-wrap lg:flex-nowrap">
-            {/* Left side: User info and stats */}
-            <div className="flex-1 min-w-0">
-              <div className="mb-4">
-                <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                  {user.name}
-                </h1>
-                <p className="text-gray-600">
-                  Member since {memberSince}
-                </p>
-              </div>
-              
-              {user.stats && (
-                <div className="flex gap-8 text-center">
-                  <div>
-                    <div className="text-2xl font-bold text-trig-green-600">
-                      {user.stats.total_trigs_logged.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-600">Trigs Logged</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-trig-green-600">
-                      {user.stats.total_logs.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-600">Total Logs</div>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-trig-green-600">
-                      {user.stats.total_photos.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-600">Photos</div>
-                  </div>
-                </div>
-              )}
+          <div className="flex items-start gap-6 flex-wrap xl:flex-nowrap">
+            {/* Left: Username and Member Since */}
+            <div className="flex-shrink-0">
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                {user.name}
+              </h1>
+              <p className="text-gray-600">
+                Member since {memberSince}
+              </p>
             </div>
 
-            {/* Right side: Map */}
-            <div className="w-full lg:w-auto flex-shrink-0">
+            {/* Middle: Statistics */}
+            {user.stats && (
+              <div className="flex gap-8 text-center flex-1 min-w-0">
+                <div>
+                  <div className="text-2xl font-bold text-trig-green-600">
+                    {user.stats.total_trigs_logged.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-600">Trigs Logged</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-trig-green-600">
+                    {user.stats.total_logs.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-600">Total Logs</div>
+                </div>
+                <div>
+                  <div className="text-2xl font-bold text-trig-green-600">
+                    {user.stats.total_photos.toLocaleString()}
+                  </div>
+                  <div className="text-sm text-gray-600">Photos</div>
+                </div>
+              </div>
+            )}
+
+            {/* Right: Map */}
+            <div className="w-full xl:w-auto flex-shrink-0">
               <img 
                 src={`${apiBase}/v1/users/${displayUserId}/map`}
                 alt={`${user.name}'s trig map`}
-                className="rounded-lg border border-gray-200 w-full lg:w-32 h-auto"
+                className="rounded-lg border border-gray-200 w-full xl:w-32 h-auto"
                 loading="lazy"
               />
             </div>
@@ -172,7 +171,7 @@ export default function UserProfile() {
           </div>
 
           {(user.about || isOwnProfile) && (
-            <div className="mt-6 flex gap-6 flex-wrap lg:flex-nowrap">
+            <div className="mt-6 flex gap-6 flex-wrap xl:flex-nowrap">
               <div className="flex-1 min-w-0">
                 <EditableField
                   label="About"
@@ -184,12 +183,12 @@ export default function UserProfile() {
                 />
               </div>
               
-              {/* Badge on the right side */}
-              <div className="w-full lg:w-auto flex-shrink-0 flex items-start">
+              {/* Badge on the right side - 1/3 width container, badge uses half */}
+              <div className="w-full xl:w-1/3 flex-shrink-0 flex justify-center items-start">
                 <img 
                   src={`${apiBase}/v1/users/${displayUserId}/badge`}
                   alt={`${user.name}'s badge`}
-                  className="rounded border border-gray-200 w-full lg:w-72 h-auto"
+                  className="rounded border border-gray-200 w-1/2 xl:w-1/2 h-auto max-w-xs"
                   loading="lazy"
                 />
               </div>
