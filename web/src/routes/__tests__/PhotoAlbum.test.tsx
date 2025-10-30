@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter } from 'react-router-dom';
 import PhotoAlbum from '../PhotoAlbum';
@@ -15,7 +16,7 @@ vi.mock('../../lib/photoHistory', () => ({
 }));
 
 // Mock fetch
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -36,7 +37,7 @@ const createWrapper = () => {
 describe('PhotoAlbum Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(global.fetch).mockClear();
+    vi.mocked(globalThis.fetch).mockClear();
     localStorage.clear();
   });
 
@@ -51,7 +52,7 @@ describe('PhotoAlbum Integration', () => {
   };
 
   it('should render Photo Gallery heading', async () => {
-    vi.mocked(global.fetch).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockPhotosResponse,
     } as Response);
@@ -61,7 +62,7 @@ describe('PhotoAlbum Integration', () => {
   });
 
   it('should show loading state initially', () => {
-    vi.mocked(global.fetch).mockImplementation(() => new Promise(() => {})); // Never resolves
+    vi.mocked(globalThis.fetch).mockImplementation(() => new Promise(() => {})); // Never resolves
     
     render(<PhotoAlbum />, { wrapper: createWrapper() });
     // Use getAllByText since "Loading photos..." appears in both header and spinner
@@ -69,10 +70,10 @@ describe('PhotoAlbum Integration', () => {
   });
 
   it('should display photos after loading', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockPhotosResponse,
-    });
+    } as Response);
 
     render(<PhotoAlbum />, { wrapper: createWrapper() });
 
@@ -83,10 +84,10 @@ describe('PhotoAlbum Integration', () => {
   });
 
   it('should display photo count', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockPhotosResponse,
-    });
+    } as Response);
 
     render(<PhotoAlbum />, { wrapper: createWrapper() });
 
@@ -96,10 +97,10 @@ describe('PhotoAlbum Integration', () => {
   });
 
   it('should have Unseen Photos selected by default', () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockPhotosResponse,
-    });
+    } as Response);
 
     render(<PhotoAlbum />, { wrapper: createWrapper() });
     
@@ -109,10 +110,10 @@ describe('PhotoAlbum Integration', () => {
   });
 
   it('should switch to All Photos mode when clicked', async () => {
-    (global.fetch as any).mockResolvedValue({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
       json: async () => mockPhotosResponse,
-    });
+    } as Response);
 
     render(<PhotoAlbum />, { wrapper: createWrapper() });
 
@@ -131,10 +132,10 @@ describe('PhotoAlbum Integration', () => {
       totalPhotosViewed: 50,
     });
 
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockPhotosResponse,
-    });
+    } as Response);
 
     render(<PhotoAlbum />, { wrapper: createWrapper() });
 
@@ -149,10 +150,10 @@ describe('PhotoAlbum Integration', () => {
       totalPhotosViewed: 0,
     });
 
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockPhotosResponse,
-    });
+    } as Response);
 
     render(<PhotoAlbum />, { wrapper: createWrapper() });
 
@@ -167,10 +168,10 @@ describe('PhotoAlbum Integration', () => {
       totalPhotosViewed: 50,
     });
 
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockPhotosResponse,
-    });
+    } as Response);
 
     render(<PhotoAlbum />, { wrapper: createWrapper() });
 
@@ -180,7 +181,7 @@ describe('PhotoAlbum Integration', () => {
   });
 
   it('should display error state when fetch fails', async () => {
-    (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+    vi.mocked(globalThis.fetch).mockRejectedValueOnce(new Error('Network error'));
 
     render(<PhotoAlbum />, { wrapper: createWrapper() });
 
@@ -190,10 +191,10 @@ describe('PhotoAlbum Integration', () => {
   });
 
   it('should show empty state when all photos are viewed (unseen mode)', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({ ...mockPhotosResponse, items: [] }),
-    });
+    } as Response);
 
     render(<PhotoAlbum />, { wrapper: createWrapper() });
 
@@ -208,10 +209,10 @@ describe('PhotoAlbum Integration', () => {
       totalPhotosViewed: 50,
     });
 
-    (global.fetch as any).mockResolvedValue({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
       json: async () => mockPhotosResponse,
-    });
+    } as Response);
 
     // Mock window.confirm
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
@@ -237,10 +238,10 @@ describe('PhotoAlbum Integration', () => {
       totalPhotosViewed: 50,
     });
 
-    (global.fetch as any).mockResolvedValue({
+    vi.mocked(globalThis.fetch).mockResolvedValue({
       ok: true,
       json: async () => mockPhotosResponse,
-    });
+    } as Response);
 
     const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
 

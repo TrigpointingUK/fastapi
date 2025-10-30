@@ -13,7 +13,7 @@ vi.mock('../../lib/photoHistory', () => ({
 }));
 
 // Mock fetch
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();
 
 const createWrapper = () => {
   const queryClient = new QueryClient({
@@ -31,7 +31,7 @@ const createWrapper = () => {
 describe('useInfinitePhotos', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(global.fetch).mockClear();
+    vi.mocked(globalThis.fetch).mockClear();
   });
 
   it('should fetch photos successfully', async () => {
@@ -40,7 +40,7 @@ describe('useInfinitePhotos', () => {
       { id: 2, log_id: 2, user_id: 2, icon_url: 'icon2.jpg', photo_url: 'photo2.jpg', caption: 'Photo 2' },
     ];
 
-    vi.mocked(global.fetch).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         items: mockPhotos,
@@ -69,7 +69,7 @@ describe('useInfinitePhotos', () => {
     // Mock that photo with id 2 is viewed
     vi.mocked(photoHistory.isPhotoViewed).mockImplementation((id) => id === 2);
 
-    vi.mocked(global.fetch).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         items: mockPhotos,
@@ -98,7 +98,7 @@ describe('useInfinitePhotos', () => {
     // Mock that photo with id 2 is viewed
     vi.mocked(photoHistory.isPhotoViewed).mockImplementation((id) => id === 2);
 
-    vi.mocked(global.fetch).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         items: mockPhotos,
@@ -119,7 +119,7 @@ describe('useInfinitePhotos', () => {
   });
 
   it('should handle fetch errors', async () => {
-    vi.mocked(global.fetch).mockRejectedValueOnce(new Error('Network error'));
+    vi.mocked(globalThis.fetch).mockRejectedValueOnce(new Error('Network error'));
 
     const { result } = renderHook(() => useInfinitePhotos(), {
       wrapper: createWrapper(),
@@ -130,7 +130,7 @@ describe('useInfinitePhotos', () => {
   });
 
   it('should build correct API URL with pagination', async () => {
-    vi.mocked(global.fetch).mockResolvedValueOnce({
+    vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         items: [],
@@ -143,8 +143,8 @@ describe('useInfinitePhotos', () => {
       wrapper: createWrapper(),
     });
 
-    await waitFor(() => expect(global.fetch).toHaveBeenCalled());
-    expect(global.fetch).toHaveBeenCalledWith(
+    await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
+    expect(globalThis.fetch).toHaveBeenCalledWith(
       'http://localhost:8000/v1/photos?limit=24&skip=0'
     );
   });

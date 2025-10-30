@@ -1,6 +1,14 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom/vitest';
 import PhotoGrid from '../PhotoGrid';
+
+interface Photo {
+  id: number;
+  icon_url: string;
+  photo_url: string;
+  caption: string;
+}
 
 describe('PhotoGrid', () => {
   const mockPhotos = [

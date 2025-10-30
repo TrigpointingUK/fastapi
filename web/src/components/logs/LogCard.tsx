@@ -104,16 +104,16 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
         {/* Comment and Photos - Side by Side */}
         {(log.comment || (log.photos && log.photos.length > 0)) && (
           <div className="flex gap-4">
-            {/* Comment - Left 50% */}
-            <div className="flex-1 min-w-0">
+            {/* Comment - Left 33% */}
+            <div className="flex-[2] min-w-0">
               {log.comment && (
                 <p className="text-gray-700 text-sm leading-relaxed">{log.comment}</p>
               )}
             </div>
 
-            {/* Photos - Right 50% */}
+            {/* Photos - Right 66% */}
             {log.photos && log.photos.length > 0 && (
-              <div className="flex-1 flex gap-2 overflow-x-auto pb-2">
+              <div className="flex-[1] flex gap-2 overflow-x-auto pb-2">
                 {log.photos.slice(0, 6).map((photo) => (
                   <img
                     key={photo.id}
