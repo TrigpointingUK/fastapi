@@ -67,7 +67,7 @@ describe('useInfinitePhotos', () => {
     ];
 
     // Mock that photo with id 2 is viewed
-    vi.mocked(photoHistory.isPhotoViewed).mockImplementation((id) => id === 2);
+    vi.mocked(photoHistory.isPhotoViewed).mockImplementation((id: number) => id === 2);
 
     vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
@@ -96,7 +96,7 @@ describe('useInfinitePhotos', () => {
     ];
 
     // Mock that photo with id 2 is viewed
-    vi.mocked(photoHistory.isPhotoViewed).mockImplementation((id) => id === 2);
+    vi.mocked(photoHistory.isPhotoViewed).mockImplementation((id: number) => id === 2);
 
     vi.mocked(globalThis.fetch).mockResolvedValueOnce({
       ok: true,
