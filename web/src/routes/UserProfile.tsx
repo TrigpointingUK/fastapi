@@ -124,7 +124,7 @@ export default function UserProfile() {
               <img 
                 src={`${apiBase}/v1/users/${displayUserId}/map`}
                 alt={`${user.name}'s trig map`}
-                className="rounded-lg border border-gray-200 w-full lg:w-64 h-auto"
+                className="rounded-lg border border-gray-200 w-full lg:w-32 h-auto"
                 loading="lazy"
               />
             </div>
@@ -189,7 +189,7 @@ export default function UserProfile() {
                 <img 
                   src={`${apiBase}/v1/users/${displayUserId}/badge`}
                   alt={`${user.name}'s badge`}
-                  className="rounded border border-gray-200 w-full lg:w-48 h-auto"
+                  className="rounded border border-gray-200 w-full lg:w-72 h-auto"
                   loading="lazy"
                 />
               </div>
