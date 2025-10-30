@@ -31,7 +31,7 @@ const createWrapper = () => {
 describe('useInfinitePhotos', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockClear();
+    vi.mocked(global.fetch).mockClear();
   });
 
   it('should fetch photos successfully', async () => {
@@ -40,14 +40,14 @@ describe('useInfinitePhotos', () => {
       { id: 2, log_id: 2, user_id: 2, icon_url: 'icon2.jpg', photo_url: 'photo2.jpg', caption: 'Photo 2' },
     ];
 
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         items: mockPhotos,
         total: 100,
         pagination: { has_more: true },
       }),
-    });
+    } as Response);
 
     const { result } = renderHook(() => useInfinitePhotos(), {
       wrapper: createWrapper(),
@@ -69,14 +69,14 @@ describe('useInfinitePhotos', () => {
     // Mock that photo with id 2 is viewed
     vi.mocked(photoHistory.isPhotoViewed).mockImplementation((id) => id === 2);
 
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         items: mockPhotos,
         total: 100,
         pagination: { has_more: false },
       }),
-    });
+    } as Response);
 
     const { result } = renderHook(() => useInfinitePhotos({ mode: 'unseen' }), {
       wrapper: createWrapper(),
@@ -98,14 +98,14 @@ describe('useInfinitePhotos', () => {
     // Mock that photo with id 2 is viewed
     vi.mocked(photoHistory.isPhotoViewed).mockImplementation((id) => id === 2);
 
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         items: mockPhotos,
         total: 100,
         pagination: { has_more: false },
       }),
-    });
+    } as Response);
 
     const { result } = renderHook(() => useInfinitePhotos({ mode: 'all' }), {
       wrapper: createWrapper(),
@@ -119,7 +119,7 @@ describe('useInfinitePhotos', () => {
   });
 
   it('should handle fetch errors', async () => {
-    (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+    vi.mocked(global.fetch).mockRejectedValueOnce(new Error('Network error'));
 
     const { result } = renderHook(() => useInfinitePhotos(), {
       wrapper: createWrapper(),
@@ -130,14 +130,14 @@ describe('useInfinitePhotos', () => {
   });
 
   it('should build correct API URL with pagination', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => ({
         items: [],
         total: 0,
         pagination: { has_more: false },
       }),
-    });
+    } as Response);
 
     renderHook(() => useInfinitePhotos(), {
       wrapper: createWrapper(),

@@ -301,7 +301,7 @@ tf-fmt: ## Format Terraform files
 pre-commit: ## Run pre-commit hooks
 	pre-commit run --all-files
 
-ci: terraform-format-check format-check lint type-check security test ## Run all CI checks
+ci: terraform-format-check format-check lint type-check security test web-lint web-type-check web-test ## Run all CI checks
 
 # Web application targets
 web-install: ## Install web application dependencies

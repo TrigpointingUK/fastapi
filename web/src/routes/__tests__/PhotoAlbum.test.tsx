@@ -36,7 +36,7 @@ const createWrapper = () => {
 describe('PhotoAlbum Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    (global.fetch as any).mockClear();
+    vi.mocked(global.fetch).mockClear();
     localStorage.clear();
   });
 
@@ -51,17 +51,17 @@ describe('PhotoAlbum Integration', () => {
   };
 
   it('should render Photo Gallery heading', async () => {
-    (global.fetch as any).mockResolvedValueOnce({
+    vi.mocked(global.fetch).mockResolvedValueOnce({
       ok: true,
       json: async () => mockPhotosResponse,
-    });
+    } as Response);
 
     render(<PhotoAlbum />, { wrapper: createWrapper() });
     expect(screen.getByText('Photo Gallery')).toBeInTheDocument();
   });
 
   it('should show loading state initially', () => {
-    (global.fetch as any).mockImplementation(() => new Promise(() => {})); // Never resolves
+    vi.mocked(global.fetch).mockImplementation(() => new Promise(() => {})); // Never resolves
     
     render(<PhotoAlbum />, { wrapper: createWrapper() });
     // Use getAllByText since "Loading photos..." appears in both header and spinner

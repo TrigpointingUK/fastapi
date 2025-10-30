@@ -63,7 +63,7 @@ describe('PhotoGrid', () => {
   });
 
   it('should handle null photos array', () => {
-    render(<PhotoGrid photos={null as any} />);
+    render(<PhotoGrid photos={null as unknown as Photo[]} />);
     expect(screen.getByText('No photos found')).toBeInTheDocument();
   });
 
