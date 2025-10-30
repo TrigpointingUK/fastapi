@@ -21,7 +21,15 @@ export default function UserProfile() {
 
   const handleFieldUpdate = async (field: string, value: string) => {
     try {
-      await updateUserProfile({ [field]: value }, getAccessTokenSilently);
+      // If updating full name, split into firstname and surname
+      if (field === "fullname") {
+        const nameParts = value.trim().split(/\s+/);
+        const firstname = nameParts[0] || "";
+        const surname = nameParts.slice(1).join(" ") || "";
+        await updateUserProfile({ firstname, surname }, getAccessTokenSilently);
+      } else {
+        await updateUserProfile({ [field]: value }, getAccessTokenSilently);
+      }
       // Invalidate to refetch
       queryClient.invalidateQueries({ queryKey: ["user", "profile"] });
     } catch (error) {
@@ -134,22 +142,14 @@ export default function UserProfile() {
                 maxLength={255}
               />
             )}
-            {(user.firstname || isOwnProfile) && (
+            {((user.firstname || user.surname) || isOwnProfile) && (
               <EditableField
-                label="First Name"
-                value={user.firstname}
-                onSave={(value) => handleFieldUpdate("firstname", value)}
+                label="Full Name"
+                value={[user.firstname, user.surname].filter(Boolean).join(" ")}
+                onSave={(value) => handleFieldUpdate("fullname", value)}
                 editable={isOwnProfile}
-                maxLength={30}
-              />
-            )}
-            {(user.surname || isOwnProfile) && (
-              <EditableField
-                label="Surname"
-                value={user.surname}
-                onSave={(value) => handleFieldUpdate("surname", value)}
-                editable={isOwnProfile}
-                maxLength={30}
+                placeholder="First Last"
+                maxLength={61}
               />
             )}
           </div>
