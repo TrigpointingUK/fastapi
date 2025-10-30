@@ -13,6 +13,7 @@ from api.api.deps import get_db, require_scopes
 from api.api.lifecycle import openapi_lifecycle
 from api.crud import user as user_crud
 from api.crud.user import update_user_email
+from api.models.tphoto import TPhoto
 from api.models.trig import Trig
 from api.schemas.user import (
     LegacyLoginRequest,
@@ -188,10 +189,17 @@ def login_for_access_token(
                 .distinct()
                 .count()
             )
+            total_photos = (
+                db.query(TPhoto)
+                .join(user_crud.TLog, TPhoto.tlog_id == user_crud.TLog.id)
+                .filter(user_crud.TLog.user_id == user.id)
+                .count()
+            )
 
             result.stats = UserStats(
                 total_logs=int(total_logs),
                 total_trigs_logged=int(total_trigs),
+                total_photos=int(total_photos),
             )
 
         if "breakdown" in tokens:

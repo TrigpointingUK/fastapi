@@ -62,10 +62,11 @@ class TestUserStatsIntegration:
         """Test that UserStats schema has basic fields only."""
         from api.schemas.user import UserStats
 
-        stats = UserStats(total_logs=100, total_trigs_logged=50)
+        stats = UserStats(total_logs=100, total_trigs_logged=50, total_photos=25)
 
         assert stats.total_logs == 100
         assert stats.total_trigs_logged == 50
+        assert stats.total_photos == 25
 
     def test_user_breakdown_schema_fields(self):
         """Test that UserBreakdown schema has all breakdown fields."""

@@ -17,7 +17,7 @@ export default function StarRating({ rating, maxRating = 5, size = "md" }: StarR
         <svg
           key={index}
           className={`${sizeClasses[size]} ${
-            index < rating ? "text-yellow-400 fill-current" : "text-gray-300"
+            index < rating ? "text-green-700 fill-current" : "text-gray-300"
           }`}
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 20 20"

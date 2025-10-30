@@ -2,11 +2,11 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="bg-gray-800 text-gray-300 sticky bottom-0 z-40 border-t border-gray-700">
+    <footer className="bg-green-700 text-gray-300 sticky bottom-0 z-40 border-t border-green-500">
       <div className="container mx-auto px-4 py-3">
         {/* Top row: Heading and description */}
         <div className="text-center mb-2">
-          <h3 className="text-white font-bold text-sm inline mr-2">Trigpointing UK</h3>
+          <h3 className="text-white font-bold text-sm inline mr-2">TrigpointingUK</h3>
           <span className="text-xs">
             The UK's premier resource for OS triangulation pillars and survey markers.
           </span>

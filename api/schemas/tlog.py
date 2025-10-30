@@ -30,10 +30,12 @@ class TLogBase(BaseModel):
 
 
 class TLogResponse(TLogBase):
-    pass
+    # Denormalized fields for convenience (populated via JOINs)
+    trig_name: Optional[str] = None
+    user_name: Optional[str] = None
 
 
-class TLogWithIncludes(TLogBase):
+class TLogWithIncludes(TLogResponse):
     # Optional includes for expanded responses
     photos: Optional[list[TPhotoResponse]] = None
 

@@ -123,7 +123,7 @@ describe('LogCard', () => {
     
     const links = screen.getAllByRole('link');
     const trigLink = links.find(link => link.getAttribute('href') === '/trig/12345');
-    const userLink = links.find(link => link.getAttribute('href') === '/user/100');
+    const userLink = links.find(link => link.getAttribute('href') === '/profile/100');
     
     expect(trigLink).toBeInTheDocument();
     expect(userLink).toBeInTheDocument();

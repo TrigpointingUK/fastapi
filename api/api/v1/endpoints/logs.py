@@ -4,7 +4,7 @@ Logs endpoints under /v1/logs (create, read, update, delete) and nested photos.
 Only PATCH (no PUT). DELETE is hard-delete for logs and soft-deletes their photos.
 """
 
-from typing import Optional
+from typing import Dict, List, Optional
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -14,6 +14,7 @@ from api.api.lifecycle import openapi_lifecycle
 from api.crud import tlog as tlog_crud
 from api.crud import tphoto as tphoto_crud
 from api.models.server import Server
+from api.models.trig import Trig
 from api.models.user import TLog as TLogModel
 from api.models.user import User
 from api.schemas.tlog import TLogCreate, TLogResponse, TLogUpdate, TLogWithIncludes
@@ -21,6 +22,43 @@ from api.schemas.tphoto import TPhotoResponse
 from api.utils.url import join_url
 
 router = APIRouter()
+
+
+def enrich_logs_with_names(db: Session, logs: List[TLogModel]) -> List[Dict]:
+    """
+    Add trig_name and user_name to logs using bulk queries to avoid N+1.
+    Returns list of dictionaries.
+    """
+    if not logs:
+        return []
+
+    # Bulk fetch trig names and user names
+    trig_ids = list(set(log.trig_id for log in logs))
+    user_ids = list(set(log.user_id for log in logs))
+
+    trigs = (
+        db.query(Trig.id, Trig.name).filter(Trig.id.in_(trig_ids)).all()
+        if trig_ids
+        else []
+    )
+    users = (
+        db.query(User.id, User.name).filter(User.id.in_(user_ids)).all()
+        if user_ids
+        else []
+    )
+
+    trig_names = {t.id: t.name for t in trigs}
+    user_names = {u.id: u.name for u in users}
+
+    # Convert to dicts and add denormalized fields
+    result = []
+    for log in logs:
+        log_dict = TLogResponse.model_validate(log).model_dump()
+        log_dict["trig_name"] = trig_names.get(log.trig_id)
+        log_dict["user_name"] = user_names.get(log.user_id)
+        result.append(log_dict)
+
+    return result
 
 
 @router.get("", openapi_extra=openapi_lifecycle("beta"))
@@ -39,7 +77,9 @@ def list_logs(
         db, trig_id=trig_id, user_id=user_id, order=order, skip=skip, limit=limit
     )
     total = tlog_crud.count_logs_filtered(db, trig_id=trig_id, user_id=user_id)
-    items_serialized = [TLogResponse.model_validate(i).model_dump() for i in items]
+
+    # Add denormalized trig_name and user_name fields
+    items_serialized = enrich_logs_with_names(db, items)
 
     # Handle includes
     if include:
@@ -127,7 +167,10 @@ def get_log(
     log = tlog_crud.get_log_by_id(db, log_id)
     if not log:
         raise HTTPException(status_code=404, detail="Log not found")
-    base = TLogResponse.model_validate(log).model_dump()
+
+    # Use helper to add denormalized fields
+    log_dicts = enrich_logs_with_names(db, [log])
+    base = log_dicts[0] if log_dicts else TLogResponse.model_validate(log).model_dump()
 
     photos_out: Optional[list[TPhotoResponse]] = None
     if include:

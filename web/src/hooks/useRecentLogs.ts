@@ -10,6 +10,8 @@ interface Log {
   id: number;
   trig_id: number;
   user_id: number;
+  trig_name?: string;
+  user_name?: string;
   date: string;
   time: string;
   condition: string;

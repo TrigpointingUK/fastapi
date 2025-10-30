@@ -48,14 +48,14 @@ def test_update_pii_without_scope_returns_403(db: Session, test_user):
         assert "api:read-pii" in response.json()["detail"]
 
 
-def test_update_firstname_without_scope_returns_403(db: Session, test_user):
-    """Test that updating firstname without api:read-pii scope returns 403."""
+def test_update_firstname_without_scope_succeeds(db: Session, test_user):
+    """Test that updating firstname without api:read-pii scope succeeds (not PII)."""
     with patch("api.api.deps.auth0_validator.validate_auth0_token") as mock:
         mock.return_value = {
             "token_type": "auth0",
             "auth0_user_id": test_user.auth0_user_id,
             "sub": test_user.auth0_user_id,
-            "scope": "api:write",
+            "scope": "api:write",  # No api:read-pii needed
         }
 
         response = client.patch(
@@ -64,18 +64,18 @@ def test_update_firstname_without_scope_returns_403(db: Session, test_user):
             headers={"Authorization": "Bearer mock_token"},
         )
 
-        assert response.status_code == 403
-        assert "api:read-pii" in response.json()["detail"]
+        assert response.status_code == 200
+        assert response.json()["firstname"] == "John"
 
 
-def test_update_surname_without_scope_returns_403(db: Session, test_user):
-    """Test that updating surname without api:read-pii scope returns 403."""
+def test_update_surname_without_scope_succeeds(db: Session, test_user):
+    """Test that updating surname without api:read-pii scope succeeds (not PII)."""
     with patch("api.api.deps.auth0_validator.validate_auth0_token") as mock:
         mock.return_value = {
             "token_type": "auth0",
             "auth0_user_id": test_user.auth0_user_id,
             "sub": test_user.auth0_user_id,
-            "scope": "api:write",
+            "scope": "api:write",  # No api:read-pii needed
         }
 
         response = client.patch(
@@ -84,8 +84,8 @@ def test_update_surname_without_scope_returns_403(db: Session, test_user):
             headers={"Authorization": "Bearer mock_token"},
         )
 
-        assert response.status_code == 403
-        assert "api:read-pii" in response.json()["detail"]
+        assert response.status_code == 200
+        assert response.json()["surname"] == "Doe"
 
 
 def test_update_non_pii_fields_without_pii_scope_succeeds(db: Session, test_user):

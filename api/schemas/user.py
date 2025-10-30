@@ -28,6 +28,7 @@ class UserResponse(BaseModel):
 class UserStats(BaseModel):
     total_logs: int
     total_trigs_logged: int
+    total_photos: int
 
 
 class UserBreakdown(BaseModel):

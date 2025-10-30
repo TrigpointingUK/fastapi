@@ -13,6 +13,8 @@ interface Log {
   id: number;
   trig_id: number;
   user_id: number;
+  trig_name?: string;
+  user_name?: string;
   date: string;
   time: string;
   condition: string;
@@ -23,6 +25,7 @@ interface Log {
 
 interface LogCardProps {
   log: Log;
+  // Deprecated: use log.trig_name and log.user_name instead
   userName?: string;
   trigName?: string;
 }
@@ -43,6 +46,10 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
     year: "numeric",
   });
 
+  // Use denormalized fields if available, otherwise fall back to props
+  const displayTrigName = log.trig_name || trigName;
+  const displayUserName = log.user_name || userName;
+
   return (
     <Card className="hover:shadow-lg transition-shadow">
       <div className="flex flex-col gap-3">
@@ -53,23 +60,38 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
               to={`/trig/${log.trig_id}`}
               className="text-lg font-semibold text-trig-green-600 hover:text-trig-green-700 hover:underline"
             >
-              {trigName || `TP${log.trig_id}`}
+              TP{log.trig_id}
+              {displayTrigName && (
+                <>
+                  <span className="text-gray-400 mx-2">·</span>
+                  <span className="font-normal text-gray-700">{displayTrigName}</span>
+                </>
+              )}
             </Link>
             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
               <span>
                 by{" "}
-                <Link
-                  to={`/user/${log.user_id}`}
-                  className="text-trig-green-600 hover:underline"
-                >
-                  {userName || `User #${log.user_id}`}
-                </Link>
+                {displayUserName ? (
+                  <Link
+                    to={`/profile/${log.user_id}`}
+                    className="text-trig-green-600 hover:underline"
+                  >
+                    {displayUserName}
+                  </Link>
+                ) : (
+                  <Link
+                    to={`/profile/${log.user_id}`}
+                    className="text-trig-green-600 hover:underline"
+                  >
+                    User #{log.user_id}
+                  </Link>
+                )}
               </span>
               <span className="text-gray-400">·</span>
               <Badge variant={condition.variant}>{condition.label}</Badge>
               <div className="flex items-center gap-1">
                 <StarRating rating={log.score} size="sm" />
-                <span className="text-sm text-gray-600">({log.score * 2}/10)</span>
+                <span className="text-sm text-gray-600">({log.score}/10)</span>
               </div>
               <span className="text-gray-400">·</span>
               <span className="text-gray-700">{formattedDate}</span>

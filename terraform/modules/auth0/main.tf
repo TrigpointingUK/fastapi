@@ -148,7 +148,7 @@ resource "auth0_resource_server_scopes" "api_scopes" {
   }
   scopes {
     name        = "api:read-pii"
-    description = "Read and write user PII (email, realName) for self"
+    description = "Read and write sensitive PII (email) for self"
   }
 }
 

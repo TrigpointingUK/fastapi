@@ -25,9 +25,9 @@ from api.crud import tlog as tlog_crud
 from api.crud import tphoto as tphoto_crud
 from api.crud import user as user_crud
 from api.models.server import Server
+from api.models.tphoto import TPhoto
 from api.models.trig import Trig
 from api.models.user import User
-from api.schemas.tlog import TLogResponse
 from api.schemas.tphoto import TPhotoResponse
 from api.schemas.user import (
     UserBreakdown,
@@ -220,10 +220,17 @@ def get_current_user_profile(
                 .distinct()
                 .count()
             )
+            total_photos = (
+                db.query(TPhoto)
+                .join(user_crud.TLog, TPhoto.tlog_id == user_crud.TLog.id)
+                .filter(user_crud.TLog.user_id == current_user.id)
+                .count()
+            )
 
             result.stats = UserStats(
                 total_logs=int(total_logs),
                 total_trigs_logged=int(total_trigs),
+                total_photos=int(total_photos),
             )
 
         if "breakdown" in tokens:
@@ -337,8 +344,9 @@ def update_current_user_profile(
     # Get update data
     update_data = user_updates.model_dump(exclude_unset=True)
 
-    # Verify api:read-pii scope for PII updates
-    if any(field in update_data for field in ["email", "firstname", "surname"]):
+    # Verify api:read-pii scope for email updates only
+    # firstname and surname are part of the basic profile, not PII
+    if "email" in update_data:
         token_payload = getattr(current_user, "_token_payload", None)
         if not token_payload:
             raise HTTPException(status_code=403, detail="Access denied")
@@ -349,7 +357,7 @@ def update_current_user_profile(
         if "api:read-pii" not in scopes:
             raise HTTPException(
                 status_code=403,
-                detail="Missing required scope: api:read-pii for PII updates",
+                detail="Missing required scope: api:read-pii for email updates",
             )
 
     if not update_data:
@@ -633,10 +641,17 @@ def get_user(
             .distinct()
             .count()
         )
+        total_photos = (
+            db.query(TPhoto)
+            .join(user_crud.TLog, TPhoto.tlog_id == user_crud.TLog.id)
+            .filter(user_crud.TLog.user_id == user_id)
+            .count()
+        )
 
         result.stats = UserStats(
             total_logs=int(total_logs),
             total_trigs_logged=int(total_trigs),
+            total_photos=int(total_photos),
         )
 
     if "breakdown" in tokens:
@@ -792,6 +807,14 @@ def list_users(
                 .all()
             )
 
+            total_photos_query = (
+                db.query(user_crud.TLog.user_id, func.count(TPhoto.id))
+                .join(TPhoto, TPhoto.tlog_id == user_crud.TLog.id)
+                .filter(user_crud.TLog.user_id.in_(user_ids))
+                .group_by(user_crud.TLog.user_id)
+                .all()
+            )
+
             # Convert to dictionaries for fast lookup
             logs_by_user: Dict[int, int] = {
                 user_id: count for user_id, count in total_logs_query
@@ -799,11 +822,15 @@ def list_users(
             trigs_by_user: Dict[int, int] = {
                 user_id: count for user_id, count in total_trigs_query
             }
+            photos_by_user: Dict[int, int] = {
+                user_id: count for user_id, count in total_photos_query
+            }
 
             for user_id in user_ids:
                 user_stats[user_id] = UserStats(
                     total_logs=logs_by_user.get(user_id, 0),
                     total_trigs_logged=trigs_by_user.get(user_id, 0),
+                    total_photos=photos_by_user.get(user_id, 0),
                 )
 
     # Serialize users with optional stats
@@ -841,7 +868,11 @@ def list_logs_for_user(
 ):
     items = tlog_crud.list_logs_filtered(db, user_id=user_id, skip=skip, limit=limit)
     total = tlog_crud.count_logs_filtered(db, user_id=user_id)
-    items_serialized = [TLogResponse.model_validate(i).model_dump() for i in items]
+
+    # Import helper from logs endpoint
+    from api.api.v1.endpoints.logs import enrich_logs_with_names
+
+    items_serialized = enrich_logs_with_names(db, items)
     has_more = (skip + len(items)) < total
     base = f"/v1/users/{user_id}/logs"
     self_link = base + f"?limit={limit}&skip={skip}"

@@ -34,9 +34,10 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
       authorizationParams={{
         audience,
         redirect_uri: redirectUri,
+        scope: "openid profile email api:write api:read-pii",
       }}
       useRefreshTokens
-      cacheLocation="memory"
+      cacheLocation="localstorage"
       onRedirectCallback={(appState) => {
         console.log('Auth0 redirect callback:', appState);
       }}

@@ -22,7 +22,6 @@ from api.crud import tphoto as tphoto_crud
 from api.crud import trig as trig_crud
 from api.crud import trigstats as trigstats_crud
 from api.models.server import Server
-from api.schemas.tlog import TLogResponse
 from api.schemas.tphoto import TPhotoResponse
 from api.schemas.trig import (
     TrigDetails,
@@ -342,7 +341,11 @@ def list_logs_for_trig(
 ):
     items = tlog_crud.list_logs_filtered(db, trig_id=trig_id, skip=skip, limit=limit)
     total = tlog_crud.count_logs_filtered(db, trig_id=trig_id)
-    items_serialized = [TLogResponse.model_validate(i).model_dump() for i in items]
+
+    # Import helper from logs endpoint
+    from api.api.v1.endpoints.logs import enrich_logs_with_names
+
+    items_serialized = enrich_logs_with_names(db, items)
 
     # Handle includes
     if include:
