@@ -89,10 +89,11 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
               </span>
               <span className="text-gray-400">·</span>
               <Badge variant={condition.variant}>{condition.label}</Badge>
-              <div className="flex items-center gap-1">
-                <StarRating rating={log.score} size="sm" />
-                <span className="text-sm text-gray-600">({log.score}/10)</span>
-              </div>
+              <StarRating 
+                rating={log.score / 2} 
+                size="sm" 
+                title={`${log.score}/10`}
+              />
               <span className="text-gray-400">·</span>
               <span className="text-gray-700">{formattedDate}</span>
               <span className="text-gray-500 text-xs">{log.time}</span>
