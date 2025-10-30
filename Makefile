@@ -314,7 +314,7 @@ web-build: ## Build web application for production
 	cd web && npm run build
 
 web-test: ## Run web application tests
-	cd web && npm test
+	cd web && npm run test:run
 
 web-lint: ## Lint web application code
 	cd web && npm run lint

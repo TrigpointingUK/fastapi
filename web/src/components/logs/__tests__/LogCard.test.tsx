@@ -28,7 +28,8 @@ describe('LogCard', () => {
   it('should render trig name when provided', () => {
     renderWithRouter(<LogCard log={mockLog} trigName="Whitchurch Hill" />);
     expect(screen.getByText('Whitchurch Hill')).toBeInTheDocument();
-    expect(screen.queryByText('TP12345')).not.toBeInTheDocument();
+    // TP12345 should still be shown alongside the trig name
+    expect(screen.getByText('TP12345')).toBeInTheDocument();
   });
 
   it('should render user information', () => {
@@ -48,8 +49,9 @@ describe('LogCard', () => {
 
   it('should render score out of 10', () => {
     renderWithRouter(<LogCard log={mockLog} />);
-    // Score is 4, so should display as 8/10
-    expect(screen.getByText('(8/10)')).toBeInTheDocument();
+    // Score is 4, displayed as stars with a title attribute of "4/10"
+    const starContainer = screen.getByTitle('4/10');
+    expect(starContainer).toBeInTheDocument();
   });
 
   it('should render formatted date', () => {

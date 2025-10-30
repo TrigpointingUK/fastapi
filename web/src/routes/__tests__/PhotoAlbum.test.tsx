@@ -92,7 +92,7 @@ describe('PhotoAlbum Integration', () => {
     render(<PhotoAlbum />, { wrapper: createWrapper() });
 
     await waitFor(() => {
-      expect(screen.getByText(/Showing 3 of 100 photos/)).toBeInTheDocument();
+      expect(screen.getByText(/3 unseen photos loaded/)).toBeInTheDocument();
     });
   });
 
