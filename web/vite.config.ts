@@ -27,5 +27,23 @@ export default defineConfig({
     outDir: 'dist',
     sourcemap: true,
   },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './tests/setup.ts',
+    css: true, // Parse CSS imports
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'json', 'html', 'lcov'],
+      exclude: [
+        'node_modules/',
+        'tests/',
+        '**/*.d.ts',
+        '**/*.config.*',
+        '**/dist/**',
+      ],
+      include: ['src/**/*.{ts,tsx}'],
+    }
+  }
 })
 

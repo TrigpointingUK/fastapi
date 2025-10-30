@@ -1,4 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { getViewedRanges, isPhotoViewed, addViewedRange } from "../lib/photoHistory";
+import { useEffect, useRef } from "react";
 
 interface Photo {
   id: number;
@@ -18,9 +20,19 @@ interface PhotosResponse {
   };
 }
 
-export function useInfinitePhotos() {
-  return useInfiniteQuery<PhotosResponse>({
-    queryKey: ["photos", "infinite"],
+export type PhotoViewMode = 'unseen' | 'all';
+
+interface UseInfinitePhotosOptions {
+  mode?: PhotoViewMode;
+}
+
+export function useInfinitePhotos(options: UseInfinitePhotosOptions = {}) {
+  const { mode = 'unseen' } = options;
+  const viewedRanges = mode === 'unseen' ? getViewedRanges() : [];
+  const lastBatchRef = useRef<{ min: number; max: number } | null>(null);
+
+  const query = useInfiniteQuery<PhotosResponse>({
+    queryKey: ["photos", "infinite", mode],
     queryFn: async ({ pageParam = 0 }) => {
       const apiBase = import.meta.env.VITE_API_BASE as string;
       const response = await fetch(
@@ -31,9 +43,26 @@ export function useInfinitePhotos() {
       }
       const data = await response.json();
       
+      let items = data.items || [];
+      
+      // Filter out viewed photos if in 'unseen' mode
+      if (mode === 'unseen') {
+        items = items.filter((photo: Photo) => 
+          !isPhotoViewed(photo.id, viewedRanges)
+        );
+      }
+
+      // Track the range of photos in this batch
+      if (items.length > 0) {
+        const photoIds = items.map((p: Photo) => p.id);
+        const min = Math.min(...photoIds);
+        const max = Math.max(...photoIds);
+        lastBatchRef.current = { min, max };
+      }
+      
       // Transform response to match expected format
       return {
-        items: data.items || [],
+        items,
         total: data.total || 0,
         pagination: {
           has_more: data.pagination?.has_more || false,
@@ -46,5 +75,20 @@ export function useInfinitePhotos() {
     initialPageParam: 0,
     getNextPageParam: (lastPage) => lastPage.pagination.next_offset,
   });
+
+  // Update viewing history when photos are fetched
+  useEffect(() => {
+    if (query.data && lastBatchRef.current && mode === 'unseen') {
+      const { min, max } = lastBatchRef.current;
+      // Add the range to history after a short delay (user has seen them)
+      const timeoutId = setTimeout(() => {
+        addViewedRange(min, max);
+      }, 2000); // Mark as viewed after 2 seconds
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [query.data, mode]);
+
+  return query;
 }
 

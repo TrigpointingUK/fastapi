@@ -1,12 +1,16 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 import Layout from "../components/layout/Layout";
 import PhotoGrid from "../components/photos/PhotoGrid";
 import Spinner from "../components/ui/Spinner";
 import Button from "../components/ui/Button";
-import { useInfinitePhotos } from "../hooks/useInfinitePhotos";
+import { useInfinitePhotos, PhotoViewMode } from "../hooks/useInfinitePhotos";
+import { clearHistory, getHistoryStats } from "../lib/photoHistory";
 
 export default function PhotoAlbum() {
+  const [viewMode, setViewMode] = useState<PhotoViewMode>('unseen');
+  const [historyStats, setHistoryStats] = useState(getHistoryStats());
+
   const {
     data,
     fetchNextPage,
@@ -14,7 +18,7 @@ export default function PhotoAlbum() {
     isFetchingNextPage,
     isLoading,
     error,
-  } = useInfinitePhotos();
+  } = useInfinitePhotos({ mode: viewMode });
 
   // Intersection observer to trigger loading more photos
   const { ref: loadMoreRef, inView } = useInView({
@@ -29,9 +33,27 @@ export default function PhotoAlbum() {
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  // Update history stats periodically
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setHistoryStats(getHistoryStats());
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
+
   // Flatten all pages into a single array
   const allPhotos = data?.pages.flatMap((page) => page.items) || [];
   const totalPhotos = data?.pages[0]?.total || 0;
+
+  const handleClearHistory = () => {
+    if (confirm('Clear your viewing history? This will show all photos again.')) {
+      clearHistory();
+      setHistoryStats(getHistoryStats());
+      // Force refresh by switching mode and back
+      setViewMode('all');
+      setTimeout(() => setViewMode('unseen'), 100);
+    }
+  };
 
   if (error) {
     return (
@@ -54,17 +76,62 @@ export default function PhotoAlbum() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">Photo Gallery</h1>
-          <p className="text-gray-600">
-            {isLoading ? (
-              "Loading photos..."
-            ) : (
-              <>
-                Showing {allPhotos.length.toLocaleString()} of{" "}
-                {totalPhotos.toLocaleString()} photos
-              </>
-            )}
-          </p>
+          <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Photo Gallery</h1>
+              <p className="text-gray-600">
+                {isLoading ? (
+                  "Loading photos..."
+                ) : (
+                  <>
+                    Showing {allPhotos.length.toLocaleString()} of{" "}
+                    {totalPhotos.toLocaleString()} photos
+                    {viewMode === 'unseen' && historyStats.totalPhotosViewed > 0 && (
+                      <span className="text-sm text-gray-500 ml-2">
+                        ({historyStats.totalPhotosViewed.toLocaleString()} previously viewed)
+                      </span>
+                    )}
+                  </>
+                )}
+              </p>
+            </div>
+            
+            {/* View Mode Controls */}
+            <div className="flex flex-wrap gap-2">
+              <div className="flex gap-1 bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('unseen')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    viewMode === 'unseen'
+                      ? 'bg-white text-trig-green-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  Unseen Photos
+                </button>
+                <button
+                  onClick={() => setViewMode('all')}
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                    viewMode === 'all'
+                      ? 'bg-white text-trig-green-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  All Photos
+                </button>
+              </div>
+              
+              {historyStats.totalPhotosViewed > 0 && (
+                <Button
+                  onClick={handleClearHistory}
+                  variant="secondary"
+                  className="text-sm"
+                >
+                  Reset History
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Loading State */}
@@ -97,7 +164,7 @@ export default function PhotoAlbum() {
               {!hasNextPage && allPhotos.length > 0 && (
                 <p className="text-gray-500">
                   You've reached the end! All {allPhotos.length.toLocaleString()}{" "}
-                  photos loaded.
+                  {viewMode === 'unseen' ? 'unseen ' : ''}photos loaded.
                 </p>
               )}
             </div>
@@ -108,7 +175,16 @@ export default function PhotoAlbum() {
         {!isLoading && allPhotos.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📷</div>
-            <p className="text-gray-600 text-lg">No photos found</p>
+            {viewMode === 'unseen' ? (
+              <>
+                <p className="text-gray-600 text-lg mb-4">
+                  You've seen all the photos!
+                </p>
+                <Button onClick={handleClearHistory}>Reset History</Button>
+              </>
+            ) : (
+              <p className="text-gray-600 text-lg">No photos found</p>
+            )}
           </div>
         )}
       </div>

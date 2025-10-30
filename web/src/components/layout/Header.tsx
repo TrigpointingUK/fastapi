@@ -29,7 +29,7 @@ export default function Header() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-6">
             <a
-              href="https://trigpointing.uk/wiki"
+              href="https://wiki.trigpointing.uk/"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-trig-green-100 transition-colors"
@@ -37,7 +37,7 @@ export default function Header() {
               Wiki
             </a>
             <a
-              href="https://trigpointing.uk/forum"
+              href="https://forum.trigpointing.uk/"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-trig-green-100 transition-colors"
