@@ -38,12 +38,24 @@ export default function PhotoAlbum() {
     rootMargin: "200px", // Start loading 200px before reaching the trigger
   });
 
+  // Flatten all pages into a single array
+  const allPhotos = data?.pages.flatMap((page) => page.items) || [];
+
   // Auto-fetch when scrolling into view
   useEffect(() => {
     if (inView && hasNextPage && !isFetchingNextPage) {
       fetchNextPage();
     }
   }, [inView, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  // Auto-fetch more pages if we have no photos but there are more pages available
+  // This handles the case where all photos in current pages are filtered out
+  useEffect(() => {
+    if (!isLoading && !isFetchingNextPage && hasNextPage && allPhotos.length === 0 && viewMode === 'unseen') {
+      // Automatically fetch the next page to find unseen photos
+      fetchNextPage();
+    }
+  }, [isLoading, isFetchingNextPage, hasNextPage, allPhotos.length, viewMode, fetchNextPage]);
 
   // Update history stats periodically
   useEffect(() => {
@@ -53,13 +65,7 @@ export default function PhotoAlbum() {
     return () => clearInterval(interval);
   }, []);
 
-  // Flatten all pages into a single array
-  const allPhotos = data?.pages.flatMap((page) => page.items) || [];
-
   const handleClearHistory = () => {
-    if (!window.confirm('Are you sure you want to reset your viewing history? This will show all photos again.')) {
-      return;
-    }
     clearHistory();
     setHistoryStats(getHistoryStats());
     // Invalidate queries to force refetch with cleared history

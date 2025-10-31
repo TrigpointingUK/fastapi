@@ -32,10 +32,11 @@ export function isPhotoViewed(photoId: number, ranges: PhotoRange[]): boolean {
 }
 
 /**
- * Merge overlapping or adjacent ranges
+ * Merge overlapping or adjacent ranges (within tolerance)
  * Assumes ranges are sorted by min value
+ * Tolerance allows merging ranges with small gaps (e.g., deleted photos)
  */
-function mergeRanges(ranges: PhotoRange[]): PhotoRange[] {
+function mergeRanges(ranges: PhotoRange[], tolerance: number = 50): PhotoRange[] {
   if (ranges.length <= 1) return ranges;
 
   // Sort by min value
@@ -46,8 +47,8 @@ function mergeRanges(ranges: PhotoRange[]): PhotoRange[] {
     const current = sorted[i];
     const lastMerged = merged[merged.length - 1];
 
-    // If current range overlaps or is adjacent to last merged range
-    if (current.min <= lastMerged.max + 1) {
+    // If current range overlaps or is within tolerance of last merged range
+    if (current.min <= lastMerged.max + tolerance) {
       // Extend the last merged range
       lastMerged.max = Math.max(lastMerged.max, current.max);
     } else {
@@ -85,6 +86,21 @@ export function clearHistory(): void {
 }
 
 /**
+ * Compact and merge existing history to reduce fragmentation
+ * Call this to fix existing history with many small gaps
+ */
+export function compactHistory(): void {
+  try {
+    const ranges = getViewedRanges();
+    const merged = mergeRanges(ranges);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
+    console.log(`Compacted ${ranges.length} ranges into ${merged.length} ranges`);
+  } catch (error) {
+    console.error('Failed to compact photo viewing history:', error);
+  }
+}
+
+/**
  * Get statistics about viewing history
  */
 export function getHistoryStats(): {
@@ -116,14 +132,17 @@ export function debugPhotoHistory(): void {
   console.log('\nRanges:');
   ranges.forEach((range, i) => {
     const size = range.max - range.min + 1;
-    console.log(`  ${i + 1}. Photo IDs ${range.min} - ${range.max} (${size} photos)`);
+    const gap = i > 0 ? range.min - ranges[i - 1].max - 1 : 0;
+    console.log(`  ${i + 1}. Photo IDs ${range.min} - ${range.max} (${size} photos)${gap > 0 ? ` [gap: ${gap}]` : ''}`);
   });
   console.log('\nTo clear history, call: window.clearPhotoHistory()');
+  console.log('To compact history (merge ranges), call: window.compactPhotoHistory()');
 }
 
 // Expose debug functions globally for troubleshooting
 if (typeof window !== 'undefined') {
-  (window as unknown as Window & { debugPhotoHistory: typeof debugPhotoHistory; clearPhotoHistory: typeof clearHistory }).debugPhotoHistory = debugPhotoHistory;
-  (window as unknown as Window & { debugPhotoHistory: typeof debugPhotoHistory; clearPhotoHistory: typeof clearHistory }).clearPhotoHistory = clearHistory;
+  (window as unknown as Window & { debugPhotoHistory: typeof debugPhotoHistory; clearPhotoHistory: typeof clearHistory; compactPhotoHistory: typeof compactHistory }).debugPhotoHistory = debugPhotoHistory;
+  (window as unknown as Window & { debugPhotoHistory: typeof debugPhotoHistory; clearPhotoHistory: typeof clearHistory; compactPhotoHistory: typeof compactHistory }).clearPhotoHistory = clearHistory;
+  (window as unknown as Window & { debugPhotoHistory: typeof debugPhotoHistory; clearPhotoHistory: typeof clearHistory; compactPhotoHistory: typeof compactHistory }).compactPhotoHistory = compactHistory;
 }
 

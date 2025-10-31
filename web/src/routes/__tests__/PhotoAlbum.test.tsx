@@ -203,7 +203,7 @@ describe('PhotoAlbum Integration', () => {
     });
   });
 
-  it('should call clearHistory when Reset History button is clicked and confirmed', async () => {
+  it('should call clearHistory when Reset History button is clicked', async () => {
     vi.mocked(photoHistory.getHistoryStats).mockReturnValue({
       rangeCount: 2,
       totalPhotosViewed: 50,
@@ -214,9 +214,6 @@ describe('PhotoAlbum Integration', () => {
       json: async () => mockPhotosResponse,
     } as Response);
 
-    // Mock window.confirm
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
-
     render(<PhotoAlbum />, { wrapper: createWrapper() });
 
     await waitFor(() => {
@@ -226,13 +223,10 @@ describe('PhotoAlbum Integration', () => {
     const resetButton = screen.getByText('Reset History');
     fireEvent.click(resetButton);
 
-    expect(confirmSpy).toHaveBeenCalled();
     expect(photoHistory.clearHistory).toHaveBeenCalled();
-
-    confirmSpy.mockRestore();
   });
 
-  it('should not clear history when confirmation is cancelled', async () => {
+  it('should clear history without confirmation', async () => {
     vi.mocked(photoHistory.getHistoryStats).mockReturnValue({
       rangeCount: 2,
       totalPhotosViewed: 50,
@@ -243,8 +237,6 @@ describe('PhotoAlbum Integration', () => {
       json: async () => mockPhotosResponse,
     } as Response);
 
-    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(false);
-
     render(<PhotoAlbum />, { wrapper: createWrapper() });
 
     await waitFor(() => {
@@ -254,10 +246,7 @@ describe('PhotoAlbum Integration', () => {
     const resetButton = screen.getByText('Reset History');
     fireEvent.click(resetButton);
 
-    expect(confirmSpy).toHaveBeenCalled();
-    expect(photoHistory.clearHistory).not.toHaveBeenCalled();
-
-    confirmSpy.mockRestore();
+    expect(photoHistory.clearHistory).toHaveBeenCalled();
   });
 });
 
