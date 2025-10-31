@@ -129,8 +129,8 @@ export function usePhotoSwipe({ photos, initialIndex = 0, onClose }: PhotoSwipeO
         onInit: (el: HTMLElement) => {
           pswp.on('change', () => {
             const currSlideElement = pswp.currSlide?.data;
-            if (currSlideElement && (currSlideElement as any).photo) {
-              el.innerHTML = createMetadataOverlay((currSlideElement as any).photo);
+            if (currSlideElement && 'photo' in currSlideElement) {
+              el.innerHTML = createMetadataOverlay(currSlideElement.photo as Photo);
             }
           });
         },
