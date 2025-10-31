@@ -32,6 +32,50 @@ export function isPhotoViewed(photoId: number, ranges: PhotoRange[]): boolean {
 }
 
 /**
+ * Calculate smart skip offset to jump past viewed photo ranges
+ * API returns photos in descending ID order (newest first)
+ * 
+ * @param currentSkip Current pagination offset
+ * @param batchMin Minimum photo ID in current batch
+ * @param batchMax Maximum photo ID in current batch  
+ * @param viewedRanges Array of viewed photo ranges
+ * @returns New skip offset to try, or null if no skip needed
+ */
+export function calculateSmartSkip(
+  currentSkip: number,
+  batchMin: number,
+  batchMax: number,
+  viewedRanges: PhotoRange[]
+): number | null {
+  if (viewedRanges.length === 0) return null;
+  
+  // Check if entire batch is within viewed ranges
+  const allViewed = viewedRanges.some(
+    range => batchMin >= range.min && batchMax <= range.max
+  );
+  
+  if (!allViewed) return null;
+  
+  // Find the lowest min value in ranges that are >= batchMin
+  // This tells us where the viewed region starts
+  const relevantRange = viewedRanges
+    .filter(range => range.min <= batchMax)
+    .sort((a, b) => a.min - b.min)[0];
+    
+  if (!relevantRange) return null;
+  
+  // Photos are in descending order, so we need to skip past this range
+  // Estimate: each batch is ~24 photos, calculate skip to get below relevantRange.min
+  // Add buffer of 100 photos to ensure we get past any gaps
+  const photosToSkip = batchMax - relevantRange.min + 100;
+  const newSkip = currentSkip + Math.max(photosToSkip, 100);
+  
+  console.log(`Smart skip: jumping from offset ${currentSkip} to ${newSkip} (past photo ID ${relevantRange.min})`);
+  
+  return newSkip;
+}
+
+/**
  * Merge overlapping or adjacent ranges (within tolerance)
  * Assumes ranges are sorted by min value
  * Tolerance allows merging ranges with small gaps (e.g., deleted photos)

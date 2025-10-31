@@ -21,6 +21,7 @@ interface PhotosResponse {
 export default function PhotoAlbum() {
   const [viewMode, setViewMode] = useState<PhotoViewMode>('unseen');
   const [historyStats, setHistoryStats] = useState(getHistoryStats());
+  const [isSearching, setIsSearching] = useState(false);
   const queryClient = useQueryClient();
 
   const {
@@ -52,8 +53,10 @@ export default function PhotoAlbum() {
   // This handles the case where all photos in current pages are filtered out
   useEffect(() => {
     if (!isLoading && !isFetchingNextPage && hasNextPage && allPhotos.length === 0 && viewMode === 'unseen') {
-      // Automatically fetch the next page to find unseen photos
+      setIsSearching(true);
       fetchNextPage();
+    } else if (allPhotos.length > 0 || !hasNextPage) {
+      setIsSearching(false);
     }
   }, [isLoading, isFetchingNextPage, hasNextPage, allPhotos.length, viewMode, fetchNextPage]);
 
@@ -214,8 +217,8 @@ export default function PhotoAlbum() {
           </>
         )}
 
-        {/* Empty State */}
-        {!isLoading && allPhotos.length === 0 && (
+        {/* Empty State / Searching State */}
+        {!isLoading && !isSearching && allPhotos.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">📷</div>
             {viewMode === 'unseen' ? (
@@ -228,6 +231,18 @@ export default function PhotoAlbum() {
             ) : (
               <p className="text-gray-600 text-lg">No photos found</p>
             )}
+          </div>
+        )}
+
+        {/* Searching State */}
+        {!isLoading && isSearching && allPhotos.length === 0 && (
+          <div className="text-center py-12">
+            <Spinner size="lg" />
+            <p className="text-gray-600 text-lg mt-4">
+              {viewMode === 'unseen' 
+                ? "Finding photos you haven't seen..." 
+                : "Loading photos..."}
+            </p>
           </div>
         )}
       </div>
