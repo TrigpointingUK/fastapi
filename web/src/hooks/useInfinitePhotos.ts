@@ -1,15 +1,7 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getViewedRanges, isPhotoViewed, addViewedRange, calculateSmartSkip } from "../lib/photoHistory";
 import { useEffect, useRef } from "react";
-
-interface Photo {
-  id: number;
-  log_id: number;
-  user_id: number;
-  icon_url: string;
-  photo_url: string;
-  caption: string;
-}
+import { Photo } from "../lib/api";
 
 interface PhotosResponse {
   items: Photo[];

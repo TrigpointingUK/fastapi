@@ -192,10 +192,6 @@ export default function PhotoAlbum() {
           <>
             <PhotoGrid
               photos={allPhotos}
-              onPhotoClick={(photo) => {
-                // Future: Open lightbox/modal
-                console.log("Photo clicked:", photo);
-              }}
               onPhotoRotated={handlePhotoRotated}
             />
 

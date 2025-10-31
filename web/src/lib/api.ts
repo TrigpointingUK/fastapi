@@ -52,6 +52,15 @@ export interface Photo {
   icon_url: string;
   photo_url: string;
   caption: string;
+  type: string;
+  filesize: number;
+  height: number;
+  width: number;
+  icon_filesize: number;
+  icon_height: number;
+  icon_width: number;
+  text_desc: string;
+  license: string;
 }
 
 /**
