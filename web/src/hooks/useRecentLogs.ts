@@ -1,10 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-
-interface Photo {
-  id: number;
-  icon_url: string;
-  caption: string;
-}
+import { Photo } from "../lib/api";
 
 interface Log {
   id: number;

@@ -1,11 +1,6 @@
 import LogCard from "./LogCard";
 import Spinner from "../ui/Spinner";
-
-interface Photo {
-  id: number;
-  icon_url: string;
-  caption: string;
-}
+import { Photo } from "../../lib/api";
 
 interface Log {
   id: number;
@@ -25,14 +20,12 @@ interface LogListProps {
   logs: Log[];
   isLoading?: boolean;
   emptyMessage?: string;
-  onPhotoUpdate?: () => void;
 }
 
 export default function LogList({
   logs,
   isLoading = false,
   emptyMessage = "No logs found",
-  onPhotoUpdate,
 }: LogListProps) {
   if (isLoading) {
     return (
@@ -54,7 +47,7 @@ export default function LogList({
   return (
     <div className="space-y-4">
       {logs.map((log) => (
-        <LogCard key={log.id} log={log} onPhotoUpdate={onPhotoUpdate} />
+        <LogCard key={log.id} log={log} />
       ))}
     </div>
   );

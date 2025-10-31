@@ -79,8 +79,40 @@ describe('LogCard', () => {
     const logWithPhotos = {
       ...mockLog,
       photos: [
-        { id: 1, icon_url: 'photo1.jpg', caption: 'Photo 1' },
-        { id: 2, icon_url: 'photo2.jpg', caption: 'Photo 2' },
+        {
+          id: 1,
+          log_id: 1,
+          user_id: 100,
+          icon_url: 'photo1.jpg',
+          photo_url: 'photo1_full.jpg',
+          caption: 'Photo 1',
+          type: 'T',
+          filesize: 1024000,
+          height: 1200,
+          width: 1600,
+          icon_filesize: 10240,
+          icon_height: 150,
+          icon_width: 200,
+          text_desc: 'Test photo 1',
+          license: 'Y',
+        },
+        {
+          id: 2,
+          log_id: 1,
+          user_id: 100,
+          icon_url: 'photo2.jpg',
+          photo_url: 'photo2_full.jpg',
+          caption: 'Photo 2',
+          type: 'L',
+          filesize: 2048000,
+          height: 1200,
+          width: 1600,
+          icon_filesize: 10240,
+          icon_height: 150,
+          icon_width: 200,
+          text_desc: 'Test photo 2',
+          license: 'Y',
+        },
       ],
     };
     renderWithRouter(<LogCard log={logWithPhotos} />);
@@ -94,8 +126,20 @@ describe('LogCard', () => {
   it('should show +X indicator when more than 6 photos', () => {
     const photos = Array.from({ length: 8 }, (_, i) => ({
       id: i + 1,
+      log_id: 1,
+      user_id: 100,
       icon_url: `photo${i + 1}.jpg`,
+      photo_url: `photo${i + 1}_full.jpg`,
       caption: `Photo ${i + 1}`,
+      type: 'T',
+      filesize: 1024000,
+      height: 1200,
+      width: 1600,
+      icon_filesize: 10240,
+      icon_height: 150,
+      icon_width: 200,
+      text_desc: `Test photo ${i + 1}`,
+      license: 'Y',
     }));
     
     const logWithManyPhotos = { ...mockLog, photos };
