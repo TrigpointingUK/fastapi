@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Auth0Provider } from "@auth0/auth0-react";
+import { Toaster } from "react-hot-toast";
 import AppRouter from "./router";
 import "./app.css";
 
@@ -44,6 +45,27 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     >
       <QueryClientProvider client={queryClient}>
         <AppRouter />
+        <Toaster
+          position="top-right"
+          containerStyle={{
+            top: '5rem', // Position below the 4rem (h-16) header with a small gap
+          }}
+          toastOptions={{
+            duration: 5000,
+            error: {
+              style: {
+                background: '#dc2626',
+                color: '#fff',
+              },
+            },
+            success: {
+              style: {
+                background: '#16a34a',
+                color: '#fff',
+              },
+            },
+          }}
+        />
       </QueryClientProvider>
     </Auth0Provider>
   </React.StrictMode>

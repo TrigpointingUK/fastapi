@@ -25,12 +25,14 @@ interface LogListProps {
   logs: Log[];
   isLoading?: boolean;
   emptyMessage?: string;
+  onPhotoUpdate?: () => void;
 }
 
 export default function LogList({
   logs,
   isLoading = false,
   emptyMessage = "No logs found",
+  onPhotoUpdate,
 }: LogListProps) {
   if (isLoading) {
     return (
@@ -52,7 +54,7 @@ export default function LogList({
   return (
     <div className="space-y-4">
       {logs.map((log) => (
-        <LogCard key={log.id} log={log} />
+        <LogCard key={log.id} log={log} onPhotoUpdate={onPhotoUpdate} />
       ))}
     </div>
   );

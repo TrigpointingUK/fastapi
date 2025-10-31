@@ -1,12 +1,22 @@
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, InfiniteData } from "@tanstack/react-query";
 import Layout from "../components/layout/Layout";
 import PhotoGrid from "../components/photos/PhotoGrid";
 import Spinner from "../components/ui/Spinner";
 import Button from "../components/ui/Button";
 import { useInfinitePhotos, PhotoViewMode } from "../hooks/useInfinitePhotos";
 import { clearHistory, getHistoryStats } from "../lib/photoHistory";
+import { Photo } from "../lib/api";
+
+interface PhotosResponse {
+  items: Photo[];
+  total: number;
+  pagination: {
+    has_more: boolean;
+    next_offset: number | null;
+  };
+}
 
 export default function PhotoAlbum() {
   const [viewMode, setViewMode] = useState<PhotoViewMode>('unseen');
@@ -47,12 +57,39 @@ export default function PhotoAlbum() {
   const allPhotos = data?.pages.flatMap((page) => page.items) || [];
 
   const handleClearHistory = () => {
-    if (confirm('Clear your viewing history? This will show all photos again.')) {
-      clearHistory();
-      setHistoryStats(getHistoryStats());
-      // Invalidate queries to force refetch with cleared history
-      queryClient.invalidateQueries({ queryKey: ["photos", "infinite"] });
+    if (!window.confirm('Are you sure you want to reset your viewing history? This will show all photos again.')) {
+      return;
     }
+    clearHistory();
+    setHistoryStats(getHistoryStats());
+    // Invalidate queries to force refetch with cleared history
+    queryClient.invalidateQueries({ queryKey: ["photos", "infinite"] });
+  };
+
+  // Handle photo rotation by updating the specific photo in the cache
+  const handlePhotoRotated = (updatedPhoto: Photo) => {
+    queryClient.setQueryData(
+      ["photos", "infinite", viewMode],
+      (oldData: InfiniteData<PhotosResponse> | undefined) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: PhotosResponse) => ({
+            ...page,
+            items: page.items.map((photo: Photo) =>
+              photo.id === updatedPhoto.id
+                ? {
+                    ...photo,
+                    photo_url: updatedPhoto.photo_url,
+                    icon_url: updatedPhoto.icon_url,
+                  }
+                : photo
+            ),
+          })),
+        };
+      }
+    );
   };
 
   if (error) {
@@ -150,6 +187,7 @@ export default function PhotoAlbum() {
                 // Future: Open lightbox/modal
                 console.log("Photo clicked:", photo);
               }}
+              onPhotoRotated={handlePhotoRotated}
             />
 
             {/* Load More Trigger */}

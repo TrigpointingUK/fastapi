@@ -1,18 +1,13 @@
 import PhotoThumbnail from "./PhotoThumbnail";
-
-interface Photo {
-  id: number;
-  icon_url: string;
-  photo_url: string;
-  caption: string;
-}
+import { Photo } from "../../lib/api";
 
 interface PhotoGridProps {
   photos: Photo[];
   onPhotoClick?: (photo: Photo) => void;
+  onPhotoRotated?: (updatedPhoto: Photo) => void;
 }
 
-export default function PhotoGrid({ photos, onPhotoClick }: PhotoGridProps) {
+export default function PhotoGrid({ photos, onPhotoClick, onPhotoRotated }: PhotoGridProps) {
   if (!photos || photos.length === 0) {
     return (
       <div className="text-center py-12 text-gray-500">
@@ -31,6 +26,7 @@ export default function PhotoGrid({ photos, onPhotoClick }: PhotoGridProps) {
           photoUrl={photo.photo_url}
           caption={photo.caption}
           onClick={() => onPhotoClick?.(photo)}
+          onPhotoRotated={onPhotoRotated}
         />
       ))}
     </div>

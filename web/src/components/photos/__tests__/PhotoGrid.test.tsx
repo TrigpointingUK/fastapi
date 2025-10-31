@@ -2,30 +2,30 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import PhotoGrid from '../PhotoGrid';
-
-interface Photo {
-  id: number;
-  icon_url: string;
-  photo_url: string;
-  caption: string;
-}
+import { Photo } from '../../../lib/api';
 
 describe('PhotoGrid', () => {
-  const mockPhotos = [
+  const mockPhotos: Photo[] = [
     {
       id: 1,
+      log_id: 100,
+      user_id: 1,
       icon_url: 'icon1.jpg',
       photo_url: 'photo1.jpg',
       caption: 'Photo 1',
     },
     {
       id: 2,
+      log_id: 100,
+      user_id: 1,
       icon_url: 'icon2.jpg',
       photo_url: 'photo2.jpg',
       caption: 'Photo 2',
     },
     {
       id: 3,
+      log_id: 100,
+      user_id: 1,
       icon_url: 'icon3.jpg',
       photo_url: 'photo3.jpg',
       caption: 'Photo 3',

@@ -41,3 +41,27 @@ export async function apiPost<T>(
   return res.json() as Promise<T>;
 }
 
+export interface RotatePhotoRequest {
+  angle: number;
+}
+
+export interface Photo {
+  id: number;
+  log_id: number;
+  user_id: number;
+  icon_url: string;
+  photo_url: string;
+  caption: string;
+}
+
+/**
+ * Rotate a photo by a given angle (90, 180, or 270 degrees)
+ */
+export async function rotatePhoto(
+  photoId: number,
+  angle: number,
+  token?: string
+): Promise<Photo> {
+  return apiPost<Photo>(`/v1/photos/${photoId}/rotate`, { angle }, token);
+}
+

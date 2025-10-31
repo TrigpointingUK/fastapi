@@ -97,10 +97,8 @@ class TestPhotoRotate:
         with patch("requests.get") as mock_get, patch(
             "api.services.image_processor.ImageProcessor.process_image"
         ) as mock_process, patch(
-            "api.services.s3_service.S3Service.upload_photo_and_thumbnail"
-        ) as mock_s3_upload, patch(
-            "api.services.s3_service.S3Service.delete_photo_and_thumbnail"
-        ) as mock_s3_delete:
+            "api.services.s3_service.S3Service.upload_photo_and_thumbnail_with_keys"
+        ) as mock_s3_upload:
 
             # Mock photo download
             mock_response = Mock()
@@ -116,8 +114,8 @@ class TestPhotoRotate:
                 (75, 100),
             )
 
-            # Mock S3 upload
-            mock_s3_upload.return_value = ("new_photo.jpg", "new_thumb.jpg")
+            # Mock S3 upload - return revision-suffixed filenames
+            mock_s3_upload.return_value = ("000/P00001_r1.jpg", "000/I00001_r1.jpg")
 
             headers = {"Authorization": "Bearer auth0_user_301"}
             resp = client.post(
@@ -129,8 +127,8 @@ class TestPhotoRotate:
             assert resp.status_code == 200
             body = resp.json()
 
-            # Check that we got a new photo ID
-            assert body["id"] != photo.id
+            # Check that we got the SAME photo ID (in-place update)
+            assert body["id"] == photo.id
             assert body["log_id"] == photo.tlog_id
             assert body["user_id"] == user.id
             assert body["type"] == "T"
@@ -138,20 +136,14 @@ class TestPhotoRotate:
             assert body["width"] == 150
             assert body["caption"] == "Test Photo"
 
-            # Verify original photo was soft-deleted
+            # Verify photo was updated, not deleted
             db.refresh(photo)
-            assert photo.deleted_ind == "Y"
-
-            # Verify new photo exists
-            new_photo_id = body["id"]
-            new_photo = db.query(TPhoto).filter(TPhoto.id == new_photo_id).first()
-            assert new_photo is not None
-            assert new_photo.deleted_ind == "N"
-            assert new_photo.source == "R"  # R for rotated
+            assert photo.deleted_ind == "N"
+            assert photo.source == "R"  # R for revised/rotated
+            assert "_r1" in photo.filename
 
             # Verify S3 operations
             mock_s3_upload.assert_called_once()
-            mock_s3_delete.assert_not_called()
 
     def test_rotate_photo_success_180_degrees(self, client: TestClient, db: Session):
         """Test successful photo rotation by 180 degrees."""
@@ -163,7 +155,7 @@ class TestPhotoRotate:
         with patch("requests.get") as mock_get, patch(
             "api.services.image_processor.ImageProcessor.process_image"
         ) as mock_process, patch(
-            "api.services.s3_service.S3Service.upload_photo_and_thumbnail"
+            "api.services.s3_service.S3Service.upload_photo_and_thumbnail_with_keys"
         ) as mock_s3_upload:
 
             mock_response = Mock()
@@ -177,7 +169,7 @@ class TestPhotoRotate:
                 (100, 100),
                 (50, 50),
             )
-            mock_s3_upload.return_value = ("new_photo.jpg", "new_thumb.jpg")
+            mock_s3_upload.return_value = ("000/P00001_r1.jpg", "000/I00001_r1.jpg")
 
             headers = {"Authorization": "Bearer auth0_user_301"}
             resp = client.post(
@@ -188,7 +180,7 @@ class TestPhotoRotate:
 
             assert resp.status_code == 200
             body = resp.json()
-            assert body["id"] != photo.id
+            assert body["id"] == photo.id  # Same ID
 
     def test_rotate_photo_default_angle(self, client: TestClient, db: Session):
         """Test photo rotation with default angle (90 degrees)."""
@@ -200,7 +192,7 @@ class TestPhotoRotate:
         with patch("requests.get") as mock_get, patch(
             "api.services.image_processor.ImageProcessor.process_image"
         ) as mock_process, patch(
-            "api.services.s3_service.S3Service.upload_photo_and_thumbnail"
+            "api.services.s3_service.S3Service.upload_photo_and_thumbnail_with_keys"
         ) as mock_s3_upload:
 
             mock_response = Mock()
@@ -214,7 +206,7 @@ class TestPhotoRotate:
                 (150, 200),
                 (75, 100),
             )
-            mock_s3_upload.return_value = ("new_photo.jpg", "new_thumb.jpg")
+            mock_s3_upload.return_value = ("000/P00001_r1.jpg", "000/I00001_r1.jpg")
 
             headers = {"Authorization": "Bearer auth0_user_301"}
             # Don't specify angle - should default to 90
@@ -256,8 +248,8 @@ class TestPhotoRotate:
         assert resp.status_code == 404
         assert "Photo not found" in resp.json()["detail"]
 
-    def test_rotate_photo_unauthorized_user(self, client: TestClient, db: Session):
-        """Test rotation by user who doesn't own the photo."""
+    def test_rotate_photo_by_non_owner_success(self, client: TestClient, db: Session):
+        """Test rotation by user who doesn't own the photo - should succeed with new trust model."""
         user, tlog = seed_user_and_tlog(db)
         photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=5005)  # type: ignore[arg-type]
 
@@ -273,28 +265,72 @@ class TestPhotoRotate:
         db.add(other_user)
         db.commit()
 
-        # Try to rotate with different user
-        headers = {"Authorization": "Bearer auth0_user_999"}
-        resp = client.post(
-            f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
-            json={"angle": 90},
-            headers=headers,
-        )
+        test_image_bytes = create_test_image()
 
-        assert resp.status_code == 403
-        assert "Missing required scope" in resp.json()["detail"]
+        with patch("requests.get") as mock_get, patch(
+            "api.services.image_processor.ImageProcessor.process_image"
+        ) as mock_process, patch(
+            "api.services.s3_service.S3Service.upload_photo_and_thumbnail_with_keys"
+        ) as mock_s3_upload:
+
+            mock_response = Mock()
+            mock_response.content = test_image_bytes
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
+
+            mock_process.return_value = (
+                b"processed_photo",
+                b"processed_thumbnail",
+                (150, 200),
+                (75, 100),
+            )
+            mock_s3_upload.return_value = ("000/P00001_r1.jpg", "000/I00001_r1.jpg")
+
+            # Try to rotate with different user - should now succeed
+            headers = {"Authorization": "Bearer auth0_user_999"}
+            resp = client.post(
+                f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
+                json={"angle": 90},
+                headers=headers,
+            )
+
+            # Should now succeed with trust-based model
+            assert resp.status_code == 200
+            assert resp.json()["id"] == photo.id  # Same ID
 
     def test_rotate_photo_no_auth(self, client: TestClient, db: Session):
-        """Test rotation without authentication."""
+        """Test rotation without authentication - no auth required now."""
         user, tlog = seed_user_and_tlog(db)
         photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=5006)  # type: ignore[arg-type]
 
-        resp = client.post(
-            f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
-            json={"angle": 90},
-        )
+        test_image_bytes = create_test_image()
 
-        assert resp.status_code == 401
+        with patch("requests.get") as mock_get, patch(
+            "api.services.image_processor.ImageProcessor.process_image"
+        ) as mock_process, patch(
+            "api.services.s3_service.S3Service.upload_photo_and_thumbnail_with_keys"
+        ) as mock_s3_upload:
+
+            mock_response = Mock()
+            mock_response.content = test_image_bytes
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
+
+            mock_process.return_value = (
+                b"processed_photo",
+                b"processed_thumbnail",
+                (150, 200),
+                (75, 100),
+            )
+            mock_s3_upload.return_value = ("000/P00001_r1.jpg", "000/I00001_r1.jpg")
+
+            resp = client.post(
+                f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
+                json={"angle": 90},
+            )
+
+            # No auth required for open trust model
+            assert resp.status_code == 200
 
     def test_rotate_photo_download_failure(self, client: TestClient, db: Session):
         """Test rotation when photo download fails."""
@@ -354,12 +390,13 @@ class TestPhotoRotate:
         photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=5009)  # type: ignore[arg-type]
 
         test_image_bytes = create_test_image()
+        original_filename = photo.filename
         original_deleted_ind = photo.deleted_ind
 
         with patch("requests.get") as mock_get, patch(
             "api.services.image_processor.ImageProcessor.process_image"
         ) as mock_process, patch(
-            "api.services.s3_service.S3Service.upload_photo_and_thumbnail"
+            "api.services.s3_service.S3Service.upload_photo_and_thumbnail_with_keys"
         ) as mock_s3_upload:
 
             mock_response = Mock()
@@ -387,17 +424,10 @@ class TestPhotoRotate:
             assert resp.status_code == 500
             assert "Failed to upload rotated files" in resp.json()["detail"]
 
-            # Verify original photo was not soft-deleted (rollback)
+            # Verify original photo was not modified (rollback)
             db.refresh(photo)
             assert photo.deleted_ind == original_deleted_ind
-
-            # Verify no new photo record exists
-            new_photos = (
-                db.query(TPhoto)
-                .filter(TPhoto.tlog_id == tlog.id, TPhoto.source == "R")
-                .all()
-            )
-            assert len(new_photos) == 0
+            assert photo.filename == original_filename
 
     def test_rotate_photo_database_failure_rollback(
         self, client: TestClient, db: Session
@@ -411,12 +441,10 @@ class TestPhotoRotate:
         with patch("requests.get") as mock_get, patch(
             "api.services.image_processor.ImageProcessor.process_image"
         ) as mock_process, patch(
-            "api.services.s3_service.S3Service.upload_photo_and_thumbnail"
+            "api.services.s3_service.S3Service.upload_photo_and_thumbnail_with_keys"
         ) as mock_s3_upload, patch(
-            "api.services.s3_service.S3Service.delete_photo_and_thumbnail"
-        ), patch(
-            "api.crud.tphoto.create_photo"
-        ) as mock_create:
+            "api.crud.tphoto.update_photo"
+        ) as mock_update:
 
             mock_response = Mock()
             mock_response.content = test_image_bytes
@@ -429,10 +457,10 @@ class TestPhotoRotate:
                 (150, 200),
                 (75, 100),
             )
-            mock_s3_upload.return_value = ("new_photo.jpg", "new_thumb.jpg")
+            mock_s3_upload.return_value = ("000/P00001_r1.jpg", "000/I00001_r1.jpg")
 
-            # Mock database creation failure
-            mock_create.side_effect = Exception("Database error")
+            # Mock database update failure
+            mock_update.side_effect = Exception("Database error")
 
             headers = {"Authorization": "Bearer auth0_user_301"}
             resp = client.post(
@@ -442,7 +470,7 @@ class TestPhotoRotate:
             )
 
             assert resp.status_code == 500
-            assert "Failed to create new photo record" in resp.json()["detail"]
+            assert "Failed to update photo record" in resp.json()["detail"]
 
     def test_rotate_photo_preserves_metadata(self, client: TestClient, db: Session):
         """Test that rotation preserves original photo metadata."""
@@ -462,7 +490,7 @@ class TestPhotoRotate:
         with patch("requests.get") as mock_get, patch(
             "api.services.image_processor.ImageProcessor.process_image"
         ) as mock_process, patch(
-            "api.services.s3_service.S3Service.upload_photo_and_thumbnail"
+            "api.services.s3_service.S3Service.upload_photo_and_thumbnail_with_keys"
         ) as mock_s3_upload:
 
             mock_response = Mock()
@@ -476,7 +504,7 @@ class TestPhotoRotate:
                 (150, 200),
                 (75, 100),
             )
-            mock_s3_upload.return_value = ("new_photo.jpg", "new_thumb.jpg")
+            mock_s3_upload.return_value = ("000/P00001_r1.jpg", "000/I00001_r1.jpg")
 
             headers = {"Authorization": "Bearer auth0_user_301"}
             resp = client.post(
@@ -493,13 +521,110 @@ class TestPhotoRotate:
             assert body["text_desc"] == "Special description"
             assert body["license"] == "N"
             assert body["type"] == "L"
+            assert body["id"] == photo.id  # Same ID
 
             # Verify in database
-            new_photo_id = body["id"]
-            new_photo = db.query(TPhoto).filter(TPhoto.id == new_photo_id).first()
-            assert new_photo is not None
-            assert new_photo.name == "Special Photo"
-            assert new_photo.text_desc == "Special description"
-            assert new_photo.public_ind == "N"
-            assert new_photo.type == "L"
-            assert new_photo.source == "R"
+            db.refresh(photo)
+            assert photo.name == "Special Photo"
+            assert photo.text_desc == "Special description"
+            assert photo.public_ind == "N"
+            assert photo.type == "L"
+            assert photo.source == "R"
+
+    def test_rotate_photo_increment_revision(self, client: TestClient, db: Session):
+        """Test that rotating a photo with existing revision increments the revision number."""
+        user, tlog = seed_user_and_tlog(db)
+        photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=5012)  # type: ignore[arg-type]
+
+        # Set photo to already have a revision suffix
+        photo.filename = "000/P00001_r5.jpg"  # type: ignore[assignment]
+        photo.icon_filename = "000/I00001_r5.jpg"  # type: ignore[assignment]
+        db.add(photo)
+        db.commit()
+
+        test_image_bytes = create_test_image()
+
+        with patch("requests.get") as mock_get, patch(
+            "api.services.image_processor.ImageProcessor.process_image"
+        ) as mock_process, patch(
+            "api.services.s3_service.S3Service.upload_photo_and_thumbnail_with_keys"
+        ) as mock_s3_upload:
+
+            mock_response = Mock()
+            mock_response.content = test_image_bytes
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
+
+            mock_process.return_value = (
+                b"processed_photo",
+                b"processed_thumbnail",
+                (150, 200),
+                (75, 100),
+            )
+            mock_s3_upload.return_value = ("000/P00001_r6.jpg", "000/I00001_r6.jpg")
+
+            headers = {"Authorization": "Bearer auth0_user_301"}
+            resp = client.post(
+                f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
+                json={"angle": 90},
+                headers=headers,
+            )
+
+            assert resp.status_code == 200
+            body = resp.json()
+
+            # Verify revision was incremented
+            assert body["id"] == photo.id
+            assert "_r6" in body["photo_url"]
+            assert "_r6" in body["icon_url"]
+
+            # Verify in database
+            db.refresh(photo)
+            assert photo.filename == "000/P00001_r6.jpg"
+            assert photo.icon_filename == "000/I00001_r6.jpg"
+
+    def test_rotate_photo_updates_server_id(self, client: TestClient, db: Session):
+        """Test that rotating a photo updates server_id to PHOTOS_SERVER_ID."""
+        user, tlog = seed_user_and_tlog(db)
+        photo = create_sample_photo(db, tlog_id=tlog.id, photo_id=5013)  # type: ignore[arg-type]
+
+        # Set photo to have a different server_id
+        original_server_id = 999
+        photo.server_id = original_server_id  # type: ignore[assignment]
+        db.add(photo)
+        db.commit()
+
+        test_image_bytes = create_test_image()
+
+        with patch("requests.get") as mock_get, patch(
+            "api.services.image_processor.ImageProcessor.process_image"
+        ) as mock_process, patch(
+            "api.services.s3_service.S3Service.upload_photo_and_thumbnail_with_keys"
+        ) as mock_s3_upload:
+
+            mock_response = Mock()
+            mock_response.content = test_image_bytes
+            mock_response.raise_for_status.return_value = None
+            mock_get.return_value = mock_response
+
+            mock_process.return_value = (
+                b"processed_photo",
+                b"processed_thumbnail",
+                (150, 200),
+                (75, 100),
+            )
+            mock_s3_upload.return_value = ("000/P00001_r1.jpg", "000/I00001_r1.jpg")
+
+            headers = {"Authorization": "Bearer auth0_user_301"}
+            resp = client.post(
+                f"{settings.API_V1_STR}/photos/{photo.id}/rotate",
+                json={"angle": 90},
+                headers=headers,
+            )
+
+            assert resp.status_code == 200
+
+            # Verify server_id was updated to PHOTOS_SERVER_ID
+            db.refresh(photo)
+            assert photo.server_id == settings.PHOTOS_SERVER_ID
+            assert photo.server_id != original_server_id

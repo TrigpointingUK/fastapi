@@ -163,7 +163,7 @@ function NewsSection() {
 }
 
 function RecentLogsSection() {
-  const { data: logsData, isLoading, error } = useRecentLogs(10);
+  const { data: logsData, isLoading, error, refetch } = useRecentLogs(10);
 
   return (
     <Card>
@@ -183,6 +183,7 @@ function RecentLogsSection() {
           logs={logsData?.items || []}
           isLoading={isLoading}
           emptyMessage="No recent activity"
+          onPhotoUpdate={() => refetch()}
         />
       )}
     </Card>

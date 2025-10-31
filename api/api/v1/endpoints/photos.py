@@ -619,16 +619,12 @@ def evaluate_photo(photo_id: int, db: Session = Depends(get_db)):
 @router.post(
     "/{photo_id}/rotate",
     response_model=TPhotoResponse,
-    openapi_extra={
-        **openapi_lifecycle("beta"),
-        "security": [{"OAuth2": []}],
-    },
+    openapi_extra=openapi_lifecycle("beta"),
 )
 def rotate_photo(
     photo_id: int,
     rotate_request: TPhotoRotateRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
 ):
     """
     Rotate a photo by the specified angle and create a new version.
@@ -636,6 +632,7 @@ def rotate_photo(
     - **angle**: Rotation angle in degrees (90, 180, 270)
 
     The original photo is soft-deleted and a new photo record is created.
+    This endpoint is open to all users to allow collaborative photo correction.
     """
     logger.info(f"Rotating photo {photo_id} by {rotate_request.angle} degrees")
 
@@ -644,28 +641,10 @@ def rotate_photo(
     if not existing_photo:
         raise HTTPException(status_code=404, detail="Photo not found")
 
-    # Authorization: owner or admin
+    # Authorization: open to all users (trust-based)
     tlog: TLog | None = db.query(TLog).filter(TLog.id == existing_photo.tlog_id).first()
     if not tlog:
         raise HTTPException(status_code=404, detail="TLog not found for photo")
-
-    if int(current_user.id) != int(tlog.user_id):
-        # Check admin privileges using token payload from current_user
-        token_payload = getattr(current_user, "_token_payload", None)
-        if not token_payload:
-            raise HTTPException(status_code=403, detail="Access denied")
-
-        from api.core.security import extract_scopes
-
-        pass  # Auth0 only - no legacy admin check needed
-
-        if token_payload.get("token_type") == "auth0":
-            scopes = extract_scopes(token_payload)
-            if "api:admin" not in scopes:
-                raise HTTPException(
-                    status_code=403, detail="Missing required scope: api:admin"
-                )
-        # Legacy tokens not supported - Auth0 only
 
     # Get server URL for constructing full URLs
     server: Server | None = (
@@ -729,105 +708,84 @@ def rotate_photo(
         logger.error(f"Failed to rotate image: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to rotate image: {str(e)}")
 
-    # Create new database record (optimistically)
-    try:
-        new_photo = tphoto_crud.create_photo(
-            db,
-            log_id=int(existing_photo.tlog_id),
-            values={
-                "server_id": existing_photo.server_id,
-                "type": existing_photo.type,
-                "filename": "",  # Will be updated after S3 upload
-                "filesize": len(processed_photo),
-                "height": image_dims[1],
-                "width": image_dims[0],
-                "icon_filename": "",  # Will be updated after S3 upload
-                "icon_filesize": len(processed_thumbnail),
-                "icon_height": thumbnail_dims[1],
-                "icon_width": thumbnail_dims[0],
-                "name": existing_photo.name,
-                "text_desc": existing_photo.text_desc,
-                "ip_addr": existing_photo.ip_addr,
-                "public_ind": existing_photo.public_ind,
-                "deleted_ind": "N",
-                "source": "R",  # R for rotated
-            },
-        )
-    except Exception as e:
-        logger.error(f"Failed to create new photo record: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create new photo record")
-
-    # Upload to S3
+    # Generate new revision filenames
     s3_service = S3Service()
-    photo_key, thumbnail_key = s3_service.upload_photo_and_thumbnail(
-        int(new_photo.id), processed_photo, processed_thumbnail
+    new_photo_key = s3_service.generate_revision_filename(str(existing_photo.filename))
+    new_thumbnail_key = s3_service.generate_revision_filename(
+        str(existing_photo.icon_filename)
+    )
+
+    # Upload rotated images to S3 with new revision filenames
+    photo_key, thumbnail_key = s3_service.upload_photo_and_thumbnail_with_keys(
+        processed_photo, processed_thumbnail, new_photo_key, new_thumbnail_key
     )
 
     if not photo_key or not thumbnail_key:
-        # Rollback: delete the new database record
-        try:
-            db.delete(new_photo)
-            db.commit()
-        except Exception as rollback_error:
-            logger.error(f"Failed to rollback new photo record: {rollback_error}")
-
         raise HTTPException(status_code=500, detail="Failed to upload rotated files")
 
-    # Update new photo record with S3 paths
+    # Update existing photo record with new file information
     try:
-        setattr(new_photo, "filename", photo_key)
-        setattr(new_photo, "icon_filename", thumbnail_key)
-        db.add(new_photo)
-        db.commit()
-        db.refresh(new_photo)
+        logger.info(
+            f"Updating photo {existing_photo.id}: server_id {existing_photo.server_id} -> {settings.PHOTOS_SERVER_ID}"
+        )
+        updated_photo = tphoto_crud.update_photo(
+            db,
+            photo_id=int(existing_photo.id),
+            updates={
+                "server_id": settings.PHOTOS_SERVER_ID,
+                "filename": photo_key,
+                "icon_filename": thumbnail_key,
+                "filesize": len(processed_photo),
+                "icon_filesize": len(processed_thumbnail),
+                "height": image_dims[1],
+                "width": image_dims[0],
+                "icon_height": thumbnail_dims[1],
+                "icon_width": thumbnail_dims[0],
+                "source": "R",  # R for revised/rotated
+            },
+        )
+
+        if updated_photo:
+            logger.info(
+                f"Photo {updated_photo.id} updated: server_id now {updated_photo.server_id}"
+            )
+
+        if not updated_photo:
+            # Rollback S3 uploads if database update fails
+            logger.error("Failed to update photo record in database")
+            # Note: We keep original S3 objects, only new ones need cleanup
+            # But since they're revisions, they're safe to keep as backups
+            raise HTTPException(status_code=500, detail="Failed to update photo record")
+
     except Exception as e:
-        logger.error(f"Failed to update new photo record: {e}")
-        # Clean up S3 files and database record
-        s3_service.delete_photo_and_thumbnail(int(new_photo.id))
-        try:
-            db.delete(new_photo)
-            db.commit()
-        except Exception as cleanup_error:
-            logger.error(f"Failed to cleanup new photo record: {cleanup_error}")
+        logger.error(f"Failed to update photo record: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update photo record")
 
-        raise HTTPException(status_code=500, detail="Failed to update new photo record")
+    logger.info(
+        f"Successfully rotated photo {photo_id}: {existing_photo.filename} -> {photo_key}"
+    )
 
-    # Soft-delete the old photo record
-    try:
-        setattr(existing_photo, "deleted_ind", "Y")
-        db.add(existing_photo)
-        db.commit()
-    except Exception as e:
-        logger.error(f"Failed to soft-delete original photo: {e}")
-        # Rollback: delete new photo and S3 files, restore old photo
-        s3_service.delete_photo_and_thumbnail(int(new_photo.id))
-        try:
-            db.delete(new_photo)
-            setattr(existing_photo, "deleted_ind", "N")  # Restore original
-            db.add(existing_photo)
-            db.commit()
-        except Exception as rollback_error:
-            logger.error(f"Failed to rollback rotation: {rollback_error}")
+    # Get updated server URL for response (fetch after update since server_id was updated)
+    updated_server: Server | None = (
+        db.query(Server).filter(Server.id == updated_photo.server_id).first()
+    )
+    base_url = str(updated_server.url) if updated_server and updated_server.url else ""
 
-        raise HTTPException(status_code=500, detail="Failed to complete photo rotation")
-
-    logger.info(f"Successfully rotated photo {photo_id} to new photo {new_photo.id}")
-
-    # Return response for the new photo
+    # Return response with updated photo
     return {
-        "id": new_photo.id,
-        "log_id": new_photo.tlog_id,
+        "id": updated_photo.id,
+        "log_id": updated_photo.tlog_id,
         "user_id": int(tlog.user_id),
-        "type": str(new_photo.type),
-        "filesize": int(new_photo.filesize),
-        "height": int(new_photo.height),
-        "width": int(new_photo.width),
-        "icon_filesize": int(new_photo.icon_filesize),
-        "icon_height": int(new_photo.icon_height),
-        "icon_width": int(new_photo.icon_width),
-        "caption": str(new_photo.name),
-        "text_desc": str(new_photo.text_desc),
-        "license": str(new_photo.public_ind),
-        "photo_url": join_url(base_url, str(new_photo.filename)),
-        "icon_url": join_url(base_url, str(new_photo.icon_filename)),
+        "type": str(updated_photo.type),
+        "filesize": int(updated_photo.filesize),
+        "height": int(updated_photo.height),
+        "width": int(updated_photo.width),
+        "icon_filesize": int(updated_photo.icon_filesize),
+        "icon_height": int(updated_photo.icon_height),
+        "icon_width": int(updated_photo.icon_width),
+        "caption": str(updated_photo.name),
+        "text_desc": str(updated_photo.text_desc),
+        "license": str(updated_photo.public_ind),
+        "photo_url": join_url(base_url, str(updated_photo.filename)),
+        "icon_url": join_url(base_url, str(updated_photo.icon_filename)),
     }
