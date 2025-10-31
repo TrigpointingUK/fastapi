@@ -1,7 +1,8 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import PhotoAlbum from './PhotoAlbum';
+import { useQueryClient, useQuery } from '@tanstack/react-query';
+import Layout from '../components/layout/Layout';
+import Spinner from '../components/ui/Spinner';
 import { usePhotoSwipe } from '../hooks/usePhotoSwipe';
 import { Photo } from '../lib/api';
 import 'photoswipe/style.css';
@@ -20,8 +21,10 @@ export default function PhotoDetail() {
   const { photo_id } = useParams<{ photo_id: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const photoIdNum = photo_id ? parseInt(photo_id, 10) : null;
+  const [photoForViewer, setPhotoForViewer] = useState<Photo | null>(null);
 
-  // Get all photos from the cache to find the requested photo
+  // Try to get photo from the photos grid cache first
   const photoData = queryClient.getQueryData<{
     pages: PhotosResponse[];
     pageParams: number[];
@@ -31,33 +34,90 @@ export default function PhotoDetail() {
   }>(['photos', 'infinite', 'all']);
 
   const allPhotos = photoData?.pages.flatMap((page) => page.items) || [];
-  const photoIdNum = photo_id ? parseInt(photo_id, 10) : null;
-  const photoIndex = allPhotos.findIndex((p) => p.id === photoIdNum);
+  const cachedPhoto = allPhotos.find((p) => p.id === photoIdNum);
+
+  // If photo not in cache, fetch a batch of recent photos that might contain it
+  // We use a reasonable skip value based on the photo ID to get photos around that ID
+  const estimatedSkip = photoIdNum ? Math.max(0, 430000 - photoIdNum) : 0;
+  
+  const { data: fetchedPhotoData, isLoading, error } = useQuery<PhotosResponse>({
+    queryKey: ['photo', photoIdNum],
+    queryFn: async () => {
+      const apiBase = import.meta.env.VITE_API_BASE as string;
+      // Fetch a batch of 100 photos around the estimated position
+      const response = await fetch(`${apiBase}/v1/photos?limit=100&skip=${estimatedSkip}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch photo');
+      }
+      return response.json();
+    },
+    enabled: !cachedPhoto && photoIdNum !== null,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const fetchedPhoto = fetchedPhotoData?.items?.find((p) => p.id === photoIdNum);
+
+  // Set the photo to display once we have it (from cache or API)
+  useEffect(() => {
+    if (cachedPhoto) {
+      setPhotoForViewer(cachedPhoto);
+    } else if (fetchedPhoto) {
+      setPhotoForViewer(fetchedPhoto);
+    }
+  }, [cachedPhoto, fetchedPhoto]);
 
   // Navigate back to grid on close
   const handleClose = () => {
     navigate('/photos', { replace: false });
   };
 
-  // If photo is found, open PhotoSwipe
+  // Open PhotoSwipe when we have a photo
   usePhotoSwipe({
-    photos: photoIndex >= 0 ? [allPhotos[photoIndex]] : [], // Only show the single photo (requirement 1b)
+    photos: photoForViewer ? [photoForViewer] : [],
     initialIndex: 0,
     onClose: handleClose,
   });
 
-  // If photo not found or invalid ID, redirect to grid
-  useEffect(() => {
-    if (photoIdNum === null || photoIndex === -1) {
-      if (allPhotos.length > 0) {
-        // Photos are loaded but this photo isn't in the list
-        navigate('/photos', { replace: true });
-      }
-      // Otherwise wait for photos to load
-    }
-  }, [photoIdNum, photoIndex, allPhotos.length, navigate]);
+  // Show loading state while fetching
+  if (isLoading && !cachedPhoto) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <Spinner size="lg" />
+            <p className="mt-4 text-gray-600">Loading photo...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
-  // Render the PhotoAlbum grid in the background for the zoom animation
-  return <PhotoAlbum />;
+  // Show error state or photo not found
+  if ((error || (!photoForViewer && !isLoading)) && !cachedPhoto) {
+    return (
+      <Layout>
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <p className="text-red-600 mb-4">
+              {error ? 'Failed to load photo.' : 'Photo not found.'}
+            </p>
+            <button
+              onClick={() => navigate('/photos')}
+              className="px-4 py-2 bg-trig-green-600 text-white rounded hover:bg-trig-green-700"
+            >
+              Back to Photos
+            </button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  // Render empty layout as background (PhotoSwipe will overlay)
+  return (
+    <Layout>
+      <div className="max-w-7xl mx-auto" />
+    </Layout>
+  );
 }
 
