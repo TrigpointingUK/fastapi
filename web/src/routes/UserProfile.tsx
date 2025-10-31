@@ -83,117 +83,117 @@ export default function UserProfile() {
       <div className="max-w-6xl mx-auto">
         {/* Header Section */}
         <Card className="mb-6">
-          <div className="flex items-start gap-6 flex-wrap xl:flex-nowrap">
-            {/* Left: Username and Member Since */}
-            <div className="flex-shrink-0">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                {user.name}
-              </h1>
-              <p className="text-gray-600">
-                Member since {memberSince}
-              </p>
+          {/* Main layout: Two columns on large screens */}
+          <div className="flex flex-col xl:flex-row gap-6">
+            {/* Left column: All user info */}
+            <div className="flex-1">
+              {/* Top: Username, Member Since, and Statistics */}
+              <div className="flex items-start gap-6 flex-wrap mb-6">
+                <div className="flex-shrink-0">
+                  <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                    {user.name}
+                  </h1>
+                  <p className="text-gray-600">
+                    Member since {memberSince}
+                  </p>
+                </div>
+
+                {user.stats && (
+                  <div className="flex gap-8 text-center flex-1 min-w-0 justify-center">
+                    <div>
+                      <div className="text-2xl font-bold text-trig-green-600">
+                        {user.stats.total_trigs_logged.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-600">Trigs Logged</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-trig-green-600">
+                        {user.stats.total_logs.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-600">Total Logs</div>
+                    </div>
+                    <div>
+                      <div className="text-2xl font-bold text-trig-green-600">
+                        {user.stats.total_photos.toLocaleString()}
+                      </div>
+                      <div className="text-sm text-gray-600">Photos</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* User details fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <EditableField
+                  label="Username"
+                  value={user.name}
+                  onSave={(value) => handleFieldUpdate("name", value)}
+                  editable={isOwnProfile}
+                  maxLength={30}
+                />
+                {((user.firstname || user.surname) || isOwnProfile) && (
+                  <EditableField
+                    label="Full Name"
+                    value={[user.firstname, user.surname].filter(Boolean).join(" ")}
+                    onSave={(value) => handleFieldUpdate("fullname", value)}
+                    editable={isOwnProfile}
+                    placeholder="First Last"
+                    maxLength={61}
+                  />
+                )}
+                {!userId && (
+                  <EditableField
+                    label="Email"
+                    value={user.email || ""}
+                    onSave={(value) => handleFieldUpdate("email", value)}
+                    editable={isOwnProfile}
+                    placeholder="your.email@example.com"
+                    type="email"
+                    maxLength={255}
+                  />
+                )}
+                {(user.homepage || isOwnProfile) && (
+                  <EditableField
+                    label="Homepage"
+                    value={user.homepage || ""}
+                    onSave={(value) => handleFieldUpdate("homepage", value)}
+                    editable={isOwnProfile}
+                    placeholder="https://example.com"
+                    maxLength={255}
+                  />
+                )}
+              </div>
+
+              {(user.about || isOwnProfile) && (
+                <div className="mt-6">
+                  <EditableField
+                    label="About"
+                    value={user.about}
+                    onSave={(value) => handleFieldUpdate("about", value)}
+                    editable={isOwnProfile}
+                    multiline
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+              )}
             </div>
 
-            {/* Middle: Statistics */}
-            {user.stats && (
-              <div className="flex gap-8 text-center flex-1 min-w-0">
-                <div>
-                  <div className="text-2xl font-bold text-trig-green-600">
-                    {user.stats.total_trigs_logged.toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-600">Trigs Logged</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-trig-green-600">
-                    {user.stats.total_logs.toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-600">Total Logs</div>
-                </div>
-                <div>
-                  <div className="text-2xl font-bold text-trig-green-600">
-                    {user.stats.total_photos.toLocaleString()}
-                  </div>
-                  <div className="text-sm text-gray-600">Photos</div>
-                </div>
-              </div>
-            )}
-
-            {/* Right: Map */}
-            <div className="w-full xl:w-auto flex-shrink-0">
+            {/* Right column: Map and Badge stacked on large screens, side by side on medium */}
+            <div className="flex flex-col md:flex-row xl:flex-col gap-6 xl:w-72 flex-shrink-0 md:items-start">
               <img 
                 src={`${apiBase}/v1/users/${displayUserId}/map`}
                 alt={`${user.name}'s trig map`}
-                className="rounded-lg border border-gray-200 w-full xl:w-48 h-auto"
+                className="rounded-lg border border-gray-200 w-full h-auto"
+                loading="lazy"
+              />
+              <img 
+                src={`${apiBase}/v1/users/${displayUserId}/badge`}
+                alt={`${user.name}'s badge`}
+                className="rounded border border-gray-200 w-full h-auto md:max-h-none"
                 loading="lazy"
               />
             </div>
           </div>
-
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
-            <EditableField
-              label="Username"
-              value={user.name}
-              onSave={(value) => handleFieldUpdate("name", value)}
-              editable={isOwnProfile}
-              maxLength={30}
-            />
-            {((user.firstname || user.surname) || isOwnProfile) && (
-              <EditableField
-                label="Full Name"
-                value={[user.firstname, user.surname].filter(Boolean).join(" ")}
-                onSave={(value) => handleFieldUpdate("fullname", value)}
-                editable={isOwnProfile}
-                placeholder="First Last"
-                maxLength={61}
-              />
-            )}
-            {!userId && (
-              <EditableField
-                label="Email"
-                value={user.email || ""}
-                onSave={(value) => handleFieldUpdate("email", value)}
-                editable={isOwnProfile}
-                placeholder="your.email@example.com"
-                type="email"
-                maxLength={255}
-              />
-            )}
-            {(user.homepage || isOwnProfile) && (
-              <EditableField
-                label="Homepage"
-                value={user.homepage || ""}
-                onSave={(value) => handleFieldUpdate("homepage", value)}
-                editable={isOwnProfile}
-                placeholder="https://example.com"
-                maxLength={255}
-              />
-            )}
-          </div>
-
-          {(user.about || isOwnProfile) && (
-            <div className="mt-6 flex gap-6 flex-wrap xl:flex-nowrap">
-              <div className="flex-1 min-w-0">
-                <EditableField
-                  label="About"
-                  value={user.about}
-                  onSave={(value) => handleFieldUpdate("about", value)}
-                  editable={isOwnProfile}
-                  multiline
-                  placeholder="Tell us about yourself..."
-                />
-              </div>
-              
-              {/* Badge on the right side - 1/3 width container, badge uses half */}
-              <div className="w-full xl:w-1/3 flex-shrink-0 flex justify-center items-start">
-                <img 
-                  src={`${apiBase}/v1/users/${displayUserId}/badge`}
-                  alt={`${user.name}'s badge`}
-                  className="rounded border border-gray-200 w-1/2 xl:w-1/2 h-auto max-w-xs"
-                  loading="lazy"
-                />
-              </div>
-            </div>
-          )}
         </Card>
 
         {/* Breakdown Section */}
