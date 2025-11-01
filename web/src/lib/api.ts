@@ -74,3 +74,42 @@ export async function rotatePhoto(
   return apiPost<Photo>(`/v1/photos/${photoId}/rotate`, { angle }, token);
 }
 
+export interface TrigDetails {
+  current_use: string;
+  historic_use: string;
+  wgs_height: number;
+  postcode: string;
+  county: string;
+  town: string;
+  fb_number: string;
+  stn_number: string;
+  stn_number_active?: string;
+  stn_number_passive?: string;
+  stn_number_osgb36?: string;
+}
+
+export interface TrigStats {
+  logged_first: string;
+  logged_last: string;
+  logged_count: number;
+  found_last: string;
+  found_count: number;
+  photo_count: number;
+  score_mean: string;
+  score_baysian: string;
+}
+
+export interface Trig {
+  id: number;
+  waypoint: string;
+  name: string;
+  status_name?: string;
+  physical_type: string;
+  condition: string;
+  wgs_lat: string;
+  wgs_long: string;
+  osgb_gridref: string;
+  details?: TrigDetails;
+  stats?: TrigStats;
+}
+

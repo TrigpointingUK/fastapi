@@ -104,12 +104,14 @@ def list_logs(
                         db.query(Server).filter(Server.id == p.server_id).first()
                     )
                     base_url = str(server.url) if server and server.url else ""
+                    # Handle empty type field by defaulting to 'O' (other)
+                    photo_type = str(p.type) if p.type and p.type.strip() else "O"
                     out["photos"].append(
                         TPhotoResponse(
                             id=int(p.id),
                             log_id=int(p.tlog_id),
                             user_id=int(orig.user_id),
-                            type=str(p.type),
+                            type=photo_type,
                             filesize=int(p.filesize),
                             height=int(p.height),
                             width=int(p.width),
@@ -191,7 +193,7 @@ def get_log(
                     id=int(p.id),
                     log_id=int(p.tlog_id),
                     user_id=int(log.user_id),
-                    type=str(p.type),
+                    type=str(p.type) if p.type and p.type.strip() else "O",
                     filesize=int(p.filesize),
                     height=int(p.height),
                     width=int(p.width),
@@ -346,12 +348,14 @@ def list_photos_for_log(
             db.query(Server).filter(Server.id == p.server_id).first()
         )
         base_url = str(server.url) if server and server.url else ""
+        # Handle empty type field by defaulting to 'O' (other)
+        photo_type = str(p.type) if p.type and p.type.strip() else "O"
         photos.append(
             TPhotoResponse(
                 id=int(p.id),
                 log_id=int(p.tlog_id),
                 user_id=int(tlog.user_id) if tlog else 0,
-                type=str(p.type),
+                type=photo_type,
                 filesize=int(p.filesize),
                 height=int(p.height),
                 width=int(p.width),

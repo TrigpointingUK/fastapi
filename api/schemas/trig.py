@@ -6,7 +6,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_serializer
 
 
 class TrigMinimal(BaseModel):
@@ -51,6 +51,11 @@ class TrigDetails(BaseModel):
     stn_number_active: Optional[str] = None
     stn_number_passive: Optional[str] = None
     stn_number_osgb36: Optional[str] = None
+
+    @field_serializer("town")
+    def serialize_town(self, value: str) -> str:
+        """Convert town name from ALL CAPS to Mixed Case."""
+        return value.title() if value else value
 
     class Config:
         from_attributes = True

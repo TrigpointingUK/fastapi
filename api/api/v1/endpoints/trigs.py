@@ -368,12 +368,14 @@ def list_logs_for_trig(
                         db.query(Server).filter(Server.id == p.server_id).first()
                     )
                     base_url = str(server.url) if server and server.url else ""
+                    # Handle empty type field by defaulting to 'O' (other)
+                    photo_type = str(p.type) if p.type and p.type.strip() else "O"
                     out["photos"].append(
                         TPhotoResponse(
                             id=int(p.id),
                             log_id=int(p.tlog_id),
                             user_id=int(orig.user_id),
-                            type=str(p.type),
+                            type=photo_type,
                             filesize=int(p.filesize),
                             height=int(p.height),
                             width=int(p.width),
@@ -438,12 +440,14 @@ def list_photos_for_trig(
             db.query(Server).filter(Server.id == p.server_id).first()
         )
         base_url = str(server.url) if server and server.url else ""
+        # Handle empty type field by defaulting to 'O' (other)
+        photo_type = str(p.type) if p.type and p.type.strip() else "O"
         result_items.append(
             TPhotoResponse(
                 id=int(p.id),
                 log_id=int(p.tlog_id),
                 user_id=0,  # omitted to avoid per-item query; can be enriched later
-                type=str(p.type),
+                type=photo_type,
                 filesize=int(p.filesize),
                 height=int(p.height),
                 width=int(p.width),

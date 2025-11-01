@@ -1,14 +1,19 @@
 import { lazy, Suspense } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Spinner from "./components/ui/Spinner";
+// NotFound is eagerly loaded to ensure it's always available, even if there are deployment issues
+import NotFound from "./routes/NotFound";
 
 const Home = lazy(() => import("./routes/Home"));
 const PhotoAlbum = lazy(() => import("./routes/PhotoAlbum"));
 const PhotoDetail = lazy(() => import("./routes/PhotoDetail"));
+const TrigDetail = lazy(() => import("./routes/TrigDetail"));
+const LogDetail = lazy(() => import("./routes/LogDetail"));
 const UserProfile = lazy(() => import("./routes/UserProfile"));
+const UserLogs = lazy(() => import("./routes/UserLogs"));
+const UserPhotos = lazy(() => import("./routes/UserPhotos"));
 const About = lazy(() => import("./routes/About"));
 const AppDetail = lazy(() => import("./routes/AppDetail"));
-const NotFound = lazy(() => import("./routes/NotFound"));
 
 function LoadingFallback() {
   return (
@@ -48,10 +53,42 @@ const router = createBrowserRouter(
       ),
     },
     {
+      path: "/trig/:trigId",
+      element: (
+        <Suspense fallback={<LoadingFallback />}>
+          <TrigDetail />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/logs/:logId",
+      element: (
+        <Suspense fallback={<LoadingFallback />}>
+          <LogDetail />
+        </Suspense>
+      ),
+    },
+    {
       path: "/profile/:userId",
       element: (
         <Suspense fallback={<LoadingFallback />}>
           <UserProfile />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/profile/:userId/logs",
+      element: (
+        <Suspense fallback={<LoadingFallback />}>
+          <UserLogs />
+        </Suspense>
+      ),
+    },
+    {
+      path: "/profile/:userId/photos",
+      element: (
+        <Suspense fallback={<LoadingFallback />}>
+          <UserPhotos />
         </Suspense>
       ),
     },
@@ -81,11 +118,7 @@ const router = createBrowserRouter(
     },
     {
       path: "*",
-      element: (
-        <Suspense fallback={<LoadingFallback />}>
-          <NotFound />
-        </Suspense>
-      ),
+      element: <NotFound />,
     },
   ],
   {

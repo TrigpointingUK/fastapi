@@ -1,4 +1,4 @@
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth0 } from "@auth0/auth0-react";
 import Layout from "../components/layout/Layout";
@@ -100,24 +100,33 @@ export default function UserProfile() {
 
                 {user.stats && (
                   <div className="flex gap-8 text-center flex-1 min-w-0 justify-center">
-                    <div>
+                    <Link
+                      to={`/profile/${displayUserId}/logs`}
+                      className="hover:opacity-80 transition-opacity"
+                    >
                       <div className="text-2xl font-bold text-trig-green-600">
                         {user.stats.total_trigs_logged.toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-600">Trigs Logged</div>
-                    </div>
-                    <div>
+                    </Link>
+                    <Link
+                      to={`/profile/${displayUserId}/logs`}
+                      className="hover:opacity-80 transition-opacity"
+                    >
                       <div className="text-2xl font-bold text-trig-green-600">
                         {user.stats.total_logs.toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-600">Total Logs</div>
-                    </div>
-                    <div>
+                    </Link>
+                    <Link
+                      to={`/profile/${displayUserId}/photos`}
+                      className="hover:opacity-80 transition-opacity"
+                    >
                       <div className="text-2xl font-bold text-trig-green-600">
                         {user.stats.total_photos.toLocaleString()}
                       </div>
                       <div className="text-sm text-gray-600">Photos</div>
-                    </div>
+                    </Link>
                   </div>
                 )}
               </div>
@@ -164,7 +173,7 @@ export default function UserProfile() {
                 )}
               </div>
 
-              {(user.about || isOwnProfile) && (
+              {((user.about && user.about.trim() !== "") || isOwnProfile) && (
                 <div className="mt-6">
                   <EditableField
                     label="About"

@@ -864,6 +864,9 @@ def list_logs_for_user(
     user_id: int,
     skip: int = Query(0, ge=0),
     limit: int = Query(10, ge=1, le=100),
+    include: Optional[str] = Query(
+        None, description="Comma-separated list of includes: photos"
+    ),
     db: Session = Depends(get_db),
 ):
     items = tlog_crud.list_logs_filtered(db, user_id=user_id, skip=skip, limit=limit)
@@ -873,6 +876,52 @@ def list_logs_for_user(
     from api.api.v1.endpoints.logs import enrich_logs_with_names
 
     items_serialized = enrich_logs_with_names(db, items)
+
+    # Handle includes
+    if include:
+        tokens = {t.strip() for t in include.split(",") if t.strip()}
+
+        # Validate include tokens
+        valid_includes = {"photos"}
+        invalid_tokens = tokens - valid_includes
+        if invalid_tokens:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid include parameter(s): {', '.join(sorted(invalid_tokens))}. Valid options: {', '.join(sorted(valid_includes))}",
+            )
+        if "photos" in tokens:
+            # Attach photos list for each log item
+            for out, orig in zip(items_serialized, items):
+                photos = tphoto_crud.list_all_photos_for_log(db, log_id=int(orig.id))
+                # Build base URLs per photo server
+                out["photos"] = []
+                for p in photos:
+                    server: Server | None = (
+                        db.query(Server).filter(Server.id == p.server_id).first()
+                    )
+                    base_url = str(server.url) if server and server.url else ""
+                    # Handle empty type field by defaulting to 'O' (other)
+                    photo_type = str(p.type) if p.type and p.type.strip() else "O"
+                    out["photos"].append(
+                        TPhotoResponse(
+                            id=int(p.id),
+                            log_id=int(p.tlog_id),
+                            user_id=int(orig.user_id),
+                            type=photo_type,
+                            filesize=int(p.filesize),
+                            height=int(p.height),
+                            width=int(p.width),
+                            icon_filesize=int(p.icon_filesize),
+                            icon_height=int(p.icon_height),
+                            icon_width=int(p.icon_width),
+                            name=str(p.name),
+                            text_desc=str(p.text_desc),
+                            public_ind=str(p.public_ind),
+                            photo_url=join_url(base_url, str(p.filename)),
+                            icon_url=join_url(base_url, str(p.icon_filename)),
+                        ).model_dump()
+                    )
+
     has_more = (skip + len(items)) < total
     base = f"/v1/users/{user_id}/logs"
     self_link = base + f"?limit={limit}&skip={skip}"
@@ -915,12 +964,14 @@ def list_photos_for_user(
             db.query(Server).filter(Server.id == p.server_id).first()
         )
         base_url = str(server.url) if server and server.url else ""
+        # Handle empty type field by defaulting to 'O' (other)
+        photo_type = str(p.type) if p.type and p.type.strip() else "O"
         result_items.append(
             TPhotoResponse(
                 id=int(p.id),
                 log_id=int(p.tlog_id),
                 user_id=user_id,
-                type=str(p.type),
+                type=photo_type,
                 filesize=int(p.filesize),
                 height=int(p.height),
                 width=int(p.width),

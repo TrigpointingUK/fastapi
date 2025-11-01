@@ -47,6 +47,9 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
   const displayTrigName = log.trig_name || trigName;
   const displayUserName = log.user_name || userName;
 
+  // Format trig ID with minimum 4 digits (TP0023, TP1234, TP34567)
+  const formattedTrigId = `TP${log.trig_id.toString().padStart(4, '0')}`;
+
   const handlePhotoClick = (photo: Photo) => {
     // Navigate with the photo data in state so PhotoDetail doesn't need to fetch it
     navigate(`/photos/${photo.id}`, { state: { photo } });
@@ -62,7 +65,7 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
               to={`/trig/${log.trig_id}`}
               className="text-lg font-semibold text-trig-green-600 hover:text-trig-green-700 hover:underline"
             >
-              TP{log.trig_id}
+              {formattedTrigId}
               {displayTrigName && (
                 <>
                   <span className="text-gray-400 mx-2">·</span>
