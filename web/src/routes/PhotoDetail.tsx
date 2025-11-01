@@ -75,9 +75,9 @@ export default function PhotoDetail() {
     }
   }, [photoFromState, cachedPhoto, fetchedPhoto]);
 
-  // Navigate back to grid on close
+  // Navigate back to previous page on close
   const handleClose = () => {
-    navigate('/photos', { replace: false });
+    navigate(-1); // Go back in browser history
   };
 
   // Open PhotoSwipe when we have a photo
