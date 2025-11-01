@@ -9,7 +9,16 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "weekly"
+    target-branch: "develop" # PRs go to develop, not main
+    
+  - package-ecosystem: "npm"
+    directory: "/web"
+    schedule:
+      interval: "weekly"
+    target-branch: "develop"
+    
   - package-ecosystem: "terraform"
     directory: "/terraform/staging"
     schedule:
       interval: "weekly"
+    target-branch: "develop"
