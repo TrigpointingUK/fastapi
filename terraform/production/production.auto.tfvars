@@ -4,7 +4,7 @@ environment = "production"
 use_ecs_valkey = true
 
 # Container image (built by GitHub Actions CI/CD)
-container_image = "ghcr.io/trigpointinguk/fastapi:main"
+container_image = "ghcr.io/trigpointinguk/platform/api:main"
 
 # Scaling settings
 desired_count = 1
@@ -21,6 +21,7 @@ enable_cloudflare_ssl = true
 
 log_level                = "INFO"
 cors_origins             = ["https://trigpointing.uk", "https://api.trigpointing.uk"]
+spa_container_image      = "ghcr.io/trigpointinguk/platform/web:main"
 db_pool_size             = 10
 db_pool_recycle          = 300
 profiling_enabled        = false

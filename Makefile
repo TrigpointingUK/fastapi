@@ -5,7 +5,8 @@ orientation-model:
 	@echo "Model exported to res/models/orientation_classifier.onnx"
 .PHONY: help install install-dev test test-cov lint format type-check security build run clean docker-build docker-run docker-down mysql-client diff-cov \
 	run-staging db-tunnel-staging-start db-tunnel-staging-stop mysql-staging \
-	bastion-ssm-shell db-tunnel-staging-ssm-start bastion-allow-my-ip bastion-revoke-my-ip
+	bastion-ssm-shell db-tunnel-staging-ssm-start bastion-allow-my-ip bastion-revoke-my-ip \
+	web-install web-dev web-build web-test web-lint web-type-check
 
 # Default target
 help: ## Show this help message
@@ -74,7 +75,7 @@ run-staging: ## Run FastAPI locally against staging DB (requires db-tunnel-stagi
 	ENVIRONMENT=development \
 	DB_HOST=127.0.0.1 DB_PORT=$(LOCAL_DB_TUNNEL_PORT) \
 	DB_USER="$$DB_USER" DB_PASSWORD="$$DB_PASSWORD" DB_NAME="$$DB_NAME" \
-	uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+	uvicorn api.main:app --reload --host 127.0.0.1 --port 8000
 
 # Open a MySQL client to staging via the tunnel
 mysql-staging: ## Open MySQL client against staging via tunnel (requires db-tunnel-staging-start)
@@ -161,12 +162,12 @@ test: ## Run tests
 	pytest
 
 test-cov: ## Run tests with coverage
-	pytest --cov=app --cov-report=term-missing --cov-report=html --cov-report=xml:coverage.xml
+	pytest --cov=api --cov-report=term-missing --cov-report=html --cov-report=xml:coverage.xml
 
 diff-cov: ## Check diff coverage against origin/main (fail if < 90%)
 	@if [ ! -f coverage.xml ]; then \
 		echo "Generating coverage.xml via pytest..."; \
-		pytest --cov=app --cov-report=xml:coverage.xml >/dev/null; \
+		pytest --cov=api --cov-report=xml:coverage.xml >/dev/null; \
 	fi
 	@BASE_REF=$$(git merge-base HEAD origin/main); \
 	echo "Comparing coverage against $$BASE_REF"; \
@@ -174,35 +175,35 @@ diff-cov: ## Check diff coverage against origin/main (fail if < 90%)
 
 # Code quality
 lint: ## Run linting
-	flake8 app tests
-	mypy app --ignore-missing-imports
+	flake8 api
+	mypy api --ignore-missing-imports
 
 format: ## Format code
-	black app tests
-	isort app tests
+	black api
+	isort api
 	terraform fmt -recursive terraform/
 
 format-check: ## Check code formatting
-	black --check app tests
-	isort --check-only app tests
+	black --check api
+	isort --check-only api
 
 type-check: ## Run type checking
-	mypy app --ignore-missing-imports
+	mypy api --ignore-missing-imports
 
 security: ## Run security checks
-	bandit -r app
+	bandit -r api --skip B101 --exclude api/tests
 	-safety check
 
 # Application
 build: ## Build the application
-	docker build -t fastapi-app .
+	docker build -t platform-api .
 
 run: ## Run the application locally
-	uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 
 # Docker commands
 docker-build: ## Build Docker image
-	docker build -t fastapi-app .
+	docker build -t platform-api .
 
 docker-run: ## Run application with Docker Compose
 	docker-compose up -d
@@ -300,7 +301,26 @@ tf-fmt: ## Format Terraform files
 pre-commit: ## Run pre-commit hooks
 	pre-commit run --all-files
 
-ci: terraform-format-check format-check lint type-check security test ## Run all CI checks
+ci: terraform-format-check format-check lint type-check security test web-lint web-type-check web-test ## Run all CI checks
+
+# Web application targets
+web-install: ## Install web application dependencies
+	cd web && npm ci
+
+web-dev: ## Run web application in development mode
+	cd web && npm run dev
+
+web-build: ## Build web application for production
+	cd web && npm run build
+
+web-test: ## Run web application tests
+	cd web && npm run test:run
+
+web-lint: ## Lint web application code
+	cd web && npm run lint
+
+web-type-check: ## Type check web application
+	cd web && npm run type-check
 
 terraform-format-check: ## Check Terraform formatting; auto-format and fail if mismatches
 	@command -v terraform >/dev/null 2>&1 || { echo "❌ terraform not installed. Please install Terraform to run formatting checks."; exit 1; }

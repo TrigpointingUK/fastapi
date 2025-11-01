@@ -31,6 +31,11 @@ output "swagger_client_id" {
   value       = auth0_client.swagger.id
 }
 
+output "web_spa_client_id" {
+  description = "Web SPA client ID"
+  value       = auth0_client.web_spa.id
+}
+
 output "website_client_id" {
   description = "Website client ID"
   value       = auth0_client.website.id

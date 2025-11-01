@@ -1,7 +1,7 @@
 # CloudWatch Log Group for nginx proxy
 resource "aws_cloudwatch_log_group" "nginx_proxy" {
   name              = "/aws/ecs/${var.project_name}-nginx-proxy"
-  retention_in_days = 30
+  retention_in_days = 7
 
   tags = {
     Name = "${var.project_name}-nginx-proxy-logs"

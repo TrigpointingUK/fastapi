@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Deployment script for FastAPI project
+# Deployment script for Platform API
 set -e
 
 ENVIRONMENT=${1:-staging}
@@ -37,17 +37,17 @@ fi
 
 # Build and push Docker image
 echo "🐳 Building Docker image..."
-docker build -t fastapi-app .
+docker build -t platform-api .
 
 # Tag and push to registry (adjust for your registry)
 if [ "$ENVIRONMENT" = "production" ]; then
-    IMAGE_TAG="ghcr.io/your-username/fastapi:main"
+    IMAGE_TAG="ghcr.io/your-username/platform/api:main"
 else
-    IMAGE_TAG="ghcr.io/your-username/fastapi:develop"
+    IMAGE_TAG="ghcr.io/your-username/platform/api:develop"
 fi
 
 echo "🐳 Tagging image as $IMAGE_TAG..."
-docker tag fastapi-app $IMAGE_TAG
+docker tag platform-api $IMAGE_TAG
 
 echo "🐳 Pushing image to registry..."
 docker push $IMAGE_TAG

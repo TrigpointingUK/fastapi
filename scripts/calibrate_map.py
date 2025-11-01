@@ -26,7 +26,7 @@ if REPO_ROOT not in sys.path:
     sys.path.insert(0, REPO_ROOT)
 
 # Import after sys.path manipulation
-from app.utils.geocalibrate import (  # noqa: E402
+from api.utils.geocalibrate import (  # noqa: E402
     calibrate_affine_from_coastline,
     download_natural_earth_110m_uk_coastline,
 )

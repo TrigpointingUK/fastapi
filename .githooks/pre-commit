@@ -17,19 +17,22 @@ fi
 # Categorise changes
 run_fastapi_checks=false
 run_terraform_checks=false
+run_web_checks=false
 docs_only=true
 
 while IFS= read -r file; do
-    if [[ "$file" =~ ^(app/|res/|tests/|\.github/) ]]; then
+    if [[ "$file" =~ ^(api/|res/|\.github/workflows/ci\.yml) ]]; then
         run_fastapi_checks=true
         docs_only=false
     elif [[ "$file" =~ ^terraform/ ]]; then
         run_terraform_checks=true
         docs_only=false
-    elif [[ ! "$file" =~ ^docs/ ]]; then
-        # Non-docs, non-categorised file - run FastAPI checks to be safe
-        run_fastapi_checks=true
+    elif [[ "$file" =~ ^web/ ]]; then
+        run_web_checks=true
         docs_only=false
+    elif [[ ! "$file" =~ ^(docs/|forum/|wiki/|\.github/|Makefile|README\.md|.*\.md$) ]]; then
+        # Unknown file type - warn but allow commit
+        echo "⚠️  File not categorised: $file"
     fi
 done <<< "$staged_files"
 
@@ -52,7 +55,7 @@ fi
 
 # Run FastAPI checks
 if [[ "$run_fastapi_checks" == true ]]; then
-    echo "🧪 Running FastAPI CI checks (app/res/tests changed)..."
+    echo "🧪 Running FastAPI CI checks (api/ or res/ changed)..."
     if make ci; then
         echo "✅ FastAPI CI checks passed!"
     else
@@ -62,6 +65,14 @@ if [[ "$run_fastapi_checks" == true ]]; then
     fi
 fi
 
+# Run Web checks
+if [[ "$run_web_checks" == true ]]; then
+    echo "🌐 Running Web CI checks (web/ changed)..."
+    echo "💡 Skipping web checks in git hook - will run in CI/CD"
+    # Uncomment if you want to run web checks locally:
+    # cd web && npm run lint && npm run type-check && npm run test
+fi
+
 # Run Terraform checks
 if [[ "$run_terraform_checks" == true ]]; then
     echo "🔧 Checking Terraform formatting..."
@@ -69,7 +80,7 @@ if [[ "$run_terraform_checks" == true ]]; then
         echo "❌ terraform not installed. Please install Terraform."
         exit 1
     fi
-    
+
     if terraform fmt -write=false -check -recursive terraform/ >/dev/null 2>&1; then
         echo "✅ Terraform formatting is correct!"
     else

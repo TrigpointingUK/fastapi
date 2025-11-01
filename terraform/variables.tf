@@ -23,6 +23,12 @@ variable "container_image" {
   type        = string
 }
 
+variable "spa_container_image" {
+  description = "Docker image for the SPA web application"
+  type        = string
+  default     = "ghcr.io/trigpointinguk/platform/web:latest"
+}
+
 variable "cpu" {
   description = "CPU units for the ECS task"
   type        = number

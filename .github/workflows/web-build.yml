@@ -1,0 +1,206 @@
+name: Web CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-build.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-build.yml'
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/web
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: web/package-lock.json
+
+    - name: Install dependencies
+      working-directory: web
+      run: npm ci
+
+    - name: Lint with ESLint
+      working-directory: web
+      run: npm run lint
+
+    - name: Type check with TypeScript
+      working-directory: web
+      run: npm run type-check
+
+    - name: Run tests
+      working-directory: web
+      run: npm run test:run
+
+    - name: Build application
+      working-directory: web
+      run: npm run build
+      env:
+        # Use placeholder values for build test
+        VITE_ENVIRONMENT: staging
+        VITE_AUTH0_DOMAIN: auth.trigpointing.me
+        VITE_AUTH0_CLIENT_ID: test-client-id
+        VITE_AUTH0_AUDIENCE: https://api.trigpointing.me/
+        VITE_API_BASE: https://api.trigpointing.me
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: './web'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  build-and-push:
+    needs: [test, security]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Log in to Container Registry
+      uses: docker/login-action@v3
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata
+      id: meta
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=ref,event=branch
+          type=sha,prefix={{branch}}-
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Set environment for build
+      id: env
+      run: |
+        if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+          echo "auth0_domain=auth.trigpointing.uk" >> $GITHUB_OUTPUT
+          echo "auth0_audience=https://api.trigpointing.uk/" >> $GITHUB_OUTPUT
+          echo "api_base=https://api.trigpointing.uk" >> $GITHUB_OUTPUT
+          echo "environment=production" >> $GITHUB_OUTPUT
+        else
+          echo "auth0_domain=auth.trigpointing.me" >> $GITHUB_OUTPUT
+          echo "auth0_audience=https://api.trigpointing.me/" >> $GITHUB_OUTPUT
+          echo "api_base=https://api.trigpointing.me" >> $GITHUB_OUTPUT
+          echo "environment=staging" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Get Auth0 Client ID from Terraform outputs
+      id: auth0
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        AWS_REGION: eu-west-1
+      run: |
+        # Get Terraform state from S3 and extract Auth0 web SPA client ID
+        # Note: This requires the Terraform state to be accessible
+        # For now, use a secret as fallback
+        if [ "${{ steps.env.outputs.environment }}" = "production" ]; then
+          echo "client_id=${{ secrets.AUTH0_WEB_SPA_CLIENT_ID_PRODUCTION }}" >> $GITHUB_OUTPUT
+        else
+          echo "client_id=${{ secrets.AUTH0_WEB_SPA_CLIENT_ID_STAGING }}" >> $GITHUB_OUTPUT
+        fi
+
+    - name: Build and push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./web
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        build-args: |
+          VITE_ENVIRONMENT=${{ steps.env.outputs.environment }}
+          VITE_AUTH0_DOMAIN=${{ steps.env.outputs.auth0_domain }}
+          VITE_AUTH0_CLIENT_ID=${{ steps.auth0.outputs.client_id }}
+          VITE_AUTH0_AUDIENCE=${{ steps.env.outputs.auth0_audience }}
+          VITE_API_BASE=${{ steps.env.outputs.api_base }}
+
+  deploy-staging:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-1
+
+    - name: Deploy to AWS Fargate (Staging)
+      run: |
+        # Update ECS service with new image
+        aws ecs update-service \
+          --cluster trigpointing-cluster \
+          --service trigpointing-spa-staging \
+          --force-new-deployment
+
+  deploy-production:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-1
+
+    - name: Deploy to AWS Fargate (Production)
+      run: |
+        # Update ECS service with new image
+        aws ecs update-service \
+          --cluster trigpointing-cluster \
+          --service trigpointing-spa-production \
+          --force-new-deployment
+

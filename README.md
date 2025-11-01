@@ -1,409 +1,159 @@
-# FastAPI Legacy Migration Project
+# Trigpointing Platform
 
-A modern FastAPI-based API to gradually migrate your 20-year-old PHP/MySQL website to a contemporary architecture. This project provides a secure, scalable foundation with JWT authentication, comprehensive testing, and AWS Fargate deployment.
+Monorepo containing all infrastructure, applications, and services for Trigpointing.uk - a 20-year-old trigpoint and surveying community website.
 
-## 🚀 Features
+## Components
 
-- **Modern FastAPI Framework**: High-performance Python web framework
-- **JWT Authentication**: Secure token-based authentication
-- **MySQL Integration**: Direct connection to your existing legacy database
-- **Comprehensive Testing**: Full test coverage with pytest
-- **Docker Support**: Easy containerization and deployment
-- **AWS Fargate Ready**: Production-ready infrastructure with Terraform
-- **CI/CD Pipeline**: GitHub Actions for automated testing and deployment
-- **Security Best Practices**: Input validation, SQL injection protection, and more
+### Applications
 
-## 📋 API Endpoints
+- **api/** - Python FastAPI backend REST API
+  - Modern Python 3.11+ API with Auth0 integration
+  - Comprehensive test coverage, type checking
+  - [Detailed API Documentation](docs/README-fastapi.md)
 
-### Public Endpoints
+- **web/** - React Single-Page Application
+  - Modern TypeScript SPA with Auth0 PKCE authentication
+  - Vite for fast builds, TanStack Query for state management
+  - Gradual "strangler fig" migration of legacy pages
+  - [Web App Documentation](web/README.md)
+  
+- **forum/** - phpBB 3.3 Forum
+  - Community discussion forums with Auth0 SSO
+  - Custom theme and extensions
+  - Docker-based deployment
+  
+- **wiki/** - MediaWiki Installation
+  - Community-maintained documentation
+  - Auth0 integration for unified authentication
+  - Docker-based deployment
 
-- `GET /api/v1/tlog/trig-count/{trig_id}` - Get count of tlog entries for a trigger ID
+### Infrastructure
 
-### Protected Endpoints (JWT Required)
+- **terraform/** - AWS Infrastructure as Code
+  - Multi-environment (staging/production)
+  - ECS Fargate, RDS MySQL, ElastiCache, CloudFront
+  - Cloudflare integration
+  - [Infrastructure Documentation](docs/infrastructure/)
+  
+- **Ansible/** - Configuration Management
+  - Bastion host setup and maintenance
+  - Common server configurations
+  - [Ansible Documentation](docs/ansible/)
 
-- `POST /api/v1/auth/login` - Authenticate and get JWT token
-- `GET /api/v1/users/email/{user_id}` - Get user email (own email or admin required)
+### Testing & Tools
 
-### Health & Documentation
+- **locust/** - Performance and load testing
+- **scripts/** - Deployment and maintenance scripts
 
-- `GET /health` - Health check endpoint
-- `GET /api/v1/openapi.json` - OpenAPI specification
-- `GET /docs` - Interactive API documentation (Swagger UI)
-- `GET /redoc` - Alternative API documentation
+## Architecture
 
-## 🛠️ Quick Start
+- **Web SPA**: React + TypeScript (Vite) served by nginx on ECS Fargate
+- **API**: FastAPI (Python 3.11) on ECS Fargate
+- **Forum**: phpBB on ECS Fargate
+- **Wiki**: MediaWiki on ECS Fargate
+- **Database**: RDS MySQL 8.0
+- **Cache**: ElastiCache (Valkey)
+- **Load Balancer**: AWS ALB with path-based routing
+- **CDN**: Cloudflare
+- **Auth**: Auth0 with unified SSO across all services
+
+## Quick Start
 
 ### Prerequisites
 
 - Python 3.11+
-- MySQL 8.0+
+- Node.js 20+ and npm (for web app)
 - Docker & Docker Compose
-- Git
+- AWS CLI (for deployments)
+- Terraform (for infrastructure)
 
-### Local Development Setup
-
-1. **Clone the repository**
-   ```bash
-   git clone <your-repo-url>
-   cd fastapi
-   ```
-
-2. **Create virtual environment**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   ```
-
-3. **Install dependencies**
-   ```bash
-   make install-dev
-   ```
-
-4. **Set up environment variables**
-   ```bash
-   cp env.example .env
-   # Edit .env with your database credentials and secrets
-   ```
-
-5. **Start with Docker Compose (Recommended)**
-   ```bash
-   make docker-dev
-   ```
-
-   Or run manually:
-   ```bash
-   make run
-   ```
-
-6. **Access the application**
-   - API: http://localhost:8000
-   - Interactive docs: http://localhost:8000/docs
-   - Alternative docs: http://localhost:8000/redoc
-
-### Database Setup
-
-The Docker Compose setup includes a MySQL container with sample data. For connecting to your existing database:
-
-1. Update the `DATABASE_URL` in your `.env` file:
-   ```
-   DATABASE_URL=mysql+pymysql://user:password@host:port/database
-   ```
-
-2. Ensure your existing database has the required tables:
-   - `user` table with columns: `user_id`, `email`, `password_hash`, `admin_ind`
-   - `tlog` table with columns: `id`, `trig_id`, and other legacy columns
-
-## 🔍 Code Quality Requirements (CRITICAL)
-
-**🚨 MANDATORY: Strict CI validation enforced on main/develop branches!**
-
-### Branch Protection Rules
-
-#### For `main` and `develop` branches:
-- **Pre-push validation** automatically enforced via git hooks
-- **ALL CI checks** must pass before any push is allowed
-- **NO EXCEPTIONS** - push will be blocked if CI fails
+### Local Development
 
 ```bash
-# REQUIRED before every push to main/develop
-make ci
-```
+# Clone the repository
+git clone git@github.com:USERNAME/platform.git
+cd platform
 
-#### Quick validation check:
-```bash
-# Verify everything passes before pushing
-source venv/bin/activate && make ci
-```
-
-### Quick Setup with Automation
-```bash
-# One-time setup: environment, dependencies, and automated git hooks
-chmod +x setup-dev.sh && ./setup-dev.sh
-```
-
-### Manual Process (if not using setup script)
-```bash
-# 1. Activate virtual environment (required)
+# API Development - ensure you're in the platform root
 source venv/bin/activate
+pip install -r requirements-dev.txt
+make run
 
-# 2. Run complete CI suite before every commit
-make ci
+# Web App Development
+cd web
+npm ci
+npm run dev
 
-# 3. Only commit if all checks pass ✅
-git add . && git commit -m "your message"
-```
-
-### What `make ci` checks:
-- ✅ **black** - Code formatting (`black --check app tests`)
-- ✅ **isort** - Import sorting (`isort --check-only app tests`)
-- ✅ **flake8** - Code linting (`flake8 app tests`)
-- ✅ **mypy** - Type checking (`mypy app --ignore-missing-imports`)
-- ✅ **bandit** - Security scanning (`bandit -r app`)
-- ⚠️ **safety** - Dependency vulnerabilities (`safety check` - warnings allowed)
-- ✅ **pytest** - Full test suite (all tests must pass)
-
-### Git Hooks Enforcement:
-- **Pre-commit hook**: Runs `make ci` on every commit
-- **Pre-push hook**: Blocks pushes to main/develop if CI fails
-- **Automatic installation**: Hooks installed via `./setup-dev.sh`
-
-### Manual CI fix workflow (if CI fails):
-```bash
-# Auto-fix formatting and imports
-black app tests && isort app tests
-
-# Check remaining issues
-flake8 app tests                    # Fix linting errors
-mypy app --ignore-missing-imports   # Fix type errors
-pytest                             # Fix failing tests
-
-# Final validation (must pass)
+# Run all quality checks
 make ci
 ```
 
-**Automated enforcement:** The pre-commit hook automatically runs these checks on every commit.
+See component-specific documentation for detailed setup:
+- [API Setup](docs/README-fastapi.md)
+- [Web App Setup](web/README.md)
 
-## 🧪 Testing
+## Documentation
 
-```bash
-# Run all tests
-make test
+- [API Documentation](docs/README-fastapi.md) - FastAPI backend setup and development
+- [Infrastructure Setup](docs/infrastructure/) - AWS deployment and Terraform
+- [Ansible Setup](docs/ANSIBLE_SETUP.md) - Configuration management
+- [Local Development](docs/LOCAL_ENV.md) - Local environment setup
+- [Database Schema](docs/database/schema_documentation.md) - Complete database documentation
 
-# Run tests with coverage
-make test-cov
+## Deployment
 
-# Run specific test file
-pytest tests/test_auth.py -v
+The platform uses a develop → main branch workflow:
+
+- **develop** branch deploys to staging (trigpointing.me)
+- **main** branch deploys to production (trigpointing.uk)
+
+CI/CD pipelines automatically build and deploy on push to these branches.
+
+See [Infrastructure Documentation](docs/infrastructure/) for detailed deployment procedures.
+
+## Development Workflow
+
+1. All changes pushed to `develop` branch
+2. CI runs tests, linting, security checks
+3. Automatic deployment to staging on success
+4. Manual PR to `main` for production deployment
+5. Run `make ci` before committing (enforced by pre-commit hooks)
+
+## Repository Structure
+
+```
+platform/
+├── api/                 # FastAPI backend API
+│   ├── api/             # API endpoints
+│   ├── core/            # Core configuration
+│   ├── crud/            # Database operations
+│   ├── models/          # SQLAlchemy models
+│   ├── schemas/         # Pydantic schemas
+│   ├── services/        # Business logic
+│   └── tests/           # Unit tests
+├── forum/               # phpBB deployment
+├── wiki/                # MediaWiki deployment
+├── terraform/           # Infrastructure as Code
+│   ├── common/          # Shared infrastructure
+│   ├── staging/         # Staging environment
+│   ├── production/      # Production environment
+│   └── modules/         # Reusable modules
+├── Ansible/             # Configuration management
+├── locust/              # Performance tests
+├── docs/                # Documentation
+└── scripts/             # Utilities
 ```
 
-## 🔍 Code Quality
-
-```bash
-# Format code
-make format
-
-# Check formatting
-make format-check
-
-# Run linting
-make lint
-
-# Type checking
-make type-check
-
-# Security checks
-make security
-
-# Run all CI checks
-make ci
-```
-
-## 🐳 Docker
-
-### Development
-```bash
-# Start development environment
-make docker-dev
-
-# View logs
-make docker-logs
-
-# Stop containers
-make docker-down
-```
-
-### Production
-```bash
-# Build production image
-make docker-build
-
-# Run production setup
-make docker-run
-```
-
-## ☁️ AWS Deployment
-
-### Prerequisites
-
-1. AWS CLI configured
-2. Terraform installed
-3. S3 bucket for Terraform state (recommended)
-
-### Staging Deployment
-
-```bash
-cd terraform
-
-# Initialize Terraform
-make tf-init
-
-# Plan deployment
-make tf-plan env=staging
-
-# Apply changes
-make tf-apply env=staging
-```
-
-### Production Deployment
-
-```bash
-# Plan production deployment
-make tf-plan env=production
-
-# Apply production changes
-make tf-apply env=production
-```
-
-### Infrastructure Components
-
-- **VPC**: Multi-AZ setup with public/private subnets
-- **ECS Fargate**: Serverless container hosting
-- **Application Load Balancer**: High availability load balancing
-- **RDS MySQL**: Managed database service
-- **CloudWatch**: Monitoring and logging
-- **Auto Scaling**: Automatic scaling based on CPU/memory
-
-## 🔧 Configuration
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DATABASE_URL` | MySQL connection string | Required |
-| `JWT_SECRET_KEY` | Secret key for JWT tokens | Required |
-| `JWT_ALGORITHM` | JWT signing algorithm | HS256 |
-| `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | Token expiration time | 30 |
-| `DEBUG` | Enable debug mode | false |
-| `API_V1_STR` | API version prefix | /api/v1 |
-
-### Database Schema
-
-Ensure your legacy database includes these minimum required tables:
-
-```sql
--- Users table
-CREATE TABLE user (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    password_hash VARCHAR(255) NOT NULL,
-    admin_ind CHAR(1) DEFAULT 'N' NOT NULL
-);
-
--- TLog table
-CREATE TABLE tlog (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    trig_id INT NOT NULL,
-    -- Add your existing columns here
-);
-```
-
-## 🔐 Security
-
-- **JWT Authentication**: Secure token-based authentication
-- **Password Hashing**: bcrypt for secure password storage
-- **Input Validation**: Pydantic models for request validation
-- **SQL Injection Protection**: SQLAlchemy ORM prevents SQL injection
-- **CORS Configuration**: Configurable cross-origin resource sharing
-- **Security Headers**: Basic security headers included
-- **Secrets Management**: Environment variables for sensitive data
-
-## 📊 Monitoring
-
-- **Health Checks**: Built-in health check endpoint
-- **CloudWatch Integration**: Comprehensive logging and metrics
-- **Application Metrics**: CPU, memory, and request metrics
-- **Database Monitoring**: RDS performance insights
-- **Alerting**: SNS alerts for critical issues
-
-## 🔄 CI/CD
-
-The GitHub Actions pipeline includes:
-
-1. **Code Quality**: Linting, formatting, type checking
-2. **Security Scanning**: Bandit, Trivy vulnerability scanning
-3. **Testing**: Comprehensive test suite with coverage
-4. **Building**: Docker image creation and registry push
-5. **Deployment**: Automatic deployment to staging/production
-
-### Required Secrets
-
-Add these secrets to your GitHub repository:
-
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_REGION`
-
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch: `git checkout -b feature-name`
-3. Make your changes
-4. Run tests: `make ci`
-5. Commit: `git commit -am 'Add feature'`
-6. Push: `git push origin feature-name`
-7. Create a Pull Request
+2. Create a feature branch
+3. Make changes and add tests
+4. Run `make ci` to validate
+5. Push to develop branch
+6. Create Pull Request
 
-## 📝 Migration Strategy
+## License
 
-This API is designed for gradual migration:
+MIT License - see LICENSE file for details
 
-1. **Phase 1**: Set up API alongside existing PHP application
-2. **Phase 2**: Migrate critical endpoints to FastAPI
-3. **Phase 3**: Update frontend to use new API endpoints
-4. **Phase 4**: Gradually deprecate PHP endpoints
-5. **Phase 5**: Complete migration and decommission legacy system
-
-## 🆘 Troubleshooting
-
-### Common Issues
-
-1. **Database Connection Issues**
-   - Verify DATABASE_URL format
-   - Check database credentials
-   - Ensure database is accessible from application
-
-2. **JWT Token Issues**
-   - Verify JWT_SECRET_KEY is set
-   - Check token expiration settings
-   - Ensure proper Authorization header format
-
-3. **Docker Issues**
-   - Check Docker daemon is running
-   - Verify port availability (8000, 3306)
-   - Check container logs: `make docker-logs`
-
-### Logs
-
-```bash
-# Application logs
-docker-compose logs app
-
-# Database logs
-docker-compose logs db
-
-# All logs
-make docker-logs
-```
-
-## 📚 Documentation
-
-Comprehensive documentation is available in the [`docs/`](docs/) directory:
-
-- **[Ansible Setup](docs/ANSIBLE_SETUP.md)** - Infrastructure management with Ansible
-- **[Database Schema](docs/database/schema_documentation.md)** - Complete database documentation
-- **[Infrastructure Setup](docs/infrastructure/)** - Terraform and infrastructure configuration
-- **[Security Configuration](docs/security/)** - Security best practices and setup
-- **[Migration Guides](docs/migration/)** - Migration procedures and strategies
-
-## 📚 Additional Resources
-
-- [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [SQLAlchemy Documentation](https://docs.sqlalchemy.org/)
-- [Pytest Documentation](https://docs.pytest.org/)
-- [AWS ECS Documentation](https://docs.aws.amazon.com/ecs/)
-- [Terraform AWS Provider](https://registry.terraform.io/providers/hashicorp/aws/)
-- [Ansible Documentation](https://docs.ansible.com/)
-
-## 📄 License
-
-This project is licensed under the MIT License - see the LICENSE file for details.

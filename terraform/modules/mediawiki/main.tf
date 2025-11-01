@@ -1,7 +1,7 @@
 # CloudWatch Log Group for MediaWiki
 resource "aws_cloudwatch_log_group" "mediawiki" {
   name              = "/aws/ecs/${var.project_name}-mediawiki-${var.environment}"
-  retention_in_days = 30
+  retention_in_days = 7
 
   tags = {
     Name = "${var.project_name}-mediawiki-${var.environment}-logs"
