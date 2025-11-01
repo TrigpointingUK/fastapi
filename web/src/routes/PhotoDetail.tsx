@@ -43,16 +43,12 @@ export default function PhotoDetail() {
   // Only fetch if we don't have the photo from state or cache
   const shouldFetch = !photoFromState && !cachedPhoto && photoIdNum !== null;
 
-  // If photo not in cache, fetch a batch of recent photos that might contain it
-  // We use a reasonable skip value based on the photo ID to get photos around that ID
-  const estimatedSkip = photoIdNum ? Math.max(0, 430000 - photoIdNum) : 0;
-  
-  const { data: fetchedPhotoData, isLoading, error } = useQuery<PhotosResponse>({
+  // Fetch single photo by ID if not in cache or state
+  const { data: fetchedPhoto, isLoading, error } = useQuery<Photo>({
     queryKey: ['photo', photoIdNum],
     queryFn: async () => {
       const apiBase = import.meta.env.VITE_API_BASE as string;
-      // Fetch a batch of 100 photos around the estimated position
-      const response = await fetch(`${apiBase}/v1/photos?limit=100&skip=${estimatedSkip}`);
+      const response = await fetch(`${apiBase}/v1/photos/${photoIdNum}`);
       if (!response.ok) {
         throw new Error('Failed to fetch photo');
       }
@@ -61,8 +57,6 @@ export default function PhotoDetail() {
     enabled: shouldFetch,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
-
-  const fetchedPhoto = fetchedPhotoData?.items?.find((p) => p.id === photoIdNum);
 
   // Set the photo to display once we have it (from state, cache, or API)
   useEffect(() => {

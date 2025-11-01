@@ -92,6 +92,10 @@ export default function PhotoAlbum() {
                     ...photo,
                     photo_url: updatedPhoto.photo_url,
                     icon_url: updatedPhoto.icon_url,
+                    width: updatedPhoto.width,
+                    height: updatedPhoto.height,
+                    icon_width: updatedPhoto.icon_width,
+                    icon_height: updatedPhoto.icon_height,
                   }
                 : photo
             ),

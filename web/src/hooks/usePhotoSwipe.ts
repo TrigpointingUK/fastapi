@@ -71,7 +71,7 @@ export function usePhotoSwipe({ photos, initialIndex = 0, onClose }: PhotoSwipeO
       
       // Zoom configuration
       maxZoomLevel: 4, // 400% max zoom
-      initialZoomLevel: 'fill' as const, // Start with image filling screen (shows full image)
+      initialZoomLevel: 'fit' as const, // Start with image fitted to screen (shows full image)
       secondaryZoomLevel: 1, // Double-click zooms to 1:1 (actual pixels)
       
       // UI configuration
