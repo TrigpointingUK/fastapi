@@ -34,9 +34,9 @@ module "spa_ecs_service" {
 
   # ALB Configuration
   alb_listener_arn  = data.terraform_remote_state.common.outputs.https_listener_arn
-  alb_rule_priority = 50 # High priority for /app/* route
+  alb_rule_priority = 55 # Changed from 50 to avoid conflict with staging (priority 50 = trigpointing.me)
   host_headers      = ["trigpointing.uk"]
-  path_patterns     = ["/app/*"] # Only match /app/* paths
+  path_patterns     = ["/app", "/app/*"] # Match both /app and /app/* paths
 
   # Container Configuration
   image_uri = var.spa_container_image
