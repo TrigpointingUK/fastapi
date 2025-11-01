@@ -28,7 +28,7 @@ export interface UserProfile {
 }
 
 export function useUserProfile(userId: string | number) {
-  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+  const { getAccessTokenSilently, isAuthenticated, loginWithRedirect } = useAuth0();
   
   return useQuery<UserProfile>({
     queryKey: ["user", "profile", userId],
@@ -37,12 +37,23 @@ export function useUserProfile(userId: string | number) {
       
       // Get token if viewing own profile
       let headers: Record<string, string> = {};
-      if (userId === "me" && isAuthenticated) {
+      if (userId === "me") {
+        if (!isAuthenticated) {
+          throw new Error("Not authenticated - please log in");
+        }
+        
         try {
-          const token = await getAccessTokenSilently();
+          const token = await getAccessTokenSilently({
+            cacheMode: 'on', // Try to use cached token first
+          });
           headers = { Authorization: `Bearer ${token}` };
         } catch (error) {
           console.error("Failed to get access token:", error);
+          // If token retrieval fails, trigger re-login
+          await loginWithRedirect({
+            appState: { returnTo: window.location.pathname }
+          });
+          throw new Error("Token expired - redirecting to login");
         }
       }
       
@@ -60,6 +71,7 @@ export function useUserProfile(userId: string | number) {
       }
       return response.json();
     },
+    retry: false, // Don't retry if token fails
   });
 }
 
