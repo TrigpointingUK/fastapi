@@ -47,8 +47,9 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
   const displayTrigName = log.trig_name || trigName;
   const displayUserName = log.user_name || userName;
 
-  const handlePhotoClick = (photoId: number) => {
-    navigate(`/photos/${photoId}`);
+  const handlePhotoClick = (photo: Photo) => {
+    // Navigate with the photo data in state so PhotoDetail doesn't need to fetch it
+    navigate(`/photos/${photo.id}`, { state: { photo } });
   };
 
   return (
@@ -119,7 +120,7 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
                   <div
                     key={photo.id}
                     className="relative h-20 w-20 flex-shrink-0 cursor-pointer group"
-                    onClick={() => handlePhotoClick(photo.id)}
+                    onClick={() => handlePhotoClick(photo)}
                   >
                     <img
                       src={photo.icon_url}

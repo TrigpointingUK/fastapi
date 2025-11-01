@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useQueryClient, useQuery } from '@tanstack/react-query';
 import Layout from '../components/layout/Layout';
 import Spinner from '../components/ui/Spinner';
@@ -20,11 +20,15 @@ interface PhotosResponse {
 export default function PhotoDetail() {
   const { photo_id } = useParams<{ photo_id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const photoIdNum = photo_id ? parseInt(photo_id, 10) : null;
   const [photoForViewer, setPhotoForViewer] = useState<Photo | null>(null);
 
-  // Try to get photo from the photos grid cache first
+  // Check if photo was passed via router state (from log cards)
+  const photoFromState = location.state?.photo as Photo | undefined;
+
+  // Try to get photo from the photos grid cache
   const photoData = queryClient.getQueryData<{
     pages: PhotosResponse[];
     pageParams: number[];
@@ -35,6 +39,9 @@ export default function PhotoDetail() {
 
   const allPhotos = photoData?.pages.flatMap((page) => page.items) || [];
   const cachedPhoto = allPhotos.find((p) => p.id === photoIdNum);
+
+  // Only fetch if we don't have the photo from state or cache
+  const shouldFetch = !photoFromState && !cachedPhoto && photoIdNum !== null;
 
   // If photo not in cache, fetch a batch of recent photos that might contain it
   // We use a reasonable skip value based on the photo ID to get photos around that ID
@@ -51,20 +58,22 @@ export default function PhotoDetail() {
       }
       return response.json();
     },
-    enabled: !cachedPhoto && photoIdNum !== null,
+    enabled: shouldFetch,
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const fetchedPhoto = fetchedPhotoData?.items?.find((p) => p.id === photoIdNum);
 
-  // Set the photo to display once we have it (from cache or API)
+  // Set the photo to display once we have it (from state, cache, or API)
   useEffect(() => {
-    if (cachedPhoto) {
+    if (photoFromState) {
+      setPhotoForViewer(photoFromState);
+    } else if (cachedPhoto) {
       setPhotoForViewer(cachedPhoto);
     } else if (fetchedPhoto) {
       setPhotoForViewer(fetchedPhoto);
     }
-  }, [cachedPhoto, fetchedPhoto]);
+  }, [photoFromState, cachedPhoto, fetchedPhoto]);
 
   // Navigate back to grid on close
   const handleClose = () => {
@@ -79,7 +88,7 @@ export default function PhotoDetail() {
   });
 
   // Show loading state while fetching
-  if (isLoading && !cachedPhoto) {
+  if (isLoading && !cachedPhoto && !photoFromState) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
@@ -93,7 +102,7 @@ export default function PhotoDetail() {
   }
 
   // Show error state or photo not found
-  if ((error || (!photoForViewer && !isLoading)) && !cachedPhoto) {
+  if ((error || (!photoForViewer && !isLoading)) && !cachedPhoto && !photoFromState) {
     return (
       <Layout>
         <div className="max-w-7xl mx-auto">
