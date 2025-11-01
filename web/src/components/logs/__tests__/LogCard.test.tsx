@@ -123,8 +123,8 @@ describe('LogCard', () => {
     expect(images[1]).toHaveAttribute('src', 'photo2.jpg');
   });
 
-  it('should show +X indicator when more than 6 photos', () => {
-    const photos = Array.from({ length: 8 }, (_, i) => ({
+  it('should show +X indicator when more than 20 photos', () => {
+    const photos = Array.from({ length: 25 }, (_, i) => ({
       id: i + 1,
       log_id: 1,
       user_id: 100,
@@ -145,7 +145,7 @@ describe('LogCard', () => {
     const logWithManyPhotos = { ...mockLog, photos };
     renderWithRouter(<LogCard log={logWithManyPhotos} />);
     
-    expect(screen.getByText('+2')).toBeInTheDocument();
+    expect(screen.getByText('+5')).toBeInTheDocument();
   });
 
   it('should handle different condition codes', () => {

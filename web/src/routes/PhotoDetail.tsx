@@ -24,9 +24,13 @@ export default function PhotoDetail() {
   const queryClient = useQueryClient();
   const photoIdNum = photo_id ? parseInt(photo_id, 10) : null;
   const [photoForViewer, setPhotoForViewer] = useState<Photo | null>(null);
+  const [allPhotosForViewer, setAllPhotosForViewer] = useState<Photo[]>([]);
+  const [initialPhotoIndex, setInitialPhotoIndex] = useState(0);
 
   // Check if photo was passed via router state (from log cards)
   const photoFromState = location.state?.photo as Photo | undefined;
+  const allPhotosFromState = location.state?.allPhotos as Photo[] | undefined;
+  const contextFromState = location.state?.context as string | undefined;
 
   // Try to get photo from the photos grid cache
   const photoData = queryClient.getQueryData<{
@@ -62,23 +66,88 @@ export default function PhotoDetail() {
   useEffect(() => {
     if (photoFromState) {
       setPhotoForViewer(photoFromState);
+      
+      // If we have all photos from a log context, set them up for navigation
+      if (allPhotosFromState && allPhotosFromState.length > 0 && contextFromState === 'log') {
+        setAllPhotosForViewer(allPhotosFromState);
+        // Find the index of the clicked photo
+        const index = allPhotosFromState.findIndex(p => p.id === photoFromState.id);
+        setInitialPhotoIndex(index >= 0 ? index : 0);
+      } else {
+        // Single photo mode (non-log context)
+        setAllPhotosForViewer([photoFromState]);
+        setInitialPhotoIndex(0);
+      }
     } else if (cachedPhoto) {
       setPhotoForViewer(cachedPhoto);
+      setAllPhotosForViewer([cachedPhoto]);
+      setInitialPhotoIndex(0);
     } else if (fetchedPhoto) {
       setPhotoForViewer(fetchedPhoto);
+      setAllPhotosForViewer([fetchedPhoto]);
+      setInitialPhotoIndex(0);
     }
-  }, [photoFromState, cachedPhoto, fetchedPhoto]);
+  }, [photoFromState, cachedPhoto, fetchedPhoto, allPhotosFromState, contextFromState]);
 
   // Navigate back to previous page on close
   const handleClose = () => {
     navigate(-1); // Go back in browser history
   };
 
+  // Handle photo rotation
+  const handlePhotoRotated = (updatedPhoto: Photo) => {
+    // Update the photo in the viewer state
+    setPhotoForViewer(updatedPhoto);
+    
+    // Update the photo in the array
+    setAllPhotosForViewer(prev => 
+      prev.map(p => p.id === updatedPhoto.id ? updatedPhoto : p)
+    );
+    
+    // Update the cache if this photo came from the photo grid
+    const photoData = queryClient.getQueryData<{
+      pages: PhotosResponse[];
+      pageParams: number[];
+    }>(['photos', 'infinite', 'unseen']) || queryClient.getQueryData<{
+      pages: PhotosResponse[];
+      pageParams: number[];
+    }>(['photos', 'infinite', 'all']);
+    
+    if (photoData) {
+      queryClient.setQueryData(['photos', 'infinite', 'unseen'], (oldData: { pages: PhotosResponse[]; pageParams: number[] } | undefined) => {
+        if (!oldData?.pages) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: PhotosResponse) => ({
+            ...page,
+            items: page.items.map((photo: Photo) =>
+              photo.id === updatedPhoto.id ? updatedPhoto : photo
+            ),
+          })),
+        };
+      });
+      
+      queryClient.setQueryData(['photos', 'infinite', 'all'], (oldData: { pages: PhotosResponse[]; pageParams: number[] } | undefined) => {
+        if (!oldData?.pages) return oldData;
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: PhotosResponse) => ({
+            ...page,
+            items: page.items.map((photo: Photo) =>
+              photo.id === updatedPhoto.id ? updatedPhoto : photo
+            ),
+          })),
+        };
+      });
+    }
+  };
+
   // Open PhotoSwipe when we have a photo
   usePhotoSwipe({
-    photos: photoForViewer ? [photoForViewer] : [],
-    initialIndex: 0,
+    photos: allPhotosForViewer,
+    initialIndex: initialPhotoIndex,
     onClose: handleClose,
+    onPhotoRotated: handlePhotoRotated,
   });
 
   // Show loading state while fetching

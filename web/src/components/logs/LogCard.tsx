@@ -51,8 +51,15 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
   const formattedTrigId = `TP${log.trig_id.toString().padStart(4, '0')}`;
 
   const handlePhotoClick = (photo: Photo) => {
-    // Navigate with the photo data in state so PhotoDetail doesn't need to fetch it
-    navigate(`/photos/${photo.id}`, { state: { photo } });
+    // Navigate with the photo data and all photos from the log in state
+    // This enables forward/back navigation in the photo viewer
+    navigate(`/photos/${photo.id}`, { 
+      state: { 
+        photo,
+        allPhotos: log.photos,
+        context: 'log' // Flag to indicate this came from a log
+      } 
+    });
   };
 
   return (
@@ -79,14 +86,14 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
                 {displayUserName ? (
                   <Link
                     to={`/profile/${log.user_id}`}
-                    className="text-trig-green-600 hover:underline"
+                    className="text-trig-green-600 hover:underline font-semibold text-base"
                   >
                     {displayUserName}
                   </Link>
                 ) : (
                   <Link
                     to={`/profile/${log.user_id}`}
-                    className="text-trig-green-600 hover:underline"
+                    className="text-trig-green-600 hover:underline font-semibold text-base"
                   >
                     User #{log.user_id}
                   </Link>
@@ -101,7 +108,9 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
               />
               <span className="text-gray-400">·</span>
               <span className="text-gray-700">{formattedDate}</span>
-              <span className="text-gray-500 text-xs">{log.time}</span>
+              {log.time && log.time !== "12:00:00" && (
+                <span className="text-gray-500 text-xs">{log.time}</span>
+              )}
             </div>
           </div>
         </div>
@@ -119,7 +128,7 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
             {/* Photos - Right 66% */}
             {log.photos && log.photos.length > 0 && (
               <div className="flex-[1] flex gap-2 overflow-x-auto pb-2">
-                {log.photos.slice(0, 6).map((photo) => (
+                {log.photos.slice(0, 20).map((photo) => (
                   <div
                     key={photo.id}
                     className="relative h-20 w-20 flex-shrink-0 cursor-pointer group"
@@ -133,9 +142,9 @@ export default function LogCard({ log, userName, trigName }: LogCardProps) {
                     />
                   </div>
                 ))}
-                {log.photos.length > 6 && (
+                {log.photos.length > 20 && (
                   <div className="h-20 w-20 flex items-center justify-center bg-gray-100 rounded border border-gray-200 flex-shrink-0 text-sm text-gray-600">
-                    +{log.photos.length - 6}
+                    +{log.photos.length - 20}
                   </div>
                 )}
               </div>

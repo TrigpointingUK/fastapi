@@ -1,6 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { useAuth0 } from "@auth0/auth0-react";
+import toast from "react-hot-toast";
 import Layout from "../components/layout/Layout";
 import Card from "../components/ui/Card";
 import Spinner from "../components/ui/Spinner";
@@ -77,6 +78,17 @@ export default function UserProfile() {
 
   const apiBase = import.meta.env.VITE_API_BASE as string;
   const displayUserId = userId || user.id;
+
+  const handleBadgeClick = async () => {
+    const badgeUrl = `${apiBase}/v1/users/${displayUserId}/badge`;
+    try {
+      await navigator.clipboard.writeText(badgeUrl);
+      toast.success("Badge URL copied to clipboard!");
+    } catch (error) {
+      console.error("Failed to copy badge URL:", error);
+      toast.error("Failed to copy URL. Please try again.");
+    }
+  };
 
   return (
     <Layout>
@@ -190,17 +202,23 @@ export default function UserProfile() {
             {/* Right column: Map and Badge stacked on large screens, side by side on medium */}
             <div className="flex flex-col md:flex-row xl:flex-col gap-6 xl:w-72 flex-shrink-0 md:items-start">
               <img 
-                src={`${apiBase}/v1/users/${displayUserId}/map`}
+                src={`${apiBase}/v1/users/${displayUserId}/map?height=500`}
                 alt={`${user.name}'s trig map`}
                 className="rounded-lg border border-gray-200 w-full h-auto"
                 loading="lazy"
               />
-              <img 
-                src={`${apiBase}/v1/users/${displayUserId}/badge`}
-                alt={`${user.name}'s badge`}
-                className="rounded border border-gray-200 w-full h-auto md:max-h-none"
-                loading="lazy"
-              />
+              <div className="flex justify-center items-center w-full">
+                <img 
+                  src={`${apiBase}/v1/users/${displayUserId}/badge`}
+                  alt={`${user.name}'s badge`}
+                  width="200"
+                  height="50"
+                  className="rounded border border-gray-200 cursor-pointer hover:opacity-80 transition-opacity"
+                  loading="lazy"
+                  onClick={handleBadgeClick}
+                  title="Click to copy URL"
+                />
+              </div>
             </div>
           </div>
         </Card>

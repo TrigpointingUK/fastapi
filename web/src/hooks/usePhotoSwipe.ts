@@ -1,11 +1,15 @@
 import { useEffect, useRef } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import toast from 'react-hot-toast';
 import PhotoSwipe from 'photoswipe';
 import type { Photo } from '../lib/api';
+import { rotatePhoto } from '../lib/api';
 
 export interface PhotoSwipeOptions {
   photos: Photo[];
   initialIndex?: number;
   onClose?: () => void;
+  onPhotoRotated?: (updatedPhoto: Photo) => void;
 }
 
 // Helper function to create metadata overlay HTML
@@ -48,8 +52,9 @@ function createMetadataOverlay(photo: Photo): string {
   `;
 }
 
-export function usePhotoSwipe({ photos, initialIndex = 0, onClose }: PhotoSwipeOptions) {
+export function usePhotoSwipe({ photos, initialIndex = 0, onClose, onPhotoRotated }: PhotoSwipeOptions) {
   const pswpRef = useRef<PhotoSwipe | null>(null);
+  const { getAccessTokenSilently } = useAuth0();
 
   useEffect(() => {
     if (photos.length === 0) return;
@@ -78,12 +83,12 @@ export function usePhotoSwipe({ photos, initialIndex = 0, onClose }: PhotoSwipeO
       padding: { top: 50, bottom: 120, left: 20, right: 20 }, // Extra bottom padding for metadata
       bgOpacity: 0.9,
       
-      // Hide default UI elements (we'll add custom metadata overlay)
+      // Show navigation UI only when there are multiple photos
       zoom: true,
       close: true,
-      counter: false, // No counter since we're showing single photo (requirement 1b)
-      arrowPrev: false, // No navigation arrows (requirement 1b)
-      arrowNext: false,
+      counter: photos.length > 1, // Show counter only with multiple photos
+      arrowPrev: photos.length > 1, // Show prev arrow only with multiple photos
+      arrowNext: photos.length > 1, // Show next arrow only with multiple photos
       
       // Click/tap behavior
       clickToCloseNonZoomable: true,
@@ -107,8 +112,8 @@ export function usePhotoSwipe({ photos, initialIndex = 0, onClose }: PhotoSwipeO
       // Animation
       showHideAnimationType: 'zoom' as const, // Zoom animation on open/close
       
-      // Allow panning when zoomed
-      allowPanToNext: false, // Disable swipe to next since we only show one photo
+      // Allow panning/swiping to next photo only when there are multiple photos
+      allowPanToNext: photos.length > 1,
       
       // Prevent closing when clicking outside if zoomed
       closeOnVerticalDrag: true,
@@ -133,6 +138,125 @@ export function usePhotoSwipe({ photos, initialIndex = 0, onClose }: PhotoSwipeO
               el.innerHTML = createMetadataOverlay(currSlideElement.photo as Photo);
             }
           });
+        },
+      });
+
+      // Add rotation buttons
+      pswp.ui?.registerElement({
+        name: 'rotate-left-button',
+        order: 8,
+        isButton: true,
+        appendTo: 'bar',
+        html: `
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="pswp__icn"
+            width="32"
+            height="32"
+            viewBox="0 0 32 32"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M4 13.33h13.33a10.67 10.67 0 0110.67 10.67v2.67M4 13.33l8 8m-8-8l8-8"
+            />
+          </svg>
+        `,
+        onInit: (el: HTMLElement, pswp: PhotoSwipe) => {
+          el.setAttribute('title', 'Rotate left 90°');
+          el.onclick = async () => {
+            const currSlideData = pswp.currSlide?.data;
+            if (currSlideData && 'photo' in currSlideData) {
+              const photo = currSlideData.photo as Photo;
+              try {
+                const token = await getAccessTokenSilently();
+                const updatedPhoto = await rotatePhoto(photo.id, 270, token);
+                
+                toast.success('Photo rotated successfully');
+                
+                // Update the current slide with the new photo URL
+                if (pswp.currSlide) {
+                  pswp.currSlide.data.src = updatedPhoto.photo_url;
+                  pswp.currSlide.data.width = updatedPhoto.width;
+                  pswp.currSlide.data.height = updatedPhoto.height;
+                  (pswp.currSlide.data as { photo: Photo }).photo = updatedPhoto;
+                  
+                  // Force PhotoSwipe to reload the image
+                  pswp.refreshSlideContent(pswp.currSlide.index);
+                }
+                
+                // Call the callback if provided
+                if (onPhotoRotated) {
+                  onPhotoRotated(updatedPhoto);
+                }
+              } catch (error) {
+                console.error('Failed to rotate photo:', error);
+                toast.error('Failed to rotate photo. Please try again.');
+              }
+            }
+          };
+        },
+      });
+
+      pswp.ui?.registerElement({
+        name: 'rotate-right-button',
+        order: 9,
+        isButton: true,
+        appendTo: 'bar',
+        html: `
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="pswp__icn"
+            width="32"
+            height="32"
+            viewBox="0 0 32 32"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M28 13.33H14.67a10.67 10.67 0 00-10.67 10.67v2.67M28 13.33l-8 8m8-8l-8-8"
+            />
+          </svg>
+        `,
+        onInit: (el: HTMLElement, pswp: PhotoSwipe) => {
+          el.setAttribute('title', 'Rotate right 90°');
+          el.onclick = async () => {
+            const currSlideData = pswp.currSlide?.data;
+            if (currSlideData && 'photo' in currSlideData) {
+              const photo = currSlideData.photo as Photo;
+              try {
+                const token = await getAccessTokenSilently();
+                const updatedPhoto = await rotatePhoto(photo.id, 90, token);
+                
+                toast.success('Photo rotated successfully');
+                
+                // Update the current slide with the new photo URL
+                if (pswp.currSlide) {
+                  pswp.currSlide.data.src = updatedPhoto.photo_url;
+                  pswp.currSlide.data.width = updatedPhoto.width;
+                  pswp.currSlide.data.height = updatedPhoto.height;
+                  (pswp.currSlide.data as { photo: Photo }).photo = updatedPhoto;
+                  
+                  // Force PhotoSwipe to reload the image
+                  pswp.refreshSlideContent(pswp.currSlide.index);
+                }
+                
+                // Call the callback if provided
+                if (onPhotoRotated) {
+                  onPhotoRotated(updatedPhoto);
+                }
+              } catch (error) {
+                console.error('Failed to rotate photo:', error);
+                toast.error('Failed to rotate photo. Please try again.');
+              }
+            }
+          };
         },
       });
     });
@@ -178,7 +302,7 @@ export function usePhotoSwipe({ photos, initialIndex = 0, onClose }: PhotoSwipeO
         pswpRef.current = null;
       }
     };
-  }, [photos, initialIndex, onClose]);
+  }, [photos, initialIndex, onClose, getAccessTokenSilently, onPhotoRotated]);
 
   return pswpRef;
 }
